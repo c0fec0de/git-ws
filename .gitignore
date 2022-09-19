@@ -1,0 +1,7 @@
+*.sublime-workspace
+*.xml
+.coverage
+.tox
+__pycache__
+poetry.lock
+build

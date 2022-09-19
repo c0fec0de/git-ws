@@ -1,0 +1,33 @@
+{
+    "folders":
+    [
+        {
+            "path": ".",
+            "file_exclude_patterns": [".coverage", "report.xml"],
+            "folder_exclude_patterns": [".tox", "*cache*", "build", "htmlcov", "dist", ".venv"]
+        }
+    ],
+    "settings":
+    {
+        "python_interpreter": "python3",
+        "rulers":
+        [
+            80, 120
+        ],
+        "tab_size": 4,
+        "translate_tabs_to_spaces": true,
+        "trim_trailing_white_space_on_save": true,
+        "ensure_newline_at_eof_on_save": true,
+        "default_encoding": "UTF-8"
+    },
+    "build_systems":
+    [
+        {
+            "name": "Test",
+            "file_regex": "^[ ]*File \"([^<]..*?)\", line ([0-9]*)",
+            "selector": "source.python",
+            "working_dir": "$project_path",
+            "shell_cmd": "tox"
+        }
+    ]
+}

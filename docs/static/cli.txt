@@ -1,0 +1,9 @@
+Usage: anyrepo [OPTIONS] COMMAND [ARGS]...
+
+  Multi Repository Management Tool.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  manifest  Manifest Commands.
