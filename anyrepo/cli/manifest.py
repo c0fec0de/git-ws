@@ -5,7 +5,7 @@ import click
 @click.group()
 def manifest():
     """
-    Manifest Commands.
+    Manifest Information.
     """
 
 

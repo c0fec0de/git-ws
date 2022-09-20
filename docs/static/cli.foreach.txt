@@ -1,0 +1,8 @@
+Usage: anyrepo foreach [OPTIONS] [COMMAND]...
+
+  Run 'command' on projects.
+
+Options:
+  -P, --project TEXT  Project path to operate on only. All by default. This
+                      option can be specified multiple times.
+  --help              Show this message and exit.

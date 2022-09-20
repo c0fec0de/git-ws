@@ -6,11 +6,11 @@ authors = []
 
 [tool.poetry.scripts]
 anyrepo = 'anyrepo.cli:main'
-ar = 'anyrepo.cli:main'
 
 [tool.poetry.dependencies]
 python = '>=3.7,<4'
 click = '>=8.0.0'
+coloredlogs = '*'
 pydantic = '>=1.10.0'
 pyyaml = '>=6.0.0'
 
@@ -53,6 +53,9 @@ max-line-length = 120
 extension-pkg-whitelist = "pydantic"
 disable = [
     # Add global exceptions here
+    'fixme', # Remove me before release
+    'unused-argument', # Remove me before release
+    'no-self-use', # Remove me before release
 ]
 
 [tool.tox]

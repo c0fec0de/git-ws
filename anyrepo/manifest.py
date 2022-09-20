@@ -10,6 +10,8 @@ from typing import List
 
 from pydantic import BaseModel, root_validator
 
+from ._url import urljoin
+
 
 class Remote(BaseModel):
     """
@@ -47,13 +49,15 @@ class Project(BaseModel):
 
     Keyword Args:
         remote (str): Remote Alias
+        suburl (str): URL relative to remote urlbase.
         url (str): URL
         revision (str): Revision
-        path (str): Path
+        path (str): Project Filesystem Path. Relative to Workspace Directory.
     """
 
     name: str
     remote: str = None
+    suburl: str = None
     url: str = None
     revision: str = None
     path: str = None
@@ -63,9 +67,14 @@ class Project(BaseModel):
     def _remote_or_url(cls, values):
         # pylint: disable=no-self-argument,no-self-use
         remote = values.get("remote", None)
+        suburl = values.get("suburl", None)
         url = values.get("url", None)
         if remote and url:
             raise ValueError("'remote' and 'url' are mutally exclusive")
+        if url and suburl:
+            raise ValueError("'url' and 'suburl' are mutally exclusive")
+        if suburl and not remote:
+            raise ValueError("'suburl' requires 'remote'")
         return values
 
 
@@ -84,9 +93,12 @@ class Manifest(BaseModel):
     remotes: List[Remote] = []
     projects: List[Project] = []
 
-    def resolve(self) -> "Manifest":
+    def resolve(self, manifesturl=None) -> "Manifest":
         """
         Return Manifest with `defaults` and `remotes` populated.
+
+        Keyword Args:
+            manifesturl: Manifest URL
 
         `defaults` and `remotes` are untouched.
         The project `name` and `manifest` is untouched.
@@ -98,19 +110,23 @@ class Manifest(BaseModel):
             filepath=self.filepath,
             defaults=self.defaults,
             remotes=self.remotes,
-            projects=[self._resolve_project(project) for project in self.projects],
+            projects=[self._resolve_project(project, manifesturl) for project in self.projects],
         )
 
-    def _resolve_project(self, project):
+    def _resolve_project(self, project, manifesturl):
         url = project.url
-        projectremote = project.remote or self.defaults.remote
         if not url:
+            # URL assembly
+            projectremote = project.remote or self.defaults.remote
+            projectsuburl = project.suburl or project.name
             for remote in self.remotes:
                 if remote.name == projectremote:
-                    url = f"{remote.urlbase}/{project.name}"
+                    url = f"{remote.urlbase}/{projectsuburl}"
                     break
             else:
                 raise ValueError(f"Unknown remote {project.remote} for project {project.name}")
+        # Resolve relative URLs
+        url = urljoin(manifesturl, url)
         return Project(
             name=project.name,
             remote=None,
@@ -122,3 +138,18 @@ class Manifest(BaseModel):
 
 
 Project.update_forward_refs()
+
+
+def create_project_filter(projectpaths=None):
+    """Create filter function."""
+    if projectpaths:
+
+        def filter_(project):
+            return project.path in projectpaths
+
+    else:
+
+        def filter_(project):
+            return True
+
+    return filter_

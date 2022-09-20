@@ -10,22 +10,30 @@ def urljoin(base, url):
 
     >>> urljoin('https://domain.com/base/repo1.git', 'https://domain.com/base/repo2.git')
     'https://domain.com/base/repo2.git'
-    >>> urljoin('https://domain.com/base/repo1.git', 'repo2.git')
+    >>> urljoin('https://domain.com/base/repo1.git/', 'repo2.git')
     'https://domain.com/base/repo1.git/repo2.git'
     >>> urljoin('https://domain.com/base/repo1.git', '../repo2.git')
     'https://domain.com/base/repo2.git'
 
     >>> urljoin('ssh://domain.com/base/repo1.git', 'ssh://domain.com/base/repo2.git')
     'ssh://domain.com/base/repo2.git'
-    >>> urljoin('ssh://domain.com/base/repo1.git', 'repo2.git')
+    >>> urljoin('ssh://domain.com/base/repo1.git/', 'repo2.git')
     'ssh://domain.com/base/repo1.git/repo2.git'
     >>> urljoin('ssh://domain.com/base/repo1.git', '../repo2.git')
     'ssh://domain.com/base/repo2.git'
+
+    >>> urljoin(None, 'repo2.git')
+    'repo2.git'
+    >>> urljoin(None, '../repo2.git')
+    '../repo2.git'
     """
+    if not base:
+        return url
+
     urlparsed = parse.urlparse(url)
     if urlparsed.scheme:
         return url
-    assert base
+
     if not base.endswith("/"):
         base = f"{base}/"
     baseparsed = parse.urlparse(base)

@@ -1,3 +1,5 @@
+from pytest import raises
+
 from anyrepo.manifest import Defaults, Manifest, Project, Remote
 
 
@@ -27,6 +29,25 @@ def test_defaults():
     assert defaults.revision == "Revision"
 
 
+def test_project():
+    """Test Project."""
+    project = Project(name="name")
+    assert project.name == "name"
+    assert project.remote is None
+    assert project.suburl is None
+    assert project.url is None
+    assert project.revision is None
+    assert project.path is None
+    assert project.manifest is None
+
+    with raises(ValueError) as raised:
+        Project(name="name", remote="remote", url="url")
+    with raises(ValueError) as raised:
+        Project(name="name", suburl="suburl", url="url")
+    with raises(ValueError) as raised:
+        Project(name="name", suburl="suburl")
+
+
 def test_manifest():
     """Test Manifest."""
     manifest = Manifest()
@@ -42,29 +63,44 @@ def test_manifest_from_data():
             "revision": "v1.3",
         },
         "remotes": [
-            {"name": "remote1", "urlbase": "https://git.example.com/base1"},
             {"name": "remote2", "urlbase": "https://git.example.com/base2"},
+            {"name": "remote1", "urlbase": "https://git.example.com/base1"},
         ],
         "projects": [
             {"name": "dep1", "remote": "remote1"},
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
+            {"name": "dep3", "remote": "remote1", "suburl": "sub.git", "revision": "main"},
         ],
     }
     manifest = Manifest(**data)
     assert manifest.defaults == Defaults(remote="remote1", revision="v1.3")
     assert manifest.remotes == [
-        Remote(name="remote1", urlbase="https://git.example.com/base1"),
         Remote(name="remote2", urlbase="https://git.example.com/base2"),
+        Remote(name="remote1", urlbase="https://git.example.com/base1"),
     ]
-    projects = [
-        Project(name="dep1", remote="remote1", url=None, revision=None, path=None, manifest=None),
-        Project(
-            name="dep2",
-            remote=None,
-            url="https://git.example.com/base3/dep2.git",
-            revision=None,
-            path="dep2dir",
-            manifest=None,
-        ),
+    assert manifest.projects == [
+        Project(name="dep1", remote="remote1"),
+        Project(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
+        Project(name="dep3", remote="remote1", suburl="sub.git", revision="main"),
     ]
-    assert manifest.projects == projects
+
+    # resolved
+    rmanifest = manifest.resolve()
+    assert rmanifest.defaults == Defaults(remote="remote1", revision="v1.3")
+    assert rmanifest.remotes == [
+        Remote(name="remote2", urlbase="https://git.example.com/base2"),
+        Remote(name="remote1", urlbase="https://git.example.com/base1"),
+    ]
+    assert rmanifest.projects == [
+        Project(name="dep1", url="https://git.example.com/base1/dep1", revision="v1.3", path="dep1"),
+        Project(name="dep2", url="https://git.example.com/base3/dep2.git", revision="v1.3", path="dep2dir"),
+        Project(name="dep3", url="https://git.example.com/base1/sub.git", revision="main", path="dep3"),
+    ]
+
+    with raises(ValueError):
+        Manifest(
+            projects=[
+                {"name": "dep1", "remote": "remote1"},
+                {"name": "dep2", "url": "https://git.example.com/base3/dep2.git"},
+            ]
+        ).resolve()

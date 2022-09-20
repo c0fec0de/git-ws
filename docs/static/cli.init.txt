@@ -1,0 +1,11 @@
+Usage: anyrepo init [OPTIONS]
+
+  Initialize AnyRepo workspace and create all dependent git clones.
+
+  The actual directory MUST be a valid git clone, which has been be either
+  created by 'git init' or 'git clone'.
+
+Options:
+  -P, --project TEXT  Project path to operate on only. All by default. This
+                      option can be specified multiple times.
+  --help              Show this message and exit.
