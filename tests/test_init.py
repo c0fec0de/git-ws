@@ -1,19 +1,39 @@
-import pathlib
+"""Initialization Tests."""
+from click.testing import CliRunner
 
-from pytest import raises
-
-from anyrepo import AnyRepo, NoGitError
+from anyrepo import AnyRepo
+from anyrepo.cli import main
 
 from .util import chdir, run
 
 
-def test_nogit(tmp_path):
+def test_cli_nogit(tmp_path):
     """Init without GIT repo."""
     mainpath = tmp_path / "main"
     mainpath.mkdir(parents=True)
     with chdir(mainpath):
-        with raises(NoGitError):
-            AnyRepo.init()
+        result = CliRunner().invoke(main, ["init"])
+    assert result.exit_code == 1
+    assert result.output == "Error: git clone has not been initialized yet (Try 'git init' or 'git clone').\n"
+
+
+def test_cli_git(tmp_path):
+    """Init with GIT repo."""
+    mainpath = tmp_path / "main"
+    mainpath.mkdir(parents=True)
+    with chdir(mainpath):
+        run(("git", "init"), check=True)
+        assert (mainpath / ".git").exists()
+        result = CliRunner().invoke(main, ["init"])
+        assert result.exit_code == 0
+        assert not result.output
+
+    #     arepo = AnyRepo.init()
+
+    # assert arepo.rootpath == tmp_path
+    # configfile = arepo.rootpath / ".anyrepo"
+    # assert configfile.exists()
+    # assert configfile.is_file()
 
 
 def test_git(tmp_path):
@@ -21,7 +41,7 @@ def test_git(tmp_path):
     mainpath = tmp_path / "main"
     mainpath.mkdir(parents=True)
     with chdir(mainpath):
-        run(("git", "init"))
+        run(("git", "init"), check=True)
         arepo = AnyRepo.init()
 
     assert arepo.rootpath == tmp_path

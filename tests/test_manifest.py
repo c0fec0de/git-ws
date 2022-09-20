@@ -1,3 +1,4 @@
+"""Manifest Testing."""
 from pytest import raises
 
 from anyrepo.manifest import Defaults, Manifest, Project, Remote
@@ -40,11 +41,11 @@ def test_project():
     assert project.path is None
     assert project.manifest is None
 
-    with raises(ValueError) as raised:
+    with raises(ValueError):
         Project(name="name", remote="remote", url="url")
-    with raises(ValueError) as raised:
+    with raises(ValueError):
         Project(name="name", suburl="suburl", url="url")
-    with raises(ValueError) as raised:
+    with raises(ValueError):
         Project(name="name", suburl="suburl")
 
 
@@ -52,7 +53,7 @@ def test_manifest():
     """Test Manifest."""
     manifest = Manifest()
     assert manifest.defaults == Defaults()
-    assert manifest.remotes == []
+    assert not manifest.remotes
 
 
 def test_manifest_from_data():

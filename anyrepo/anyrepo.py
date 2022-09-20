@@ -119,7 +119,6 @@ class AnyRepo(BaseModel):
 
     def _update(self, project):
         """Update."""
-        assert False, "TODO"
 
     def get_subpath(self, path):
         """Return `path` relative to workspace."""
