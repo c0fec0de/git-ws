@@ -2,7 +2,7 @@
 import logging
 
 import click
-import coloredlogs
+import coloredlogs  # type: ignore
 
 from anyrepo import AnyRepo
 from anyrepo._util import get_loglevel

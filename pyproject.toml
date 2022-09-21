@@ -21,6 +21,8 @@ pylint = '>=2.13.5'
 isort = '>=5.9'
 coverage = '>=6.4.4'
 sphinx = '>=5.1.1'
+mypy = "^0.971"
+sphinx-rtd-theme = "^1.0.0"
 
 
 [build-system]
@@ -69,7 +71,7 @@ basepython = python3
 
 [testenv]
 allowlist_externals = *
-commands = 
+commands =
     poetry install
     black .
     isort .
@@ -78,5 +80,6 @@ commands =
     coverage html
     coverage xml
     pylint anyrepo tests
+    mypy anyrepo
     make html -C docs
 """

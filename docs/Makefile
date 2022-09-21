@@ -21,9 +21,8 @@ help:
 
 
 api:
-	sphinx-apidoc --output-dir api.tmp .. ../anyrepo/cli ../docs ../tests $(wildcard ../*.py) --separate --force --module-first
-	-rsync -rvct api.tmp/ api/ --exclude modules.rst --exclude anyrepo.rst
-	rm -rf api.tmp
+	sphinx-apidoc --output-dir api .. ../anyrepo/cli ../docs ../tests $(wildcard ../*.py) --separate --force --module-first
+.PHONY: api
 
 gen:
 	anyrepo --help > static/cli.txt

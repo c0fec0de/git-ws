@@ -30,10 +30,10 @@ def test_cli_git(tmp_path):
 
     #     arepo = AnyRepo.init()
 
-    # assert arepo.rootpath == tmp_path
-    # configfile = arepo.rootpath / ".anyrepo"
-    # assert configfile.exists()
-    # assert configfile.is_file()
+    # assert arepo.root_path == tmp_path
+    # config_file = arepo.root_path / ".anyrepo"
+    # assert config_file.exists()
+    # assert config_file.is_file()
 
 
 def test_git(tmp_path):
@@ -44,7 +44,7 @@ def test_git(tmp_path):
         run(("git", "init"), check=True)
         arepo = AnyRepo.init()
 
-    assert arepo.rootpath == tmp_path
-    configfile = arepo.rootpath / ".anyrepo"
+    assert arepo.root_path == tmp_path
+    configfile = arepo.root_path / ".anyrepo"
     assert configfile.exists()
     assert configfile.is_file()

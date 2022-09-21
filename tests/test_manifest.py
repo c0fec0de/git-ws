@@ -35,7 +35,7 @@ def test_project():
     project = Project(name="name")
     assert project.name == "name"
     assert project.remote is None
-    assert project.suburl is None
+    assert project.sub_url is None
     assert project.url is None
     assert project.revision is None
     assert project.path is None
@@ -44,9 +44,9 @@ def test_project():
     with raises(ValueError):
         Project(name="name", remote="remote", url="url")
     with raises(ValueError):
-        Project(name="name", suburl="suburl", url="url")
+        Project(name="name", sub_url="sub-url", url="url")
     with raises(ValueError):
-        Project(name="name", suburl="suburl")
+        Project(name="name", sub_url="sub-url")
 
 
 def test_manifest():
@@ -70,7 +70,7 @@ def test_manifest_from_data():
         "projects": [
             {"name": "dep1", "remote": "remote1"},
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
-            {"name": "dep3", "remote": "remote1", "suburl": "sub.git", "revision": "main"},
+            {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main"},
         ],
     }
     manifest = Manifest(**data)
@@ -82,7 +82,7 @@ def test_manifest_from_data():
     assert manifest.projects == [
         Project(name="dep1", remote="remote1"),
         Project(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
-        Project(name="dep3", remote="remote1", suburl="sub.git", revision="main"),
+        Project(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
     ]
 
     # resolved
