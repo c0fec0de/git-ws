@@ -6,7 +6,7 @@ They do not implement any business logic.
 """
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, root_validator
 
@@ -24,7 +24,7 @@ class Remote(BaseModel):
     """
 
     name: str
-    urlbase: str = None
+    urlbase: Optional[str] = None
 
 
 class Defaults(BaseModel):
@@ -36,8 +36,8 @@ class Defaults(BaseModel):
         revision: Revision
     """
 
-    remote: str = None
-    revision: str = None
+    remote: Optional[str] = None
+    revision: Optional[str] = None
 
 
 class Project(BaseModel):
@@ -56,11 +56,11 @@ class Project(BaseModel):
     """
 
     name: str
-    remote: str = None
-    suburl: str = None
-    url: str = None
-    revision: str = None
-    path: str = None
+    remote: Optional[str] = None
+    suburl: Optional[str] = None
+    url: Optional[str] = None
+    revision: Optional[str] = None
+    path: Optional[str] = None
     manifest: "Manifest" = None
 
     @root_validator
@@ -88,7 +88,7 @@ class Manifest(BaseModel):
         remotes (List[Remote]): Remote Aliases
     """
 
-    filepath: Path = None
+    filepath: Optional[Path] = None
     defaults: Defaults = Defaults()
     remotes: List[Remote] = []
     projects: List[Project] = []
@@ -140,16 +140,8 @@ class Manifest(BaseModel):
 Project.update_forward_refs()
 
 
-def create_project_filter(projectpaths=None):
+def create_project_filter(project_paths: Optional[List[Path]] = None):
     """Create filter function."""
-    if projectpaths:
-
-        def filter_(project):
-            return project.path in projectpaths
-
-    else:
-
-        def filter_(project):
-            return True
-
-    return filter_
+    if project_paths:
+        return lambda project: project.path in project_paths
+    return lambda _: True

@@ -81,27 +81,27 @@ class AnyRepo(BaseModel):
         assert False, "TODO"
         return AnyRepo()
 
-    def update(self, projectpaths=None, banner=None):
+    def update(self, project_paths=None, banner=None):
         """Create/Update all dependent projects."""
-        for project in self.iter_projects(projectpaths=projectpaths, banner=banner):
+        for project in self.iter_projects(project_paths=project_paths, banner=banner):
             self._update(project)
 
-    def foreach(self, command, projectpaths=None, banner=None):
+    def foreach(self, command, project_paths=None, banner=None):
         """Run `command` on each project."""
-        for project in self.iter_projects(projectpaths=projectpaths, banner=banner):
+        for project in self.iter_projects(project_paths=project_paths, banner=banner):
             path = self.rootpath / project.path
             run(command, cwd=path)
 
-    def iter_projects(self, projectpaths=None, banner=None):
+    def iter_projects(self, project_paths=None, banner=None):
         """
         Iterate Over Projects and yield them.
 
         Keyword Args:
-            projectpaths: Only yield projects at these paths.
+            project_paths: Only yield projects at these paths.
             banner: Print method for project banner.
         """
-        projectpaths = [self.get_subpath(path) for path in projectpaths]
-        filter_ = create_project_filter(projectpaths=projectpaths)
+        project_paths = [self.get_subpath(path) for path in project_paths]
+        filter_ = create_project_filter(project_paths=project_paths)
         banner = banner or no_banner
         for project in self._iter_projects(filter_=filter_):
             banner(f"{project.name} ({project.path})")

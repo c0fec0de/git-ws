@@ -77,7 +77,7 @@ def git(projects, command):
     """
     with exceptionhandling():
         arepo = AnyRepo.from_path()
-        arepo.foreach(("git",) + command, projectpaths=projects, banner=banner)
+        arepo.foreach(("git",) + command, project_paths=projects, banner=banner)
 
 
 @click.command()
@@ -90,7 +90,7 @@ def fetch(projects):
     """
     with exceptionhandling():
         arepo = AnyRepo.from_path()
-        arepo.foreach(("git", "fetch"), projectpaths=projects, banner=banner)
+        arepo.foreach(("git", "fetch"), project_paths=projects, banner=banner)
 
 
 @click.command()
@@ -103,7 +103,7 @@ def pull(projects):
     """
     with exceptionhandling():
         arepo = AnyRepo.from_path()
-        arepo.foreach(("git", "pull"), projectpaths=projects, banner=banner)
+        arepo.foreach(("git", "pull"), project_paths=projects, banner=banner)
 
 
 @click.command()
@@ -116,7 +116,7 @@ def rebase(projects):
     """
     with exceptionhandling():
         arepo = AnyRepo.from_path()
-        arepo.foreach(("git", "rebase"), projectpaths=projects, banner=banner)
+        arepo.foreach(("git", "rebase"), project_paths=projects, banner=banner)
 
 
 @click.command()
@@ -129,7 +129,7 @@ def status(projects):
     """
     with exceptionhandling():
         arepo = AnyRepo.from_path()
-        arepo.foreach(("git", "status"), projectpaths=projects, banner=banner)
+        arepo.foreach(("git", "status"), project_paths=projects, banner=banner)
 
 
 @click.command()
@@ -142,7 +142,7 @@ def diff(projects):
     """
     with exceptionhandling():
         arepo = AnyRepo.from_path()
-        arepo.foreach(("git", "diff"), projectpaths=projects, banner=banner)
+        arepo.foreach(("git", "diff"), project_paths=projects, banner=banner)
 
 
 @click.command()
@@ -152,7 +152,7 @@ def foreach(projects, command):
     """Run 'command' on projects."""
     with exceptionhandling():
         arepo = AnyRepo.from_path()
-        arepo.foreach(command, projectpaths=projects, banner=banner)
+        arepo.foreach(command, project_paths=projects, banner=banner)
 
 
 main.add_command(init)
