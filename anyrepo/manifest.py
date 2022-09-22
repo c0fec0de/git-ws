@@ -10,24 +10,24 @@ from typing import Callable, List, Optional
 
 from pydantic import BaseModel, Field, root_validator
 
-from ._url import urljoin
 
-
-class Remote(BaseModel):
+class Remote(BaseModel, allow_population_by_field_name=True):
     """
-    Remote Alias
+    Remote Alias.
 
     :param name: Remote Name
-    :param urlbase: Base URL. Optional.
+    :param url_base: Base URL. Optional.
     """
 
     name: str
-    urlbase: Optional[str] = None
+    url_base: Optional[str] = Field(None, alias="url-base")
 
 
 class Defaults(BaseModel):
     """
-    Default Values
+    Default Values.
+
+    These default values are used, if the project does not specify it.
 
     :param remote: Remote Name
     :param revision: Revision
@@ -41,9 +41,13 @@ class Project(BaseModel, allow_population_by_field_name=True):
     """
     Project.
 
+    A project specifies the reference to a repository.
+    `remote` and `url` are mutually exclusive.
+    `url` and `sub-url` are likewise mutually exclusive, but `sub-url` requires a `remote`.
+
     :param name (str): Unique name.
     :param remote (str): Remote Alias
-    :param sub_url (str): URL relative to remote urlbase.
+    :param sub_url (str): URL relative to remote url_base.
     :param url (str): URL
     :param revision (str): Revision
     :param path (str): Project Filesystem Path. Relative to Workspace Directory.
@@ -55,9 +59,8 @@ class Project(BaseModel, allow_population_by_field_name=True):
     url: Optional[str] = None
     revision: Optional[str] = None
     path: Optional[str] = None
-    manifest: Optional["Manifest"] = None
 
-    @root_validator
+    @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
         # pylint: disable=no-self-argument,no-self-use
         remote = values.get("remote", None)
@@ -77,59 +80,50 @@ class Manifest(BaseModel):
     """
     Manifest.
 
-    :param defaults (Defaults): Default settings
+    :param path (Path): Path to the manifest file. Relative to git top directory.
+    :param defaults (Defaults): Default settings.
     :param remotes (List[Remote]): Remote Aliases
+    :param projects (List[Project]): Projects.
     """
 
-    filepath: Optional[Path] = None
+    path: Optional[Path] = None
     defaults: Defaults = Defaults()
     remotes: List[Remote] = []
     projects: List[Project] = []
 
-    def resolve(self, manifest_url=None) -> "Manifest":
+
+class ResolvedProject(Project):
+
+    """
+    Project with resolved `defaults` and `remotes`.
+
+    Only `name`, `url`, `revisìon`, `path` will be set.
+    """
+
+    manifest: Optional[Manifest] = None
+
+    @staticmethod
+    def from_project(manifest: Manifest, project: Project) -> "ResolvedProject":
         """
-        Return Manifest with `defaults` and `remotes` populated.
-
-        :param manifest_url: Manifest URL
-
-        `defaults` and `remotes` are untouched.
-        The project `name` and `manifest` is untouched.
-        The `url` is calculated if not given based on the remote and `name`.
-        The `remote` is cleared.
-        The `path` defaults to `name` if not given.
+        Create :any:`ResolvedProject` from `manifest` and `project`.
         """
-        return Manifest(
-            filepath=self.filepath,
-            defaults=self.defaults,
-            remotes=self.remotes,
-            projects=[self._resolve_project(project, manifest_url) for project in self.projects],
-        )
-
-    def _resolve_project(self, project, manifest_url):
         url = project.url
         if not url:
             # URL assembly
-            project_remote = project.remote or self.defaults.remote
+            project_remote = project.remote or manifest.defaults.remote
             project_sub_url = project.sub_url or project.name
-            for remote in self.remotes:
+            for remote in manifest.remotes:
                 if remote.name == project_remote:
-                    url = f"{remote.urlbase}/{project_sub_url}"
+                    url = f"{remote.url_base}/{project_sub_url}"
                     break
             else:
                 raise ValueError(f"Unknown remote {project.remote} for project {project.name}")
-        # Resolve relative URLs
-        url = urljoin(manifest_url, url)
-        return Project(
+        return ResolvedProject(
             name=project.name,
-            remote=None,
             url=url,
-            revision=project.revision or self.defaults.revision,
+            revision=project.revision or manifest.defaults.revision,
             path=project.path or project.name,
-            manifest=project.manifest,
         )
-
-
-Project.update_forward_refs()
 
 
 def create_project_filter(project_paths: Optional[List[Path]] = None) -> Callable[[Project], bool]:
