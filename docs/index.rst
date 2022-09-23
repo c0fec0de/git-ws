@@ -18,7 +18,7 @@ use. The following chapters provide details and guide through the usage of the
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User Manual:
 
    manual/why
 
@@ -28,7 +28,7 @@ for more advanced automatization of your projects:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Modules:
+   :caption: Python API:
 
    api/modules
 
