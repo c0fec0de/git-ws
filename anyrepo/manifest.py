@@ -8,7 +8,10 @@ They do not implement any business logic.
 from pathlib import Path
 from typing import Callable, List, Optional
 
+import yaml
 from pydantic import BaseModel, Field, root_validator
+
+from .exceptions import ManifestNotFoundError
 
 
 class Remote(BaseModel, allow_population_by_field_name=True):
@@ -75,7 +78,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         return values
 
 
-class Manifest(BaseModel):
+class Manifest(BaseModel, allow_population_by_field_name=True):
 
     """
     Manifest.
@@ -86,10 +89,27 @@ class Manifest(BaseModel):
     :param projects (List[Project]): Projects.
     """
 
-    path: Optional[Path] = None
+    main: Project = Field(Project(name="main"), alias="self")
     defaults: Defaults = Defaults()
     remotes: List[Remote] = []
     projects: List[Project] = []
+
+    @classmethod
+    def load(cls, path: Path) -> "Manifest":
+        """Load :any:`Manifest` from `path`."""
+        try:
+            content = path.read_text()
+        except FileNotFoundError:
+            raise ManifestNotFoundError(path) from None
+        data = yaml.load(content, Loader=yaml.Loader)
+        manifestdata = data.get("manifest", {})
+        return cls(**manifestdata)
+
+    def save(self, path: Path):
+        """Save manifest within `project_path` at :any:`Manifest.path`."""
+        data = {"manifest": self.dict(by_alias=True, exclude_none=True)}
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(yaml.dump(data))
 
 
 class ResolvedProject(Project):

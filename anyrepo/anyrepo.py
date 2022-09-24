@@ -3,41 +3,34 @@ Multi Repository Management.
 """
 
 import logging
-import pathlib
-from typing import Optional
+from pathlib import Path
 
-from pydantic import BaseModel
-
-from ._git import get_repo_top
-from ._util import no_banner, run
-from .exceptions import UninitializedError
-from .manifest import Project, create_project_filter
+# from ._git import get_repo_top
+from ._util import no_banner, resolve_relative, run
+from .const import MANIFEST_PATH_DEFAULT
+from .manifest import Manifest, Project, create_project_filter
+from .workspace import Workspace
 
 CONFIG_FILE = ".anyrepo"
 _LOGGER = logging.getLogger("anyrepo")
 
 
-class AnyRepo(BaseModel):
+class AnyRepo:
     """
     Multi Repository Management.
 
-    :param root_path: Path to the AnyRepo Root.
+    :param workspace (Workspace): workspace.
     """
 
-    root_path: pathlib.Path
+    def __init__(self, workspace: Workspace):
+        self.workspace = workspace
 
-    @staticmethod
-    def find_root_path(path: Optional[pathlib.Path] = None):
-        """Find anyrepo root directory."""
-        spath = path or pathlib.Path.cwd()
-        while True:
-            configpath = spath / CONFIG_FILE
-            if configpath.exists():
-                return spath
-            if spath == spath.parent:
-                break
-            spath = spath.parent
-        raise UninitializedError()
+    @property
+    def path(self):
+        """
+        AnyRepo Workspace Root Directory.
+        """
+        return self.workspace.path
 
     @staticmethod
     def from_path(path=None) -> "AnyRepo":
@@ -46,39 +39,36 @@ class AnyRepo(BaseModel):
 
         :param path:  Path within the workspace (Default is the current working directory).
         """
-        root_path = AnyRepo.find_root_path(path=path)
-        _LOGGER.info("root_path=%s", root_path)
-        return AnyRepo.from_root_path(root_path)
+        workspace = Workspace.from_path(path=path)
+        return AnyRepo(workspace)
 
     @staticmethod
-    def from_root_path(root_path) -> "AnyRepo":
+    def init(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> "AnyRepo":
         """
-        Create :any:`AnyRepo`.
+        Initialize Workspace for git clone at `project_path`.
 
-        :param root_path: The path to the workspace's root project.
+        :param project_path: Path within git clone. (Default is the current working directory).
+        :param manifest_path: Path to the manifest file.
         """
-        return AnyRepo(root_path=root_path)
+        assert False, "TODO"
 
-    @staticmethod
-    def init(clone_path=None) -> "AnyRepo":
-        """
-        Initialize Workspace for git clone at `clone_path`.
-
-        :param clone_path: Path within git clone. (Default is the current working directory).
-        """
-        repo_top = get_repo_top(path=clone_path)
-        # TODO: read manifest and check path
-        root_path = repo_top.parent
-        AnyRepo._init(root_path)
-        return AnyRepo.from_root_path(root_path)
+        # project_path = resolve_relative(get_repo_top(path=project_path))
+        # manifest_path = resolve_relative(manifest_path)
+        # manifest = Manifest.load(manifest_path)
+        # print(manifest)
+        # # TODO: read manifest and check path
+        # path = project_path.parent
+        # # manifest_path = MANIFEST_PATH_DEFAULT
+        # workspace = Workspace.init(path, project_path, manifest_path)
+        # return AnyRepo(workspace)
 
     @staticmethod
     def clone(url) -> "AnyRepo":
         """Clone git `url` and initialize Workspace."""
         assert False, "TODO"
-        return AnyRepo()
+        # return AnyRepo()
 
-    def update(self, project_paths=None, banner=None):
+    def update(self, project_paths=None, prune=False, banner=None):
         """Create/Update all dependent projects."""
         for project in self.iter_projects(project_paths=project_paths, banner=banner):
             self._update(project)
@@ -86,8 +76,21 @@ class AnyRepo(BaseModel):
     def foreach(self, command, project_paths=None, banner=None):
         """Run `command` on each project."""
         for project in self.iter_projects(project_paths=project_paths, banner=banner):
-            path = self.root_path / project.path
+            path = resolve_relative(Path(project.path), base=self.path)
             run(command, cwd=path)
+
+    @staticmethod
+    def create_manifest(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT):
+        """Create Manifest File at `manifest_path`within `project`."""
+        assert False, "TODO"
+        # project_path = get_repo_top(path=project_path)
+        # manifest_path = resolve_relative(manifest_path)
+        # if manifest_path.exists():
+        #     raise ManifestExistError(manifest_path)
+        # print(manifest_path)
+        # # path = resolve_relative(manifest_path, base=project_path)
+        # manifest = Manifest(path=path)
+        # manifest.save(project_path)
 
     def iter_projects(self, project_paths=None, banner=None):
         """
@@ -96,7 +99,7 @@ class AnyRepo(BaseModel):
         :param project_paths: Only yield projects at these paths.
         :param banner: Print method for project banner.
         """
-        project_paths = [self.get_subpath(path) for path in project_paths]
+        project_paths = [resolve_relative(Path(path), base=self.path) for path in project_paths]
         filter_ = create_project_filter(project_paths=project_paths)
         banner = banner or no_banner
         for project in self._iter_projects(filter_=filter_):
@@ -107,16 +110,9 @@ class AnyRepo(BaseModel):
         """Iterate over all projects."""
         yield Project(name="main", path="main")
 
-    @staticmethod
-    def _init(root_path):
-        # TODO:
-        config_path = root_path / CONFIG_FILE
-        config_path.touch()
-
     def _update(self, project):
         """Update."""
 
-    def get_subpath(self, path):
-        """Return `path` relative to workspace."""
-        path = self.root_path / pathlib.Path(path)
-        return path.relative_to(self.root_path)
+
+def parse_manifest(text: str) -> Manifest:
+    """Parse Manifest."""

@@ -1,0 +1,8 @@
+Usage: anyrepo create-manifest [OPTIONS]
+
+  Create Manifest.
+
+Options:
+  -P, --project DIRECTORY  Project Path. Current working directory by default.
+  -M, --manifest FILE      Manifest file. 'anyrepo.yaml' by default.
+  --help                   Show this message and exit.

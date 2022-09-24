@@ -12,17 +12,18 @@ python = '>=3.7,<4'
 click = '>=8.0.0'
 coloredlogs = '*'
 pydantic = '>=1.10.0'
-pyyaml = '>=6.0.0'
+pyyaml = '*'
 
 [tool.poetry.dev-dependencies]
 black = '>=21.9b0'
-pytest = '>=6.2'
-pylint = '>=2.13.5'
-isort = '>=5.9'
 coverage = '>=6.4.4'
-sphinx = '>=5.1.1'
+isort = '>=5.9'
 mypy = "^0.971"
-sphinx-rtd-theme = "^1.0.0"
+pylint = '>=2.13.5'
+pytest = '>=6.2'
+sphinx = '>=5.1.1'
+sphinx-rtd-theme = ">=1.0.0"
+types-PyYAML = '*'
 
 
 [build-system]

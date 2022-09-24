@@ -5,4 +5,5 @@ Usage: anyrepo update [OPTIONS]
 Options:
   -P, --project TEXT  Project path to operate on only. All by default. This
                       option can be specified multiple times.
+  --prune             Remove obsolete git clones
   --help              Show this message and exit.

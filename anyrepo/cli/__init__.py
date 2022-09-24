@@ -6,6 +6,7 @@ import coloredlogs  # type: ignore
 
 from anyrepo import AnyRepo
 from anyrepo._util import get_loglevel
+from anyrepo.const import MANIFEST_PATH_DEFAULT
 
 from .manifest import manifest
 from .util import banner, exceptionhandling
@@ -59,11 +60,12 @@ def clone(url, projects):
 
 @click.command()
 @_projects()
-def update(projects):
+@click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
+def update(projects, prune=False):
     """Create/update all dependent git clones."""
     with exceptionhandling():
         arepo = AnyRepo.from_path()
-        arepo.update(projects, banner=banner)
+        arepo.update(projects, prune=prune, banner=banner)
 
 
 @click.command()
@@ -155,13 +157,34 @@ def foreach(projects, command):
         arepo.foreach(command, project_paths=projects, banner=banner)
 
 
-main.add_command(init)
+@click.command()
+@click.option(
+    "--project",
+    "-P",
+    type=click.Path(file_okay=False),
+    help="Project Path. Current working directory by default.",
+)
+@click.option(
+    "--manifest",
+    "-M",
+    type=click.Path(dir_okay=False),
+    default=MANIFEST_PATH_DEFAULT,
+    help=f"Manifest file. '{MANIFEST_PATH_DEFAULT!s}' by default.",
+)
+# pylint: disable=redefined-outer-name
+def create_manifest(project, manifest):
+    """Create Manifest."""
+    AnyRepo.create_manifest(project, manifest)
+
+
 main.add_command(clone)
-main.add_command(update)
-main.add_command(git)
 main.add_command(fetch)
+main.add_command(foreach)
+main.add_command(git)
+main.add_command(init)
+main.add_command(manifest)
 main.add_command(pull)
 main.add_command(rebase)
 main.add_command(status)
-main.add_command(foreach)
-main.add_command(manifest)
+main.add_command(update)
+main.add_command(create_manifest)

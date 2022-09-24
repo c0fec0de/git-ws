@@ -1,6 +1,8 @@
 """Utilities."""
 import logging
 import subprocess
+from pathlib import Path
+from typing import Optional
 
 _LOGGER = logging.getLogger("anyrepo")
 # Dependencies to any anyrepo module are forbidden here!
@@ -18,7 +20,7 @@ def get_loglevel(verbose: int):
 
 
 def run(cmd, cwd=None, capture_output=False, check=True):
-    """Simplified wrapper around subprocess.run."""
+    """Simplified wrapper around :any:`subprocess.run`."""
     try:
         result = subprocess.run(cmd, capture_output=capture_output, check=check, cwd=cwd)
         _LOGGER.info("run(%r) OK stdout=%r stderr=%r", cmd, result.stdout, result.stderr)
@@ -28,5 +30,22 @@ def run(cmd, cwd=None, capture_output=False, check=True):
         raise error
 
 
-def no_banner(text):
+def no_banner(text: str):
     """Just suppress `text`."""
+
+
+def resolve_relative(path: Path, base: Optional[Path] = None):
+    """
+    Return resolved `path` relative to `base`.
+
+    :param path (Path): Path
+    :param base (Path): Base Path. Current Working Directory by default.
+    """
+    if not base:
+        base = Path.cwd()
+    path = base / path
+    path = path.resolve()
+    try:
+        return path.relative_to(base)
+    except ValueError:
+        return path.resolve()
