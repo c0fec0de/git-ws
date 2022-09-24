@@ -49,3 +49,14 @@ def resolve_relative(path: Path, base: Optional[Path] = None):
         return path.relative_to(base)
     except ValueError:
         return path.resolve()
+
+
+def path_upwards(path: Path, sub: Path) -> Path:
+    """Return `path` without `sub`."""
+    pathparts = path.parts
+    for part in reversed(sub.parts):
+        if part == pathparts[-1]:
+            pathparts = pathparts[:-1]
+        else:
+            raise ValueError(f"{sub} is not within {path}")
+    return Path(*pathparts)

@@ -5,7 +5,7 @@ import click
 import coloredlogs  # type: ignore
 
 from anyrepo import AnyRepo
-from anyrepo._util import get_loglevel
+from anyrepo._util import get_loglevel, resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
 from .manifest import manifest
@@ -43,6 +43,7 @@ def init(projects):
     """
     with exceptionhandling():
         arepo = AnyRepo.init()
+        click.echo(f"Workspace initialized at {resolve_relative(arepo.path)!s}")
         arepo.update(projects)
 
 
@@ -174,7 +175,9 @@ def foreach(projects, command):
 # pylint: disable=redefined-outer-name
 def create_manifest(project, manifest):
     """Create Manifest."""
-    AnyRepo.create_manifest(project, manifest)
+    with exceptionhandling():
+        path = AnyRepo.create_manifest(project, manifest)
+        click.echo(f"Manifest {path!s} created.")
 
 
 main.add_command(clone)

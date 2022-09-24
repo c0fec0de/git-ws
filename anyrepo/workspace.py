@@ -14,7 +14,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Info(BaseModel):
-    """Workspace Information Container."""
+    """
+    Workspace Information Container.
+
+    The workspace information container assembles all information which has to be kept persistant between tool
+    invocations.
+
+    :param main_path (Path): Path to main project. Relative to workspace root directory.
+    :param mainfest_path (Path): Path to manifest file. Relative to `main_path`.
+    """
 
     main_path: Path
     manifest_path: Path = MANIFEST_PATH_DEFAULT
@@ -28,12 +36,12 @@ class Info(BaseModel):
 
     def save(self, path: Path):
         """Save Workspace Information at AnyRepo root directory `path`."""
+        infopath = path / INFO_PATH
+        infopath.parent.mkdir(parents=True, exist_ok=True)
         data = {
             "main_path": str(self.main_path),
             "manifest_path": str(self.manifest_path),
         }
-        infopath = path / INFO_PATH
-        infopath.parent.mkdir(parents=True, exist_ok=True)
         infopath.write_text(yaml.dump(data))
 
 
@@ -43,7 +51,7 @@ class Workspace:
     Workspace.
 
     The workspace contains all git clones, but is *NOT* a git clone itself.
-    A workspace refers to a top git clone, which defines which dependent git clones should be integrated.
+    A workspace refers to a main git clone, which defines the workspace content (i.e. dependencies).
 
     :param path (Path): Workspace Root Directory.
     :param info (Info): Workspace Information.
@@ -94,11 +102,12 @@ class Workspace:
             raise InitializedError(path)
 
         # Normalize
+        main_path = main_path.resolve()
+        manifest_path = resolve_relative(main_path / manifest_path, base=main_path)
         try:
             main_path = main_path.relative_to(path)
         except ValueError:
             raise OutsideWorkspaceError(path, main_path) from None
-        manifest_path = resolve_relative(main_path / manifest_path, base=main_path)
 
         # Initialize Info
         info = Info(main_path=main_path, manifest_path=manifest_path)

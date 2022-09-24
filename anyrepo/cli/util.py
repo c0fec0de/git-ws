@@ -19,9 +19,9 @@ def exceptionhandling():
     try:
         yield
     except UninitializedError as exc:
-        raise click.ClickException(f"{exc!s}\nTry:\n\nanyrepo init\n\nor:\n\nanyrepo clone\n")
+        raise click.ClickException(f"{exc!s}\nTry:\n\nanyrepo init\n\nor:\n\nanyrepo clone")
     except NoGitError as exc:
-        raise click.ClickException(f"{exc!s}\nTry:\n\ngit init\n\nor:\n\ngit clone\n")
+        raise click.ClickException(f"{exc!s}\nTry:\n\ngit init\n\nor:\n\ngit clone")
     except ManifestNotFoundError as exc:
         raise click.ClickException(f"{exc!s}\nTry\n\nanyrepo create-manifest --manifest='{exc.path!s}'")
     except Exception as exc:

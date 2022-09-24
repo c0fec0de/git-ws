@@ -34,14 +34,18 @@ class ManifestNotFoundError(RuntimeError):
 class ManifestExistError(RuntimeError):
     """Manifest already exists."""
 
-    def __init__(self):
-        super().__init__("Manifest exists.")
+    def __init__(self, path):
+        super().__init__(f"Manifest exists at {path!s}.")
 
 
 class OutsideWorkspaceError(RuntimeError):
     """Project is located outside of Workspace."""
 
     def __init__(self, path, project_path):
-        super().__init__(f"Project {project_path} is located outside {path}")
+        super().__init__(f"Project {project_path!s} is located outside {path!s}")
         self.path = path
         self.project_path = project_path
+
+
+class ManifestError(RuntimeError):
+    """Manifest Error."""

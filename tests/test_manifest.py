@@ -1,7 +1,7 @@
 """Manifest Testing."""
 from pytest import raises
 
-from anyrepo.manifest import Defaults, Manifest, Project, Remote
+from anyrepo.manifest import Defaults, Manifest, Project, Remote, ResolvedProject
 
 
 def test_remote():
@@ -114,6 +114,15 @@ def test_manifest_from_data(tmp_path):
         "",
     ]
     assert Manifest.load(filepath) == manifest
+
+    projects = [manifest.main] + manifest.projects
+    rprojects = [ResolvedProject.from_project(manifest.defaults, manifest.remotes, project) for project in projects]
+    assert rprojects == [
+        ResolvedProject(name="main", url="https://git.example.com/base1/main", revision="v1.3", path="main"),
+        ResolvedProject(name="dep1", url="https://git.example.com/base1/dep1", revision="v1.3", path="dep1"),
+        ResolvedProject(name="dep2", url="https://git.example.com/base3/dep2.git", revision="v1.3", path="dep2dir"),
+        ResolvedProject(name="dep3", url="https://git.example.com/base1/sub.git", revision="main", path="dep3"),
+    ]
 
 
 def test_manifest_from_other_data(tmp_path):

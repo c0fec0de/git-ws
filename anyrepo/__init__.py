@@ -3,4 +3,11 @@
 import logging
 
 from .anyrepo import AnyRepo
-from .exceptions import InitializedError, ManifestNotFoundError, NoGitError, OutsideWorkspaceError, UninitializedError
+from .exceptions import (
+    InitializedError,
+    ManifestExistError,
+    ManifestNotFoundError,
+    NoGitError,
+    OutsideWorkspaceError,
+    UninitializedError,
+)

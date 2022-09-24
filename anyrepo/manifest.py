@@ -1,7 +1,7 @@
 """
 Manifest Data Container.
 
-The :any:`Manifest` and :any:`Project` classes are pure data container.
+The :any:`Manifest`, :any:`Project`, :any:`Remote` and :any:`Defaults` classes are pure data container.
 They do not implement any business logic.
 """
 
@@ -83,7 +83,7 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
     """
     Manifest.
 
-    :param path (Path): Path to the manifest file. Relative to git top directory.
+    :param main (Project): Main project.
     :param defaults (Defaults): Default settings.
     :param remotes (List[Remote]): Remote Aliases
     :param projects (List[Project]): Projects.
@@ -118,31 +118,42 @@ class ResolvedProject(Project):
     Project with resolved `defaults` and `remotes`.
 
     Only `name`, `url`, `revisìon`, `path` will be set.
+
+    :param name (str): Unique name.
+    :param url (str): URL.
+    :param revision (str): Revision.
+    :param path (str): Project Filesystem Path. Relative to Workspace Directory.
+    :param manifest (Manifest): Project Manifest.
     """
 
+    name: str
+    path: str
+    url: Optional[str] = None
+    revision: Optional[str] = None
     manifest: Optional[Manifest] = None
 
     @staticmethod
-    def from_project(manifest: Manifest, project: Project) -> "ResolvedProject":
+    def from_project(defaults: Defaults, remotes: List[Remote], project: Project) -> "ResolvedProject":
         """
         Create :any:`ResolvedProject` from `manifest` and `project`.
         """
         url = project.url
         if not url:
             # URL assembly
-            project_remote = project.remote or manifest.defaults.remote
-            project_sub_url = project.sub_url or project.name
-            for remote in manifest.remotes:
-                if remote.name == project_remote:
-                    url = f"{remote.url_base}/{project_sub_url}"
-                    break
-            else:
-                raise ValueError(f"Unknown remote {project.remote} for project {project.name}")
+            project_remote = project.remote or defaults.remote
+            if project_remote:
+                project_sub_url = project.sub_url or project.name
+                for remote in remotes:
+                    if remote.name == project_remote:
+                        url = f"{remote.url_base}/{project_sub_url}"
+                        break
+                else:
+                    raise ValueError(f"Unknown remote {project.remote} for project {project.name}")
         return ResolvedProject(
             name=project.name,
-            url=url,
-            revision=project.revision or manifest.defaults.revision,
             path=project.path or project.name,
+            url=url,
+            revision=project.revision or defaults.revision,
         )
 
 
