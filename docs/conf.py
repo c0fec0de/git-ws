@@ -15,6 +15,11 @@ author = "c0fec0de"
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
 ]
 
 templates_path = ["_templates"]

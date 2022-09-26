@@ -1,4 +1,4 @@
-"""Exceptions."""
+"""Collection Of All Exceptions Which Might Occur."""
 
 
 class UninitializedError(RuntimeError):

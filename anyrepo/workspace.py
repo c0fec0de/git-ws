@@ -1,9 +1,14 @@
-"""Workspace."""
+"""
+Workspace Handling.
+
+The :any:`Workspace` class represents the file system location containing all git clones.
+:any:`Info` is a helper.
+"""
 import logging
 from pathlib import Path
 from typing import Optional
 
-import yaml
+import tomlkit
 from pydantic import BaseModel
 
 from ._util import resolve_relative
@@ -20,8 +25,9 @@ class Info(BaseModel):
     The workspace information container assembles all information which has to be kept persistant between tool
     invocations.
 
-    :param main_path (Path): Path to main project. Relative to workspace root directory.
-    :param mainfest_path (Path): Path to manifest file. Relative to `main_path`.
+    Keyword Args:
+        main_path (Path): Path to main project. Relative to workspace root directory.
+        mainfest_path (Path): Path to manifest file. Relative to `main_path`.
     """
 
     main_path: Path
@@ -29,20 +35,43 @@ class Info(BaseModel):
 
     @staticmethod
     def load(path: Path) -> "Info":
-        """Load Workspace Information from AnyRepo root directory `path`."""
+        """
+        Load Workspace Information from AnyRepo root directory at `path`.
+
+        The workspace information is stored at `{path}/.anyrepo/info.yaml`.
+
+        Args:
+            path (Path): Path to AnyRepo root directory.
+        """
         infopath = path / INFO_PATH
-        data = yaml.load(infopath.read_text(), Loader=yaml.Loader)
-        return Info(**data)  # type: ignore
+        doc = tomlkit.parse(infopath.read_text())
+        return Info(
+            main_path=doc["main_path"],
+            manifest_path=doc["manifest_path"],
+        )
 
     def save(self, path: Path):
-        """Save Workspace Information at AnyRepo root directory `path`."""
+        """
+        Save Workspace Information at AnyRepo root directory at `path`.
+
+        The workspace information is stored at `{path}/.anyrepo/info.yaml`.
+
+        Args:
+            path (Path): Path to AnyRepo root directory.
+        """
         infopath = path / INFO_PATH
         infopath.parent.mkdir(parents=True, exist_ok=True)
-        data = {
-            "main_path": str(self.main_path),
-            "manifest_path": str(self.manifest_path),
-        }
-        infopath.write_text(yaml.dump(data))
+        try:
+            doc = tomlkit.parse(infopath.read_text())
+        except FileNotFoundError:
+            doc = tomlkit.document()
+            doc.add(tomlkit.comment("AnyRepo System File. DO NOT EDIT."))
+            doc.add(tomlkit.nl())
+            doc.add("main_path", "")  # type: ignore
+            doc.add("manifest_path", "")  # type: ignore
+        doc["main_path"] = str(self.main_path)
+        doc["manifest_path"] = str(self.manifest_path)
+        infopath.write_text(tomlkit.dumps(doc))
 
 
 class Workspace:
@@ -53,8 +82,9 @@ class Workspace:
     The workspace contains all git clones, but is *NOT* a git clone itself.
     A workspace refers to a main git clone, which defines the workspace content (i.e. dependencies).
 
-    :param path (Path): Workspace Root Directory.
-    :param info (Info): Workspace Information.
+    Args:
+        path (Path): Workspace Root Directory.
+        info (Info): Workspace Information.
     """
 
     def __init__(self, path: Path, info: Info):
@@ -64,7 +94,18 @@ class Workspace:
 
     @staticmethod
     def find_path(path: Optional[Path] = None):
-        """Find workspace root directory."""
+        """
+        Find Workspace Root Directory.
+
+        Keyword Args:
+            path (Path): directory or file within the workspace. Current working directory be default.
+
+        Raises:
+            UninitializedError: If directory of file is not within a workspace.
+
+        The workspace root directory contains a sub directory `.anyrepo`.
+        This one is searched upwards the given `path`.
+        """
         spath = path or Path.cwd()
         while True:
             anyrepopath = spath / ANYREPO_PATH
@@ -78,9 +119,16 @@ class Workspace:
     @staticmethod
     def from_path(path=None) -> "Workspace":
         """
-        Create :any:`Workspace`.
+        Create :any:`Workspace` for existing workspace at `path`.
 
-        :param path:  Path within the workspace (Default is the current working directory).
+        Keyword Args:
+            path (Path): directory or file within the workspace. Current working directory be default.
+
+        Raises:
+            UninitializedError: If directory of file is not within a workspace.
+
+        The workspace root directory contains a sub directory `.anyrepo`.
+        This one is searched upwards the given `path`.
         """
         path = Workspace.find_path(path=path)
         _LOGGER.info("path=%s", path)
@@ -93,9 +141,15 @@ class Workspace:
         """
         Initialize new :any:`Workspace` at `path`.
 
-        :param path (Path):  Path to the workspace
-        :param main_path (Path):  Path to the main project.
-        :param manifest_path (Path):  Path to the manifest file.
+        Args:
+            path (Path):  Path to the workspace
+            main_path (Path):  Path to the main project.
+
+        Keyword Args:
+            manifest_path (Path):  Path to the manifest file.
+
+        Raises:
+            OutsideWorkspaceError: `main_path` is not within `path`.
         """
         infopath = path / INFO_PATH
         if infopath.exists():

@@ -4,5 +4,5 @@ Usage: anyrepo create-manifest [OPTIONS]
 
 Options:
   -P, --project DIRECTORY  Project Path. Current working directory by default.
-  -M, --manifest FILE      Manifest file. 'anyrepo.yaml' by default.
+  -M, --manifest FILE      Manifest file. 'anyrepo.toml' by default.
   --help                   Show this message and exit.

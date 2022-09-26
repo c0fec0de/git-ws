@@ -30,6 +30,10 @@ class Git:
         path = get_repo_top(path=path)
         return Git(path=path)
 
+    def clone(self, url):
+        """Clone."""
+        run(("git", "clone", str(url), str(self.path)))
+
     def get_revision(self):
         """Get Revision."""
         result = run(("git", "branch", "--show-current"), cwd=self.path, capture_output=True)

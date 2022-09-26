@@ -1,18 +1,19 @@
 """
 Multi Repository Management.
-"""
 
+The :any:`AnyRepo` class provides a simple facade to all inner `AnyRepo` functionality.
+"""
 import logging
+import urllib
 from pathlib import Path
 
 from ._git import Git, get_repo_top
 from ._util import no_banner, path_upwards, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestError, ManifestExistError
-from .manifest import Manifest, Project, ResolvedProject, create_project_filter
+from .manifest import Manifest, Project, create_project_filter
 from .workspace import Workspace
 
-CONFIG_FILE = ".anyrepo"
 _LOGGER = logging.getLogger("anyrepo")
 
 
@@ -20,8 +21,9 @@ class AnyRepo:
     """
     Multi Repository Management.
 
-    :param workspace (Workspace): workspace.
-    :param manifest (Manifest): manifest.
+    Args:
+        workspace (Workspace): workspace.
+        manifest (Manifest): manifest.
     """
 
     def __init__(self, workspace: Workspace, manifest: Manifest):
@@ -38,7 +40,7 @@ class AnyRepo:
     @staticmethod
     def from_path(path=None) -> "AnyRepo":
         """
-        Create :any:`AnyRepo`.
+        Create :any:`AnyRepo` for workspace at `path`.
 
         :param path:  Path within the workspace (Default is the current working directory).
         """
@@ -58,25 +60,32 @@ class AnyRepo:
         project_path = get_repo_top(path=project_path)
         manifest_path = resolve_relative(project_path / manifest_path)
         manifest = Manifest.load(manifest_path)
-        main = ResolvedProject.from_project(manifest.defaults, manifest.remotes, manifest.main)
         try:
-            path = path_upwards(project_path, Path(main.path))
+            path = path_upwards(project_path, Path(manifest.path or project_path.name))
         except ValueError:
-            msg = f"git clone has NOT been created at path specified by manifest main.path={main.path}"
+            msg = f"git clone has NOT been created at path specified by manifest path={manifest.path}"
             raise ManifestError(msg) from None
         workspace = Workspace.init(path, project_path, manifest_path)
         return AnyRepo(workspace, manifest)
 
     @staticmethod
-    def clone(url) -> "AnyRepo":
+    def clone(url: str, path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> "AnyRepo":
         """Clone git `url` and initialize Workspace."""
-        assert False, "TODO"
-        # return AnyRepo()
+        path = path or Path.cwd()
+        parsedurl = urllib.parse.urlparse(url)
+        name = Path(parsedurl.path).name
+        project_path = path / name
+        git = Git(project_path)
+        git.clone(url)
+        manifest_path = resolve_relative(project_path / manifest_path)
+        manifest = Manifest.load(manifest_path)
+        workspace = Workspace.init(path, project_path, manifest_path)
+        return AnyRepo(workspace, manifest)
 
     def update(self, project_paths=None, prune=False, banner=None):
         """Create/Update all dependent projects."""
-        for project in self.iter_projects(project_paths=project_paths, banner=banner):
-            self._update(project)
+        # for project in self.iter_projects(project_paths=project_paths, banner=banner):
+        #     _update(workspace, project)
 
     def foreach(self, command, project_paths=None, banner=None):
         """Run `command` on each project."""
@@ -115,10 +124,3 @@ class AnyRepo:
     def _iter_projects(self, filter_=None):
         """Iterate over all projects."""
         yield Project(name="main", path="main")
-
-    def _update(self, project):
-        """Update."""
-
-
-def parse_manifest(text: str) -> Manifest:
-    """Parse Manifest."""

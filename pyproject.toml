@@ -12,7 +12,7 @@ python = '>=3.7,<4'
 click = '>=8.0.0'
 coloredlogs = '*'
 pydantic = '>=1.10.0'
-pyyaml = '*'
+tomlkit = '*'
 
 [tool.poetry.dev-dependencies]
 black = '>=21.9b0'
