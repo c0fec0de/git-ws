@@ -1,5 +1,6 @@
 """Command Line Interface."""
 import logging
+from pathlib import Path
 
 import click
 import coloredlogs  # type: ignore
@@ -22,7 +23,7 @@ def main(verbose=None):
     coloredlogs.install(level=level, fmt="%(name)s %(levelname)s %(message)s")
 
 
-def _projects():
+def _projects_option():
     return click.option(
         "--project",
         "-P",
@@ -32,9 +33,20 @@ def _projects():
     )
 
 
+def _manifest_option():
+    return click.option(
+        "--manifest",
+        "-M",
+        type=click.Path(dir_okay=False),
+        default=MANIFEST_PATH_DEFAULT,
+        help=f"Manifest file. '{MANIFEST_PATH_DEFAULT!s}' by default.",
+    )
+
+
 @click.command()
-@_projects()
-def init(projects):
+@_projects_option()
+@_manifest_option()
+def init(projects, manifest: Path = MANIFEST_PATH_DEFAULT):
     """
     Initialize AnyRepo workspace and create all dependent git clones.
 
@@ -42,35 +54,37 @@ def init(projects):
     be either created by 'git init' or 'git clone'.
     """
     with exceptionhandling():
-        arepo = AnyRepo.init()
+        arepo = AnyRepo.init(manifest_path=manifest)
         click.echo(f"Workspace initialized at {resolve_relative(arepo.path)!s}")
-        arepo.update(projects)
+        arepo.update(projects, manifest_path=manifest, banner=banner)
 
 
 @click.command()
 @click.argument("url")
-@_projects()
-def clone(url, projects):
+@_projects_option()
+@_manifest_option()
+def clone(url, projects, manifest: Path = MANIFEST_PATH_DEFAULT):
     """
     Create a git clone, initialize AnyRepo workspace and create all dependent git clones.
     """
     with exceptionhandling():
-        arepo = AnyRepo.clone(url)
-        arepo.update(projects)
+        arepo = AnyRepo.clone(url, manifest_path=manifest)
+        arepo.update(projects, manifest_path=manifest, banner=banner)
 
 
 @click.command()
-@_projects()
+@_projects_option()
+@_manifest_option()
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
-def update(projects, prune=False):
+def update(projects, manifest: Path = MANIFEST_PATH_DEFAULT, prune: bool = False):
     """Create/update all dependent git clones."""
     with exceptionhandling():
         arepo = AnyRepo.from_path()
-        arepo.update(projects, prune=prune, banner=banner)
+        arepo.update(projects, manifest_path=manifest, prune=prune, banner=banner)
 
 
 @click.command()
-@_projects()
+@_projects_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 def git(projects, command):
     """
@@ -84,7 +98,7 @@ def git(projects, command):
 
 
 @click.command()
-@_projects()
+@_projects_option()
 def fetch(projects):
     """
     Run 'git fetch' on projects.
@@ -97,7 +111,7 @@ def fetch(projects):
 
 
 @click.command()
-@_projects()
+@_projects_option()
 def pull(projects):
     """
     Run 'git pull' on projects.
@@ -110,7 +124,7 @@ def pull(projects):
 
 
 @click.command()
-@_projects()
+@_projects_option()
 def rebase(projects):
     """
     Run 'git rebase' on projects.
@@ -123,7 +137,7 @@ def rebase(projects):
 
 
 @click.command()
-@_projects()
+@_projects_option()
 def status(projects):
     """
     Run 'git status' on projects.
@@ -136,7 +150,7 @@ def status(projects):
 
 
 @click.command()
-@_projects()
+@_projects_option()
 def diff(projects):
     """
     Run 'git diff' on projects.
@@ -149,7 +163,7 @@ def diff(projects):
 
 
 @click.command()
-@_projects()
+@_projects_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 def foreach(projects, command):
     """Run 'command' on projects."""
@@ -165,14 +179,7 @@ def foreach(projects, command):
     type=click.Path(file_okay=False),
     help="Project Path. Current working directory by default.",
 )
-@click.option(
-    "--manifest",
-    "-M",
-    type=click.Path(dir_okay=False),
-    default=MANIFEST_PATH_DEFAULT,
-    help=f"Manifest file. '{MANIFEST_PATH_DEFAULT!s}' by default.",
-)
-# pylint: disable=redefined-outer-name
+@_manifest_option()
 def create_manifest(project, manifest):
     """Create Manifest."""
     with exceptionhandling():

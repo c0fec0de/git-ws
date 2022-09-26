@@ -30,6 +30,11 @@ class AnyRepo:
         self.workspace = workspace
         self.manifest = manifest
 
+    def __eq__(self, other):
+        if isinstance(other, AnyRepo):
+            return (self.workspace, self.manifest) == (other.workspace, other.manifest)
+        return NotImplemented
+
     @property
     def path(self):
         """
@@ -82,7 +87,7 @@ class AnyRepo:
         workspace = Workspace.init(path, project_path, manifest_path)
         return AnyRepo(workspace, manifest)
 
-    def update(self, project_paths=None, prune=False, banner=None):
+    def update(self, project_paths=None, manifest_path: Path = MANIFEST_PATH_DEFAULT, prune=False, banner=None):
         """Create/Update all dependent projects."""
         # for project in self.iter_projects(project_paths=project_paths, banner=banner):
         #     _update(workspace, project)

@@ -3,7 +3,8 @@ Usage: anyrepo update [OPTIONS]
   Create/update all dependent git clones.
 
 Options:
-  -P, --project TEXT  Project path to operate on only. All by default. This
-                      option can be specified multiple times.
-  --prune             Remove obsolete git clones
-  --help              Show this message and exit.
+  -P, --project TEXT   Project path to operate on only. All by default. This
+                       option can be specified multiple times.
+  -M, --manifest FILE  Manifest file. 'anyrepo.toml' by default.
+  --prune              Remove obsolete git clones
+  --help               Show this message and exit.

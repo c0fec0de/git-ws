@@ -55,7 +55,7 @@ line_length = 120
 max-line-length = 120
 extension-pkg-whitelist = "pydantic"
 disable = [
-    # Add global exceptions here
+    'redefined-outer-name',
     'fixme', # Remove me before release
     'unused-argument', # Remove me before release
     'no-self-use', # Remove me before release

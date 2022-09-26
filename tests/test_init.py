@@ -93,3 +93,6 @@ def test_git(tmp_path):
 
         with raises(InitializedError):
             AnyRepo.init()
+
+        rrepo = AnyRepo.from_path()
+        assert arepo == rrepo

@@ -6,7 +6,6 @@ from .fixtures import repos
 from .util import chdir
 
 
-# pylint: disable=redefined-outer-name
 def test_clone(tmp_path, repos):
     """Test Cloning."""
 
@@ -20,3 +19,6 @@ def test_clone(tmp_path, repos):
         #     file_path = workspace / name / "data.txt"
         #     assert file_path.exists()
         #     assert file_path.read_text() == f"{name}"
+
+        # rrepo = AnyRepo.from_path()
+        # assert arepo == rrepo

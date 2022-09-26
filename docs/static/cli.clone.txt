@@ -4,6 +4,7 @@ Usage: anyrepo clone [OPTIONS] URL
   git clones.
 
 Options:
-  -P, --project TEXT  Project path to operate on only. All by default. This
-                      option can be specified multiple times.
-  --help              Show this message and exit.
+  -P, --project TEXT   Project path to operate on only. All by default. This
+                       option can be specified multiple times.
+  -M, --manifest FILE  Manifest file. 'anyrepo.toml' by default.
+  --help               Show this message and exit.

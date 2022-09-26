@@ -92,6 +92,11 @@ class Workspace:
         self.path = path
         self.info = info
 
+    def __eq__(self, other):
+        if isinstance(other, Workspace):
+            return (self.path, self.info) == (other.path, other.info)
+        return NotImplemented
+
     @staticmethod
     def find_path(path: Optional[Path] = None):
         """
