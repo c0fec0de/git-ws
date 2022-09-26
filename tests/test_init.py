@@ -3,7 +3,7 @@ from click.testing import CliRunner
 from pytest import raises
 
 from anyrepo import AnyRepo, InitializedError, ManifestExistError
-from anyrepo.cli import main
+from anyrepo._cli import main
 
 from .util import chdir, run
 

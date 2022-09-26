@@ -5,7 +5,7 @@ description = "Multi Repository Management Tool"
 authors = []
 
 [tool.poetry.scripts]
-anyrepo = 'anyrepo.cli:main'
+anyrepo = 'anyrepo._cli:main'
 
 [tool.poetry.dependencies]
 python = '>=3.7,<4'
