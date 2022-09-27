@@ -185,16 +185,22 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
         data = dict(doc)
         return cls(**data)
 
+    def dump(self) -> str:
+        """
+        Return :any:`Manifest` as string.
+        """
+        doc = tomlkit.document()
+        for key, value in self.dict(by_alias=True, exclude_none=True, exclude_defaults=True).items():
+            if value:
+                doc[key] = value
+        return tomlkit.dumps(doc)
+
     def save(self, path: Path):
         """
         Save :any:`Manifest` at `path`.
         """
         path.parent.mkdir(parents=True, exist_ok=True)
-        doc = tomlkit.document()
-        for key, value in self.dict(by_alias=True, exclude_none=True, exclude_defaults=True).items():
-            if value:
-                doc[key] = value
-        path.write_text(tomlkit.dumps(doc))
+        path.write_text(self.dump())
 
 
 def create_project_filter(project_paths: Optional[List[Path]] = None) -> Callable[[ProjectSpec], bool]:

@@ -147,11 +147,10 @@ class AnyRepo:
             else:
                 self.colorprint("Nothing to do.", fg=_COLOR_ACTION)
 
-    def foreach(self, command, project_paths=None, manifest_path: Path = MANIFEST_PATH_DEFAULT):
+    def foreach(self, command, project_paths=None, manifest_path: Path = None):
         """Run `command` on each project."""
         workspace = self.workspace
-        manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
-        for project in ProjectIter(workspace, manifest):
+        for project in self.iter_projects(manifest_path=manifest_path):
             self.colorprint(
                 f"===== {project.name} (revision={project.revision}, path={project.path}) =====", fg=_COLOR_BANNER
             )
@@ -170,3 +169,23 @@ class AnyRepo:
         manifest = Manifest()
         manifest.save(manifest_path)
         return manifest_path
+
+    def iter_projects(self, manifest_path=None):
+        """Iterate over Projects."""
+        workspace = self.workspace
+        manifest_path = manifest_path or workspace.info.manifest_path
+        manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
+        yield from ProjectIter(self.workspace, manifest)
+
+    def iter_manifests(self, manifest_path=None):
+        """Iterate over Manifests."""
+        workspace = self.workspace
+        manifest_path = manifest_path or workspace.info.manifest_path
+        manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
+        yield from ProjectIter(self.workspace, manifest)
+        # yield from ManifestIter(self.workspace, manifest_path)
+
+    def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:
+        """Get Manifest."""
+        manifest = Manifest()
+        return manifest

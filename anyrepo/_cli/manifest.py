@@ -1,6 +1,10 @@
 """Manifest Commands."""
 import click
 
+from anyrepo import AnyRepo
+
+from .util import exceptionhandling, pass_context
+
 
 @click.group()
 def manifest():
@@ -10,45 +14,63 @@ def manifest():
 
 
 @manifest.command()
-def resolve():
+@pass_context
+def resolve(context):
     """
     Print The Manifest With All Imports Resolved.
 
     The output is a single manifest file with all dependencies and their dependencies.
     """
-    click.echo("TODO: Manifest Resolve")
+    with exceptionhandling(context):
+        anyrepo = AnyRepo.from_path()
+        manifest = anyrepo.get_manifest(resolve=True)
+        click.echo(manifest.dump())
 
 
 @manifest.command()
-def freeze():
+@pass_context
+def freeze(context):
     """
     Print The Resolved Manifest With SHAs For All Project Revisions.
 
     The output is identical to resolve, a single manifest file with all dependencies and their dependencies.
     Revisions are replaced by the actual SHAs.
     """
-    click.echo("TODO: Manifest Freeze")
+    with exceptionhandling(context):
+        anyrepo = AnyRepo.from_path()
+        manifest = anyrepo.get_manifest(freeze=True, resolve=True)
+        click.echo(manifest.dump())
 
 
 @manifest.command()
-def validate():
+@pass_context
+def validate(context):
     """
     Validate The Current Manifest, Exiting With An Error On Issues.
     """
-    click.echo("TODO: Manifest Validate")
+    with exceptionhandling(context):
+        AnyRepo.from_path()
 
 
 @manifest.command()
-def path():
+@pass_context
+def path(context):
     """
     Print Path to Main Manifest File.
     """
-    click.echo("TODO: Manifest Path")
+    with exceptionhandling(context):
+        anyrepo = AnyRepo.from_path()
+        manifest_path = anyrepo.workspace.manifest_path
+        click.echo(str(manifest_path))
 
 
 @manifest.command()
-def paths():
+@pass_context
+def paths(context):
     """
     Print Paths to ALL Manifest Files.
     """
-    click.echo("TODO: Manifest Paths")
+    with exceptionhandling(context):
+        anyrepo = AnyRepo.from_path()
+        for manifest_path, _ in anyrepo.iter_manifests():
+            click.echo(str(manifest_path))

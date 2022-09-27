@@ -165,3 +165,25 @@ def _test_foreach(tmp_path, arepo, command):
         "",
     ]
     assert result.exit_code == 0
+
+
+def test_manifest_path(tmp_path, arepo):
+    """Manifest Path."""
+    result = CliRunner().invoke(main, ["manifest", "path"])
+    manifest_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
+    assert result.output.split("\n") == [
+        f"{manifest_path!s}",
+        "",
+    ]
+    assert result.exit_code == 0
+
+
+# def test_manifest_paths(tmp_path, arepo):
+#     """Manifest Paths."""
+#     result = CliRunner().invoke(main, ["manifest", "path"])
+#     manifest_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
+#     assert result.output.split("\n") == [
+#         f"{manifest_path!s}",
+#         "",
+#     ]
+#     assert result.exit_code == 0

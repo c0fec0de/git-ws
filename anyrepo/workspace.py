@@ -178,3 +178,8 @@ class Workspace:
     def main_path(self) -> Path:
         """Path to main project."""
         return self.path / self.info.main_path
+
+    @property
+    def manifest_path(self) -> Path:
+        """Path to manifest."""
+        return self.main_path / self.info.manifest_path
