@@ -4,14 +4,17 @@ Multi Repository Management.
 The :any:`AnyRepo` class provides a simple facade to all inner `AnyRepo` functionality.
 """
 import logging
+import shlex
 import urllib
 from pathlib import Path
+from typing import Callable, Optional
 
 from ._git import Git, get_repo_top
-from ._util import no_banner, path_upwards, resolve_relative, run
+from ._util import no_banner, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
-from .exceptions import ManifestError, ManifestExistError
-from .manifest import Manifest, Project, create_project_filter
+from .exceptions import ManifestExistError
+from .manifest import Manifest
+from .projectiter import ProjectIter
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("anyrepo")
@@ -26,9 +29,10 @@ class AnyRepo:
         manifest (Manifest): manifest.
     """
 
-    def __init__(self, workspace: Workspace, manifest: Manifest):
+    def __init__(self, workspace: Workspace, manifest: Manifest, banner: Callable[[str], None] = None):
         self.workspace = workspace
         self.manifest = manifest
+        self.banner: Callable[[str], None] = banner or no_banner
 
     def __eq__(self, other):
         if isinstance(other, AnyRepo):
@@ -36,67 +40,98 @@ class AnyRepo:
         return NotImplemented
 
     @property
-    def path(self):
+    def path(self) -> Path:
         """
         AnyRepo Workspace Root Directory.
         """
         return self.workspace.path
 
     @staticmethod
-    def from_path(path=None) -> "AnyRepo":
+    def from_path(path: Optional[Path] = None, banner: Callable[[str], None] = None) -> "AnyRepo":
         """
         Create :any:`AnyRepo` for workspace at `path`.
 
-        :param path:  Path within the workspace (Default is the current working directory).
+        Keyword Args:
+            path:  Path within the workspace (Default is the current working directory).
         """
         workspace = Workspace.from_path(path=path)
         manifest_path = workspace.path / workspace.info.main_path / workspace.info.manifest_path
         manifest = Manifest.load(manifest_path)
-        return AnyRepo(workspace, manifest)
+        return AnyRepo(workspace, manifest, banner=banner)
 
     @staticmethod
-    def init(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> "AnyRepo":
+    def from_paths(
+        path: Path, project_path: Path, manifest_path: Path, banner: Callable[[str], None] = None
+    ) -> "AnyRepo":
+        """
+        Create :any:`AnyRepo` for workspace at `path`.
+
+        Keyword Args:
+            path:  Path within the workspace (Default is the current working directory).
+            project_path:  Main Project Path.
+            mainfest_path:  Manifest File Path.
+        """
+        manifest_path = resolve_relative(project_path / manifest_path)
+        manifest = Manifest.load(manifest_path)
+        workspace = Workspace.init(path, project_path, manifest_path)
+        return AnyRepo(workspace, manifest, banner=banner)
+
+    @staticmethod
+    def init(
+        project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT, banner: Callable[[str], None] = None
+    ) -> "AnyRepo":
         """
         Initialize Workspace for git clone at `project_path`.
 
         :param project_path: Path within git clone. (Default is the current working directory).
         :param manifest_path: Path to the manifest file.
         """
+        banner = banner or no_banner
         project_path = get_repo_top(path=project_path)
+        name = project_path.name
+        banner(f"{name} (revision=None, path={name})")
         manifest_path = resolve_relative(project_path / manifest_path)
-        manifest = Manifest.load(manifest_path)
-        try:
-            path = path_upwards(project_path, Path(manifest.path or project_path.name))
-        except ValueError:
-            msg = f"git clone has NOT been created at path specified by manifest path={manifest.path}"
-            raise ManifestError(msg) from None
-        workspace = Workspace.init(path, project_path, manifest_path)
-        return AnyRepo(workspace, manifest)
+        path = project_path.parent
+        return AnyRepo.from_paths(path, project_path, manifest_path, banner=banner)
 
     @staticmethod
-    def clone(url: str, path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> "AnyRepo":
+    def clone(
+        url: str, path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT, banner: Callable[[str], None] = None
+    ) -> "AnyRepo":
         """Clone git `url` and initialize Workspace."""
+        banner = banner or no_banner
         path = path or Path.cwd()
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
+        banner(f"{name} (revision=None, path={name})")
         project_path = path / name
         git = Git(project_path)
         git.clone(url)
-        manifest_path = resolve_relative(project_path / manifest_path)
-        manifest = Manifest.load(manifest_path)
-        workspace = Workspace.init(path, project_path, manifest_path)
-        return AnyRepo(workspace, manifest)
+        return AnyRepo.from_paths(path, project_path, manifest_path, banner=banner)
 
-    def update(self, project_paths=None, manifest_path: Path = MANIFEST_PATH_DEFAULT, prune=False, banner=None):
+    def update(self, project_paths=None, manifest_path: Path = MANIFEST_PATH_DEFAULT, prune=False):
         """Create/Update all dependent projects."""
-        # for project in self.iter_projects(project_paths=project_paths, banner=banner):
-        #     _update(workspace, project)
+        assert not prune, "TODO"
+        workspace = self.workspace
+        manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
+        for rproject in ProjectIter(workspace, manifest, skip_main=True, resolve_url=True):
+            self.banner(f"{rproject.name} (revision={rproject.revision}, path={rproject.path})")
+            project_path = resolve_relative(workspace.path / rproject.path)
+            git = Git(project_path)
+            if not git.is_cloned():
+                git.clone(rproject.url, branch=rproject.revision)
+            elif rproject.revision:
+                git.checkout(rproject.revision)
 
-    def foreach(self, command, project_paths=None, banner=None):
+    def foreach(self, command, project_paths=None, manifest_path: Path = MANIFEST_PATH_DEFAULT):
         """Run `command` on each project."""
-        for project in self.iter_projects(project_paths=project_paths, banner=banner):
-            path = resolve_relative(Path(project.path), base=self.path)
-            run(command, cwd=path)
+        workspace = self.workspace
+        manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
+        for rproject in ProjectIter(workspace, manifest, resolve_url=True):
+            self.banner(f"{rproject.name} (revision={rproject.revision}, path={rproject.path})")
+            project_path = resolve_relative(workspace.path / rproject.path)
+            print(shlex.join(command))
+            run(command, cwd=project_path)
 
     @staticmethod
     def create_manifest(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
@@ -105,27 +140,6 @@ class AnyRepo:
         manifest_path = resolve_relative(git.path / manifest_path)
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
-        name = git.path.name
-        revision = git.get_revision()
-        main = Project(name=name, revision=revision)
-        manifest = Manifest(main=main)
+        manifest = Manifest()
         manifest.save(manifest_path)
         return manifest_path
-
-    def iter_projects(self, project_paths=None, banner=None):
-        """
-        Iterate Over Projects and yield them.
-
-        :param project_paths: Only yield projects at these paths.
-        :param banner: Print method for project banner.
-        """
-        project_paths = [resolve_relative(Path(path), base=self.path) for path in project_paths]
-        filter_ = create_project_filter(project_paths=project_paths)
-        banner = banner or no_banner
-        for project in self._iter_projects(filter_=filter_):
-            banner(f"{project.name} ({project.path})")
-            yield project
-
-    def _iter_projects(self, filter_=None):
-        """Iterate over all projects."""
-        yield Project(name="main", path="main")

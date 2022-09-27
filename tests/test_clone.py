@@ -13,12 +13,13 @@ def test_clone(tmp_path, repos):
     workspace.mkdir()
 
     with chdir(workspace):
-        AnyRepo.clone(str(repos / "main"))
+        arepo = AnyRepo.clone(str(repos / "main"))
+        arepo.update()
 
-        # for name in ("main", "dep1", "dep2", "dep3", "dep4"):
-        #     file_path = workspace / name / "data.txt"
-        #     assert file_path.exists()
-        #     assert file_path.read_text() == f"{name}"
+        for name in ("main", "dep1", "dep2", "dep3", "dep4"):
+            file_path = workspace / name / "data.txt"
+            assert file_path.exists()
+            assert file_path.read_text() == f"{name}"
 
         # rrepo = AnyRepo.from_path()
         # assert arepo == rrepo

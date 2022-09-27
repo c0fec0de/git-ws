@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Optional
 
 import tomlkit
-from pydantic import BaseModel
 
+from ._basemodel import BaseModel
 from ._util import resolve_relative
 from .const import ANYREPO_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError
@@ -173,3 +173,8 @@ class Workspace:
         info.save(path)
         _LOGGER.info("Initialized %s %s %s", path, info.main_path, info.manifest_path)
         return Workspace(path, info)
+
+    @property
+    def main_path(self) -> Path:
+        """Path to main project."""
+        return self.path / self.info.main_path

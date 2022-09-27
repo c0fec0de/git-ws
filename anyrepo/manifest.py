@@ -10,8 +10,11 @@ from pathlib import Path
 from typing import Callable, List, Optional
 
 import tomlkit
-from pydantic import BaseModel, Field, root_validator
+from pydantic import Field, root_validator
 
+from ._basemodel import BaseModel
+from ._url import urljoin
+from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestNotFoundError
 
 
@@ -64,6 +67,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         url (str): URL
         revision (str): Revision
         path (str): Project Filesystem Path. Relative to Workspace Root Directory.
+        manifest_path (str): Path to manifest. Relative to Project Filesystem Path. `anyrepo.toml` by default.
     """
 
     name: str
@@ -72,6 +76,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
     url: Optional[str] = None
     revision: Optional[str] = None
     path: Optional[str] = None
+    manifest_path: str = str(MANIFEST_PATH_DEFAULT)
 
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
@@ -102,13 +107,12 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
         dependencies: Dependency Projects.
     """
 
-    path: Optional[str] = None
     defaults: Defaults = Defaults()
     remotes: List[Remote] = []
     dependencies: List[Project] = []
 
     @classmethod
-    def load(cls, path: Path) -> "Manifest":
+    def load(cls, path: Path, default: Optional["Manifest"] = None) -> "Manifest":
         """
         Load :any:`Manifest` from `path`.
 
@@ -118,6 +122,8 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
         try:
             content = path.read_text()
         except FileNotFoundError:
+            if default:
+                return default
             raise ManifestNotFoundError(path) from None
         doc = tomlkit.parse(content)
         data = dict(doc)
@@ -129,7 +135,7 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
         """
         path.parent.mkdir(parents=True, exist_ok=True)
         doc = tomlkit.document()
-        for key, value in self.dict(by_alias=True, exclude_none=True).items():
+        for key, value in self.dict(by_alias=True, exclude_none=True, exclude_defaults=True).items():
             if value:
                 doc[key] = value
         path.write_text(tomlkit.dumps(doc))
@@ -154,10 +160,11 @@ class ResolvedProject(Project):
     path: str
     url: Optional[str] = None
     revision: Optional[str] = None
-    manifest: Optional[Manifest] = None
 
     @staticmethod
-    def from_project(defaults: Defaults, remotes: List[Remote], project: Project) -> "ResolvedProject":
+    def from_project(
+        defaults: Defaults, remotes: List[Remote], project: Project, refurl: Optional[str] = None
+    ) -> "ResolvedProject":
         """
         Create :any:`ResolvedProject` from `defaults`, `remotes` and `project`.
 
@@ -178,11 +185,15 @@ class ResolvedProject(Project):
                         break
                 else:
                     raise ValueError(f"Unknown remote {project.remote} for project {project.name}")
+
+        # Resolve relative URLs.
+        url = urljoin(refurl, url)
         return ResolvedProject(
             name=project.name,
             path=project.path or project.name,
             url=url,
             revision=project.revision or defaults.revision,
+            manifest_path=project.manifest_path,
         )
 
 

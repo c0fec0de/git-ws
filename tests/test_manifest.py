@@ -38,7 +38,6 @@ def test_project():
     assert project.sub_url is None
     assert project.url is None
     assert project.revision is None
-    assert project.path is None
 
     with raises(ValueError):
         Project(name="name", remote="remote", url="url")
@@ -51,7 +50,6 @@ def test_project():
 def test_manifest():
     """Test Manifest."""
     manifest = Manifest()
-    assert manifest.path is None
     assert manifest.defaults == Defaults()
     assert not manifest.remotes
     assert not manifest.dependencies
@@ -75,7 +73,6 @@ def test_manifest_from_data(tmp_path):
         ],
     }
     manifest = Manifest(**data)
-    assert manifest.path is None
     assert manifest.defaults == Defaults(remote="remote1", revision="v1.3")
     assert manifest.remotes == [
         Remote(name="remote2", url_base="https://git.example.com/base2"),
@@ -133,7 +130,6 @@ def test_manifest_from_data(tmp_path):
 def test_manifest_from_other_data(tmp_path):
     """Determine Manifest from Other Data."""
     data = {
-        "path": "root",
         "defaults": {
             "remote": "remote1",
         },
@@ -144,7 +140,6 @@ def test_manifest_from_other_data(tmp_path):
         ],
     }
     manifest = Manifest(**data)
-    assert manifest.path == "root"
     assert manifest.defaults == Defaults(remote="remote1")
     assert not manifest.remotes
     assert manifest.dependencies == [
