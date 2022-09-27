@@ -18,6 +18,13 @@ class Context(BaseModel):
 pass_context = click.make_pass_decorator(Context)
 
 
+class Error(click.ClickException):
+    """Common CLI Error."""
+
+    def format_message(self) -> str:
+        return click.style(self.message, fg="red")
+
+
 @contextmanager
 def exceptionhandling(context: Context):
     """
@@ -32,16 +39,16 @@ def exceptionhandling(context: Context):
         yield
     except UninitializedError as exc:
         _print_traceback(context, exc)
-        raise click.ClickException(f"{exc!s}\nTry:\n\nanyrepo init\n\nor:\n\nanyrepo clone")
+        raise Error(f"{exc!s} Try:\n\n    anyrepo init\n\nor:\n\n    anyrepo clone\n") from None
     except NoGitError as exc:
         _print_traceback(context, exc)
-        raise click.ClickException(f"{exc!s}\nTry:\n\ngit init\n\nor:\n\ngit clone")
+        raise Error(f"{exc!s} Try:\n\n    git init\n\nor:\n\n    git clone\n") from None
     except ManifestNotFoundError as exc:
         _print_traceback(context, exc)
-        raise click.ClickException(f"{exc!s}\nTry\n\nanyrepo create-manifest --manifest='{exc.path!s}'")
+        raise Error(f"{exc!s} Try\n\n    anyrepo create-manifest --manifest='{exc.path!s}'\n") from None
     except Exception as exc:
         _print_traceback(context, exc)
-        raise click.ClickException(f"{exc!s}")
+        raise Error(f"{exc!s}") from None
 
 
 def _print_traceback(context: Context, exc: Exception):

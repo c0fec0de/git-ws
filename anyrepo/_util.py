@@ -31,7 +31,7 @@ def run(cmd, cwd=None, capture_output=False, check=True):
         raise error
 
 
-def no_banner(text: str):
+def no_colorprint(text: str, **kwargs):
     """Just suppress `text`."""
 
 

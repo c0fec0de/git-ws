@@ -37,11 +37,11 @@ class Git:
         result = self._run(("rev-parse", "--show-cdup"), cwd=self.path, capture_output=True, check=False)
         return not result.stderr and not result.stdout.strip()
 
-    def clone(self, url, branch=None):
+    def clone(self, url, revision=None):
         """Clone."""
         cmd = ["git", "clone"]
-        if branch:
-            cmd += ["--branch", branch]
+        if revision:
+            cmd += ["--branch", revision]
         cmd += ["--", str(url), str(self.path)]
         run(cmd)
 
@@ -59,8 +59,23 @@ class Git:
             return None
         return result.stdout.decode("utf-8")
 
+    def is_branch(self, revision=None) -> bool:
+        """Check if `revision` is a branch."""
+        revision = revision or self.get_revision()
+        # TODO: is_branch
+        return True
+
     def checkout(self, revision):
         """Checkout Revision."""
+        # TODO: checkout
+
+    def pull(self):
+        """Pull."""
+        self._run(("pull",))
+
+    def rebase(self):
+        """Rebase."""
+        self._run(("rebase",))
 
     def _run(self, cmd, cwd=None, **kwargs):
         cwd = cwd or self.path

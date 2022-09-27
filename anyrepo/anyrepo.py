@@ -7,10 +7,10 @@ import logging
 import shlex
 import urllib
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Optional
 
 from ._git import Git, get_repo_top
-from ._util import no_banner, resolve_relative, run
+from ._util import no_colorprint, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestExistError
 from .manifest import Manifest
@@ -18,6 +18,8 @@ from .projectiter import ProjectIter
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("anyrepo")
+_COLOR_BANNER = "green"
+_COLOR_ACTION = "magenta"
 
 
 class AnyRepo:
@@ -29,10 +31,10 @@ class AnyRepo:
         manifest (Manifest): manifest.
     """
 
-    def __init__(self, workspace: Workspace, manifest: Manifest, banner: Callable[[str], None] = None):
+    def __init__(self, workspace: Workspace, manifest: Manifest, colorprint=None):
         self.workspace = workspace
         self.manifest = manifest
-        self.banner: Callable[[str], None] = banner or no_banner
+        self.colorprint = colorprint or no_colorprint
 
     def __eq__(self, other):
         if isinstance(other, AnyRepo):
@@ -47,7 +49,7 @@ class AnyRepo:
         return self.workspace.path
 
     @staticmethod
-    def from_path(path: Optional[Path] = None, banner: Callable[[str], None] = None) -> "AnyRepo":
+    def from_path(path: Optional[Path] = None, colorprint=None) -> "AnyRepo":
         """
         Create :any:`AnyRepo` for workspace at `path`.
 
@@ -57,12 +59,10 @@ class AnyRepo:
         workspace = Workspace.from_path(path=path)
         manifest_path = workspace.path / workspace.info.main_path / workspace.info.manifest_path
         manifest = Manifest.load(manifest_path)
-        return AnyRepo(workspace, manifest, banner=banner)
+        return AnyRepo(workspace, manifest, colorprint=colorprint)
 
     @staticmethod
-    def from_paths(
-        path: Path, project_path: Path, manifest_path: Path, banner: Callable[[str], None] = None
-    ) -> "AnyRepo":
+    def from_paths(path: Path, project_path: Path, manifest_path: Path, colorprint=None) -> "AnyRepo":
         """
         Create :any:`AnyRepo` for workspace at `path`.
 
@@ -71,14 +71,16 @@ class AnyRepo:
             project_path:  Main Project Path.
             mainfest_path:  Manifest File Path.
         """
-        manifest_path = resolve_relative(project_path / manifest_path)
+        manifest_path = project_path / manifest_path
         manifest = Manifest.load(manifest_path)
-        workspace = Workspace.init(path, project_path, manifest_path)
-        return AnyRepo(workspace, manifest, banner=banner)
+        workspace = Workspace.init(path, project_path, resolve_relative(manifest_path, base=project_path))
+        return AnyRepo(workspace, manifest, colorprint=colorprint)
 
     @staticmethod
     def init(
-        project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT, banner: Callable[[str], None] = None
+        project_path: Path = None,
+        manifest_path: Path = MANIFEST_PATH_DEFAULT,
+        colorprint=None,
     ) -> "AnyRepo":
         """
         Initialize Workspace for git clone at `project_path`.
@@ -86,51 +88,75 @@ class AnyRepo:
         :param project_path: Path within git clone. (Default is the current working directory).
         :param manifest_path: Path to the manifest file.
         """
-        banner = banner or no_banner
+        colorprint = colorprint or no_colorprint
         project_path = get_repo_top(path=project_path)
         name = project_path.name
-        banner(f"{name} (revision=None, path={name})")
+        colorprint(f"===== {name} (revision=None, path={name}) =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(project_path / manifest_path)
         path = project_path.parent
-        return AnyRepo.from_paths(path, project_path, manifest_path, banner=banner)
+        return AnyRepo.from_paths(path, project_path, manifest_path, colorprint=colorprint)
 
     @staticmethod
     def clone(
-        url: str, path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT, banner: Callable[[str], None] = None
+        url: str,
+        path: Path = None,
+        manifest_path: Path = MANIFEST_PATH_DEFAULT,
+        colorprint=None,
     ) -> "AnyRepo":
         """Clone git `url` and initialize Workspace."""
-        banner = banner or no_banner
+        colorprint = colorprint or no_colorprint
         path = path or Path.cwd()
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
-        banner(f"{name} (revision=None, path={name})")
+        colorprint(f"===== {name} (revision=None, path={name}) =====", fg=_COLOR_BANNER)
+        colorprint(f"Cloning {url}.", fg=_COLOR_ACTION)
         project_path = path / name
         git = Git(project_path)
         git.clone(url)
-        return AnyRepo.from_paths(path, project_path, manifest_path, banner=banner)
+        return AnyRepo.from_paths(path, project_path, manifest_path, colorprint=colorprint)
 
-    def update(self, project_paths=None, manifest_path: Path = MANIFEST_PATH_DEFAULT, prune=False):
+    def update(self, project_paths=None, manifest_path: Path = MANIFEST_PATH_DEFAULT, prune=False, rebase=False):
         """Create/Update all dependent projects."""
         assert not prune, "TODO"
         workspace = self.workspace
         manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
-        for rproject in ProjectIter(workspace, manifest, skip_main=True, resolve_url=True):
-            self.banner(f"{rproject.name} (revision={rproject.revision}, path={rproject.path})")
-            project_path = resolve_relative(workspace.path / rproject.path)
+        for project in ProjectIter(workspace, manifest, skip_main=True, resolve_url=True):
+            project_path = resolve_relative(workspace.path / project.path)
+            self.colorprint(
+                f"===== {project.name} (revision={project.revision}, path={project_path}) =====", fg=_COLOR_BANNER
+            )
             git = Git(project_path)
-            if not git.is_cloned():
-                git.clone(rproject.url, branch=rproject.revision)
-            elif rproject.revision:
-                git.checkout(rproject.revision)
+            self._update(git, project, rebase)
+
+    def _update(self, git, project, rebase):
+        revision = project.revision
+        if not git.is_cloned():
+            self.colorprint(f"Cloning {project.url}.", fg=_COLOR_ACTION)
+            git.clone(project.url, revision=revision)
+        else:
+            if revision:
+                self.colorprint("Checking out.", fg=_COLOR_ACTION)
+                git.checkout(revision)
+            if git.is_branch(revision=revision):
+                if rebase:
+                    self.colorprint("Rebasing.", fg=_COLOR_ACTION)
+                    git.rebase()
+                else:
+                    self.colorprint("Pulling.", fg=_COLOR_ACTION)
+                    git.pull()
+            else:
+                self.colorprint("Nothing to do.", fg=_COLOR_ACTION)
 
     def foreach(self, command, project_paths=None, manifest_path: Path = MANIFEST_PATH_DEFAULT):
         """Run `command` on each project."""
         workspace = self.workspace
         manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
-        for rproject in ProjectIter(workspace, manifest, resolve_url=True):
-            self.banner(f"{rproject.name} (revision={rproject.revision}, path={rproject.path})")
-            project_path = resolve_relative(workspace.path / rproject.path)
-            print(shlex.join(command))
+        for project in ProjectIter(workspace, manifest, resolve_url=True):
+            self.colorprint(
+                f"===== {project.name} (revision={project.revision}, path={project.path}) =====", fg=_COLOR_BANNER
+            )
+            project_path = resolve_relative(workspace.path / project.path)
+            self.colorprint(shlex.join(command), fg=_COLOR_ACTION)
             run(command, cwd=project_path)
 
     @staticmethod

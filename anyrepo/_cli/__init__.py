@@ -10,7 +10,9 @@ from anyrepo._util import get_loglevel, resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
 from .manifest import manifest
-from .util import Context, banner, exceptionhandling, pass_context
+from .util import Context, exceptionhandling, pass_context
+
+_COLOR_INFO = "blue"
 
 
 @click.group()
@@ -56,8 +58,12 @@ def init(context, manifest: Path = MANIFEST_PATH_DEFAULT):
     be either created by 'git init' or 'git clone'.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.init(manifest_path=manifest, banner=banner)
-        click.echo(f"Workspace initialized at {resolve_relative(arepo.path)!s}\nNow run:\nanyrepo update")
+        arepo = AnyRepo.init(manifest_path=manifest, colorprint=click.secho)
+        click.secho(
+            f"Workspace initialized at '{resolve_relative(arepo.path)!s}'. "
+            "Please continue with:\n\n    anyrepo update\n",
+            fg=_COLOR_INFO,
+        )
 
 
 @main.command()
@@ -69,8 +75,12 @@ def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT):
     Create a git clone, initialize AnyRepo workspace and create all dependent git clones.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.clone(url, manifest_path=manifest, banner=banner)
-        click.echo(f"Workspace initialized at {resolve_relative(arepo.path)!s}\nNow run:\nanyrepo update")
+        arepo = AnyRepo.clone(url, manifest_path=manifest, colorprint=click.secho)
+        click.secho(
+            f"Workspace initialized at '{resolve_relative(arepo.path)!s}'. "
+            "Please continue with:\n\n    anyrepo update\n",
+            fg=_COLOR_INFO,
+        )
 
 
 @main.command()
@@ -81,7 +91,7 @@ def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT):
 def update(context, projects, manifest: Path = MANIFEST_PATH_DEFAULT, prune: bool = False):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(banner=banner)
+        arepo = AnyRepo.from_path(colorprint=click.secho)
         arepo.update(projects, manifest_path=manifest, prune=prune)
 
 
@@ -96,7 +106,7 @@ def git(context, projects, command):
     This command behaves identical to `anyrepo foreach git`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(banner=banner)
+        arepo = AnyRepo.from_path(colorprint=click.secho)
         arepo.foreach(("git",) + command, project_paths=projects)
 
 
@@ -110,7 +120,7 @@ def fetch(context, projects):
     This command behaves identical to `anyrepo foreach git fetch`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(banner=banner)
+        arepo = AnyRepo.from_path(colorprint=click.secho)
         arepo.foreach(("git", "fetch"), project_paths=projects)
 
 
@@ -124,7 +134,7 @@ def pull(context, projects):
     This command behaves identical to `anyrepo foreach git pull`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(banner=banner)
+        arepo = AnyRepo.from_path(colorprint=click.secho)
         arepo.foreach(("git", "pull"), project_paths=projects)
 
 
@@ -138,7 +148,7 @@ def rebase(context, projects):
     This command behaves identical to `anyrepo foreach git rebase`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(banner=banner)
+        arepo = AnyRepo.from_path(colorprint=click.secho)
         arepo.foreach(("git", "rebase"), project_paths=projects)
 
 
@@ -152,7 +162,7 @@ def status(context, projects):
     This command behaves identical to `anyrepo foreach git status`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(banner=banner)
+        arepo = AnyRepo.from_path(colorprint=click.secho)
         arepo.foreach(("git", "status"), project_paths=projects)
 
 
@@ -166,7 +176,7 @@ def diff(context, projects):
     This command behaves identical to `anyrepo foreach git diff`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(banner=banner)
+        arepo = AnyRepo.from_path(colorprint=click.secho)
         arepo.foreach(("git", "diff"), project_paths=projects)
 
 
@@ -177,7 +187,7 @@ def diff(context, projects):
 def foreach(context, projects, command):
     """Run 'command' on projects."""
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(banner=banner)
+        arepo = AnyRepo.from_path(colorprint=click.secho)
         arepo.foreach(command, project_paths=projects)
 
 
@@ -194,7 +204,7 @@ def create_manifest(context, project, manifest):
     """Create Manifest."""
     with exceptionhandling(context):
         path = AnyRepo.create_manifest(project, manifest)
-        click.echo(f"Manifest {path!s} created.")
+        click.secho(f"Manifest {path!s} created.", fg=_COLOR_INFO)
 
 
 main.add_command(manifest)
