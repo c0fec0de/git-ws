@@ -32,7 +32,7 @@ def repos(tmp_path):
         Manifest(
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
-                ProjectSpec(name="dep2", url="../dep2"),
+                ProjectSpec(name="dep2", url="../dep2", revision="1-feature"),
             ]
         ).save(path / "anyrepo.toml")
 
@@ -52,6 +52,13 @@ def repos(tmp_path):
                 ProjectSpec(name="dep4", url="../dep4"),
             ]
         ).save(path / "anyrepo.toml")
+
+    with chdir(repos_path / "dep2"):
+        run(("git", "checkout", "-b", "1-feature"), check=True)
+        (path / "data.txt").write_text("dep2-feature")
+        run(("git", "add", "data.txt"), check=True)
+        run(("git", "commit", "-m", "feature"), check=True)
+        run(("git", "checkout", "main"), check=True)
 
     with git_repo(repos_path / "dep3", commit="initial") as path:
         (path / "data.txt").write_text("dep3")

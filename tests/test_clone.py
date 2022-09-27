@@ -34,23 +34,30 @@ def test_clone(tmp_path, repos, caplog):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
+    def check(name, content=None):
+        file_path = workspace / name / "data.txt"
+        content = content or name
+        assert file_path.exists()
+        assert file_path.read_text() == f"{content}"
+
     with chdir(workspace):
         arepo = AnyRepo.clone(str(repos / "main"))
         arepo.update()
 
         assert format_caplog(tmp_path, caplog) == [
-            "run(['git', 'clone', '--', 'WORK/repos/main', "
-            "'WORK/workspace/main'], cwd=None) OK stdout=None stderr=None",
+            "run(['git', 'clone', '--', 'WORK/repos/main', 'WORK/workspace/main'], "
+            "cwd=None) OK stdout=None stderr=None",
             "Initialized WORK/workspace main anyrepo.toml",
             "run(('git', 'rev-parse', '--show-cdup'), cwd=main) OK stdout=b'\\n' stderr=b''",
             "run(('git', 'remote', 'get-url', 'origin'), cwd=main) OK stdout=b'WORK/repos/main\\n' stderr=b''",
             "Manifest(defaults=Defaults(), remotes=[], "
             "dependencies=[ProjectSpec(name='dep1', url='../dep1'), "
-            "ProjectSpec(name='dep2', url='../dep2')])",
+            "ProjectSpec(name='dep2', url='../dep2', revision='1-feature')])",
             "Project(name='dep1', path='dep1', url='WORK/repos/dep1')",
             "run(['git', 'clone', '--', 'WORK/repos/dep1', 'dep1'], cwd=None) OK stdout=None stderr=None",
-            "Project(name='dep2', path='dep2', url='WORK/repos/dep2')",
-            "run(['git', 'clone', '--', 'WORK/repos/dep2', 'dep2'], cwd=None) OK stdout=None stderr=None",
+            "Project(name='dep2', path='dep2', url='WORK/repos/dep2', revision='1-feature')",
+            "run(['git', 'clone', '--branch', '1-feature', '--', 'WORK/repos/dep2', "
+            "'dep2'], cwd=None) OK stdout=None stderr=None",
             "run(('git', 'rev-parse', '--show-cdup'), cwd=dep1) OK stdout=b'\\n' stderr=b''",
             "run(('git', 'remote', 'get-url', 'origin'), cwd=dep1) OK stdout=b'WORK/repos/dep1\\n' stderr=b''",
             "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep4', url='../dep4')])",
@@ -66,10 +73,11 @@ def test_clone(tmp_path, repos, caplog):
             "DUPLICATE Project(name='dep4', path='dep4', url='WORK/repos/dep4')",
         ]
 
-        for name in ("main", "dep1", "dep2", "dep3", "dep4"):
-            file_path = workspace / name / "data.txt"
-            assert file_path.exists()
-            assert file_path.read_text() == f"{name}"
+        check("main")
+        check("dep1")
+        check("dep2", content="dep2-feature")
+        check("dep3")
+        check("dep4")
 
         rrepo = AnyRepo.from_path()
         assert arepo == rrepo
