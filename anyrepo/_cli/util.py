@@ -53,6 +53,7 @@ def exceptionhandling(context: Context):
 
 def _print_traceback(context: Context, exc: Exception):
     if context.verbose > 1:
+        # pylint: disable=no-value-for-parameter
         lines = "".join(traceback.format_exception(exc))
         click.secho(lines, fg="red")
 
