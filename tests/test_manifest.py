@@ -147,3 +147,12 @@ def test_manifest_from_other_data(tmp_path):
         ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
         ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
     ]
+
+
+def test_manifest_missing_remote(tmp_path):
+    """Determine Manifest from Other Data."""
+    remotes = [Remote(name="remote2", url_base="foo")]
+    defaults = Defaults()
+    with raises(ValueError) as exc:
+        Project.from_spec(defaults=defaults, remotes=remotes, spec=ProjectSpec(name="foo", remote="remote1"))
+        assert str(exc) == "ValueError: Unknown remote remote1 for project foo"

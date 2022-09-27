@@ -9,7 +9,7 @@ def manifest():
     """
 
 
-@click.command()
+@manifest.command()
 def resolve():
     """
     Print The Manifest With All Imports Resolved.
@@ -19,7 +19,7 @@ def resolve():
     click.echo("TODO: Manifest Resolve")
 
 
-@click.command()
+@manifest.command()
 def freeze():
     """
     Print The Resolved Manifest With SHAs For All Project Revisions.
@@ -30,7 +30,7 @@ def freeze():
     click.echo("TODO: Manifest Freeze")
 
 
-@click.command()
+@manifest.command()
 def validate():
     """
     Validate The Current Manifest, Exiting With An Error On Issues.
@@ -38,7 +38,7 @@ def validate():
     click.echo("TODO: Manifest Validate")
 
 
-@click.command()
+@manifest.command()
 def path():
     """
     Print Path to Main Manifest File.
@@ -46,16 +46,9 @@ def path():
     click.echo("TODO: Manifest Path")
 
 
-@click.command()
+@manifest.command()
 def paths():
     """
     Print Paths to ALL Manifest Files.
     """
     click.echo("TODO: Manifest Paths")
-
-
-manifest.add_command(resolve)
-manifest.add_command(freeze)
-manifest.add_command(validate)
-manifest.add_command(path)
-manifest.add_command(paths)

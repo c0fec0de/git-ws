@@ -1,9 +1,10 @@
 """Workspace Testing."""
+# pylint: disable=duplicate-code
 from pathlib import Path
 
 from pytest import raises
 
-from anyrepo import UninitializedError
+from anyrepo import OutsideWorkspaceError, UninitializedError
 from anyrepo.const import INFO_PATH
 from anyrepo.workspace import Info, Workspace
 
@@ -43,3 +44,12 @@ def test_init(tmp_path):
             'manifest_path = "resolved.toml"',
             "",
         ]
+
+
+def test_outside(tmp_path):
+    """Test Outside."""
+    with chdir(tmp_path):
+        sub_path = tmp_path / "sub"
+        sub_path.mkdir(parents=True)
+        with raises(OutsideWorkspaceError):
+            Workspace.init(sub_path, tmp_path)

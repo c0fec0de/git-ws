@@ -51,6 +51,13 @@ exclude = '''
 profile = "black"
 line_length = 120
 
+[tool.coverage.report]
+exclude_lines = [
+    'return NotImplemented',
+    'pragma: no cover'
+]
+
+
 [tool.pylint.'MESSAGES CONTROL']
 max-line-length = 120
 extension-pkg-whitelist = "pydantic"

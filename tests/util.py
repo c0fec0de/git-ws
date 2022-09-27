@@ -15,3 +15,8 @@ def chdir(path):
         yield
     finally:
         os.chdir(curdir)
+
+
+def format_caplog(tmp_path, caplog):
+    """Format caplog."""
+    return [record.getMessage().replace(str(tmp_path), "WORK") for record in caplog.records]

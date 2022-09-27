@@ -14,7 +14,6 @@ def test_cli_nogit(tmp_path):
     main_path.mkdir(parents=True)
     with chdir(main_path):
         result = CliRunner().invoke(main, ["init"])
-    assert result.exit_code == 1
     assert result.output.split("\n") == [
         "Error: git clone has not been initialized yet. Try:",
         "",
@@ -26,6 +25,7 @@ def test_cli_nogit(tmp_path):
         "",
         "",
     ]
+    assert result.exit_code == 1
 
 
 def test_cli_git(tmp_path):

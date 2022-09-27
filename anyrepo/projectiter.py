@@ -7,7 +7,7 @@ from ._git import Git
 from .manifest import Manifest, Project
 from .workspace import Workspace
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("anyrepo")
 _MANIFEST_DEFAULT = Manifest()
 
 
@@ -44,21 +44,21 @@ class ProjectIter:
 
         _LOGGER.debug("%r", manifest)
 
-        for dep in manifest.dependencies:
-            rdep = Project.from_spec(manifest.defaults, manifest.remotes, dep, refurl=refurl)
+        for spec in manifest.dependencies:
+            dep = Project.from_spec(manifest.defaults, manifest.remotes, spec, refurl=refurl)
 
             # Update every path just once
-            if rdep.path in done:
-                _LOGGER.debug("DUPLICATE %r", rdep)
+            if dep.path in done:
+                _LOGGER.debug("DUPLICATE %r", dep)
                 continue
-            _LOGGER.debug("%r", rdep)
-            done.append(rdep.path)
+            _LOGGER.debug("%r", dep)
+            done.append(dep.path)
 
-            dep_project_path = self.workspace.path / rdep.path
-            yield rdep
+            dep_project_path = self.workspace.path / dep.path
+            yield dep
 
             # Recursive
-            dep_manifest_path = dep_project_path / rdep.manifest_path
+            dep_manifest_path = dep_project_path / dep.manifest_path
             dep_manifest = Manifest.load(dep_manifest_path, default=_MANIFEST_DEFAULT)
             if dep_manifest != _MANIFEST_DEFAULT:
                 deps.append((dep_project_path, dep_manifest))

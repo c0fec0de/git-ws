@@ -86,13 +86,14 @@ def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT):
 @main.command()
 @_projects_option()
 @_manifest_option()
+@click.option("--rebase", is_flag=True, default=False, help="Run 'git rebase' instead of 'git pull'")
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
 @pass_context
-def update(context, projects, manifest: Path = MANIFEST_PATH_DEFAULT, prune: bool = False):
+def update(context, projects, manifest: Path = MANIFEST_PATH_DEFAULT, rebase: bool = False, prune: bool = False):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(colorprint=click.secho)
-        arepo.update(projects, manifest_path=manifest, prune=prune)
+        arepo.update(projects, manifest_path=manifest, rebase=rebase, prune=prune)
 
 
 @main.command()

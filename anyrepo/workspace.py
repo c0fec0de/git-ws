@@ -15,7 +15,7 @@ from ._util import resolve_relative
 from .const import ANYREPO_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("anyrepo")
 
 
 class Info(BaseModel):

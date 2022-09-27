@@ -17,9 +17,8 @@ def git_repo(path, commit=None):
         run(("git", "config", "user.email", "you@example.com"), check=True)
         run(("git", "config", "user.name", "you"), check=True)
         yield path
-        if commit:
-            run(("git", "add", "-A"), check=True)
-            run(("git", "commit", "-m", commit), check=True)
+        run(("git", "add", "-A"), check=True)
+        run(("git", "commit", "-m", commit), check=True)
 
 
 @fixture
@@ -50,6 +49,7 @@ def repos(tmp_path):
         Manifest(
             dependencies=[
                 ProjectSpec(name="dep3", url="../dep3"),
+                ProjectSpec(name="dep4", url="../dep4"),
             ]
         ).save(path / "anyrepo.toml")
 
