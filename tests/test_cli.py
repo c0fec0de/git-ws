@@ -8,7 +8,7 @@ from anyrepo.manifest import Manifest, ProjectSpec
 
 # pylint: disable=unused-import,duplicate-code
 from .fixtures import repos
-from .util import chdir, format_caplog, run
+from .util import chdir, run
 
 
 @fixture
@@ -24,32 +24,32 @@ def arepo(tmp_path, repos):
         yield arepo
 
 
-def test_pull(tmp_path, arepo, caplog):
+def test_pull(tmp_path, arepo):
     """Test pull."""
-    _test_foreach(tmp_path, arepo, caplog, "pull")
+    _test_foreach(tmp_path, arepo, "pull")
 
 
-def test_fetch(tmp_path, arepo, caplog):
+def test_fetch(tmp_path, arepo):
     """Test fetch."""
-    _test_foreach(tmp_path, arepo, caplog, "fetch")
+    _test_foreach(tmp_path, arepo, "fetch")
 
 
-def test_rebase(tmp_path, arepo, caplog):
+def test_rebase(tmp_path, arepo):
     """Test rebase."""
-    _test_foreach(tmp_path, arepo, caplog, "rebase")
+    _test_foreach(tmp_path, arepo, "rebase")
 
 
-def test_diff(tmp_path, arepo, caplog):
+def test_diff(tmp_path, arepo):
     """Test diff."""
-    _test_foreach(tmp_path, arepo, caplog, "diff")
+    _test_foreach(tmp_path, arepo, "diff")
 
 
-def test_status(tmp_path, arepo, caplog):
+def test_status(tmp_path, arepo):
     """Test status."""
-    _test_foreach(tmp_path, arepo, caplog, "status")
+    _test_foreach(tmp_path, arepo, "status")
 
 
-def test_update(tmp_path, repos, arepo, caplog):
+def test_update(tmp_path, repos, arepo):
     """Test update."""
 
     # Modify dep4
@@ -79,47 +79,9 @@ def test_update(tmp_path, repos, arepo, caplog):
         "",
     ]
     assert result.exit_code == 0
-    assert format_caplog(tmp_path, caplog) == [
-        "path=WORK/workspace",
-        "Loaded WORK/workspace main anyrepo.toml",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=main) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=main) OK stdout=b'WORK/repos/main\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep1', url='../dep1'), "
-        "ProjectSpec(name='dep2', url='../dep2', revision='1-feature')])",
-        "Project(name='dep1', path='dep1', url='WORK/repos/dep1')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep1) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'branch', '--show-current'), cwd=dep1) OK stdout=b'main\\n' stderr=b''",
-        "run(('git', 'pull'), cwd=dep1) OK stdout=None stderr=None",
-        "Project(name='dep2', path='dep2', url='WORK/repos/dep2', revision='1-feature')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep2) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'pull'), cwd=dep2) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep1) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep1) OK stdout=b'WORK/repos/dep1\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep4', path='dep4', url='WORK/repos/dep4')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep4) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'branch', '--show-current'), cwd=dep4) OK stdout=b'main\\n' stderr=b''",
-        "run(('git', 'pull'), cwd=dep4) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep4) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep4) OK stdout=b'WORK/repos/dep4\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep5', url='../dep5')])",
-        "Project(name='dep5', path='dep5', url='WORK/repos/dep5')",
-        "run(['git', 'clone', '--', 'WORK/repos/dep5', 'dep5'], cwd=None) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep2) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep2) OK stdout=b'WORK/repos/dep2\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep3', url='../dep3'), "
-        "ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep3', path='dep3', url='WORK/repos/dep3')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep3) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'branch', '--show-current'), cwd=dep3) OK stdout=b'main\\n' stderr=b''",
-        "run(('git', 'pull'), cwd=dep3) OK stdout=None stderr=None",
-        "DUPLICATE Project(name='dep4', path='dep4', url='WORK/repos/dep4')",
-    ]
 
 
-def test_update_rebase(tmp_path, repos, arepo, caplog):
+def test_update_rebase(tmp_path, repos, arepo):
     """Test update --rebase."""
 
     # Modify dep4
@@ -166,63 +128,6 @@ def test_update_rebase(tmp_path, repos, arepo, caplog):
         "",
     ]
     assert result.exit_code == 0
-    assert format_caplog(tmp_path, caplog) == [
-        "path=WORK/workspace",
-        "Loaded WORK/workspace main anyrepo.toml",
-        "run(('git', 'fetch'), cwd=main) OK stdout=None stderr=None",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep1', url='../dep1'), "
-        "ProjectSpec(name='dep2', url='../dep2', revision='1-feature')])",
-        "Project(name='dep1', path='dep1', url='../dep1')",
-        "run(('git', 'fetch'), cwd=dep1) OK stdout=None stderr=None",
-        "Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
-        "run(('git', 'fetch'), cwd=dep2) OK stdout=None stderr=None",
-        "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep4', path='dep4', url='../dep4')",
-        "run(('git', 'fetch'), cwd=dep4) OK stdout=None stderr=None",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep3', url='../dep3'), "
-        "ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep3', path='dep3', url='../dep3')",
-        "run(('git', 'fetch'), cwd=dep3) OK stdout=None stderr=None",
-        "DUPLICATE Project(name='dep4', path='dep4', url='../dep4')",
-        "path=WORK/workspace",
-        "Loaded WORK/workspace main anyrepo.toml",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=main) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=main) OK stdout=b'WORK/repos/main\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep1', url='../dep1'), "
-        "ProjectSpec(name='dep2', url='../dep2', revision='1-feature')])",
-        "Project(name='dep1', path='dep1', url='WORK/repos/dep1')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep1) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'branch', '--show-current'), cwd=dep1) OK stdout=b'main\\n' stderr=b''",
-        "run(('git', 'rebase'), cwd=dep1) OK stdout=None stderr=None",
-        "Project(name='dep2', path='dep2', url='WORK/repos/dep2', revision='1-feature')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep2) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'rebase'), cwd=dep2) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep1) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep1) OK stdout=b'WORK/repos/dep1\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep4', path='dep4', url='WORK/repos/dep4')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep4) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'branch', '--show-current'), cwd=dep4) OK stdout=b'main\\n' stderr=b''",
-        "run(('git', 'rebase'), cwd=dep4) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep4) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep4) OK stdout=b'WORK/repos/dep4\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep5', url='../dep5')])",
-        "Project(name='dep5', path='dep5', url='WORK/repos/dep5')",
-        "run(['git', 'clone', '--', 'WORK/repos/dep5', 'dep5'], cwd=None) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep2) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep2) OK stdout=b'WORK/repos/dep2\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep3', url='../dep3'), "
-        "ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep3', path='dep3', url='WORK/repos/dep3')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep3) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'branch', '--show-current'), cwd=dep3) OK stdout=b'main\\n' stderr=b''",
-        "run(('git', 'rebase'), cwd=dep3) OK stdout=None stderr=None",
-        "DUPLICATE Project(name='dep4', path='dep4', url='WORK/repos/dep4')",
-    ]
 
 
 def test_outside(tmp_path, arepo):
@@ -244,7 +149,7 @@ def test_outside(tmp_path, arepo):
         assert result.exit_code == 1
 
 
-def _test_foreach(tmp_path, arepo, caplog, command):
+def _test_foreach(tmp_path, arepo, command):
     result = CliRunner().invoke(main, [command])
     assert result.output.split("\n") == [
         "===== main (revision=None, path=main) =====",
@@ -260,24 +165,3 @@ def _test_foreach(tmp_path, arepo, caplog, command):
         "",
     ]
     assert result.exit_code == 0
-    assert format_caplog(tmp_path, caplog) == [
-        "path=WORK/workspace",
-        "Loaded WORK/workspace main anyrepo.toml",
-        f"run(('git', '{command}'), cwd=main) OK stdout=None stderr=None",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep1', url='../dep1'), "
-        "ProjectSpec(name='dep2', url='../dep2', revision='1-feature')])",
-        "Project(name='dep1', path='dep1', url='../dep1')",
-        f"run(('git', '{command}'), cwd=dep1) OK stdout=None stderr=None",
-        "Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
-        f"run(('git', '{command}'), cwd=dep2) OK stdout=None stderr=None",
-        "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep4', path='dep4', url='../dep4')",
-        f"run(('git', '{command}'), cwd=dep4) OK stdout=None stderr=None",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep3', url='../dep3'), "
-        "ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep3', path='dep3', url='../dep3')",
-        f"run(('git', '{command}'), cwd=dep3) OK stdout=None stderr=None",
-        "DUPLICATE Project(name='dep4', path='dep4', url='../dep4')",
-    ]

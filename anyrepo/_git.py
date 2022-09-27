@@ -37,6 +37,14 @@ class Git:
         result = self._run(("rev-parse", "--show-cdup"), cwd=self.path, capture_output=True, check=False)
         return not result.stderr and not result.stdout.strip()
 
+    def init(self):
+        """Initialize."""
+        self._run(("init",))
+
+    def set_config(self, name, value):
+        """Configure."""
+        self._run(("config", name, value))
+
     def clone(self, url, revision=None):
         """Clone."""
         cmd = ["git", "clone"]
@@ -67,7 +75,7 @@ class Git:
 
     def checkout(self, revision):
         """Checkout Revision."""
-        # TODO: checkout
+        self._run(("checkout", revision))
 
     def pull(self):
         """Pull."""
@@ -76,6 +84,14 @@ class Git:
     def rebase(self):
         """Rebase."""
         self._run(("rebase",))
+
+    def add(self, file):
+        """Add."""
+        self._run(("add", str(file)))
+
+    def commit(self, msg):
+        """Commit."""
+        self._run(("commit", "-m", msg))
 
     def _run(self, cmd, cwd=None, **kwargs):
         cwd = cwd or self.path
