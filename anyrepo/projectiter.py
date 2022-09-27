@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from ._git import Git
-from .manifest import Manifest, ResolvedProject
+from .manifest import Manifest, Project
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class ProjectIter:
         if not self.skip_main:
             workspace = self.workspace
             info = workspace.info
-            yield ResolvedProject(
+            yield Project(
                 name=info.main_path.name,
                 path=str(info.main_path),
             )
@@ -45,7 +45,7 @@ class ProjectIter:
         _LOGGER.debug("%r", manifest)
 
         for dep in manifest.dependencies:
-            rdep = ResolvedProject.from_project(manifest.defaults, manifest.remotes, dep, refurl=refurl)
+            rdep = Project.from_spec(manifest.defaults, manifest.remotes, dep, refurl=refurl)
 
             # Update every path just once
             if rdep.path in done:

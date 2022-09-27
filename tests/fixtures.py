@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from pytest import fixture
 
-from anyrepo.manifest import Manifest, Project
+from anyrepo.manifest import Manifest, ProjectSpec
 
 from .util import chdir, run
 
@@ -32,8 +32,8 @@ def repos(tmp_path):
         (path / "data.txt").write_text("main")
         Manifest(
             dependencies=[
-                Project(name="dep1", url="../dep1"),
-                Project(name="dep2", url="../dep2"),
+                ProjectSpec(name="dep1", url="../dep1"),
+                ProjectSpec(name="dep2", url="../dep2"),
             ]
         ).save(path / "anyrepo.toml")
 
@@ -41,7 +41,7 @@ def repos(tmp_path):
         (path / "data.txt").write_text("dep1")
         Manifest(
             dependencies=[
-                Project(name="dep4", url="../dep4"),
+                ProjectSpec(name="dep4", url="../dep4"),
             ]
         ).save(path / "anyrepo.toml")
 
@@ -49,7 +49,7 @@ def repos(tmp_path):
         (path / "data.txt").write_text("dep2")
         Manifest(
             dependencies=[
-                Project(name="dep3", url="../dep3"),
+                ProjectSpec(name="dep3", url="../dep3"),
             ]
         ).save(path / "anyrepo.toml")
 

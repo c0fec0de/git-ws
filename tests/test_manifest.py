@@ -1,7 +1,7 @@
 """Manifest Testing."""
 from pytest import raises
 
-from anyrepo.manifest import Defaults, Manifest, Project, Remote, ResolvedProject
+from anyrepo.manifest import Defaults, Manifest, Project, ProjectSpec, Remote
 
 
 def test_remote():
@@ -31,8 +31,8 @@ def test_defaults():
 
 
 def test_project():
-    """Test Project."""
-    project = Project(name="name")
+    """Test ProjectSpec."""
+    project = ProjectSpec(name="name")
     assert project.name == "name"
     assert project.remote is None
     assert project.sub_url is None
@@ -40,11 +40,11 @@ def test_project():
     assert project.revision is None
 
     with raises(ValueError):
-        Project(name="name", remote="remote", url="url")
+        ProjectSpec(name="name", remote="remote", url="url")
     with raises(ValueError):
-        Project(name="name", sub_url="sub-url", url="url")
+        ProjectSpec(name="name", sub_url="sub-url", url="url")
     with raises(ValueError):
-        Project(name="name", sub_url="sub-url")
+        ProjectSpec(name="name", sub_url="sub-url")
 
 
 def test_manifest():
@@ -79,9 +79,9 @@ def test_manifest_from_data(tmp_path):
         Remote(name="remote1", url_base="https://git.example.com/base1"),
     ]
     assert manifest.dependencies == [
-        Project(name="dep1", remote="remote1"),
-        Project(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
-        Project(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
+        ProjectSpec(name="dep1", remote="remote1"),
+        ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
+        ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
     ]
 
     filepath = tmp_path / "manifest.toml"
@@ -118,12 +118,12 @@ def test_manifest_from_data(tmp_path):
     assert Manifest.load(filepath) == manifest
 
     rdependencies = [
-        ResolvedProject.from_project(manifest.defaults, manifest.remotes, project) for project in manifest.dependencies
+        Project.from_spec(manifest.defaults, manifest.remotes, project) for project in manifest.dependencies
     ]
     assert rdependencies == [
-        ResolvedProject(name="dep1", url="https://git.example.com/base1/dep1", revision="v1.3", path="dep1"),
-        ResolvedProject(name="dep2", url="https://git.example.com/base3/dep2.git", revision="v1.3", path="dep2dir"),
-        ResolvedProject(name="dep3", url="https://git.example.com/base1/sub.git", revision="main", path="dep3"),
+        Project(name="dep1", url="https://git.example.com/base1/dep1", revision="v1.3", path="dep1"),
+        Project(name="dep2", url="https://git.example.com/base3/dep2.git", revision="v1.3", path="dep2dir"),
+        Project(name="dep3", url="https://git.example.com/base1/sub.git", revision="main", path="dep3"),
     ]
 
 
@@ -143,7 +143,7 @@ def test_manifest_from_other_data(tmp_path):
     assert manifest.defaults == Defaults(remote="remote1")
     assert not manifest.remotes
     assert manifest.dependencies == [
-        Project(name="dep1", remote="remote1"),
-        Project(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
-        Project(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
+        ProjectSpec(name="dep1", remote="remote1"),
+        ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
+        ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
     ]

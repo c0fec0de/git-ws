@@ -1,9 +1,9 @@
 """
 Manifest Handling.
 
-:any:`Manifest`, :any:`Project`, :any:`Remote` and :any:`Defaults` classes are pure data containers.
+:any:`Manifest`, :any:`ProjectSpec`, :any:`Remote` and :any:`Defaults` classes are pure data containers.
 They do not implement any business logic on purpose.
-:any:`ResolvedProject` is a :any:`Project` with applied :any:`Remote` and :any:`Defaults`.
+:any:`Project` is a :any:`ProjectSpec` with applied :any:`Remote` and :any:`Defaults`.
 """
 
 from pathlib import Path
@@ -48,9 +48,65 @@ class Defaults(BaseModel):
     revision: Optional[str] = None
 
 
-class Project(BaseModel, allow_population_by_field_name=True):
+class Project(BaseModel):
+
     """
-    Project.
+    ProjectSpec with resolved :any:`Defaults` and :any:`Remote`.
+
+    Only `name`, `url`, `revisìon`, `path` will be set.
+
+    Keyword Args:
+        name (str): Unique name.
+        path (str): ProjectSpec Filesystem Path. Relative to Workspace Root Directory.
+        url (str): URL
+        revision (str): Revision
+    """
+
+    name: str
+    path: str
+    url: Optional[str] = None
+    revision: Optional[str] = None
+    manifest_path: str = str(MANIFEST_PATH_DEFAULT)
+
+    @staticmethod
+    def from_spec(
+        defaults: Defaults, remotes: List[Remote], spec: "ProjectSpec", refurl: Optional[str] = None
+    ) -> "Project":
+        """
+        Create :any:`Project` from `defaults`, `remotes` and `spec`.
+
+        Args:
+            defaults (Defaults): Default settings if not given by `spec`.
+            remotes (List[Remote]): Remotes
+            spec (ProjectSpec): Base project to be resolved.
+        """
+        url = spec.url
+        if not url:
+            # URL assembly
+            project_remote = spec.remote or defaults.remote
+            if project_remote:
+                project_sub_url = spec.sub_url or spec.name
+                for remote in remotes:
+                    if remote.name == project_remote:
+                        url = f"{remote.url_base}/{project_sub_url}"
+                        break
+                else:
+                    raise ValueError(f"Unknown remote {spec.remote} for project {spec.name}")
+
+        # Resolve relative URLs.
+        url = urljoin(refurl, url)
+        return Project(
+            name=spec.name,
+            path=spec.path or spec.name,
+            url=url,
+            revision=spec.revision or defaults.revision,
+            manifest_path=spec.manifest_path,
+        )
+
+
+class ProjectSpec(BaseModel, allow_population_by_field_name=True):
+    """
+    ProjectSpec.
 
     A project specifies the reference to a repository.
 
@@ -66,8 +122,8 @@ class Project(BaseModel, allow_population_by_field_name=True):
         sub_url (str): URL relative to :any:`Remote.url_base`.
         url (str): URL
         revision (str): Revision
-        path (str): Project Filesystem Path. Relative to Workspace Root Directory.
-        manifest_path (str): Path to manifest. Relative to Project Filesystem Path. `anyrepo.toml` by default.
+        path (str): ProjectSpec Filesystem Path. Relative to Workspace Root Directory.
+        manifest_path (str): Path to manifest. Relative to ProjectSpec Filesystem Path. `anyrepo.toml` by default.
     """
 
     name: str
@@ -109,7 +165,7 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
 
     defaults: Defaults = Defaults()
     remotes: List[Remote] = []
-    dependencies: List[Project] = []
+    dependencies: List[ProjectSpec] = []
 
     @classmethod
     def load(cls, path: Path, default: Optional["Manifest"] = None) -> "Manifest":
@@ -141,63 +197,7 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
         path.write_text(tomlkit.dumps(doc))
 
 
-class ResolvedProject(Project):
-
-    """
-    Project with resolved :any:`Defaults` and :any:`Remote`.
-
-    Only `name`, `url`, `revisìon`, `path` will be set.
-
-    Keyword Args:
-        name (str): Unique name.
-        url (str): URL
-        revision (str): Revision
-        path (str): Project Filesystem Path. Relative to Workspace Root Directory.
-        manifest (Manifest): Project Manifest.
-    """
-
-    name: str
-    path: str
-    url: Optional[str] = None
-    revision: Optional[str] = None
-
-    @staticmethod
-    def from_project(
-        defaults: Defaults, remotes: List[Remote], project: Project, refurl: Optional[str] = None
-    ) -> "ResolvedProject":
-        """
-        Create :any:`ResolvedProject` from `defaults`, `remotes` and `project`.
-
-        Args:
-            defaults (Defaults): Default settings if not given by `project`.
-            remotes (List[Remote]): Remotes
-            project (Project): Base project to be resolved.
-        """
-        url = project.url
-        if not url:
-            # URL assembly
-            project_remote = project.remote or defaults.remote
-            if project_remote:
-                project_sub_url = project.sub_url or project.name
-                for remote in remotes:
-                    if remote.name == project_remote:
-                        url = f"{remote.url_base}/{project_sub_url}"
-                        break
-                else:
-                    raise ValueError(f"Unknown remote {project.remote} for project {project.name}")
-
-        # Resolve relative URLs.
-        url = urljoin(refurl, url)
-        return ResolvedProject(
-            name=project.name,
-            path=project.path or project.name,
-            url=url,
-            revision=project.revision or defaults.revision,
-            manifest_path=project.manifest_path,
-        )
-
-
-def create_project_filter(project_paths: Optional[List[Path]] = None) -> Callable[[Project], bool]:
+def create_project_filter(project_paths: Optional[List[Path]] = None) -> Callable[[ProjectSpec], bool]:
     """Create filter function."""
     if project_paths:
         initialized_project_paths: List[Path] = project_paths
