@@ -39,49 +39,14 @@ def test_rebase(tmp_path, arepo, caplog):
     _test_foreach(tmp_path, arepo, caplog, "rebase")
 
 
-def _test_foreach(tmp_path, arepo, caplog, command):
-    result = CliRunner().invoke(main, [command])
-    assert result.output.split("\n") == [
-        "===== main (revision=None, path=main) =====",
-        f"git {command}",
-        "===== dep1 (revision=None, path=dep1) =====",
-        f"git {command}",
-        "===== dep2 (revision=None, path=dep2) =====",
-        f"git {command}",
-        "===== dep4 (revision=None, path=dep4) =====",
-        f"git {command}",
-        "===== dep3 (revision=None, path=dep3) =====",
-        f"git {command}",
-        "",
-    ]
-    assert result.exit_code == 0
-    assert format_caplog(tmp_path, caplog) == [
-        "path=WORK/workspace",
-        "Loaded WORK/workspace main anyrepo.toml",
-        f"run(('git', '{command}'), cwd=main) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=main) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=main) OK stdout=b'WORK/repos/main\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep1', url='../dep1'), "
-        "ProjectSpec(name='dep2', url='../dep2')])",
-        "Project(name='dep1', path='dep1', url='WORK/repos/dep1')",
-        f"run(('git', '{command}'), cwd=dep1) OK stdout=None stderr=None",
-        "Project(name='dep2', path='dep2', url='WORK/repos/dep2')",
-        f"run(('git', '{command}'), cwd=dep2) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep1) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep1) OK stdout=b'WORK/repos/dep1\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep4', path='dep4', url='WORK/repos/dep4')",
-        f"run(('git', '{command}'), cwd=dep4) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep2) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep2) OK stdout=b'WORK/repos/dep2\\n' stderr=b''",
-        "Manifest(defaults=Defaults(), remotes=[], "
-        "dependencies=[ProjectSpec(name='dep3', url='../dep3'), "
-        "ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep3', path='dep3', url='WORK/repos/dep3')",
-        f"run(('git', '{command}'), cwd=dep3) OK stdout=None stderr=None",
-        "DUPLICATE Project(name='dep4', path='dep4', url='WORK/repos/dep4')",
-    ]
+def test_diff(tmp_path, arepo, caplog):
+    """Test diff."""
+    _test_foreach(tmp_path, arepo, caplog, "diff")
+
+
+def test_status(tmp_path, arepo, caplog):
+    """Test status."""
+    _test_foreach(tmp_path, arepo, caplog, "status")
 
 
 def test_update(tmp_path, repos, arepo, caplog):
@@ -204,28 +169,22 @@ def test_update_rebase(tmp_path, repos, arepo, caplog):
         "path=WORK/workspace",
         "Loaded WORK/workspace main anyrepo.toml",
         "run(('git', 'fetch'), cwd=main) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=main) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=main) OK stdout=b'WORK/repos/main\\n' stderr=b''",
         "Manifest(defaults=Defaults(), remotes=[], "
         "dependencies=[ProjectSpec(name='dep1', url='../dep1'), "
         "ProjectSpec(name='dep2', url='../dep2')])",
-        "Project(name='dep1', path='dep1', url='WORK/repos/dep1')",
+        "Project(name='dep1', path='dep1', url='../dep1')",
         "run(('git', 'fetch'), cwd=dep1) OK stdout=None stderr=None",
-        "Project(name='dep2', path='dep2', url='WORK/repos/dep2')",
+        "Project(name='dep2', path='dep2', url='../dep2')",
         "run(('git', 'fetch'), cwd=dep2) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep1) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep1) OK stdout=b'WORK/repos/dep1\\n' stderr=b''",
         "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep4', path='dep4', url='WORK/repos/dep4')",
+        "Project(name='dep4', path='dep4', url='../dep4')",
         "run(('git', 'fetch'), cwd=dep4) OK stdout=None stderr=None",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd=dep2) OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'remote', 'get-url', 'origin'), cwd=dep2) OK stdout=b'WORK/repos/dep2\\n' stderr=b''",
         "Manifest(defaults=Defaults(), remotes=[], "
         "dependencies=[ProjectSpec(name='dep3', url='../dep3'), "
         "ProjectSpec(name='dep4', url='../dep4')])",
-        "Project(name='dep3', path='dep3', url='WORK/repos/dep3')",
+        "Project(name='dep3', path='dep3', url='../dep3')",
         "run(('git', 'fetch'), cwd=dep3) OK stdout=None stderr=None",
-        "DUPLICATE Project(name='dep4', path='dep4', url='WORK/repos/dep4')",
+        "DUPLICATE Project(name='dep4', path='dep4', url='../dep4')",
         "path=WORK/workspace",
         "Loaded WORK/workspace main anyrepo.toml",
         "run(('git', 'rev-parse', '--show-cdup'), cwd=main) OK stdout=b'\\n' stderr=b''",
@@ -283,3 +242,42 @@ def test_outside(tmp_path, arepo):
             "",
         ]
         assert result.exit_code == 1
+
+
+def _test_foreach(tmp_path, arepo, caplog, command):
+    result = CliRunner().invoke(main, [command])
+    assert result.output.split("\n") == [
+        "===== main (revision=None, path=main) =====",
+        f"git {command}",
+        "===== dep1 (revision=None, path=dep1) =====",
+        f"git {command}",
+        "===== dep2 (revision=None, path=dep2) =====",
+        f"git {command}",
+        "===== dep4 (revision=None, path=dep4) =====",
+        f"git {command}",
+        "===== dep3 (revision=None, path=dep3) =====",
+        f"git {command}",
+        "",
+    ]
+    assert result.exit_code == 0
+    assert format_caplog(tmp_path, caplog) == [
+        "path=WORK/workspace",
+        "Loaded WORK/workspace main anyrepo.toml",
+        f"run(('git', '{command}'), cwd=main) OK stdout=None stderr=None",
+        "Manifest(defaults=Defaults(), remotes=[], "
+        "dependencies=[ProjectSpec(name='dep1', url='../dep1'), "
+        "ProjectSpec(name='dep2', url='../dep2')])",
+        "Project(name='dep1', path='dep1', url='../dep1')",
+        f"run(('git', '{command}'), cwd=dep1) OK stdout=None stderr=None",
+        "Project(name='dep2', path='dep2', url='../dep2')",
+        f"run(('git', '{command}'), cwd=dep2) OK stdout=None stderr=None",
+        "Manifest(defaults=Defaults(), remotes=[], dependencies=[ProjectSpec(name='dep4', url='../dep4')])",
+        "Project(name='dep4', path='dep4', url='../dep4')",
+        f"run(('git', '{command}'), cwd=dep4) OK stdout=None stderr=None",
+        "Manifest(defaults=Defaults(), remotes=[], "
+        "dependencies=[ProjectSpec(name='dep3', url='../dep3'), "
+        "ProjectSpec(name='dep4', url='../dep4')])",
+        "Project(name='dep3', path='dep3', url='../dep3')",
+        f"run(('git', '{command}'), cwd=dep3) OK stdout=None stderr=None",
+        "DUPLICATE Project(name='dep4', path='dep4', url='../dep4')",
+    ]

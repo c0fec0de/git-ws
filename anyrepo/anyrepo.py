@@ -151,12 +151,13 @@ class AnyRepo:
         """Run `command` on each project."""
         workspace = self.workspace
         manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
-        for project in ProjectIter(workspace, manifest, resolve_url=True):
+        for project in ProjectIter(workspace, manifest):
             self.colorprint(
                 f"===== {project.name} (revision={project.revision}, path={project.path}) =====", fg=_COLOR_BANNER
             )
             project_path = resolve_relative(workspace.path / project.path)
-            self.colorprint(shlex.join(command), fg=_COLOR_ACTION)
+            cmdstr = " ".join(shlex.quote(part) for part in command)
+            self.colorprint(cmdstr, fg=_COLOR_ACTION)
             run(command, cwd=project_path)
 
     @staticmethod

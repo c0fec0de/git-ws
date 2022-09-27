@@ -47,12 +47,16 @@ def test_project():
         ProjectSpec(name="name", sub_url="sub-url")
 
 
-def test_manifest():
+def test_manifest(tmp_path):
     """Test Manifest."""
     manifest = Manifest()
     assert manifest.defaults == Defaults()
     assert not manifest.remotes
     assert not manifest.dependencies
+
+    filepath = tmp_path / "manifest.toml"
+    manifest.save(filepath)
+    assert filepath.read_text().split("\n") == [""]
 
 
 def test_manifest_from_data(tmp_path):
@@ -149,8 +153,17 @@ def test_manifest_from_other_data(tmp_path):
     ]
 
 
-def test_manifest_missing_remote(tmp_path):
+def test_manifest_not_remote(tmp_path):
     """Determine Manifest from Other Data."""
+    remotes = [Remote(name="remote2", url_base="foo")]
+    defaults = Defaults()
+    project = Project.from_spec(defaults=defaults, remotes=remotes, spec=ProjectSpec(name="foo"))
+    assert project.name == "foo"
+    assert project.url is None
+
+
+def test_manifest_missing_remote(tmp_path):
+    """Determine Manifest with missing Remote."""
     remotes = [Remote(name="remote2", url_base="foo")]
     defaults = Defaults()
     with raises(ValueError) as exc:
