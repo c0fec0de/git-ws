@@ -1,17 +1,17 @@
 """Application Configuration Handling."""
 
+from enum import Enum, auto
+from pathlib import Path
 from typing import Optional
+
 import tomlkit
 import tomlkit.exceptions
-from pathlib import Path
-from enum import Enum, auto
-
 from pydantic import BaseSettings, Extra, ValidationError
 
 from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError, UninitializedError
 
+from .const import ANYREPO_PATH, SYSTEM_CONFIG_DIR, USER_CONFIG_DIR
 from .workspace import Workspace
-from .const import SYSTEM_CONFIG_DIR, USER_CONFIG_DIR, ANYREPO_PATH
 
 
 class AppConfigData(BaseSettings, extra=Extra.allow):
@@ -185,6 +185,9 @@ class AppConfig:
         This returns a configuration object which is built by merging the system,
         user and workspace configuration as well as configurations read from environment
         variables.
+
+        Note that once accessed, the settings care cached in memory, so changes made on disk will
+        not be picked up.
         """
         if self._merged_config is None:
             sys_config = self.load_configuration(AppConfigLocation.SYSTEM)
@@ -197,16 +200,11 @@ class AppConfig:
             merged_config_data.update(workspace_config.dict())
             merged_config_data.update(env_config.dict())
             self._merged_config = AppConfigData(**merged_config_data)
+            self._fill_in_defaults(self._merged_config)
         return self._merged_config
 
-    def _create_merged_config(self) -> AppConfigData:
-        data = self._system_settings.dict()
-        data.update(self._user_settings.dict())
-        data.update(self._local_settings.dict())
-        data.update(self._env_settings.dict())
-
-        # Provide some sensible defaults (in case some options are not set anywhere):
-        if "color_ui" not in data:
-            data["color_ui"] = True
-
-        return AppConfigData(**data)
+    @staticmethod
+    def _fill_in_defaults(config: AppConfigData):
+        """Fill in some sensible defaults in the given config object."""
+        if config.color_ui is None:
+            config.color_ui = True

@@ -1,6 +1,7 @@
 """General Constants."""
 from pathlib import Path
-from appdirs import user_config_dir, site_config_dir
+
+from appdirs import site_config_dir, user_config_dir
 
 ANYREPO_PATH = Path(".anyrepo")
 INFO_PATH = ANYREPO_PATH / "info.toml"
