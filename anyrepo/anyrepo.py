@@ -7,14 +7,14 @@ import logging
 import shlex
 import urllib
 from pathlib import Path
-from typing import Optional
+from typing import Generator, Optional
 
 from ._git import Git, get_repo_top
 from ._util import no_colorprint, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestExistError
-from .manifest import Manifest
-from .projectiter import ProjectIter
+from .iters import ManifestIter, ProjectIter
+from .manifest import Manifest, Project
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("anyrepo")
@@ -119,8 +119,7 @@ class AnyRepo:
         """Create/Update all dependent projects."""
         assert not prune, "TODO"
         workspace = self.workspace
-        manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
-        for project in ProjectIter(workspace, manifest, skip_main=True, resolve_url=True):
+        for project in ProjectIter(workspace, workspace.main_path / manifest_path, skip_main=True, resolve_url=True):
             project_path = resolve_relative(workspace.path / project.path)
             self.colorprint(
                 f"===== {project.name} (revision={project.revision}, path={project_path}) =====", fg=_COLOR_BANNER
@@ -170,20 +169,17 @@ class AnyRepo:
         manifest.save(manifest_path)
         return manifest_path
 
-    def iter_projects(self, manifest_path=None):
+    def iter_projects(self, manifest_path=None) -> Generator[Project, None, None]:
         """Iterate over Projects."""
         workspace = self.workspace
         manifest_path = manifest_path or workspace.info.manifest_path
-        manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
-        yield from ProjectIter(self.workspace, manifest)
+        yield from ProjectIter(workspace, workspace.main_path / manifest_path)
 
     def iter_manifests(self, manifest_path=None):
         """Iterate over Manifests."""
         workspace = self.workspace
         manifest_path = manifest_path or workspace.info.manifest_path
-        manifest = Manifest.load(workspace.main_path / manifest_path, default=Manifest())
-        yield from ProjectIter(self.workspace, manifest)
-        # yield from ManifestIter(self.workspace, manifest_path)
+        yield from ManifestIter(workspace, workspace.main_path / manifest_path)
 
     def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:
         """Get Manifest."""
