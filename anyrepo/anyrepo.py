@@ -21,6 +21,7 @@ from .workspace import Workspace
 _LOGGER = logging.getLogger("anyrepo")
 _COLOR_BANNER = "green"
 _COLOR_ACTION = "magenta"
+_COLOR_SKIP = "blue"
 
 
 class AnyRepo:
@@ -120,15 +121,16 @@ class AnyRepo:
         """Create/Update all dependent projects."""
         workspace = self.workspace
         used: List[Path] = [workspace.info.main_path]
+        filter_ = _create_project_paths_filter(workspace, project_paths)
         for project in self.iter_projects(manifest_path, skip_main=True, resolve_url=True):
             used.append(Path(project.path))
-            project_path = resolve_relative(workspace.path / project.path)
-            self.colorprint(
-                f"===== {project.name} (revision={project.revision!r}, path={str(project_path)!r}) =====",
-                fg=_COLOR_BANNER,
-            )
-            git = Git(project_path)
-            self._update(git, project, rebase)
+            self._banner(project)
+            if filter_(project):
+                project_path = resolve_relative(self.workspace.path / project.path)
+                git = Git(project_path)
+                self._update(git, project, rebase)
+            else:
+                self.colorprint("SKIPPING", fg=_COLOR_SKIP)
         if prune:
             self._prune(workspace, used)
 
@@ -188,14 +190,16 @@ class AnyRepo:
     def foreach(self, command, project_paths=None, manifest_path: Path = None):
         """Run `command` on each project."""
         workspace = self.workspace
+        filter_ = _create_project_paths_filter(workspace, project_paths)
         for project in self.iter_projects(manifest_path=manifest_path):
-            self.colorprint(
-                f"===== {project.name} (revision={project.revision!r}, path={project.path!r}) =====", fg=_COLOR_BANNER
-            )
-            project_path = resolve_relative(workspace.path / project.path)
-            cmdstr = " ".join(shlex.quote(part) for part in command)
-            self.colorprint(cmdstr, fg=_COLOR_ACTION)
-            run(command, cwd=project_path)
+            self._banner(project)
+            if filter_(project):
+                cmdstr = " ".join(shlex.quote(part) for part in command)
+                self.colorprint(cmdstr, fg=_COLOR_ACTION)
+                project_path = resolve_relative(self.workspace.path / project.path)
+                run(command, cwd=project_path)
+            else:
+                self.colorprint("SKIPPING", fg=_COLOR_SKIP)
 
     @staticmethod
     def create_manifest(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
@@ -245,3 +249,17 @@ class AnyRepo:
         manifest_path = self.workspace.get_manifest_path()
         manifest_spec = self.get_manifest_spec(freeze=freeze, resolve=resolve)
         return Manifest.from_spec(manifest_spec, path=str(manifest_path))
+
+    def _banner(self, project):
+        project_path = resolve_relative(self.workspace.path / project.path)
+        name = project.name
+        revision = project.revision
+        self.colorprint(f"===== {name} (revision={revision!r}, path={str(project_path)!r}) =====", fg=_COLOR_BANNER)
+
+
+def _create_project_paths_filter(workspace, project_paths):
+    workspace_path = workspace.path
+    if project_paths:
+        project_paths = [resolve_relative(workspace_path / path, base=workspace_path) for path in project_paths]
+        return lambda project: resolve_relative(workspace_path / project.path, base=workspace_path) in project_paths
+    return lambda project: True
