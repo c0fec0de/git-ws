@@ -15,7 +15,7 @@ from ._util import no_colorprint, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestExistError
 from .iters import ManifestIter, ProjectIter
-from .manifest import Manifest, ManifestSpec, Project
+from .manifest import Manifest, ManifestSpec, Project, ProjectSpec
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("anyrepo")
@@ -197,7 +197,13 @@ class AnyRepo:
     def get_manifest_spec(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
         """Get Manifest."""
         workspace = self.workspace
-        manifest_spec = self.manifest_spec.copy(deep=True)
+        if resolve:
+            manifest_spec = ManifestSpec()
+            for project in self.iter_projects(skip_main=True):
+                project_spec = ProjectSpec.from_project(project)
+                manifest_spec.dependencies.append(project_spec)
+        else:
+            manifest_spec = self.manifest_spec.copy(deep=True)
         if freeze:
             manifest = Manifest.from_spec(manifest_spec)
             for project_spec, project in zip(manifest_spec.dependencies, manifest.dependencies):

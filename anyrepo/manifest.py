@@ -149,6 +149,17 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             raise ValueError("'sub-url' requires 'remote'")
         return values
 
+    @staticmethod
+    def from_project(project: Project) -> "ProjectSpec":
+        """Create :any:`ProjectSpec` from `project`."""
+        return ProjectSpec(
+            name=project.name,
+            path=project.path,
+            url=project.url,
+            revision=project.revision,
+            manifest_path=project.manifest_path,
+        )
+
 
 class Manifest(BaseModel):
 

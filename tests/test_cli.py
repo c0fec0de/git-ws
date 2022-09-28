@@ -256,16 +256,32 @@ def test_manifest_freeze(tmp_path, arepo):
     """Manifest Freeze."""
     sha1 = get_sha(arepo.path / "dep1")
     sha2 = get_sha(arepo.path / "dep2")
+    sha3 = get_sha(arepo.path / "dep3")
+    sha4 = get_sha(arepo.path / "dep4")
     lines = [
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',
         f'revision = "{sha1}"',
+        'path = "dep1"',
         "",
         "[[dependencies]]",
         'name = "dep2"',
         'url = "../dep2"',
         f'revision = "{sha2}"',
+        'path = "dep2"',
+        "",
+        "[[dependencies]]",
+        'name = "dep4"',
+        'url = "../dep4"',
+        f'revision = "{sha4}"',
+        'path = "dep4"',
+        "",
+        "[[dependencies]]",
+        'name = "dep3"',
+        'url = "../dep3"',
+        f'revision = "{sha3}"',
+        'path = "dep3"',
         "",
     ]
 
@@ -277,6 +293,47 @@ def test_manifest_freeze(tmp_path, arepo):
     # FILE
     output_path = tmp_path / "manifest.toml"
     result = CliRunner().invoke(main, ["manifest", "freeze", "--output", str(output_path)])
+    assert result.output.split("\n") == [
+        "",
+    ]
+    assert result.exit_code == 0
+    assert output_path.read_text().split("\n") == lines
+
+
+def test_manifest_resolve(tmp_path, arepo):
+    """Manifest Resolve."""
+    lines = [
+        "[[dependencies]]",
+        'name = "dep1"',
+        'url = "../dep1"',
+        'path = "dep1"',
+        "",
+        "[[dependencies]]",
+        'name = "dep2"',
+        'url = "../dep2"',
+        'revision = "1-feature"',
+        'path = "dep2"',
+        "",
+        "[[dependencies]]",
+        'name = "dep4"',
+        'url = "../dep4"',
+        'path = "dep4"',
+        "",
+        "[[dependencies]]",
+        'name = "dep3"',
+        'url = "../dep3"',
+        'path = "dep3"',
+        "",
+    ]
+
+    # STDOUT
+    result = CliRunner().invoke(main, ["manifest", "resolve"])
+    assert result.output.split("\n") == lines + [""]
+    assert result.exit_code == 0
+
+    # FILE
+    output_path = tmp_path / "manifest.toml"
+    result = CliRunner().invoke(main, ["manifest", "resolve", "--output", str(output_path)])
     assert result.output.split("\n") == [
         "",
     ]
