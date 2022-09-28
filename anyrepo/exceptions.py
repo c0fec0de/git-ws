@@ -1,5 +1,7 @@
 """Collection Of All Exceptions Which Might Occur."""
 
+from pathlib import Path
+
 
 class UninitializedError(RuntimeError):
     """AnyRepo Workspace has not been initialized."""
@@ -54,3 +56,20 @@ class ManifestError(RuntimeError):
         super().__init__(f"Manifest {path} is broken: {details}")
         self.path = path
         self.details = details
+
+
+class InvalidConfigurationFileError(RuntimeError):
+    """A configuration file is invalid and cannot be used."""
+
+    def __init__(self, path: Path, details: str):
+        super().__init__(f"The configuration file {path} cannot be read: {details}")
+        self.path = path
+        self.details = details
+
+
+class InvalidConfigurationLocationError(RuntimeError):
+    """An invalid location for configuration data has been used."""
+
+    def __init__(self, location: str):
+        super().__init__(f"The configuration location {location} is not known")
+        self.location = location

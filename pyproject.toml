@@ -13,6 +13,7 @@ click = '>=8.0.0'
 coloredlogs = '*'
 pydantic = '>=1.10.0'
 tomlkit = '*'
+appdirs = "^1.4.4"
 
 [tool.poetry.dev-dependencies]
 black = '>=21.9b0'
