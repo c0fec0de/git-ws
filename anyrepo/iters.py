@@ -1,14 +1,14 @@
-"""Manifest and Project Iterators."""
+"""ManifestSpec and Project Iterators."""
 import logging
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
 from ._git import Git
-from .manifest import Manifest, Project
+from .manifest import Manifest, ManifestSpec, Project
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("anyrepo")
-_MANIFEST_DEFAULT = Manifest()
+_MANIFEST_DEFAULT = ManifestSpec()
 
 
 class ManifestIter:
@@ -24,27 +24,26 @@ class ManifestIter:
         yield from self.__iter(self.workspace.main_path, self.manifest_path)
 
     def __iter(self, project_path: Path, manifest_path: Path) -> Generator[Manifest, None, None]:
-        deps: List[Tuple[Path, Manifest]] = []
+        deps: List[Tuple[Path, Path]] = []
         done: List[str] = self.__done
 
-        manifest = Manifest.load(manifest_path)
+        manifest_spec = ManifestSpec.load(manifest_path)
+        manifest = Manifest.from_spec(manifest_spec, path=str(manifest_path))
         _LOGGER.debug("%r", manifest)
-        yield self.manifest_path, manifest
+        yield manifest
 
-        for spec in manifest.dependencies:
-            dep = Project.from_spec(manifest.defaults, manifest.remotes, spec)
-
+        for dep_project in manifest.dependencies:
             # Update every path just once
-            if dep.path in done:
-                _LOGGER.debug("DUPLICATE %r", dep)
+            if dep_project.path in done:
+                _LOGGER.debug("DUPLICATE %r", dep_project)
                 continue
-            _LOGGER.debug("%r", dep)
-            done.append(dep.path)
+            _LOGGER.debug("%r", dep_project)
+            done.append(dep_project.path)
 
-            dep_project_path = self.workspace.path / dep.path
+            dep_project_path = self.workspace.path / dep_project.path
 
             # Recursive
-            dep_manifest_path = dep_project_path / dep.manifest_path
+            dep_manifest_path = dep_project_path / dep_project.manifest_path
             if dep_manifest_path.exists():
                 deps.append((dep_project_path, dep_manifest_path))
 
@@ -73,11 +72,11 @@ class ProjectIter:
                 name=info.main_path.name,
                 path=str(info.main_path),
             )
-        manifest = Manifest.load(self.manifest_path, default=Manifest())
+        manifest = ManifestSpec.load(self.manifest_path, default=ManifestSpec())
         yield from self.__iter(self.workspace.main_path, manifest)
 
-    def __iter(self, project_path: Path, manifest: Manifest) -> Generator[Project, None, None]:
-        deps: List[Tuple[Path, Manifest]] = []
+    def __iter(self, project_path: Path, manifest: ManifestSpec) -> Generator[Project, None, None]:
+        deps: List[Tuple[Path, ManifestSpec]] = []
         refurl: Optional[str] = None
         done: List[str] = self.__done
         if self.resolve_url:
@@ -102,7 +101,7 @@ class ProjectIter:
 
             # Recursive
             dep_manifest_path = dep_project_path / dep.manifest_path
-            dep_manifest = Manifest.load(dep_manifest_path, default=_MANIFEST_DEFAULT)
+            dep_manifest = ManifestSpec.load(dep_manifest_path, default=_MANIFEST_DEFAULT)
             if dep_manifest != _MANIFEST_DEFAULT:
                 deps.append((dep_project_path, dep_manifest))
 

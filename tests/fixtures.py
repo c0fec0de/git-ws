@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from pytest import fixture
 
-from anyrepo.manifest import Manifest, ProjectSpec
+from anyrepo.manifest import ManifestSpec, ProjectSpec
 
 from .util import chdir, run
 
@@ -29,7 +29,7 @@ def repos(tmp_path):
 
     with git_repo(repos_path / "main", commit="initial") as path:
         (path / "data.txt").write_text("main")
-        Manifest(
+        ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep2", url="../dep2", revision="1-feature"),
@@ -38,7 +38,7 @@ def repos(tmp_path):
 
     with git_repo(repos_path / "dep1", commit="initial") as path:
         (path / "data.txt").write_text("dep1")
-        Manifest(
+        ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep4", url="../dep4"),
             ]
@@ -46,7 +46,7 @@ def repos(tmp_path):
 
     with git_repo(repos_path / "dep2", commit="initial") as path:
         (path / "data.txt").write_text("dep2")
-        Manifest(
+        ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep3", url="../dep3"),
                 ProjectSpec(name="dep4", url="../dep4"),

@@ -14,7 +14,7 @@ from ._util import no_colorprint, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestExistError
 from .iters import ManifestIter, ProjectIter
-from .manifest import Manifest, Project
+from .manifest import ManifestSpec, Project
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("anyrepo")
@@ -28,10 +28,10 @@ class AnyRepo:
 
     Args:
         workspace (Workspace): workspace.
-        manifest (Manifest): manifest.
+        manifest (ManifestSpec): manifest.
     """
 
-    def __init__(self, workspace: Workspace, manifest: Manifest, colorprint=None):
+    def __init__(self, workspace: Workspace, manifest: ManifestSpec, colorprint=None):
         self.workspace = workspace
         self.manifest = manifest
         self.colorprint = colorprint or no_colorprint
@@ -58,7 +58,7 @@ class AnyRepo:
         """
         workspace = Workspace.from_path(path=path)
         manifest_path = workspace.path / workspace.info.main_path / workspace.info.manifest_path
-        manifest = Manifest.load(manifest_path)
+        manifest = ManifestSpec.load(manifest_path)
         return AnyRepo(workspace, manifest, colorprint=colorprint)
 
     @staticmethod
@@ -69,10 +69,10 @@ class AnyRepo:
         Keyword Args:
             path:  Path within the workspace (Default is the current working directory).
             project_path:  Main Project Path.
-            mainfest_path:  Manifest File Path.
+            mainfest_path:  ManifestSpec File Path.
         """
         manifest_path = project_path / manifest_path
-        manifest = Manifest.load(manifest_path)
+        manifest = ManifestSpec.load(manifest_path)
         workspace = Workspace.init(path, project_path, resolve_relative(manifest_path, base=project_path))
         return AnyRepo(workspace, manifest, colorprint=colorprint)
 
@@ -160,12 +160,12 @@ class AnyRepo:
 
     @staticmethod
     def create_manifest(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
-        """Create Manifest File at `manifest_path`within `project`."""
+        """Create ManifestSpec File at `manifest_path`within `project`."""
         git = Git.from_path(path=project_path)
         manifest_path = resolve_relative(git.path / manifest_path)
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
-        manifest = Manifest()
+        manifest = ManifestSpec()
         manifest.save(manifest_path)
         return manifest_path
 
@@ -181,7 +181,7 @@ class AnyRepo:
         manifest_path = manifest_path or workspace.info.manifest_path
         yield from ManifestIter(workspace, workspace.main_path / manifest_path)
 
-    def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:
-        """Get Manifest."""
-        manifest = Manifest()
+    def get_manifest(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
+        """Get ManifestSpec."""
+        manifest = ManifestSpec()
         return manifest

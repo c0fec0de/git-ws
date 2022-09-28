@@ -4,7 +4,7 @@ from pytest import fixture
 
 from anyrepo import AnyRepo
 from anyrepo._cli import main
-from anyrepo.manifest import Manifest, ProjectSpec
+from anyrepo.manifest import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import,duplicate-code
 from .fixtures import repos
@@ -54,7 +54,7 @@ def test_update(tmp_path, repos, arepo):
 
     # Modify dep4
     path = repos / "dep4"
-    Manifest(
+    ManifestSpec(
         dependencies=[
             ProjectSpec(name="dep5", url="../dep5"),
         ]
@@ -86,7 +86,7 @@ def test_update_rebase(tmp_path, repos, arepo):
 
     # Modify dep4
     path = repos / "dep4"
-    Manifest(
+    ManifestSpec(
         dependencies=[
             ProjectSpec(name="dep5", url="../dep5"),
         ]
@@ -170,20 +170,24 @@ def _test_foreach(tmp_path, arepo, command):
 def test_manifest_path(tmp_path, arepo):
     """Manifest Path."""
     result = CliRunner().invoke(main, ["manifest", "path"])
-    manifest_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
+    main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
     assert result.output.split("\n") == [
-        f"{manifest_path!s}",
+        f"{main_path!s}",
         "",
     ]
     assert result.exit_code == 0
 
 
-# def test_manifest_paths(tmp_path, arepo):
-#     """Manifest Paths."""
-#     result = CliRunner().invoke(main, ["manifest", "path"])
-#     manifest_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
-#     assert result.output.split("\n") == [
-#         f"{manifest_path!s}",
-#         "",
-#     ]
-#     assert result.exit_code == 0
+def test_manifest_paths(tmp_path, arepo):
+    """Manifest Paths."""
+    result = CliRunner().invoke(main, ["manifest", "paths"])
+    main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
+    dep1_path = tmp_path / "workspace" / "dep1" / "anyrepo.toml"
+    dep2_path = tmp_path / "workspace" / "dep2" / "anyrepo.toml"
+    assert result.output.split("\n") == [
+        f"{main_path!s}",
+        f"{dep1_path!s}",
+        f"{dep2_path!s}",
+        "",
+    ]
+    assert result.exit_code == 0

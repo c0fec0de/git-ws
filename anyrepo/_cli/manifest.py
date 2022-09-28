@@ -60,8 +60,8 @@ def path(context):
     """
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path()
-        manifest_path = anyrepo.workspace.manifest_path
-        click.echo(str(manifest_path))
+        manifest = next(anyrepo.iter_manifests())
+        click.echo(str(manifest.path))
 
 
 @manifest.command()
@@ -72,5 +72,5 @@ def paths(context):
     """
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path()
-        for manifest_path, _ in anyrepo.iter_manifests():
-            click.echo(str(manifest_path))
+        for manifest in anyrepo.iter_manifests():
+            click.echo(str(manifest.path))

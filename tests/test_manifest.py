@@ -1,7 +1,7 @@
 """Manifest Testing."""
 from pytest import raises
 
-from anyrepo.manifest import Defaults, Manifest, Project, ProjectSpec, Remote
+from anyrepo.manifest import Defaults, Manifest, ManifestSpec, Project, ProjectSpec, Remote
 
 
 def test_remote():
@@ -30,14 +30,14 @@ def test_defaults():
     assert defaults.revision == "Revision"
 
 
-def test_project():
+def test_project_spec():
     """Test ProjectSpec."""
-    project = ProjectSpec(name="name")
-    assert project.name == "name"
-    assert project.remote is None
-    assert project.sub_url is None
-    assert project.url is None
-    assert project.revision is None
+    project_spec = ProjectSpec(name="name")
+    assert project_spec.name == "name"
+    assert project_spec.remote is None
+    assert project_spec.sub_url is None
+    assert project_spec.url is None
+    assert project_spec.revision is None
 
     with raises(ValueError):
         ProjectSpec(name="name", remote="remote", url="url")
@@ -47,9 +47,9 @@ def test_project():
         ProjectSpec(name="name", sub_url="sub-url")
 
 
-def test_manifest(tmp_path):
-    """Test Manifest."""
-    manifest = Manifest()
+def test_manifest_spec(tmp_path):
+    """Test ManifestSpec."""
+    manifest = ManifestSpec()
     assert manifest.defaults == Defaults()
     assert not manifest.remotes
     assert not manifest.dependencies
@@ -59,8 +59,8 @@ def test_manifest(tmp_path):
     assert filepath.read_text().split("\n") == [""]
 
 
-def test_manifest_from_data(tmp_path):
-    """Determine Manifest from Data."""
+def test_manifest_spec_from_data(tmp_path):
+    """Determine ManifestSpec from Data."""
     data = {
         "defaults": {
             "remote": "remote1",
@@ -76,7 +76,7 @@ def test_manifest_from_data(tmp_path):
             {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main"},
         ],
     }
-    manifest = Manifest(**data)
+    manifest = ManifestSpec(**data)
     assert manifest.defaults == Defaults(remote="remote1", revision="v1.3")
     assert manifest.remotes == [
         Remote(name="remote2", url_base="https://git.example.com/base2"),
@@ -119,7 +119,7 @@ def test_manifest_from_data(tmp_path):
         'revision = "main"',
         "",
     ]
-    assert Manifest.load(filepath) == manifest
+    assert ManifestSpec.load(filepath) == manifest
 
     rdependencies = [
         Project.from_spec(manifest.defaults, manifest.remotes, project) for project in manifest.dependencies
@@ -131,8 +131,8 @@ def test_manifest_from_data(tmp_path):
     ]
 
 
-def test_manifest_from_other_data(tmp_path):
-    """Determine Manifest from Other Data."""
+def test_manifest_spec_from_other_data(tmp_path):
+    """Determine ManifestSpec from Other Data."""
     data = {
         "defaults": {
             "remote": "remote1",
@@ -143,7 +143,7 @@ def test_manifest_from_other_data(tmp_path):
             {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main"},
         ],
     }
-    manifest = Manifest(**data)
+    manifest = ManifestSpec(**data)
     assert manifest.defaults == Defaults(remote="remote1")
     assert not manifest.remotes
     assert manifest.dependencies == [
@@ -153,8 +153,8 @@ def test_manifest_from_other_data(tmp_path):
     ]
 
 
-def test_manifest_not_remote(tmp_path):
-    """Determine Manifest from Other Data."""
+def test_manifest_spec_not_remote():
+    """Determine ManifestSpec from Other Data."""
     remotes = [Remote(name="remote2", url_base="foo")]
     defaults = Defaults()
     project = Project.from_spec(defaults=defaults, remotes=remotes, spec=ProjectSpec(name="foo"))
@@ -162,10 +162,42 @@ def test_manifest_not_remote(tmp_path):
     assert project.url is None
 
 
-def test_manifest_missing_remote(tmp_path):
-    """Determine Manifest with missing Remote."""
+def test_manifest_spec_missing_remote():
+    """Determine ManifestSpec with missing Remote."""
     remotes = [Remote(name="remote2", url_base="foo")]
     defaults = Defaults()
     with raises(ValueError) as exc:
         Project.from_spec(defaults=defaults, remotes=remotes, spec=ProjectSpec(name="foo", remote="remote1"))
         assert str(exc) == "ValueError: Unknown remote remote1 for project foo"
+
+
+def test_manifest():
+    """Test Manifest."""
+    data = {
+        "remotes": [
+            {
+                "name": "remote1",
+                "url-base": "url1",
+            },
+            {
+                "name": "remote2",
+                "url-base": "url2",
+            },
+        ],
+        "defaults": {
+            "remote": "remote1",
+        },
+        "dependencies": [
+            {"name": "dep1", "remote": "remote2"},
+            {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
+            {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main"},
+        ],
+    }
+    manifest_spec = ManifestSpec(**data)
+    manifest = Manifest.from_spec(manifest_spec)
+    assert manifest.dependencies == [
+        Project(name="dep1", path="dep1", url="url2/dep1"),
+        Project(name="dep2", path="dep2dir", url="https://git.example.com/base3/dep2.git"),
+        Project(name="dep3", path="dep3", url="url1/sub.git", revision="main"),
+    ]
+    assert manifest.path is None

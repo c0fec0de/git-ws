@@ -1,7 +1,7 @@
 """
 Manifest Handling.
 
-:any:`Manifest`, :any:`ProjectSpec`, :any:`Remote` and :any:`Defaults` classes are pure data containers.
+:any:`ManifestSpec`, :any:`ProjectSpec`, :any:`Remote` and :any:`Defaults` classes are pure data containers.
 They do not implement any business logic on purpose.
 :any:`Project` is a :any:`ProjectSpec` with applied :any:`Remote` and :any:`Defaults`.
 """
@@ -122,7 +122,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         sub_url (str): URL relative to :any:`Remote.url_base`.
         url (str): URL
         revision (str): Revision
-        path (str): ProjectSpec Filesystem Path. Relative to Workspace Root Directory.
+        path (str): Project Filesystem Path. Relative to Workspace Root Directory.
         manifest_path (str): Path to manifest. Relative to ProjectSpec Filesystem Path. `anyrepo.toml` by default.
     """
 
@@ -149,7 +149,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         return values
 
 
-class Manifest(BaseModel, allow_population_by_field_name=True):
+class Manifest(BaseModel):
 
     """
     Manifest.
@@ -157,7 +157,36 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
     A manifest describes the actual project and its dependencies.
 
     Keyword Args:
-        path: Checkout path.
+        path (str): Filesystem Path. Relative to Workspace Root Directory.
+        dependencies: Dependency Projects.
+    """
+
+    dependencies: List[Project] = []
+    path: Optional[str] = None
+
+    @staticmethod
+    def from_spec(spec: "ManifestSpec", path: Optional[str] = None, refurl: Optional[str] = None) -> "Manifest":
+        """
+        Create :any:`Manifest` from :any:`ManifestSpec`.
+        """
+        dependencies = [
+            Project.from_spec(spec.defaults, spec.remotes, project_spec, refurl=refurl)
+            for project_spec in spec.dependencies
+        ]
+        return Manifest(
+            dependencies=dependencies,
+            path=path,
+        )
+
+
+class ManifestSpec(BaseModel, allow_population_by_field_name=True):
+
+    """
+    ManifestSpec.
+
+    A manifest describes the actual project and its dependencies.
+
+    Keyword Args:
         defaults: Default settings.
         remotes: Remote Aliases
         dependencies: Dependency Projects.
@@ -168,9 +197,9 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
     dependencies: List[ProjectSpec] = []
 
     @classmethod
-    def load(cls, path: Path, default: Optional["Manifest"] = None) -> "Manifest":
+    def load(cls, path: Path, default: Optional["ManifestSpec"] = None) -> "ManifestSpec":
         """
-        Load :any:`Manifest` from `path`.
+        Load :any:`ManifestSpec` from `path`.
 
         The file referenced by `path` should be a YAML file according to the
         manifest scheme.
@@ -187,17 +216,16 @@ class Manifest(BaseModel, allow_population_by_field_name=True):
 
     def dump(self) -> str:
         """
-        Return :any:`Manifest` as string.
+        Return :any:`ManifestSpec` as string.
         """
         doc = tomlkit.document()
         for key, value in self.dict(by_alias=True, exclude_none=True, exclude_defaults=True).items():
-            if value:
-                doc[key] = value
+            doc[key] = value
         return tomlkit.dumps(doc)
 
     def save(self, path: Path):
         """
-        Save :any:`Manifest` at `path`.
+        Save :any:`ManifestSpec` at `path`.
         """
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(self.dump())
