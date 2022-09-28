@@ -61,6 +61,8 @@ def test_manifest_freeze(tmp_path, arepo):
     sha3 = "v1.0"
     sha4 = get_sha(arepo.path / "dep4")
     lines = [
+        'optional_groups = ["test"]',
+        "",
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',
@@ -84,6 +86,7 @@ def test_manifest_freeze(tmp_path, arepo):
         'url = "../dep3"',
         f'revision = "{sha3}"',
         'path = "dep3"',
+        'groups = ["test", "doc"]',
         "",
     ]
 
@@ -142,6 +145,8 @@ def test_manifest_freeze(tmp_path, arepo):
 def test_manifest_resolve(tmp_path, arepo):
     """Manifest Resolve."""
     lines = [
+        'optional_groups = ["test"]',
+        "",
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',
@@ -163,6 +168,7 @@ def test_manifest_resolve(tmp_path, arepo):
         'name = "dep3"',
         'url = "../dep3"',
         'path = "dep3"',
+        'groups = ["test", "doc"]',
         "",
     ]
 

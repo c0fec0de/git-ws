@@ -30,10 +30,11 @@ def repos(tmp_path):
     with git_repo(repos_path / "main", commit="initial") as path:
         (path / "data.txt").write_text("main")
         ManifestSpec(
+            optional_groups=("test",),
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep2", url="../dep2", revision="1-feature"),
-            ]
+            ],
         ).save(path / "anyrepo.toml")
 
     with chdir(repos_path / "main"):
@@ -59,7 +60,7 @@ def repos(tmp_path):
         (path / "data.txt").write_text("dep2")
         ManifestSpec(
             dependencies=[
-                ProjectSpec(name="dep3", url="../dep3"),
+                ProjectSpec(name="dep3", url="../dep3", groups=("test", "doc")),
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),
             ]
         ).save(path / "anyrepo.toml")

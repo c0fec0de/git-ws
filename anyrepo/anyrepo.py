@@ -230,18 +230,22 @@ class AnyRepo:
         """Get Manifest."""
         workspace = self.workspace
         if resolve:
-            manifest_spec = ManifestSpec()
+            rdeps: List[ProjectSpec] = []
             for project in self.iter_projects(skip_main=True):
                 project_spec = ProjectSpec.from_project(project)
-                manifest_spec.dependencies.append(project_spec)
+                rdeps.append(project_spec)
+            manifest_spec = self.manifest_spec.new(dependencies=rdeps)
         else:
-            manifest_spec = self.manifest_spec.copy(deep=True)
+            manifest_spec = self.manifest_spec.copy()
         if freeze:
             manifest = Manifest.from_spec(manifest_spec)
+            fdeps: List[ProjectSpec] = []
             for project_spec, project in zip(manifest_spec.dependencies, manifest.dependencies):
                 project_path = workspace.get_project_path(project)
                 git = Git(project_path)
-                project_spec.revision = git.get_tag() or git.get_sha()
+                revision = git.get_tag() or git.get_sha()
+                fdeps.append(project_spec.new(revision=revision))
+            manifest_spec = manifest_spec.new(dependencies=fdeps)
         return manifest_spec
 
     def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:
