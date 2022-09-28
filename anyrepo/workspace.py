@@ -6,7 +6,7 @@ The :any:`Workspace` class represents the file system location containing all gi
 """
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Generator, List, Optional
 
 import tomlkit
 
@@ -183,3 +183,27 @@ class Workspace:
     def get_project_path(self, project: Project) -> Path:
         """Project Path."""
         return self.path / project.path
+
+    def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
+        """Manifest Path."""
+        return self.main_path / (manifest_path or self.info.manifest_path)
+
+    def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
+        """Remove everything except `used`."""
+        usemap: Dict[str, Any] = {ANYREPO_PATH.name: {}}
+        for path in used:
+            pathmap = usemap
+            for part in path.parts:
+                pathmap[part] = {}
+                pathmap = pathmap[part]
+        yield from _iter_obsoletes(self.path, usemap)
+
+
+def _iter_obsoletes(path, usemap):
+    for sub in path.iterdir():
+        if sub.name in usemap:
+            subusemap = usemap[sub.name]
+            if subusemap:
+                yield from _iter_obsoletes(sub, subusemap)
+        elif sub.is_dir():
+            yield sub

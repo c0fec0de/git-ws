@@ -5,9 +5,10 @@ The :any:`AnyRepo` class provides a simple facade to all inner `AnyRepo` functio
 """
 import logging
 import shlex
+import shutil
 import urllib
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator, List, Optional
 
 from ._git import Git, get_repo_top
 from ._util import no_colorprint, resolve_relative, run
@@ -49,7 +50,7 @@ class AnyRepo:
         return self.workspace.path
 
     @staticmethod
-    def from_path(path: Optional[Path] = None, colorprint=None) -> "AnyRepo":
+    def from_path(path: Optional[Path] = None, manifest_path: Optional[Path] = None, colorprint=None) -> "AnyRepo":
         """
         Create :any:`AnyRepo` for workspace at `path`.
 
@@ -57,7 +58,7 @@ class AnyRepo:
             path:  Path within the workspace (Default is the current working directory).
         """
         workspace = Workspace.from_path(path=path)
-        manifest_path = workspace.path / workspace.info.main_path / workspace.info.manifest_path
+        manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
         return AnyRepo(workspace, manifest_spec, colorprint=colorprint)
 
@@ -115,17 +116,25 @@ class AnyRepo:
         git.clone(url)
         return AnyRepo.from_paths(path, project_path, manifest_path, colorprint=colorprint)
 
-    def update(self, project_paths=None, manifest_path: Path = MANIFEST_PATH_DEFAULT, prune=False, rebase=False):
+    def update(self, project_paths=None, manifest_path: Path = None, prune=False, rebase=False):
         """Create/Update all dependent projects."""
-        assert not prune, "TODO"
         workspace = self.workspace
-        for project in ProjectIter(workspace, workspace.main_path / manifest_path, skip_main=True, resolve_url=True):
+        used: List[Path] = [workspace.info.main_path]
+        for project in self.iter_projects(manifest_path, skip_main=True, resolve_url=True):
+            used.append(Path(project.path))
             project_path = resolve_relative(workspace.path / project.path)
             self.colorprint(
                 f"===== {project.name} (revision={project.revision}, path={project_path}) =====", fg=_COLOR_BANNER
             )
             git = Git(project_path)
             self._update(git, project, rebase)
+        if prune:
+            for obsolete_path in workspace.iter_obsoletes(used):
+                name = resolve_relative(obsolete_path, workspace.path)
+                self.colorprint(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
+                self.colorprint(f"Removing {obsolete_path!s}.", fg=_COLOR_ACTION)
+                # TODO: safety check.
+                shutil.rmtree(obsolete_path, ignore_errors=True)
 
     def _update(self, git, project, rebase):
         revision = project.revision
@@ -138,6 +147,8 @@ class AnyRepo:
                 git.checkout(revision)
             if git.is_branch(revision=revision):
                 if rebase:
+                    self.colorprint("Fetching.", fg=_COLOR_ACTION)
+                    git.fetch()
                     self.colorprint("Rebasing.", fg=_COLOR_ACTION)
                     git.rebase()
                 else:
@@ -169,20 +180,22 @@ class AnyRepo:
         manifest_spec.save(manifest_path)
         return manifest_path
 
-    def iter_projects(self, manifest_path=None) -> Generator[Project, None, None]:
+    def iter_projects(
+        self, manifest_path: Optional[Path] = None, skip_main: bool = False, resolve_url: bool = False
+    ) -> Generator[Project, None, None]:
         """Iterate over Projects."""
         workspace = self.workspace
-        manifest_path = manifest_path or workspace.info.manifest_path
-        yield from ProjectIter(workspace, workspace.main_path / manifest_path)
+        manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
+        yield from ProjectIter(workspace, manifest_path, skip_main=skip_main, resolve_url=resolve_url)
 
-    def iter_manifests(self, manifest_path=None):
+    def iter_manifests(self, manifest_path: Optional[Path] = None) -> Generator[Manifest, None, None]:
         """Iterate over Manifests."""
         workspace = self.workspace
-        manifest_path = manifest_path or workspace.info.manifest_path
-        yield from ManifestIter(workspace, workspace.main_path / manifest_path)
+        manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
+        yield from ManifestIter(workspace, manifest_path)
 
-    def get_manifest(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
-        """Get ManifestSpec."""
+    def get_manifest_spec(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
+        """Get Manifest."""
         workspace = self.workspace
         manifest_spec = self.manifest_spec.copy(deep=True)
         if freeze:
@@ -192,3 +205,9 @@ class AnyRepo:
                 git = Git(project_path)
                 project_spec.revision = git.get_sha()
         return manifest_spec
+
+    def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:
+        """Get Manifest."""
+        manifest_path = self.workspace.get_manifest_path()
+        manifest_spec = self.get_manifest_spec(freeze=freeze, resolve=resolve)
+        return Manifest.from_spec(manifest_spec, path=str(manifest_path))

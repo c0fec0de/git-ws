@@ -37,18 +37,16 @@ def _projects_option():
     )
 
 
-def _manifest_option():
-    return click.option(
-        "--manifest",
-        "-M",
-        type=click.Path(dir_okay=False),
-        default=MANIFEST_PATH_DEFAULT,
-        help=f"Manifest file. '{MANIFEST_PATH_DEFAULT!s}' by default.",
-    )
+def _manifest_option(default=None):
+    if default:
+        help_ = f"Manifest file. '{default!s}' by default."
+    else:
+        help_ = "Manifest file. Configured file by default."
+    return click.option("--manifest", "-M", type=click.Path(dir_okay=False), default=default, help=help_)
 
 
 @main.command()
-@_manifest_option()
+@_manifest_option(default=MANIFEST_PATH_DEFAULT)
 @pass_context
 def init(context, manifest: Path = MANIFEST_PATH_DEFAULT):
     """
@@ -68,7 +66,7 @@ def init(context, manifest: Path = MANIFEST_PATH_DEFAULT):
 
 @main.command()
 @click.argument("url")
-@_manifest_option()
+@_manifest_option(default=MANIFEST_PATH_DEFAULT)
 @pass_context
 def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT):
     """
@@ -89,10 +87,10 @@ def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT):
 @click.option("--rebase", is_flag=True, default=False, help="Run 'git rebase' instead of 'git pull'")
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
 @pass_context
-def update(context, projects, manifest: Path = MANIFEST_PATH_DEFAULT, rebase: bool = False, prune: bool = False):
+def update(context, projects, manifest: Path = None, rebase: bool = False, prune: bool = False):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(colorprint=click.secho)
+        arepo = AnyRepo.from_path(colorprint=click.secho, manifest_path=manifest)
         arepo.update(projects, manifest_path=manifest, rebase=rebase, prune=prune)
 
 
@@ -204,7 +202,7 @@ def foreach(context, projects, command):
     type=click.Path(file_okay=False),
     help="Project Path. Current working directory by default.",
 )
-@_manifest_option()
+@_manifest_option(default=MANIFEST_PATH_DEFAULT)
 @pass_context
 def create_manifest(context, project, manifest):
     """Create Manifest."""

@@ -36,6 +36,16 @@ def repos(tmp_path):
             ]
         ).save(path / "anyrepo.toml")
 
+    with chdir(repos_path / "main"):
+        ManifestSpec(
+            dependencies=[
+                ProjectSpec(name="dep1", url="../dep1"),
+                ProjectSpec(name="dep6", url="../dep6", path="sub/dep6"),
+            ]
+        ).save(path / "other.toml")
+        run(("git", "add", "other.toml"), check=True)
+        run(("git", "commit", "-m", "other"), check=True)
+
     with git_repo(repos_path / "dep1", commit="initial") as path:
         (path / "data.txt").write_text("dep1")
         ManifestSpec(
@@ -68,5 +78,8 @@ def repos(tmp_path):
 
     with git_repo(repos_path / "dep5", commit="initial") as path:
         (path / "data.txt").write_text("dep5")
+
+    with git_repo(repos_path / "dep6", commit="initial") as path:
+        (path / "data.txt").write_text("dep6")
 
     yield repos_path

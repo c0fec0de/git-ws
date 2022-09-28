@@ -82,6 +82,10 @@ class Git:
         """Checkout Revision."""
         self._run(("checkout", revision))
 
+    def fetch(self):
+        """Pull."""
+        self._run(("fetch",))
+
     def pull(self):
         """Pull."""
         self._run(("pull",))

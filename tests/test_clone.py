@@ -9,6 +9,17 @@ from .fixtures import repos
 from .util import chdir
 
 
+def check(workspace, name, content=None, exists=True):
+    """Check."""
+    file_path = workspace / name / "data.txt"
+    content = content or name
+    if exists:
+        assert file_path.exists()
+        assert file_path.read_text() == f"{content}"
+    else:
+        assert not file_path.exists()
+
+
 def test_cli_clone(tmp_path, repos):
     """Cloning via CLI."""
     workspace = tmp_path / "workspace"
@@ -34,21 +45,71 @@ def test_clone(tmp_path, repos):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
-    def check(name, content=None):
-        file_path = workspace / name / "data.txt"
-        content = content or name
-        assert file_path.exists()
-        assert file_path.read_text() == f"{content}"
-
     with chdir(workspace):
-        arepo = AnyRepo.clone(str(repos / "main"))
+        main_path = repos / "main"
+        arepo = AnyRepo.clone(str(main_path))
         arepo.update()
+        assert arepo.get_manifest().path == str(workspace / "main" / "anyrepo.toml")
 
-        check("main")
-        check("dep1")
-        check("dep2", content="dep2-feature")
-        check("dep3")
-        check("dep4")
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3")
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
 
         rrepo = AnyRepo.from_path()
         assert arepo == rrepo
+
+
+def test_clone_other(tmp_path, repos):
+    """Test Clone Other."""
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    with chdir(workspace):
+        main_path = repos / "main"
+        arepo = AnyRepo.clone(str(main_path), manifest_path="other.toml")
+        arepo.update()
+        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", exists=False)
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
+
+        rrepo = AnyRepo.from_path()
+        assert arepo == rrepo
+
+        arepo.update(manifest_path="anyrepo.toml")
+        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3")
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
+
+        arepo.update()
+        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3")
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
+
+        arepo.update(prune=True)
+        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", exists=False)
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)

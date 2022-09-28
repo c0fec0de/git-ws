@@ -36,7 +36,7 @@ def resolve(context, output=None):
     """
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path()
-        manifest = anyrepo.get_manifest(resolve=True)
+        manifest = anyrepo.get_manifest_spec(resolve=True)
         if output:
             manifest.save(Path(output))
         else:
@@ -55,7 +55,7 @@ def freeze(context, output=None):
     """
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path()
-        manifest = anyrepo.get_manifest(freeze=True, resolve=True)
+        manifest = anyrepo.get_manifest_spec(freeze=True, resolve=True)
         if output:
             manifest.save(Path(output))
         else:

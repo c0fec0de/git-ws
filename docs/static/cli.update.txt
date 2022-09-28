@@ -5,7 +5,7 @@ Usage: anyrepo update [OPTIONS]
 Options:
   -P, --project TEXT   Project path to operate on only. All by default. This
                        option can be specified multiple times.
-  -M, --manifest FILE  Manifest file. 'anyrepo.toml' by default.
+  -M, --manifest FILE  Manifest file. Configured file by default.
   --rebase             Run 'git rebase' instead of 'git pull'
   --prune              Remove obsolete git clones
   --help               Show this message and exit.

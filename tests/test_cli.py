@@ -165,15 +165,19 @@ def test_update_rebase(tmp_path, repos, arepo):
     result = CliRunner().invoke(main, ["update", "--rebase"])
     assert result.output.split("\n") == [
         "===== dep1 (revision=None, path=dep1) =====",
+        "Fetching.",
         "Rebasing.",
         "===== dep2 (revision=1-feature, path=dep2) =====",
         "Checking out.",
+        "Fetching.",
         "Rebasing.",
         "===== dep4 (revision=None, path=dep4) =====",
+        "Fetching.",
         "Rebasing.",
         "===== dep5 (revision=None, path=dep5) =====",
         f"Cloning {tmp_path!s}/repos/dep5.",
         "===== dep3 (revision=None, path=dep3) =====",
+        "Fetching.",
         "Rebasing.",
         "",
     ]
