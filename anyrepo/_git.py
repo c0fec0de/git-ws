@@ -19,7 +19,12 @@ def get_repo_top(path: Optional[Path]) -> Path:
 
 class Git:
 
-    """Our Git REPO Helper."""
+    """
+    Our Git REPO Helper.
+
+    We know, that there are libraries for that.
+    But we just want to have a lean programmatic interface to git.
+    """
 
     def __init__(self, path):
         self.path = path
@@ -34,12 +39,12 @@ class Git:
         """Check if clone already exists."""
         if not self.path.exists() or not self.path.is_dir():
             return False
-        result = self._run(("rev-parse", "--show-cdup"), cwd=self.path, capture_output=True, check=False)
+        result = self._run(("rev-parse", "--show-cdup"), capture_output=True, check=False)
         return not result.stderr and not result.stdout.strip()
 
-    def init(self):
+    def init(self, branch="main"):
         """Initialize."""
-        self._run(("init",))
+        self._run(("init", "-b", branch))
 
     def set_config(self, name, value):
         """Configure."""
@@ -53,30 +58,21 @@ class Git:
         cmd += ["--", str(url), str(self.path)]
         run(cmd)
 
-    def get_revision(self) -> str:
-        """Get actual revision."""
-        result = self._run(("branch", "--show-current"), cwd=self.path, capture_output=True)
-        first_line = result.stdout.decode("utf-8").split("\n")[0]
-        return first_line.rsplit(" ", 1)[-1]
+    def get_branch(self) -> Optional[str]:
+        """Get Branch."""
+        return self._run2str(("branch", "--show-current")) or None
+
+    def get_tag(self) -> Optional[str]:
+        """Get Tag."""
+        return self._run2str(("describe", "--exact-match", "--tags"), check=False) or None
 
     def get_sha(self, revision="HEAD") -> str:
         """Get SHA."""
-        result = self._run(("rev-parse", revision), capture_output=True, check=True)
-        return result.stdout.decode("utf-8").strip()
+        return self._run2str(("rev-parse", revision))
 
     def get_url(self) -> Optional[str]:
         """Get actual url."""
-        result = self._run(("remote", "get-url", "origin"), capture_output=True, check=False)
-        stdout = result.stdout.decode("utf-8").strip()
-        if result.stderr or not stdout:
-            return None
-        return stdout
-
-    def is_branch(self, revision=None) -> bool:
-        """Check if `revision` is a branch."""
-        revision = revision or self.get_revision()
-        # TODO: is_branch
-        return True
+        return self._run2str(("remote", "get-url", "origin"), check=False) or None
 
     def checkout(self, revision):
         """Checkout Revision."""
@@ -85,6 +81,10 @@ class Git:
     def fetch(self):
         """Pull."""
         self._run(("fetch",))
+
+    def merge(self):
+        """Merge."""
+        self._run(("merge",))
 
     def pull(self):
         """Pull."""
@@ -102,7 +102,21 @@ class Git:
         """Commit."""
         self._run(("commit", "-m", msg))
 
+    def tag(self, name, msg=None):
+        """Tag."""
+        cmd = ["tag", name]
+        if msg:
+            cmd += ["-m", msg]
+        self._run(cmd)
+
     def _run(self, cmd, cwd=None, **kwargs):
         cwd = cwd or self.path
         cmd = ("git",) + tuple(cmd)
         return run(cmd, cwd=cwd, **kwargs)
+
+    def _run2str(self, cmd, cwd=None, check=True) -> str:
+        result = self._run(cmd, cwd=cwd, check=check, capture_output=True)
+        if result.stderr.strip():
+            return ""
+        stdout = result.stdout.decode("utf-8").strip()
+        return stdout

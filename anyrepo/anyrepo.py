@@ -92,7 +92,7 @@ class AnyRepo:
         colorprint = colorprint or no_colorprint
         project_path = get_repo_top(path=project_path)
         name = project_path.name
-        colorprint(f"===== {name} (revision=None, path={name}) =====", fg=_COLOR_BANNER)
+        colorprint(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(project_path / manifest_path)
         path = project_path.parent
         return AnyRepo.from_paths(path, project_path, manifest_path, colorprint=colorprint)
@@ -109,8 +109,8 @@ class AnyRepo:
         path = path or Path.cwd()
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
-        colorprint(f"===== {name} (revision=None, path={name}) =====", fg=_COLOR_BANNER)
-        colorprint(f"Cloning {url}.", fg=_COLOR_ACTION)
+        colorprint(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
+        colorprint(f"Cloning {url!r}.", fg=_COLOR_ACTION)
         project_path = path / name
         git = Git(project_path)
         git.clone(url)
@@ -124,45 +124,73 @@ class AnyRepo:
             used.append(Path(project.path))
             project_path = resolve_relative(workspace.path / project.path)
             self.colorprint(
-                f"===== {project.name} (revision={project.revision}, path={project_path}) =====", fg=_COLOR_BANNER
+                f"===== {project.name} (revision={project.revision!r}, path={str(project_path)!r}) =====",
+                fg=_COLOR_BANNER,
             )
             git = Git(project_path)
             self._update(git, project, rebase)
         if prune:
-            for obsolete_path in workspace.iter_obsoletes(used):
-                name = resolve_relative(obsolete_path, workspace.path)
-                self.colorprint(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
-                self.colorprint(f"Removing {obsolete_path!s}.", fg=_COLOR_ACTION)
-                # TODO: safety check.
-                shutil.rmtree(obsolete_path, ignore_errors=True)
+            self._prune(workspace, used)
 
     def _update(self, git, project, rebase):
-        revision = project.revision
+        # Clone
         if not git.is_cloned():
-            self.colorprint(f"Cloning {project.url}.", fg=_COLOR_ACTION)
-            git.clone(project.url, revision=revision)
-        else:
-            if revision:
-                self.colorprint("Checking out.", fg=_COLOR_ACTION)
-                git.checkout(revision)
-            if git.is_branch(revision=revision):
-                if rebase:
+            self.colorprint(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+            git.clone(project.url, revision=project.revision)
+            return
+
+        # Determine actual version
+        sha = git.get_sha()
+        tag = git.get_tag()
+        branch = git.get_branch()
+
+        if project.revision in (sha, tag) and not branch:
+            self.colorprint("Nothing to do.", fg=_COLOR_ACTION)
+            return
+
+        revision = branch or tag or sha
+
+        # Checkout
+        fetched = False
+        if project.revision and revision != project.revision:
+            self.colorprint("Fetching.", fg=_COLOR_ACTION)
+            git.fetch()
+            fetched = True
+            self.colorprint(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
+            git.checkout(project.revision)
+            branch = git.get_branch()
+            revision = branch or tag or sha
+
+        # Pull or Rebase in case we are on a branch (or have switched to it.)
+        if branch:
+            if rebase:
+                if not fetched:
                     self.colorprint("Fetching.", fg=_COLOR_ACTION)
                     git.fetch()
-                    self.colorprint("Rebasing.", fg=_COLOR_ACTION)
-                    git.rebase()
-                else:
-                    self.colorprint("Pulling.", fg=_COLOR_ACTION)
-                    git.pull()
+                self.colorprint(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
+                git.rebase()
             else:
-                self.colorprint("Nothing to do.", fg=_COLOR_ACTION)
+                if not fetched:
+                    self.colorprint(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
+                    git.pull()
+                else:
+                    self.colorprint(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
+                    git.merge()
+
+    def _prune(self, workspace: Workspace, used: List[Path]):
+        for obsolete_path in workspace.iter_obsoletes(used):
+            name = resolve_relative(obsolete_path, workspace.path)
+            self.colorprint(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
+            self.colorprint(f"Removing {str(obsolete_path)!r}.", fg=_COLOR_ACTION)
+            # TODO: safety check.
+            shutil.rmtree(obsolete_path, ignore_errors=True)
 
     def foreach(self, command, project_paths=None, manifest_path: Path = None):
         """Run `command` on each project."""
         workspace = self.workspace
         for project in self.iter_projects(manifest_path=manifest_path):
             self.colorprint(
-                f"===== {project.name} (revision={project.revision}, path={project.path}) =====", fg=_COLOR_BANNER
+                f"===== {project.name} (revision={project.revision!r}, path={project.path!r}) =====", fg=_COLOR_BANNER
             )
             project_path = resolve_relative(workspace.path / project.path)
             cmdstr = " ".join(shlex.quote(part) for part in command)
@@ -209,7 +237,7 @@ class AnyRepo:
             for project_spec, project in zip(manifest_spec.dependencies, manifest.dependencies):
                 project_path = workspace.get_project_path(project)
                 git = Git(project_path)
-                project_spec.revision = git.get_sha()
+                project_spec.revision = git.get_tag() or git.get_sha()
         return manifest_spec
 
     def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:

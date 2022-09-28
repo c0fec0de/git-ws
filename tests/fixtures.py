@@ -41,6 +41,7 @@ def repos(tmp_path):
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep6", url="../dep6", path="sub/dep6"),
+                ProjectSpec(name="dep4", url="../dep4", revision="4-feature"),
             ]
         ).save(path / "other.toml")
         run(("git", "add", "other.toml"), check=True)
@@ -50,7 +51,7 @@ def repos(tmp_path):
         (path / "data.txt").write_text("dep1")
         ManifestSpec(
             dependencies=[
-                ProjectSpec(name="dep4", url="../dep4"),
+                ProjectSpec(name="dep4", url="../dep4", revision="main"),
             ]
         ).save(path / "anyrepo.toml")
 
@@ -59,7 +60,7 @@ def repos(tmp_path):
         ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep3", url="../dep3"),
-                ProjectSpec(name="dep4", url="../dep4"),
+                ProjectSpec(name="dep4", url="../dep4", revision="main"),
             ]
         ).save(path / "anyrepo.toml")
 
@@ -73,8 +74,17 @@ def repos(tmp_path):
     with git_repo(repos_path / "dep3", commit="initial") as path:
         (path / "data.txt").write_text("dep3")
 
+    run(("git", "tag", "v1.0"), check=True, cwd=repos_path / "dep3")
+
     with git_repo(repos_path / "dep4", commit="initial") as path:
         (path / "data.txt").write_text("dep4")
+
+    with chdir(repos_path / "dep4"):
+        run(("git", "checkout", "-b", "4-feature"), check=True)
+        (path / "data.txt").write_text("dep4-feature")
+        run(("git", "add", "data.txt"), check=True)
+        run(("git", "commit", "-m", "feature"), check=True)
+        run(("git", "checkout", "main"), check=True)
 
     with git_repo(repos_path / "dep5", commit="initial") as path:
         (path / "data.txt").write_text("dep5")

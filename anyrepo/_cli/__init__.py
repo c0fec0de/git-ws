@@ -45,10 +45,15 @@ def _manifest_option(default=None):
     return click.option("--manifest", "-M", type=click.Path(dir_okay=False), default=default, help=help_)
 
 
+def _update_option(default=None):
+    return click.option("--update", "-U", is_flag=True, help="Run 'anyrepo update' too.")
+
+
 @main.command()
 @_manifest_option(default=MANIFEST_PATH_DEFAULT)
+@_update_option()
 @pass_context
-def init(context, manifest: Path = MANIFEST_PATH_DEFAULT):
+def init(context, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = False):
     """
     Initialize AnyRepo workspace and create all dependent git clones.
 
@@ -57,28 +62,35 @@ def init(context, manifest: Path = MANIFEST_PATH_DEFAULT):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.init(manifest_path=manifest, colorprint=click.secho)
-        click.secho(
-            f"Workspace initialized at '{resolve_relative(arepo.path)!s}'. "
-            "Please continue with:\n\n    anyrepo update\n",
-            fg=_COLOR_INFO,
-        )
+        click.secho(f"Workspace initialized at {str(resolve_relative(arepo.path))!r}.")
+        if update:
+            arepo.update()
+        else:
+            click.secho(
+                "Please continue with:\n\n    anyrepo update\n",
+                fg=_COLOR_INFO,
+            )
 
 
 @main.command()
 @click.argument("url")
 @_manifest_option(default=MANIFEST_PATH_DEFAULT)
+@_update_option()
 @pass_context
-def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT):
+def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = False):
     """
     Create a git clone, initialize AnyRepo workspace and create all dependent git clones.
     """
     with exceptionhandling(context):
         arepo = AnyRepo.clone(url, manifest_path=manifest, colorprint=click.secho)
-        click.secho(
-            f"Workspace initialized at '{resolve_relative(arepo.path)!s}'. "
-            "Please continue with:\n\n    anyrepo update\n",
-            fg=_COLOR_INFO,
-        )
+        if update:
+            arepo.update()
+        else:
+            click.secho(
+                f"Workspace initialized at {str(resolve_relative(arepo.path))!r}. "
+                "Please continue with:\n\n    anyrepo update\n",
+                fg=_COLOR_INFO,
+            )
 
 
 @main.command()
@@ -91,7 +103,7 @@ def update(context, projects, manifest: Path = None, rebase: bool = False, prune
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(colorprint=click.secho, manifest_path=manifest)
-        arepo.update(projects, manifest_path=manifest, rebase=rebase, prune=prune)
+        arepo.update(project_paths=projects, manifest_path=manifest, rebase=rebase, prune=prune)
 
 
 @main.command()
@@ -208,7 +220,7 @@ def create_manifest(context, project, manifest):
     """Create Manifest."""
     with exceptionhandling(context):
         path = AnyRepo.create_manifest(project, manifest)
-        click.secho(f"Manifest {path!s} created.", fg=_COLOR_INFO)
+        click.secho(f"Manifest {str(path)!r} created.", fg=_COLOR_INFO)
 
 
 main.add_command(manifest)

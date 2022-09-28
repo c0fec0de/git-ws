@@ -28,8 +28,8 @@ def test_cli_clone(tmp_path, repos):
     with chdir(workspace):
         result = CliRunner().invoke(main, ["clone", str(repos / "main")])
         assert result.output.split("\n") == [
-            "===== main (revision=None, path=main) =====",
-            f"Cloning {tmp_path}/repos/main.",
+            "===== main (revision=None, path='main') =====",
+            f"Cloning '{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
             "    anyrepo update",
@@ -37,6 +37,43 @@ def test_cli_clone(tmp_path, repos):
             "",
         ]
         assert result.exit_code == 0
+
+    check(workspace, "main")
+    check(workspace, "dep1", exists=False)
+    check(workspace, "dep2", exists=False)
+    check(workspace, "dep3", exists=False)
+    check(workspace, "dep4", exists=False)
+    check(workspace, "dep5", exists=False)
+
+
+def test_cli_clone_update(tmp_path, repos):
+    """Cloning via CLI."""
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    with chdir(workspace):
+        result = CliRunner().invoke(main, ["clone", str(repos / "main"), "--update"])
+        assert result.output.split("\n") == [
+            "===== main (revision=None, path='main') =====",
+            f"Cloning '{tmp_path}/repos/main'.",
+            "===== dep1 (revision=None, path='dep1') =====",
+            f"Cloning '{tmp_path}/repos/dep1'.",
+            "===== dep2 (revision='1-feature', path='dep2') =====",
+            f"Cloning '{tmp_path}/repos/dep2'.",
+            "===== dep4 (revision='main', path='dep4') =====",
+            f"Cloning '{tmp_path}/repos/dep4'.",
+            "===== dep3 (revision=None, path='dep3') =====",
+            f"Cloning '{tmp_path}/repos/dep3'.",
+            "",
+        ]
+        assert result.exit_code == 0
+
+    check(workspace, "main")
+    check(workspace, "dep1")
+    check(workspace, "dep2", content="dep2-feature")
+    check(workspace, "dep3")
+    check(workspace, "dep4")
+    check(workspace, "dep5", exists=False)
 
 
 def test_clone(tmp_path, repos):
@@ -78,7 +115,7 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep1")
         check(workspace, "dep2", exists=False)
         check(workspace, "dep3", exists=False)
-        check(workspace, "dep4")
+        check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
 
         rrepo = AnyRepo.from_path()
@@ -101,8 +138,10 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep1")
         check(workspace, "dep2", content="dep2-feature")
         check(workspace, "dep3")
-        check(workspace, "dep4")
+        check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
+
+        (workspace / "dep5").touch()
 
         arepo.update(prune=True)
         assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
@@ -111,5 +150,5 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep1")
         check(workspace, "dep2", exists=False)
         check(workspace, "dep3", exists=False)
-        check(workspace, "dep4")
+        check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
