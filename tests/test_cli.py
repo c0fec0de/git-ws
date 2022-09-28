@@ -8,7 +8,7 @@ from anyrepo.manifest import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import,duplicate-code
 from .fixtures import repos
-from .util import chdir, run
+from .util import chdir, get_sha, run
 
 
 @fixture
@@ -47,6 +47,56 @@ def test_diff(tmp_path, arepo):
 def test_status(tmp_path, arepo):
     """Test status."""
     _test_foreach(tmp_path, arepo, "status")
+
+
+def test_git(tmp_path, arepo):
+    """Test git."""
+    result = CliRunner().invoke(main, ["git", "status"])
+    assert result.output.split("\n") == [
+        "===== main (revision=None, path=main) =====",
+        "git status",
+        "===== dep1 (revision=None, path=dep1) =====",
+        "git status",
+        "===== dep2 (revision=1-feature, path=dep2) =====",
+        "git status",
+        "===== dep4 (revision=None, path=dep4) =====",
+        "git status",
+        "===== dep3 (revision=None, path=dep3) =====",
+        "git status",
+        "",
+    ]
+    assert result.exit_code == 0
+
+
+def test_foreach(tmp_path, arepo):
+    """Test foreach."""
+    result = CliRunner().invoke(main, ["foreach", "git", "status"])
+    assert result.output.split("\n") == [
+        "===== main (revision=None, path=main) =====",
+        "git status",
+        "===== dep1 (revision=None, path=dep1) =====",
+        "git status",
+        "===== dep2 (revision=1-feature, path=dep2) =====",
+        "git status",
+        "===== dep4 (revision=None, path=dep4) =====",
+        "git status",
+        "===== dep3 (revision=None, path=dep3) =====",
+        "git status",
+        "",
+    ]
+    assert result.exit_code == 0
+
+
+def test_foreach_fail(tmp_path, arepo):
+    """Test foreach failing."""
+    result = CliRunner().invoke(main, ["foreach", "--", "git", "status", "--invalidoption"])
+    assert result.output.split("\n") == [
+        "===== main (revision=None, path=main) =====",
+        "git status --invalidoption",
+        "Error: Command '('git', 'status', '--invalidoption')' returned non-zero exit status 129.",
+        "",
+    ]
+    assert result.exit_code == 1
 
 
 def test_update(tmp_path, repos, arepo):
@@ -165,6 +215,69 @@ def _test_foreach(tmp_path, arepo, command):
         "",
     ]
     assert result.exit_code == 0
+
+
+def test_manifest_validate(tmp_path, arepo):
+    """Manifest Validate."""
+    result = CliRunner().invoke(main, ["manifest", "validate"])
+    assert result.output.split("\n") == [""]
+    assert result.exit_code == 0
+
+    manifest_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
+    assert manifest_path.write_text(
+        "\n".join(
+            [
+                "[[dependencies]]",
+                'nam = "dep1"',
+                "",
+                "[[dependencies]]",
+                'name = "dep2"',
+                'url = "../dep2"',
+                'revision = "1-feature"',
+                "",
+            ]
+        )
+    )
+    result = CliRunner().invoke(main, ["manifest", "validate"])
+    assert result.output.split("\n") == [
+        "Error: Manifest main/anyrepo.toml is broken: 1 validation error for ManifestSpec",
+        "dependencies -> 0 -> name",
+        "  field required (type=value_error.missing)",
+        "",
+    ]
+    assert result.exit_code == 1
+
+
+def test_manifest_freeze(tmp_path, arepo):
+    """Manifest Freeze."""
+    sha1 = get_sha(arepo.path / "dep1")
+    sha2 = get_sha(arepo.path / "dep2")
+    lines = [
+        "[[dependencies]]",
+        'name = "dep1"',
+        'url = "../dep1"',
+        f'revision = "{sha1}"',
+        "",
+        "[[dependencies]]",
+        'name = "dep2"',
+        'url = "../dep2"',
+        f'revision = "{sha2}"',
+        "",
+    ]
+
+    # STDOUT
+    result = CliRunner().invoke(main, ["manifest", "freeze"])
+    assert result.output.split("\n") == lines + [""]
+    assert result.exit_code == 0
+
+    # FILE
+    output_path = tmp_path / "manifest.toml"
+    result = CliRunner().invoke(main, ["manifest", "freeze", "--output", str(output_path)])
+    assert result.output.split("\n") == [
+        "",
+    ]
+    assert result.exit_code == 0
+    assert output_path.read_text().split("\n") == lines
 
 
 def test_manifest_path(tmp_path, arepo):

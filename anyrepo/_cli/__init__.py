@@ -104,7 +104,7 @@ def git(context, projects, command):
     """
     Run git command on projects.
 
-    This command behaves identical to `anyrepo foreach git`.
+    This command behaves identical to `anyrepo foreach -- git`.
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(colorprint=click.secho)
@@ -118,7 +118,7 @@ def fetch(context, projects):
     """
     Run 'git fetch' on projects.
 
-    This command behaves identical to `anyrepo foreach git fetch`.
+    This command behaves identical to `anyrepo foreach -- git fetch`.
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(colorprint=click.secho)
@@ -132,7 +132,7 @@ def pull(context, projects):
     """
     Run 'git pull' on projects.
 
-    This command behaves identical to `anyrepo foreach git pull`.
+    This command behaves identical to `anyrepo foreach -- git pull`.
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(colorprint=click.secho)
@@ -146,7 +146,7 @@ def rebase(context, projects):
     """
     Run 'git rebase' on projects.
 
-    This command behaves identical to `anyrepo foreach git rebase`.
+    This command behaves identical to `anyrepo foreach -- git rebase`.
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(colorprint=click.secho)
@@ -160,7 +160,7 @@ def status(context, projects):
     """
     Run 'git status' on projects.
 
-    This command behaves identical to `anyrepo foreach git status`.
+    This command behaves identical to `anyrepo foreach -- git status`.
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(colorprint=click.secho)
@@ -174,7 +174,7 @@ def diff(context, projects):
     """
     Run 'git diff' on projects.
 
-    This command behaves identical to `anyrepo foreach git diff`.
+    This command behaves identical to `anyrepo foreach -- git diff`.
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(colorprint=click.secho)
@@ -186,7 +186,12 @@ def diff(context, projects):
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 @pass_context
 def foreach(context, projects, command):
-    """Run 'command' on projects."""
+    """
+    Run 'command' on projects.
+
+    Please use '--' to separate anyrepo command line options from options forwarded to the `command`
+    (i.e. `anyrepo foreach -- ls -l`)
+    """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(colorprint=click.secho)
         arepo.foreach(command, project_paths=projects)

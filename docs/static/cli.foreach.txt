@@ -2,6 +2,9 @@ Usage: anyrepo foreach [OPTIONS] [COMMAND]...
 
   Run 'command' on projects.
 
+  Please use '--' to separate anyrepo command line options from options
+  forwarded to the `command` (i.e. `anyrepo foreach -- ls -l`)
+
 Options:
   -P, --project TEXT  Project path to operate on only. All by default. This
                       option can be specified multiple times.

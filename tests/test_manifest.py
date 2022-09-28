@@ -168,7 +168,7 @@ def test_manifest_spec_missing_remote():
     defaults = Defaults()
     with raises(ValueError) as exc:
         Project.from_spec(defaults=defaults, remotes=remotes, spec=ProjectSpec(name="foo", remote="remote1"))
-        assert str(exc) == "ValueError: Unknown remote remote1 for project foo"
+    assert str(exc.value) == "Unknown remote remote1 for project foo"
 
 
 def test_manifest():

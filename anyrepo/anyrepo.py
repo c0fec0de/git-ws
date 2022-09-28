@@ -14,7 +14,7 @@ from ._util import no_colorprint, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestExistError
 from .iters import ManifestIter, ProjectIter
-from .manifest import ManifestSpec, Project
+from .manifest import Manifest, ManifestSpec, Project
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("anyrepo")
@@ -28,17 +28,17 @@ class AnyRepo:
 
     Args:
         workspace (Workspace): workspace.
-        manifest (ManifestSpec): manifest.
+        manifest_spec (ManifestSpec): manifest.
     """
 
-    def __init__(self, workspace: Workspace, manifest: ManifestSpec, colorprint=None):
+    def __init__(self, workspace: Workspace, manifest_spec: ManifestSpec, colorprint=None):
         self.workspace = workspace
-        self.manifest = manifest
+        self.manifest_spec = manifest_spec
         self.colorprint = colorprint or no_colorprint
 
     def __eq__(self, other):
         if isinstance(other, AnyRepo):
-            return (self.workspace, self.manifest) == (other.workspace, other.manifest)
+            return (self.workspace, self.manifest_spec) == (other.workspace, other.manifest_spec)
         return NotImplemented
 
     @property
@@ -58,8 +58,8 @@ class AnyRepo:
         """
         workspace = Workspace.from_path(path=path)
         manifest_path = workspace.path / workspace.info.main_path / workspace.info.manifest_path
-        manifest = ManifestSpec.load(manifest_path)
-        return AnyRepo(workspace, manifest, colorprint=colorprint)
+        manifest_spec = ManifestSpec.load(manifest_path)
+        return AnyRepo(workspace, manifest_spec, colorprint=colorprint)
 
     @staticmethod
     def from_paths(path: Path, project_path: Path, manifest_path: Path, colorprint=None) -> "AnyRepo":
@@ -72,9 +72,9 @@ class AnyRepo:
             mainfest_path:  ManifestSpec File Path.
         """
         manifest_path = project_path / manifest_path
-        manifest = ManifestSpec.load(manifest_path)
+        manifest_spec = ManifestSpec.load(manifest_path)
         workspace = Workspace.init(path, project_path, resolve_relative(manifest_path, base=project_path))
-        return AnyRepo(workspace, manifest, colorprint=colorprint)
+        return AnyRepo(workspace, manifest_spec, colorprint=colorprint)
 
     @staticmethod
     def init(
@@ -165,8 +165,8 @@ class AnyRepo:
         manifest_path = resolve_relative(git.path / manifest_path)
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
-        manifest = ManifestSpec()
-        manifest.save(manifest_path)
+        manifest_spec = ManifestSpec()
+        manifest_spec.save(manifest_path)
         return manifest_path
 
     def iter_projects(self, manifest_path=None) -> Generator[Project, None, None]:
@@ -183,5 +183,12 @@ class AnyRepo:
 
     def get_manifest(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
         """Get ManifestSpec."""
-        manifest = ManifestSpec()
-        return manifest
+        workspace = self.workspace
+        manifest_spec = self.manifest_spec.copy(deep=True)
+        if freeze:
+            manifest = Manifest.from_spec(manifest_spec)
+            for project_spec, project in zip(manifest_spec.dependencies, manifest.dependencies):
+                project_path = workspace.get_project_path(project)
+                git = Git(project_path)
+                project_spec.revision = git.get_sha()
+        return manifest_spec

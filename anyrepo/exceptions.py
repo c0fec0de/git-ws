@@ -49,3 +49,8 @@ class OutsideWorkspaceError(RuntimeError):
 
 class ManifestError(RuntimeError):
     """Manifest Error."""
+
+    def __init__(self, path, details):
+        super().__init__(f"Manifest {path} is broken: {details}")
+        self.path = path
+        self.details = details

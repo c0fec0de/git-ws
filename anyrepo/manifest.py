@@ -7,15 +7,16 @@ They do not implement any business logic on purpose.
 """
 
 from pathlib import Path
-from typing import Callable, List, Optional
+from typing import List, Optional
 
 import tomlkit
 from pydantic import Field, root_validator
 
 from ._basemodel import BaseModel
 from ._url import urljoin
+from ._util import resolve_relative
 from .const import MANIFEST_PATH_DEFAULT
-from .exceptions import ManifestNotFoundError
+from .exceptions import ManifestError, ManifestNotFoundError
 
 
 class Remote(BaseModel, allow_population_by_field_name=True):
@@ -210,9 +211,12 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
             if default:
                 return default
             raise ManifestNotFoundError(path) from None
-        doc = tomlkit.parse(content)
-        data = dict(doc)
-        return cls(**data)
+        try:
+            doc = tomlkit.parse(content)
+            data = dict(doc)
+            return cls(**data)
+        except Exception as exc:
+            raise ManifestError(resolve_relative(path), str(exc)) from None
 
     def dump(self) -> str:
         """
@@ -229,11 +233,3 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         """
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(self.dump())
-
-
-def create_project_filter(project_paths: Optional[List[Path]] = None) -> Callable[[ProjectSpec], bool]:
-    """Create filter function."""
-    if project_paths:
-        initialized_project_paths: List[Path] = project_paths
-        return lambda project: project.path in initialized_project_paths
-    return lambda _: True

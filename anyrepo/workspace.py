@@ -14,6 +14,7 @@ from ._basemodel import BaseModel
 from ._util import resolve_relative
 from .const import ANYREPO_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError
+from .manifest import Project
 
 _LOGGER = logging.getLogger("anyrepo")
 
@@ -179,7 +180,6 @@ class Workspace:
         """Path to main project."""
         return self.path / self.info.main_path
 
-    @property
-    def manifest_path(self) -> Path:
-        """Path to manifest."""
-        return self.main_path / self.info.manifest_path
+    def get_project_path(self, project: Project) -> Path:
+        """Project Path."""
+        return self.path / project.path

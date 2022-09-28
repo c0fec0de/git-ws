@@ -2,7 +2,7 @@ Usage: anyrepo status [OPTIONS]
 
   Run 'git status' on projects.
 
-  This command behaves identical to `anyrepo foreach git status`.
+  This command behaves identical to `anyrepo foreach -- git status`.
 
 Options:
   -P, --project TEXT  Project path to operate on only. All by default. This

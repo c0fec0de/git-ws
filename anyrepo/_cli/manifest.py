@@ -1,9 +1,21 @@
 """Manifest Commands."""
+from pathlib import Path
+
 import click
 
 from anyrepo import AnyRepo
 
 from .util import exceptionhandling, pass_context
+
+
+def _output_option():
+    return click.option(
+        "--output",
+        "-O",
+        "output",
+        type=click.Path(dir_okay=False),
+        help="Write Manifest to file instead of STDOUT.",
+    )
 
 
 @click.group()
@@ -14,8 +26,9 @@ def manifest():
 
 
 @manifest.command()
+@_output_option()
 @pass_context
-def resolve(context):
+def resolve(context, output=None):
     """
     Print The Manifest With All Imports Resolved.
 
@@ -24,12 +37,16 @@ def resolve(context):
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path()
         manifest = anyrepo.get_manifest(resolve=True)
-        click.echo(manifest.dump())
+        if output:
+            manifest.save(Path(output))
+        else:
+            click.echo(manifest.dump())
 
 
 @manifest.command()
+@_output_option()
 @pass_context
-def freeze(context):
+def freeze(context, output=None):
     """
     Print The Resolved Manifest With SHAs For All Project Revisions.
 
@@ -39,7 +56,10 @@ def freeze(context):
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path()
         manifest = anyrepo.get_manifest(freeze=True, resolve=True)
-        click.echo(manifest.dump())
+        if output:
+            manifest.save(Path(output))
+        else:
+            click.echo(manifest.dump())
 
 
 @manifest.command()

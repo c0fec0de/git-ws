@@ -2,7 +2,7 @@ Usage: anyrepo fetch [OPTIONS]
 
   Run 'git fetch' on projects.
 
-  This command behaves identical to `anyrepo foreach git fetch`.
+  This command behaves identical to `anyrepo foreach -- git fetch`.
 
 Options:
   -P, --project TEXT  Project path to operate on only. All by default. This

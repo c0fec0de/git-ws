@@ -2,7 +2,7 @@ Usage: anyrepo rebase [OPTIONS]
 
   Run 'git rebase' on projects.
 
-  This command behaves identical to `anyrepo foreach git rebase`.
+  This command behaves identical to `anyrepo foreach -- git rebase`.
 
 Options:
   -P, --project TEXT  Project path to operate on only. All by default. This

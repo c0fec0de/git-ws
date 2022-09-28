@@ -59,13 +59,18 @@ class Git:
         first_line = result.stdout.decode("utf-8").split("\n")[0]
         return first_line.rsplit(" ", 1)[-1]
 
+    def get_sha(self, revision="HEAD") -> str:
+        """Get SHA."""
+        result = self._run(("rev-parse", revision), capture_output=True, check=True)
+        return result.stdout.decode("utf-8").strip()
+
     def get_url(self) -> Optional[str]:
         """Get actual url."""
         result = self._run(("remote", "get-url", "origin"), capture_output=True, check=False)
-        stdout = result.stdout.strip()
+        stdout = result.stdout.decode("utf-8").strip()
         if result.stderr or not stdout:
             return None
-        return result.stdout.decode("utf-8")
+        return stdout
 
     def is_branch(self, revision=None) -> bool:
         """Check if `revision` is a branch."""
