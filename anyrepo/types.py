@@ -1,7 +1,7 @@
 """Types."""
 from typing import Callable, Optional
 
-from .manifest import Project
+from .datamodel import Project
 
 Groups = Optional[str]
 ProjectFilter = Callable[[Project], bool]

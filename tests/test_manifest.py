@@ -1,7 +1,7 @@
 """Manifest Testing."""
 from pytest import raises
 
-from anyrepo.manifest import Defaults, Group, Manifest, ManifestSpec, Project, ProjectSpec, Remote
+from anyrepo.datamodel import Defaults, Group, Manifest, ManifestSpec, Project, ProjectSpec, Remote
 
 
 def test_remote():

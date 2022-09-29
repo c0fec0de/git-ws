@@ -4,7 +4,7 @@ from pytest import fixture
 
 from anyrepo import AnyRepo
 from anyrepo._cli import main
-from anyrepo.manifest import ManifestSpec, ProjectSpec
+from anyrepo.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import,duplicate-code
 from .fixtures import repos

@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from pytest import fixture
 
-from anyrepo.manifest import ManifestSpec, ProjectSpec
+from anyrepo.datamodel import ManifestSpec, ProjectSpec
 
 from .util import chdir, run
 

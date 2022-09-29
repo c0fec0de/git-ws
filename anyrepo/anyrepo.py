@@ -13,10 +13,10 @@ from typing import Generator, List, Optional
 from ._git import Git, get_repo_top
 from ._util import no_colorprint, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
+from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
 from .exceptions import ManifestExistError
 from .filters import Filter, default_filter
 from .iters import ManifestIter, ProjectIter
-from .manifest import Manifest, ManifestSpec, Project, ProjectSpec
 from .types import Groups, ProjectFilter
 from .workspace import Workspace
 

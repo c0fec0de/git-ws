@@ -13,8 +13,8 @@ import tomlkit
 from ._basemodel import BaseModel
 from ._util import resolve_relative
 from .const import ANYREPO_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
+from .datamodel import Project
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError
-from .manifest import Project
 from .types import Groups
 
 _LOGGER = logging.getLogger("anyrepo")
