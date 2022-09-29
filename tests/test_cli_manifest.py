@@ -23,7 +23,7 @@ def arepo(tmp_path, repos):
         yield arepo
 
 
-def test_manifest_validate(tmp_path, arepo):
+def test_validate(tmp_path, arepo):
     """Manifest Validate."""
     result = CliRunner().invoke(main, ["manifest", "validate"])
     assert result.output.split("\n") == [""]
@@ -54,7 +54,7 @@ def test_manifest_validate(tmp_path, arepo):
     assert result.exit_code == 1
 
 
-def test_manifest_freeze(tmp_path, arepo):
+def test_freeze(tmp_path, arepo):
     """Manifest Freeze."""
     sha1 = get_sha(arepo.path / "dep1")
     sha2 = get_sha(arepo.path / "dep2")
@@ -146,7 +146,7 @@ def test_manifest_freeze(tmp_path, arepo):
     assert result.exit_code == 0
 
 
-def test_manifest_resolve(tmp_path, arepo):
+def test_resolve(tmp_path, arepo):
     """Manifest Resolve."""
     lines = [
         "[[dependencies]]",
@@ -183,7 +183,7 @@ def test_manifest_resolve(tmp_path, arepo):
     assert output_path.read_text().split("\n") == lines
 
 
-def test_manifest_path(tmp_path, arepo):
+def test_path(tmp_path, arepo):
     """Manifest Path."""
     result = CliRunner().invoke(main, ["manifest", "path"])
     main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
@@ -194,7 +194,7 @@ def test_manifest_path(tmp_path, arepo):
     assert result.exit_code == 0
 
 
-def test_manifest_paths(tmp_path, arepo):
+def test_paths(tmp_path, arepo):
     """Manifest Paths."""
     result = CliRunner().invoke(main, ["manifest", "paths"])
     main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"

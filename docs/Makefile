@@ -31,6 +31,7 @@ gen:
 	anyrepo fetch --help > static/cli.fetch.txt
 	anyrepo foreach --help > static/cli.foreach.txt
 	anyrepo git --help > static/cli.git.txt
+	anyrepo info --help > static/cli.info.txt
 	anyrepo init --help > static/cli.init.txt
 	anyrepo manifest --help > static/cli.manifest.txt
 	anyrepo pull --help > static/cli.pull.txt

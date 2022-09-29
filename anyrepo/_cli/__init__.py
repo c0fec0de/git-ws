@@ -9,6 +9,7 @@ from anyrepo import AnyRepo
 from anyrepo._util import get_loglevel, resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
+from .info import info
 from .manifest import manifest
 from .options import groups_option, manifest_option, projects_option, update_option
 from .util import Context, exceptionhandling, pass_context
@@ -157,16 +158,20 @@ def rebase(context, projects, manifest, groups):
 @projects_option()
 @manifest_option()
 @groups_option()
+@click.option("-s", "--short", is_flag=True)
 @pass_context
-def status(context, projects, manifest, groups):
+def status(context, projects, manifest, groups, short=False):
     """
     Run 'git status' on projects.
 
     This command behaves identical to `anyrepo foreach -- git status`.
     """
+    cmd = ["git", "status"]
+    if short:
+        cmd.append("-s")
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, echo=click.secho)
-        arepo.foreach(("git", "status"), project_paths=projects, groups=groups)
+        arepo.foreach(cmd, project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -220,3 +225,4 @@ def create_manifest(context, project, manifest):
 
 
 main.add_command(manifest)
+main.add_command(info)

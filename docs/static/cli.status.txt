@@ -11,4 +11,5 @@ Options:
                            default.
   -G, --groups TEXT        Group Filtering. TODO: more details. Initial
                            clone/init filter settings by default.
+  -s, --short
   -h, --help               Show this message and exit.
