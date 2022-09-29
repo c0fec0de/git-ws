@@ -10,7 +10,7 @@ from anyrepo._util import get_loglevel, resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
 from .manifest import manifest
-from .options import filter_option, manifest_option, projects_option, update_option
+from .options import groups_option, manifest_option, projects_option, update_option
 from .util import Context, exceptionhandling, pass_context
 
 _COLOR_INFO = "blue"
@@ -30,9 +30,10 @@ def main(ctx=None, verbose=0):
 
 @main.command()
 @manifest_option(initial=True)
+@groups_option(initial=True)
 @update_option()
 @pass_context
-def init(context, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = False):
+def init(context, manifest: Path = MANIFEST_PATH_DEFAULT, groups=None, update: bool = False):
     """
     Initialize AnyRepo workspace and create all dependent git clones.
 
@@ -40,7 +41,7 @@ def init(context, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = False):
     be either created by 'git init' or 'git clone'.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.init(manifest_path=manifest, colorprint=click.secho)
+        arepo = AnyRepo.init(manifest_path=manifest, groups=groups, colorprint=click.secho)
         click.secho(f"Workspace initialized at {str(resolve_relative(arepo.path))!r}.")
         if update:
             arepo.update()
@@ -54,14 +55,15 @@ def init(context, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = False):
 @main.command()
 @click.argument("url")
 @manifest_option(initial=True)
+@groups_option(initial=True)
 @update_option()
 @pass_context
-def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = False):
+def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT, groups=None, update: bool = False):
     """
     Create a git clone, initialize AnyRepo workspace and create all dependent git clones.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.clone(url, manifest_path=manifest, colorprint=click.secho)
+        arepo = AnyRepo.clone(url, manifest_path=manifest, groups=groups, colorprint=click.secho)
         if update:
             arepo.update()
         else:
@@ -75,11 +77,13 @@ def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = F
 @main.command()
 @projects_option()
 @manifest_option()
+@groups_option()
 @click.option("--rebase", is_flag=True, default=False, help="Run 'git rebase' instead of 'git pull'")
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
 @pass_context
-def update(context, projects, manifest: Path = None, rebase: bool = False, prune: bool = False):
+def update(context, projects, manifest: Path = None, groups=None, rebase: bool = False, prune: bool = False):
     """Create/update all dependent git clones."""
+    # pylint: disable=too-many-arguments
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
         arepo.update(project_paths=projects, manifest_path=manifest, rebase=rebase, prune=prune)
@@ -88,9 +92,10 @@ def update(context, projects, manifest: Path = None, rebase: bool = False, prune
 @main.command()
 @projects_option()
 @manifest_option()
+@groups_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 @pass_context
-def git(context, projects, manifest, command):
+def git(context, projects, manifest, groups, command):
     """
     Run git command on projects.
 
@@ -104,8 +109,9 @@ def git(context, projects, manifest, command):
 @main.command()
 @projects_option()
 @manifest_option()
+@groups_option()
 @pass_context
-def fetch(context, projects, manifest):
+def fetch(context, projects, manifest, groups):
     """
     Run 'git fetch' on projects.
 
@@ -119,8 +125,9 @@ def fetch(context, projects, manifest):
 @main.command()
 @projects_option()
 @manifest_option()
+@groups_option()
 @pass_context
-def pull(context, projects, manifest):
+def pull(context, projects, manifest, groups):
     """
     Run 'git pull' on projects.
 
@@ -134,8 +141,9 @@ def pull(context, projects, manifest):
 @main.command()
 @projects_option()
 @manifest_option()
+@groups_option()
 @pass_context
-def rebase(context, projects, manifest):
+def rebase(context, projects, manifest, groups):
     """
     Run 'git rebase' on projects.
 
@@ -149,8 +157,9 @@ def rebase(context, projects, manifest):
 @main.command()
 @projects_option()
 @manifest_option()
+@groups_option()
 @pass_context
-def status(context, projects, manifest):
+def status(context, projects, manifest, groups):
     """
     Run 'git status' on projects.
 
@@ -164,8 +173,9 @@ def status(context, projects, manifest):
 @main.command()
 @projects_option()
 @manifest_option()
+@groups_option()
 @pass_context
-def diff(context, projects, manifest):
+def diff(context, projects, manifest, groups):
     """
     Run 'git diff' on projects.
 
@@ -179,9 +189,10 @@ def diff(context, projects, manifest):
 @main.command()
 @projects_option()
 @manifest_option()
+@groups_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 @pass_context
-def foreach(context, projects, manifest, command):
+def foreach(context, projects, manifest, groups, command):
     """
     Run 'command' on projects.
 

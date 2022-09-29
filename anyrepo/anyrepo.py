@@ -82,6 +82,7 @@ class AnyRepo:
     def init(
         project_path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
+        groups: Optional[str] = None,
         colorprint=None,
     ) -> "AnyRepo":
         """
@@ -90,6 +91,7 @@ class AnyRepo:
         :param project_path: Path within git clone. (Default is the current working directory).
         :param manifest_path: Path to the manifest file.
         """
+        # pylint: disable=too-many-arguments
         colorprint = colorprint or no_colorprint
         project_path = get_repo_top(path=project_path)
         name = project_path.name
@@ -103,6 +105,7 @@ class AnyRepo:
         url: str,
         path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
+        groups: Optional[str] = None,
         colorprint=None,
     ) -> "AnyRepo":
         """Clone git `url` and initialize Workspace."""
