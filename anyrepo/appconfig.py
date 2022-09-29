@@ -79,8 +79,10 @@ class AppConfig:
         system_config_dir: Optional[str] = None,
         user_config_dir: Optional[str] = None,
         workspace_config_dir: Optional[str] = None,
+        use_config_from_env: bool = True,
     ) -> None:
         super().__init__()
+        self._use_config_from_env = use_config_from_env
         if system_config_dir is None:
             system_config_dir = SYSTEM_CONFIG_DIR
         if user_config_dir is None:
@@ -193,12 +195,13 @@ class AppConfig:
             sys_config = self.load_configuration(AppConfigLocation.SYSTEM)
             user_config = self.load_configuration(AppConfigLocation.USER)
             workspace_config = self.load_configuration(AppConfigLocation.WORKSPACE)
-            env_config = _EnvAppConfigData()
             merged_config_data = {}
             merged_config_data.update(sys_config.dict())
             merged_config_data.update(user_config.dict())
             merged_config_data.update(workspace_config.dict())
-            merged_config_data.update(env_config.dict())
+            if self._use_config_from_env:
+                env_config = _EnvAppConfigData()
+                merged_config_data.update(env_config.dict())
             self._merged_config = AppConfigData(**merged_config_data)
             self._fill_in_defaults(self._merged_config)
         return self._merged_config
