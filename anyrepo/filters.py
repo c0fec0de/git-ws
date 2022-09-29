@@ -1,7 +1,12 @@
 """Filters."""
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from ._basemodel import BaseModel
+
+
+def default_filter(item: Any) -> bool:
+    """Default Filter - always returning True."""
+    return True
 
 
 class Filter(BaseModel):
@@ -16,7 +21,7 @@ class Filter(BaseModel):
 
     A simple example:
 
-    >>> filter_ = Filter.from_spec("+doc,-test")
+    >>> filter_ = Filter.from_str("+doc,-test")
     >>> filter_
     Filter(with_=('doc',), without=('test',))
     >>> filter_(('other', ))
@@ -31,7 +36,7 @@ class Filter(BaseModel):
     >>> from tabulate import tabulate
     >>> specs = ("", "test", "+test", "-test", "+doc,-test", "-doc,+test")
     >>> values = (tuple(), ('test',), ('test', 'doc'), ('lint', 'doc'))
-    >>> filters = [Filter.from_spec(spec) for spec in specs]
+    >>> filters = [Filter.from_str(spec) for spec in specs]
     >>> disabled = None
     >>> overview = [[value] + [filter_(value, disabled=disabled) for filter_ in filters] for value in values]
     >>> print(tabulate(overview, headers = ["value / spec",] + [f"{spec!r}" for spec in specs]))
@@ -69,17 +74,17 @@ class Filter(BaseModel):
     without: Tuple[str, ...] = tuple()
 
     @staticmethod
-    def from_spec(expr: str) -> "Filter":
+    def from_str(expr: str) -> "Filter":
         """
         Create :any:`Filter` from `expr`.
 
-        >>> Filter.from_spec("")
+        >>> Filter.from_str("")
         Filter()
-        >>> Filter.from_spec("+test")
+        >>> Filter.from_str("+test")
         Filter(with_=('test',))
-        >>> Filter.from_spec("-test,-doc, +lint, imp")
+        >>> Filter.from_str("-test,-doc, +lint, imp")
         Filter(only=('imp',), with_=('lint',), without=('test', 'doc'))
-        >>> Filter.from_spec("+lint, -doc")
+        >>> Filter.from_str("+lint, -doc")
         Filter(with_=('lint',), without=('doc',))
         """
         parts = tuple(part.strip() for part in expr.split(",") if part.strip())

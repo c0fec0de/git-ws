@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from pytest import fixture
 
-from anyrepo.manifest import ManifestSpec, ProjectSpec
+from anyrepo.datamodel import Group, ManifestSpec, ProjectSpec
 
 from .util import chdir, run
 
@@ -30,7 +30,6 @@ def repos(tmp_path):
     with git_repo(repos_path / "main", commit="initial") as path:
         (path / "data.txt").write_text("main")
         ManifestSpec(
-            optional_groups=("test",),
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep2", url="../dep2", revision="1-feature"),
@@ -41,7 +40,7 @@ def repos(tmp_path):
         ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
-                ProjectSpec(name="dep6", url="../dep6", path="sub/dep6"),
+                ProjectSpec(name="dep6", url="../dep6", path="sub/dep6", groups=["foo", "bar", "fast"]),
                 ProjectSpec(name="dep4", url="../dep4", revision="4-feature"),
             ]
         ).save(path / "other.toml")
@@ -59,10 +58,11 @@ def repos(tmp_path):
     with git_repo(repos_path / "dep2", commit="initial") as path:
         (path / "data.txt").write_text("dep2")
         ManifestSpec(
+            groups=[Group(name="test", optional=True)],
             dependencies=[
-                ProjectSpec(name="dep3", url="../dep3", groups=("test", "doc")),
+                ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),
-            ]
+            ],
         ).save(path / "anyrepo.toml")
 
     with chdir(repos_path / "dep2"):

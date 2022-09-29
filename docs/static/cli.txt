@@ -13,6 +13,7 @@ Commands:
   fetch            Run 'git fetch' on projects.
   foreach          Run 'command' on projects.
   git              Run git command on projects.
+  info             AnyRepo Information.
   init             Initialize AnyRepo workspace and create all dependent...
   manifest         Manifest Information.
   pull             Run 'git pull' on projects.

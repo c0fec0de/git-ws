@@ -122,6 +122,7 @@ def test_git(tmp_path):
             "",
             'main_path = "main"',
             'manifest_path = "anyrepo.toml"',
+            'groups = ""',
             "",
         ]
 

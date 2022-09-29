@@ -54,3 +54,11 @@ class ManifestError(RuntimeError):
         super().__init__(f"Manifest {path} is broken: {details}")
         self.path = path
         self.details = details
+
+
+class GitCloneMissingError(RuntimeError):
+    """Git Clone Missing Error."""
+
+    def __init__(self, project_path):
+        super().__init__(f"Git Clone {project_path} is missing.")
+        self.project_path = project_path

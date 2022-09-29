@@ -5,17 +5,8 @@ import click
 
 from anyrepo import AnyRepo
 
+from .options import groups_option, output_option
 from .util import exceptionhandling, pass_context
-
-
-def _output_option():
-    return click.option(
-        "--output",
-        "-O",
-        "output",
-        type=click.Path(dir_okay=False),
-        help="Write Manifest to file instead of STDOUT.",
-    )
 
 
 @click.group()
@@ -26,9 +17,10 @@ def manifest():
 
 
 @manifest.command()
-@_output_option()
+@groups_option()
+@output_option()
 @pass_context
-def resolve(context, output=None):
+def resolve(context, groups=None, output=None):
     """
     Print The Manifest With All Imports Resolved.
 
@@ -36,7 +28,7 @@ def resolve(context, output=None):
     """
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path()
-        manifest = anyrepo.get_manifest_spec(resolve=True)
+        manifest = anyrepo.get_manifest_spec(groups=groups, resolve=True)
         if output:
             manifest.save(Path(output))
         else:
@@ -44,9 +36,10 @@ def resolve(context, output=None):
 
 
 @manifest.command()
-@_output_option()
+@groups_option()
+@output_option()
 @pass_context
-def freeze(context, output=None):
+def freeze(context, groups=None, output=None):
     """
     Print The Resolved Manifest With SHAs For All Project Revisions.
 
@@ -55,7 +48,7 @@ def freeze(context, output=None):
     """
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path()
-        manifest = anyrepo.get_manifest_spec(freeze=True, resolve=True)
+        manifest = anyrepo.get_manifest_spec(groups=groups, freeze=True, resolve=True)
         if output:
             manifest.save(Path(output))
         else:

@@ -21,7 +21,7 @@ def manifest_option(initial=False):
     if initial:
         help_ = f"Manifest file. '{MANIFEST_PATH_DEFAULT!s}' by default."
     else:
-        help_ = "Manifest file. Initial clone/init filter settings by default."
+        help_ = "Manifest file. Initial clone/init settings by default."
     return click.option("--manifest", "-M", type=click.Path(dir_okay=False), default=MANIFEST_PATH_DEFAULT, help=help_)
 
 
@@ -30,8 +30,8 @@ def update_option(default=None):
     return click.option("--update", "-U", is_flag=True, help="Run 'anyrepo update' too.")
 
 
-def filter_option(initial=False):
-    """Filter Option."""
+def groups_option(initial=False):
+    """Group Filter Option."""
     if initial:
         help_ = """\
 Group Filtering.
@@ -44,4 +44,15 @@ Group Filtering.
 TODO: more details.
 Initial clone/init filter settings by default.
 """
-    return click.option("--filter", "-F", "filter_", help=help_)
+    return click.option("--groups", "-G", "groups", help=help_)
+
+
+def output_option():
+    """Manifest Output Option."""
+    return click.option(
+        "--output",
+        "-O",
+        "output",
+        type=click.Path(dir_okay=False),
+        help="Write Manifest to file instead of STDOUT.",
+    )

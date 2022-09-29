@@ -5,5 +5,7 @@ Usage: anyrepo clone [OPTIONS] URL
 
 Options:
   -M, --manifest FILE  Manifest file. 'anyrepo.toml' by default.
+  -G, --groups TEXT    Group Filtering. TODO: more details. The setting
+                       becomes default for all successive runs.
   -U, --update         Run 'anyrepo update' too.
   -h, --help           Show this message and exit.

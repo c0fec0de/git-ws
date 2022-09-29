@@ -14,7 +14,7 @@ from pydantic import Field, root_validator
 
 from ._basemodel import BaseModel
 from ._url import urljoin
-from ._util import resolve_relative
+from ._util import get_repr, resolve_relative
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestError, ManifestNotFoundError
 
@@ -49,6 +49,28 @@ class Defaults(BaseModel):
     revision: Optional[str] = None
 
 
+class Group(BaseModel):
+    """
+    Dependency Group.
+
+    Args:
+        name: Name
+
+    Keyword Args:
+        optional: Group is optional
+    """
+
+    name: str
+    optional: bool = False
+
+    @property
+    def info(self):
+        """`repr`-like information string."""
+        if self.optional:
+            return f"{self.name}?"
+        return self.name
+
+
 class Project(BaseModel):
 
     """
@@ -69,12 +91,22 @@ class Project(BaseModel):
     url: Optional[str] = None
     revision: Optional[str] = None
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
-    groups: Tuple[str, ...] = tuple()
+    groups: Tuple[Group, ...] = tuple()
+
+    @property
+    def info(self):
+        """`repr`-like info string but more condensed."""
+        options = get_repr(
+            kwargs=(
+                ("revision", self.revision, ""),
+                ("path", str(self.path)),
+                ("groups", ",".join(group.info for group in self.groups), ""),
+            )
+        )
+        return f"{self.name} ({options})"
 
     @staticmethod
-    def from_spec(
-        defaults: Defaults, remotes: Tuple[Remote, ...], spec: "ProjectSpec", refurl: Optional[str] = None
-    ) -> "Project":
+    def from_spec(manifest_spec: "ManifestSpec", spec: "ProjectSpec", refurl: Optional[str] = None) -> "Project":
         """
         Create :any:`Project` from `defaults`, `remotes` and `spec`.
 
@@ -83,6 +115,9 @@ class Project(BaseModel):
             remotes (List[Remote]): Remotes
             spec (ProjectSpec): Base project to be resolved.
         """
+        defaults = manifest_spec.defaults
+        remotes = manifest_spec.remotes
+        groups = manifest_spec.groups
         url = spec.url
         if not url:
             # URL assembly
@@ -98,13 +133,14 @@ class Project(BaseModel):
 
         # Resolve relative URLs.
         url = urljoin(refurl, url)
+        groupdict = {group.name: group for group in groups} if spec.groups else {}
         return Project(
             name=spec.name,
             path=spec.path or spec.name,
             url=url,
             revision=spec.revision or defaults.revision,
             manifest_path=spec.manifest_path,
-            groups=spec.groups,
+            groups=[groupdict.get(name, Group(name=name)) for name in spec.groups],
         )
 
 
@@ -163,7 +199,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             url=project.url,
             revision=project.revision,
             manifest_path=project.manifest_path,
-            groups=project.groups,
+            groups=[group.name for group in project.groups],
         )
 
 
@@ -175,12 +211,11 @@ class Manifest(BaseModel):
     A manifest describes the actual project and its dependencies.
 
     Keyword Args:
-        optional_groups: Dependency Groups.
         path (str): Filesystem Path. Relative to Workspace Root Directory.
         dependencies: Dependency Projects.
     """
 
-    optional_groups: Tuple[str, ...] = tuple()
+    groups: Tuple[Group, ...] = tuple()
     dependencies: Tuple[Project, ...] = tuple()
     path: Optional[str] = None
 
@@ -189,12 +224,9 @@ class Manifest(BaseModel):
         """
         Create :any:`Manifest` from :any:`ManifestSpec`.
         """
-        dependencies = [
-            Project.from_spec(spec.defaults, spec.remotes, project_spec, refurl=refurl)
-            for project_spec in spec.dependencies
-        ]
+        dependencies = [Project.from_spec(spec, project_spec, refurl=refurl) for project_spec in spec.dependencies]
         return Manifest(
-            optional_groups=spec.optional_groups,
+            groups=spec.groups,
             dependencies=dependencies,
             path=path,
         )
@@ -210,13 +242,12 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     Keyword Args:
         defaults: Default settings.
         remotes: Remote Aliases.
-        optional_groups: Dependency Groups.
         dependencies: Dependency Projects.
     """
 
     defaults: Defaults = Defaults()
     remotes: Tuple[Remote, ...] = tuple()
-    optional_groups: Tuple[str, ...] = tuple()
+    groups: Tuple[Group, ...] = tuple()
     dependencies: Tuple[ProjectSpec, ...] = tuple()
 
     @classmethod
