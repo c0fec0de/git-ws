@@ -10,12 +10,13 @@ from anyrepo._util import get_loglevel, resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
 from .manifest import manifest
+from .options import filter_option, manifest_option, projects_option, update_option
 from .util import Context, exceptionhandling, pass_context
 
 _COLOR_INFO = "blue"
 
 
-@click.group()
+@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("-v", "--verbose", count=True)
 @click.pass_context
 def main(ctx=None, verbose=0):
@@ -27,31 +28,9 @@ def main(ctx=None, verbose=0):
     ctx.obj = Context(verbose=verbose)
 
 
-def _projects_option():
-    return click.option(
-        "--project",
-        "-P",
-        "projects",
-        multiple=True,
-        help="Project path to operate on only. All by default. This option can be specified multiple times.",
-    )
-
-
-def _manifest_option(default=None):
-    if default:
-        help_ = f"Manifest file. '{default!s}' by default."
-    else:
-        help_ = "Manifest file. Configured file by default."
-    return click.option("--manifest", "-M", type=click.Path(dir_okay=False), default=default, help=help_)
-
-
-def _update_option(default=None):
-    return click.option("--update", "-U", is_flag=True, help="Run 'anyrepo update' too.")
-
-
 @main.command()
-@_manifest_option(default=MANIFEST_PATH_DEFAULT)
-@_update_option()
+@manifest_option(initial=True)
+@update_option()
 @pass_context
 def init(context, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = False):
     """
@@ -74,8 +53,8 @@ def init(context, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = False):
 
 @main.command()
 @click.argument("url")
-@_manifest_option(default=MANIFEST_PATH_DEFAULT)
-@_update_option()
+@manifest_option(initial=True)
+@update_option()
 @pass_context
 def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = False):
     """
@@ -94,108 +73,115 @@ def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT, update: bool = F
 
 
 @main.command()
-@_projects_option()
-@_manifest_option()
+@projects_option()
+@manifest_option()
 @click.option("--rebase", is_flag=True, default=False, help="Run 'git rebase' instead of 'git pull'")
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
 @pass_context
 def update(context, projects, manifest: Path = None, rebase: bool = False, prune: bool = False):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(colorprint=click.secho, manifest_path=manifest)
+        arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
         arepo.update(project_paths=projects, manifest_path=manifest, rebase=rebase, prune=prune)
 
 
 @main.command()
-@_projects_option()
+@projects_option()
+@manifest_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 @pass_context
-def git(context, projects, command):
+def git(context, projects, manifest, command):
     """
     Run git command on projects.
 
     This command behaves identical to `anyrepo foreach -- git`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(colorprint=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
         arepo.foreach(("git",) + command, project_paths=projects)
 
 
 @main.command()
-@_projects_option()
+@projects_option()
+@manifest_option()
 @pass_context
-def fetch(context, projects):
+def fetch(context, projects, manifest):
     """
     Run 'git fetch' on projects.
 
     This command behaves identical to `anyrepo foreach -- git fetch`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(colorprint=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
         arepo.foreach(("git", "fetch"), project_paths=projects)
 
 
 @main.command()
-@_projects_option()
+@projects_option()
+@manifest_option()
 @pass_context
-def pull(context, projects):
+def pull(context, projects, manifest):
     """
     Run 'git pull' on projects.
 
     This command behaves identical to `anyrepo foreach -- git pull`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(colorprint=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
         arepo.foreach(("git", "pull"), project_paths=projects)
 
 
 @main.command()
-@_projects_option()
+@projects_option()
+@manifest_option()
 @pass_context
-def rebase(context, projects):
+def rebase(context, projects, manifest):
     """
     Run 'git rebase' on projects.
 
     This command behaves identical to `anyrepo foreach -- git rebase`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(colorprint=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
         arepo.foreach(("git", "rebase"), project_paths=projects)
 
 
 @main.command()
-@_projects_option()
+@projects_option()
+@manifest_option()
 @pass_context
-def status(context, projects):
+def status(context, projects, manifest):
     """
     Run 'git status' on projects.
 
     This command behaves identical to `anyrepo foreach -- git status`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(colorprint=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
         arepo.foreach(("git", "status"), project_paths=projects)
 
 
 @main.command()
-@_projects_option()
+@projects_option()
+@manifest_option()
 @pass_context
-def diff(context, projects):
+def diff(context, projects, manifest):
     """
     Run 'git diff' on projects.
 
     This command behaves identical to `anyrepo foreach -- git diff`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(colorprint=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
         arepo.foreach(("git", "diff"), project_paths=projects)
 
 
 @main.command()
-@_projects_option()
+@projects_option()
+@manifest_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 @pass_context
-def foreach(context, projects, command):
+def foreach(context, projects, manifest, command):
     """
     Run 'command' on projects.
 
@@ -203,7 +189,7 @@ def foreach(context, projects, command):
     (i.e. `anyrepo foreach -- ls -l`)
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(colorprint=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
         arepo.foreach(command, project_paths=projects)
 
 
@@ -214,7 +200,7 @@ def foreach(context, projects, command):
     type=click.Path(file_okay=False),
     help="Project Path. Current working directory by default.",
 )
-@_manifest_option(default=MANIFEST_PATH_DEFAULT)
+@manifest_option(initial=True)
 @pass_context
 def create_manifest(context, project, manifest):
     """Create Manifest."""
