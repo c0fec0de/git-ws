@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Generator, List, Optional
 
 from ._git import Git, get_repo_top
-from ._util import no_colorprint, resolve_relative, run
+from ._util import no_echo, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
 from .exceptions import ManifestExistError
@@ -35,10 +35,10 @@ class AnyRepo:
         manifest_spec (ManifestSpec): manifest.
     """
 
-    def __init__(self, workspace: Workspace, manifest_spec: ManifestSpec, colorprint=None):
+    def __init__(self, workspace: Workspace, manifest_spec: ManifestSpec, echo=None):
         self.workspace = workspace
         self.manifest_spec = manifest_spec
-        self.colorprint = colorprint or no_colorprint
+        self.echo = echo or no_echo
 
     def __eq__(self, other):
         if isinstance(other, AnyRepo):
@@ -53,7 +53,7 @@ class AnyRepo:
         return self.workspace.path
 
     @staticmethod
-    def from_path(path: Optional[Path] = None, manifest_path: Optional[Path] = None, colorprint=None) -> "AnyRepo":
+    def from_path(path: Optional[Path] = None, manifest_path: Optional[Path] = None, echo=None) -> "AnyRepo":
         """
         Create :any:`AnyRepo` for workspace at `path`.
 
@@ -63,12 +63,10 @@ class AnyRepo:
         workspace = Workspace.from_path(path=path)
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
-        return AnyRepo(workspace, manifest_spec, colorprint=colorprint)
+        return AnyRepo(workspace, manifest_spec, echo=echo)
 
     @staticmethod
-    def create(
-        path: Path, project_path: Path, manifest_path: Path, groups: Groups = None, colorprint=None
-    ) -> "AnyRepo":
+    def create(path: Path, project_path: Path, manifest_path: Path, groups: Groups = None, echo=None) -> "AnyRepo":
         """
         Create :any:`AnyRepo` for workspace at `path`.
 
@@ -82,14 +80,14 @@ class AnyRepo:
         workspace = Workspace.init(
             path, project_path, resolve_relative(manifest_path, base=project_path), groups=groups
         )
-        return AnyRepo(workspace, manifest_spec, colorprint=colorprint)
+        return AnyRepo(workspace, manifest_spec, echo=echo)
 
     @staticmethod
     def init(
         project_path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
-        colorprint=None,
+        echo=None,
     ) -> "AnyRepo":
         """
         Initialize Workspace for git clone at `project_path`.
@@ -97,13 +95,13 @@ class AnyRepo:
         :param project_path: Path within git clone. (Default is the current working directory).
         :param manifest_path: Path to the manifest file.
         """
-        colorprint = colorprint or no_colorprint
+        echo = echo or no_echo
         project_path = get_repo_top(path=project_path)
         name = project_path.name
-        colorprint(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
+        echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(project_path / manifest_path)
         path = project_path.parent
-        return AnyRepo.create(path, project_path, manifest_path, groups, colorprint=colorprint)
+        return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
 
     @staticmethod
     def clone(
@@ -111,19 +109,19 @@ class AnyRepo:
         path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
-        colorprint=None,
+        echo=None,
     ) -> "AnyRepo":
         """Clone git `url` and initialize Workspace."""
-        colorprint = colorprint or no_colorprint
+        echo = echo or no_echo
         path = path or Path.cwd()
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
-        colorprint(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
-        colorprint(f"Cloning {url!r}.", fg=_COLOR_ACTION)
+        echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
+        echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
         project_path = path / name
         git = Git(project_path)
         git.clone(url)
-        return AnyRepo.create(path, project_path, manifest_path, groups, colorprint=colorprint)
+        return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
 
     def update(
         self,
@@ -149,7 +147,7 @@ class AnyRepo:
     def _update(self, git, project, rebase):
         # Clone
         if not git.is_cloned():
-            self.colorprint(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+            self.echo(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
             git.clone(project.url, revision=project.revision)
             return
 
@@ -159,7 +157,7 @@ class AnyRepo:
         branch = git.get_branch()
 
         if project.revision in (sha, tag) and not branch:
-            self.colorprint("Nothing to do.", fg=_COLOR_ACTION)
+            self.echo("Nothing to do.", fg=_COLOR_ACTION)
             return
 
         revision = branch or tag or sha
@@ -167,10 +165,10 @@ class AnyRepo:
         # Checkout
         fetched = False
         if project.revision and revision != project.revision:
-            self.colorprint("Fetching.", fg=_COLOR_ACTION)
+            self.echo("Fetching.", fg=_COLOR_ACTION)
             git.fetch()
             fetched = True
-            self.colorprint(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
+            self.echo(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
             git.checkout(project.revision)
             branch = git.get_branch()
             revision = branch or tag or sha
@@ -179,23 +177,23 @@ class AnyRepo:
         if branch:
             if rebase:
                 if not fetched:
-                    self.colorprint("Fetching.", fg=_COLOR_ACTION)
+                    self.echo("Fetching.", fg=_COLOR_ACTION)
                     git.fetch()
-                self.colorprint(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
+                self.echo(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
                 git.rebase()
             else:
                 if not fetched:
-                    self.colorprint(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
+                    self.echo(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
                     git.pull()
                 else:
-                    self.colorprint(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
+                    self.echo(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
                     git.merge()
 
     def _prune(self, workspace: Workspace, used: List[Path]):
         for obsolete_path in workspace.iter_obsoletes(used):
             name = resolve_relative(obsolete_path, workspace.path)
-            self.colorprint(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
-            self.colorprint(f"Removing {str(obsolete_path)!r}.", fg=_COLOR_ACTION)
+            self.echo(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
+            self.echo(f"Removing {str(obsolete_path)!r}.", fg=_COLOR_ACTION)
             # TODO: safety check.
             shutil.rmtree(obsolete_path, ignore_errors=True)
 
@@ -204,7 +202,7 @@ class AnyRepo:
         workspace = self.workspace
         for project in self.iter(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
             cmdstr = " ".join(shlex.quote(part) for part in command)
-            self.colorprint(cmdstr, fg=_COLOR_ACTION)
+            self.echo(cmdstr, fg=_COLOR_ACTION)
             project_path = workspace.get_project_path(project, relative=True)
             run(command, cwd=project_path)
 
@@ -220,11 +218,11 @@ class AnyRepo:
         project_paths_filter = self._create_project_paths_filter(project_paths)
         filter_ = self._create_groups_filter(groups)
         for project in self.iter_projects(manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url):
-            self._banner(project)
+            self._printbanner(project)
             if project_paths_filter(project):
                 yield project
             else:
-                self.colorprint("SKIPPING", fg=_COLOR_SKIP)
+                self.echo("SKIPPING", fg=_COLOR_SKIP)
 
     def iter_projects(
         self,
@@ -286,11 +284,11 @@ class AnyRepo:
         manifest_spec = self.get_manifest_spec(freeze=freeze, resolve=resolve)
         return Manifest.from_spec(manifest_spec, path=str(manifest_path))
 
-    def _banner(self, project):
+    def _printbanner(self, project):
         project_path = resolve_relative(self.workspace.path / project.path)
         name = project.name
         revision = project.revision
-        self.colorprint(f"===== {name} (revision={revision!r}, path={str(project_path)!r}) =====", fg=_COLOR_BANNER)
+        self.echo(f"===== {name} (revision={revision!r}, path={str(project_path)!r}) =====", fg=_COLOR_BANNER)
 
     def _create_project_paths_filter(self, project_paths):
         workspace_path = self.workspace.path
