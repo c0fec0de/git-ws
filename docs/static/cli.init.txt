@@ -8,4 +8,4 @@ Usage: anyrepo init [OPTIONS]
 Options:
   -M, --manifest FILE  Manifest file. 'anyrepo.toml' by default.
   -U, --update         Run 'anyrepo update' too.
-  --help               Show this message and exit.
+  -h, --help           Show this message and exit.

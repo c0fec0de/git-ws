@@ -7,7 +7,7 @@ They do not implement any business logic on purpose.
 """
 
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional, Tuple
 
 import tomlkit
 from pydantic import Field, root_validator
@@ -61,6 +61,7 @@ class Project(BaseModel):
         path (str): ProjectSpec Filesystem Path. Relative to Workspace Root Directory.
         url (str): URL
         revision (str): Revision
+        groups: Dependency Groups.
     """
 
     name: str
@@ -68,10 +69,11 @@ class Project(BaseModel):
     url: Optional[str] = None
     revision: Optional[str] = None
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
+    groups: Tuple[str, ...] = tuple()
 
     @staticmethod
     def from_spec(
-        defaults: Defaults, remotes: List[Remote], spec: "ProjectSpec", refurl: Optional[str] = None
+        defaults: Defaults, remotes: Tuple[Remote, ...], spec: "ProjectSpec", refurl: Optional[str] = None
     ) -> "Project":
         """
         Create :any:`Project` from `defaults`, `remotes` and `spec`.
@@ -102,12 +104,13 @@ class Project(BaseModel):
             url=url,
             revision=spec.revision or defaults.revision,
             manifest_path=spec.manifest_path,
+            groups=spec.groups,
         )
 
 
 class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     """
-    ProjectSpec.
+    Project Dependency Specification
 
     A project specifies the reference to a repository.
 
@@ -125,6 +128,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         revision (str): Revision
         path (str): Project Filesystem Path. Relative to Workspace Root Directory.
         manifest_path (str): Path to manifest. Relative to ProjectSpec Filesystem Path. `anyrepo.toml` by default.
+        groups: Dependency Groups.
     """
 
     name: str
@@ -134,6 +138,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     revision: Optional[str] = None
     path: Optional[str] = None
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
+    groups: Tuple[str, ...] = tuple()
 
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
@@ -158,6 +163,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             url=project.url,
             revision=project.revision,
             manifest_path=project.manifest_path,
+            groups=project.groups,
         )
 
 
@@ -169,11 +175,13 @@ class Manifest(BaseModel):
     A manifest describes the actual project and its dependencies.
 
     Keyword Args:
+        optional_groups: Dependency Groups.
         path (str): Filesystem Path. Relative to Workspace Root Directory.
         dependencies: Dependency Projects.
     """
 
-    dependencies: List[Project] = []
+    optional_groups: Tuple[str, ...] = tuple()
+    dependencies: Tuple[Project, ...] = tuple()
     path: Optional[str] = None
 
     @staticmethod
@@ -186,6 +194,7 @@ class Manifest(BaseModel):
             for project_spec in spec.dependencies
         ]
         return Manifest(
+            optional_groups=spec.optional_groups,
             dependencies=dependencies,
             path=path,
         )
@@ -200,13 +209,15 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     Keyword Args:
         defaults: Default settings.
-        remotes: Remote Aliases
+        remotes: Remote Aliases.
+        optional_groups: Dependency Groups.
         dependencies: Dependency Projects.
     """
 
     defaults: Defaults = Defaults()
-    remotes: List[Remote] = []
-    dependencies: List[ProjectSpec] = []
+    remotes: Tuple[Remote, ...] = tuple()
+    optional_groups: Tuple[str, ...] = tuple()
+    dependencies: Tuple[ProjectSpec, ...] = tuple()
 
     @classmethod
     def load(cls, path: Path, default: Optional["ManifestSpec"] = None) -> "ManifestSpec":

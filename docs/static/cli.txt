@@ -4,7 +4,7 @@ Usage: anyrepo [OPTIONS] COMMAND [ARGS]...
 
 Options:
   -v, --verbose
-  --help         Show this message and exit.
+  -h, --help     Show this message and exit.
 
 Commands:
   clone            Create a git clone, initialize AnyRepo workspace and...

@@ -70,27 +70,29 @@ def test_manifest_spec_from_data(tmp_path):
             {"name": "remote2", "url-base": "https://git.example.com/base2"},
             {"name": "remote1", "url-base": "https://git.example.com/base1"},
         ],
+        "optional_groups": ["foo", "bar"],
         "dependencies": [
-            {"name": "dep1", "remote": "remote1"},
+            {"name": "dep1", "remote": "remote1", "groups": ["test", "foo"]},
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
             {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main"},
         ],
     }
     manifest = ManifestSpec(**data)
     assert manifest.defaults == Defaults(remote="remote1", revision="v1.3")
-    assert manifest.remotes == [
+    assert manifest.remotes == (
         Remote(name="remote2", url_base="https://git.example.com/base2"),
         Remote(name="remote1", url_base="https://git.example.com/base1"),
-    ]
-    assert manifest.dependencies == [
-        ProjectSpec(name="dep1", remote="remote1"),
+    )
+    assert manifest.dependencies == (
+        ProjectSpec(name="dep1", remote="remote1", groups=("test", "foo")),
         ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
         ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
-    ]
+    )
 
     filepath = tmp_path / "manifest.toml"
     manifest.save(filepath)
     assert filepath.read_text().split("\n") == [
+        'optional_groups = ["foo", "bar"]',
         "[defaults]",
         'remote = "remote1"',
         'revision = "v1.3"',
@@ -106,6 +108,7 @@ def test_manifest_spec_from_data(tmp_path):
         "[[dependencies]]",
         'name = "dep1"',
         'remote = "remote1"',
+        'groups = ["test", "foo"]',
         "",
         "[[dependencies]]",
         'name = "dep2"',
@@ -125,7 +128,9 @@ def test_manifest_spec_from_data(tmp_path):
         Project.from_spec(manifest.defaults, manifest.remotes, project) for project in manifest.dependencies
     ]
     assert rdependencies == [
-        Project(name="dep1", url="https://git.example.com/base1/dep1", revision="v1.3", path="dep1"),
+        Project(
+            name="dep1", url="https://git.example.com/base1/dep1", revision="v1.3", path="dep1", groups=("test", "foo")
+        ),
         Project(name="dep2", url="https://git.example.com/base3/dep2.git", revision="v1.3", path="dep2dir"),
         Project(name="dep3", url="https://git.example.com/base1/sub.git", revision="main", path="dep3"),
     ]
@@ -146,16 +151,16 @@ def test_manifest_spec_from_other_data(tmp_path):
     manifest = ManifestSpec(**data)
     assert manifest.defaults == Defaults(remote="remote1")
     assert not manifest.remotes
-    assert manifest.dependencies == [
+    assert manifest.dependencies == (
         ProjectSpec(name="dep1", remote="remote1"),
         ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
         ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
-    ]
+    )
 
 
 def test_manifest_spec_not_remote():
     """Determine ManifestSpec from Other Data."""
-    remotes = [Remote(name="remote2", url_base="foo")]
+    remotes = (Remote(name="remote2", url_base="foo"),)
     defaults = Defaults()
     project = Project.from_spec(defaults=defaults, remotes=remotes, spec=ProjectSpec(name="foo"))
     assert project.name == "foo"
@@ -164,7 +169,7 @@ def test_manifest_spec_not_remote():
 
 def test_manifest_spec_missing_remote():
     """Determine ManifestSpec with missing Remote."""
-    remotes = [Remote(name="remote2", url_base="foo")]
+    remotes = (Remote(name="remote2", url_base="foo"),)
     defaults = Defaults()
     with raises(ValueError) as exc:
         Project.from_spec(defaults=defaults, remotes=remotes, spec=ProjectSpec(name="foo", remote="remote1"))
@@ -187,17 +192,18 @@ def test_manifest():
         "defaults": {
             "remote": "remote1",
         },
+        "optional_groups": ["test"],
         "dependencies": [
-            {"name": "dep1", "remote": "remote2"},
+            {"name": "dep1", "remote": "remote2", "groups": ["test", "doc"]},
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
-            {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main"},
+            {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main", "groups": ["test"]},
         ],
     }
     manifest_spec = ManifestSpec(**data)
     manifest = Manifest.from_spec(manifest_spec)
-    assert manifest.dependencies == [
-        Project(name="dep1", path="dep1", url="url2/dep1"),
+    assert manifest.dependencies == (
+        Project(name="dep1", path="dep1", url="url2/dep1", groups=("test", "doc")),
         Project(name="dep2", path="dep2dir", url="https://git.example.com/base3/dep2.git"),
-        Project(name="dep3", path="dep3", url="url1/sub.git", revision="main"),
-    ]
+        Project(name="dep3", path="dep3", url="url1/sub.git", revision="main", groups=("test",)),
+    )
     assert manifest.path is None
