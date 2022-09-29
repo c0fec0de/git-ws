@@ -14,8 +14,10 @@ from ._git import Git, get_repo_top
 from ._util import no_colorprint, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestExistError
+from .filters import Filter, default_filter
 from .iters import ManifestIter, ProjectIter
 from .manifest import Manifest, ManifestSpec, Project, ProjectSpec
+from .types import Groups, ProjectFilter
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("anyrepo")
@@ -64,7 +66,9 @@ class AnyRepo:
         return AnyRepo(workspace, manifest_spec, colorprint=colorprint)
 
     @staticmethod
-    def from_paths(path: Path, project_path: Path, manifest_path: Path, colorprint=None) -> "AnyRepo":
+    def create(
+        path: Path, project_path: Path, manifest_path: Path, groups: Groups = None, colorprint=None
+    ) -> "AnyRepo":
         """
         Create :any:`AnyRepo` for workspace at `path`.
 
@@ -75,14 +79,16 @@ class AnyRepo:
         """
         manifest_path = project_path / manifest_path
         manifest_spec = ManifestSpec.load(manifest_path)
-        workspace = Workspace.init(path, project_path, resolve_relative(manifest_path, base=project_path))
+        workspace = Workspace.init(
+            path, project_path, resolve_relative(manifest_path, base=project_path), groups=groups
+        )
         return AnyRepo(workspace, manifest_spec, colorprint=colorprint)
 
     @staticmethod
     def init(
         project_path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
-        groups: Optional[str] = None,
+        groups: Groups = None,
         colorprint=None,
     ) -> "AnyRepo":
         """
@@ -91,21 +97,20 @@ class AnyRepo:
         :param project_path: Path within git clone. (Default is the current working directory).
         :param manifest_path: Path to the manifest file.
         """
-        # pylint: disable=too-many-arguments
         colorprint = colorprint or no_colorprint
         project_path = get_repo_top(path=project_path)
         name = project_path.name
         colorprint(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(project_path / manifest_path)
         path = project_path.parent
-        return AnyRepo.from_paths(path, project_path, manifest_path, colorprint=colorprint)
+        return AnyRepo.create(path, project_path, manifest_path, groups, colorprint=colorprint)
 
     @staticmethod
     def clone(
         url: str,
         path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
-        groups: Optional[str] = None,
+        groups: Groups = None,
         colorprint=None,
     ) -> "AnyRepo":
         """Clone git `url` and initialize Workspace."""
@@ -118,22 +123,26 @@ class AnyRepo:
         project_path = path / name
         git = Git(project_path)
         git.clone(url)
-        return AnyRepo.from_paths(path, project_path, manifest_path, colorprint=colorprint)
+        return AnyRepo.create(path, project_path, manifest_path, groups, colorprint=colorprint)
 
-    def update(self, project_paths=None, manifest_path: Path = None, prune=False, rebase=False):
+    def update(
+        self,
+        project_paths=None,
+        manifest_path: Path = None,
+        groups: Groups = None,
+        prune: bool = False,
+        rebase: bool = False,
+    ):
         """Create/Update all dependent projects."""
         workspace = self.workspace
         used: List[Path] = [workspace.info.main_path]
-        filter_ = _create_project_paths_filter(workspace, project_paths)
-        for project in self.iter_projects(manifest_path, skip_main=True, resolve_url=True):
+        for project in self.iter(
+            project_paths=project_paths, manifest_path=manifest_path, groups=groups, skip_main=True, resolve_url=True
+        ):
             used.append(Path(project.path))
-            self._banner(project)
-            if filter_(project):
-                project_path = resolve_relative(self.workspace.path / project.path)
-                git = Git(project_path)
-                self._update(git, project, rebase)
-            else:
-                self.colorprint("SKIPPING", fg=_COLOR_SKIP)
+            project_path = workspace.get_project_path(project, relative=True)
+            git = Git(project_path)
+            self._update(git, project, rebase)
         if prune:
             self._prune(workspace, used)
 
@@ -190,19 +199,52 @@ class AnyRepo:
             # TODO: safety check.
             shutil.rmtree(obsolete_path, ignore_errors=True)
 
-    def foreach(self, command, project_paths=None, manifest_path: Path = None):
+    def foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
         """Run `command` on each project."""
         workspace = self.workspace
-        filter_ = _create_project_paths_filter(workspace, project_paths)
-        for project in self.iter_projects(manifest_path=manifest_path):
+        for project in self.iter(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
+            cmdstr = " ".join(shlex.quote(part) for part in command)
+            self.colorprint(cmdstr, fg=_COLOR_ACTION)
+            project_path = workspace.get_project_path(project, relative=True)
+            run(command, cwd=project_path)
+
+    def iter(
+        self,
+        project_paths=None,
+        manifest_path: Path = None,
+        groups: Groups = None,
+        skip_main: bool = False,
+        resolve_url: bool = False,
+    ) -> Generator[Project, None, None]:
+        """Create/Update all dependent projects."""
+        project_paths_filter = self._create_project_paths_filter(project_paths)
+        filter_ = self._create_groups_filter(groups)
+        for project in self.iter_projects(manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url):
             self._banner(project)
-            if filter_(project):
-                cmdstr = " ".join(shlex.quote(part) for part in command)
-                self.colorprint(cmdstr, fg=_COLOR_ACTION)
-                project_path = resolve_relative(self.workspace.path / project.path)
-                run(command, cwd=project_path)
+            if project_paths_filter(project):
+                yield project
             else:
                 self.colorprint("SKIPPING", fg=_COLOR_SKIP)
+
+    def iter_projects(
+        self,
+        manifest_path: Optional[Path] = None,
+        filter_: ProjectFilter = None,
+        skip_main: bool = False,
+        resolve_url: bool = False,
+    ) -> Generator[Project, None, None]:
+        """Iterate over Projects."""
+        workspace = self.workspace
+        manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
+        yield from ProjectIter(workspace, manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url)
+
+    def iter_manifests(
+        self, manifest_path: Optional[Path] = None, filter_: ProjectFilter = None
+    ) -> Generator[Manifest, None, None]:
+        """Iterate over Manifests."""
+        workspace = self.workspace
+        manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
+        yield from ManifestIter(workspace, manifest_path, filter_=filter_)
 
     @staticmethod
     def create_manifest(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
@@ -214,20 +256,6 @@ class AnyRepo:
         manifest_spec = ManifestSpec()
         manifest_spec.save(manifest_path)
         return manifest_path
-
-    def iter_projects(
-        self, manifest_path: Optional[Path] = None, skip_main: bool = False, resolve_url: bool = False
-    ) -> Generator[Project, None, None]:
-        """Iterate over Projects."""
-        workspace = self.workspace
-        manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
-        yield from ProjectIter(workspace, manifest_path, skip_main=skip_main, resolve_url=resolve_url)
-
-    def iter_manifests(self, manifest_path: Optional[Path] = None) -> Generator[Manifest, None, None]:
-        """Iterate over Manifests."""
-        workspace = self.workspace
-        manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
-        yield from ManifestIter(workspace, manifest_path)
 
     def get_manifest_spec(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
         """Get Manifest."""
@@ -263,10 +291,16 @@ class AnyRepo:
         revision = project.revision
         self.colorprint(f"===== {name} (revision={revision!r}, path={str(project_path)!r}) =====", fg=_COLOR_BANNER)
 
+    def _create_project_paths_filter(self, project_paths):
+        workspace_path = self.workspace.path
+        if project_paths:
+            project_paths = [resolve_relative(workspace_path / path, base=workspace_path) for path in project_paths]
+            return lambda project: resolve_relative(workspace_path / project.path, base=workspace_path) in project_paths
+        return default_filter
 
-def _create_project_paths_filter(workspace, project_paths):
-    workspace_path = workspace.path
-    if project_paths:
-        project_paths = [resolve_relative(workspace_path / path, base=workspace_path) for path in project_paths]
-        return lambda project: resolve_relative(workspace_path / project.path, base=workspace_path) in project_paths
-    return lambda project: True
+    def _create_groups_filter(self, groups):
+        groups = self.workspace.get_groups(groups)
+        if groups:
+            filter_ = Filter.from_str(groups)
+            return lambda project: filter_(project.groups)
+        return None

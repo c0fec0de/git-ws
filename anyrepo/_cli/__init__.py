@@ -33,7 +33,7 @@ def main(ctx=None, verbose=0):
 @groups_option(initial=True)
 @update_option()
 @pass_context
-def init(context, manifest: Path = MANIFEST_PATH_DEFAULT, groups=None, update: bool = False):
+def init(context, manifest, groups, update: bool = False):
     """
     Initialize AnyRepo workspace and create all dependent git clones.
 
@@ -58,7 +58,7 @@ def init(context, manifest: Path = MANIFEST_PATH_DEFAULT, groups=None, update: b
 @groups_option(initial=True)
 @update_option()
 @pass_context
-def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT, groups=None, update: bool = False):
+def clone(context, url, manifest, groups, update: bool = False):
     """
     Create a git clone, initialize AnyRepo workspace and create all dependent git clones.
     """
@@ -81,12 +81,11 @@ def clone(context, url, manifest: Path = MANIFEST_PATH_DEFAULT, groups=None, upd
 @click.option("--rebase", is_flag=True, default=False, help="Run 'git rebase' instead of 'git pull'")
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
 @pass_context
-def update(context, projects, manifest: Path = None, groups=None, rebase: bool = False, prune: bool = False):
+def update(context, projects, manifest, groups, rebase: bool = False, prune: bool = False):
     """Create/update all dependent git clones."""
-    # pylint: disable=too-many-arguments
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
-        arepo.update(project_paths=projects, manifest_path=manifest, rebase=rebase, prune=prune)
+        arepo.update(project_paths=projects, manifest_path=manifest, groups=groups, rebase=rebase, prune=prune)
 
 
 @main.command()
@@ -103,7 +102,7 @@ def git(context, projects, manifest, groups, command):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
-        arepo.foreach(("git",) + command, project_paths=projects)
+        arepo.foreach(("git",) + command, project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -119,7 +118,7 @@ def fetch(context, projects, manifest, groups):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
-        arepo.foreach(("git", "fetch"), project_paths=projects)
+        arepo.foreach(("git", "fetch"), project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -135,7 +134,7 @@ def pull(context, projects, manifest, groups):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
-        arepo.foreach(("git", "pull"), project_paths=projects)
+        arepo.foreach(("git", "pull"), project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -151,7 +150,7 @@ def rebase(context, projects, manifest, groups):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
-        arepo.foreach(("git", "rebase"), project_paths=projects)
+        arepo.foreach(("git", "rebase"), project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -167,7 +166,7 @@ def status(context, projects, manifest, groups):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
-        arepo.foreach(("git", "status"), project_paths=projects)
+        arepo.foreach(("git", "status"), project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -183,7 +182,7 @@ def diff(context, projects, manifest, groups):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
-        arepo.foreach(("git", "diff"), project_paths=projects)
+        arepo.foreach(("git", "diff"), project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -201,7 +200,7 @@ def foreach(context, projects, manifest, groups, command):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest, colorprint=click.secho)
-        arepo.foreach(command, project_paths=projects)
+        arepo.foreach(command, project_paths=projects, groups=groups)
 
 
 @main.command()

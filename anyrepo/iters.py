@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
 from ._git import Git
+from .filters import default_filter
 from .manifest import Manifest, ManifestSpec, Project
+from .types import ProjectFilter
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("anyrepo")
@@ -15,9 +17,10 @@ class ManifestIter:
     """Iterator to resolve the manifest dependencies."""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, workspace: Workspace, manifest_path: Path):
-        self.workspace = workspace
-        self.manifest_path = manifest_path
+    def __init__(self, workspace: Workspace, manifest_path: Path, filter_: Optional[ProjectFilter] = None):
+        self.workspace: Workspace = workspace
+        self.manifest_path: Path = manifest_path
+        self.filter_: ProjectFilter = filter_ or default_filter
         self.__done: List[str] = []
 
     def __iter__(self) -> Generator[Manifest, None, None]:
@@ -26,6 +29,7 @@ class ManifestIter:
     def __iter(self, project_path: Path, manifest_path: Path) -> Generator[Manifest, None, None]:
         deps: List[Tuple[Path, Path]] = []
         done: List[str] = self.__done
+        filter_ = self.filter_
 
         manifest_spec = ManifestSpec.load(manifest_path)
         manifest = Manifest.from_spec(manifest_spec, path=str(manifest_path))
@@ -37,9 +41,13 @@ class ManifestIter:
             if dep_project.path in done:
                 _LOGGER.debug("DUPLICATE %r", dep_project)
                 continue
-            _LOGGER.debug("%r", dep_project)
             done.append(dep_project.path)
 
+            if not filter_(dep_project):
+                _LOGGER.debug("FILTERED OUT %r", dep_project)
+                continue
+
+            _LOGGER.debug("%r", dep_project)
             dep_project_path = self.workspace.path / dep_project.path
 
             # Recursive
@@ -57,27 +65,35 @@ class ProjectIter:
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, workspace: Workspace, manifest_path: Path, skip_main: bool = False, resolve_url: bool = False):
-        self.workspace = workspace
-        self.manifest_path = manifest_path
-        self.skip_main = skip_main
-        self.resolve_url = resolve_url
+    def __init__(
+        self,
+        workspace: Workspace,
+        manifest_path: Path,
+        filter_: Optional[ProjectFilter] = None,
+        skip_main: bool = False,
+        resolve_url: bool = False,
+    ):
+        self.workspace: Workspace = workspace
+        self.manifest_path: Path = manifest_path
+        self.filter_: ProjectFilter = filter_ or default_filter
+        self.skip_main: bool = skip_main
+        self.resolve_url: bool = resolve_url
         self.__done: List[str] = []
 
     def __iter__(self) -> Generator[Project, None, None]:
         if not self.skip_main:
             workspace = self.workspace
             info = workspace.info
-            yield Project(
-                name=info.main_path.name,
-                path=str(info.main_path),
-            )
+            project = Project(name=info.main_path.name, path=str(info.main_path))
+            if self.filter_(project):
+                yield project
         manifest = ManifestSpec.load(self.manifest_path, default=ManifestSpec())
         yield from self.__iter(self.workspace.main_path, manifest)
 
     def __iter(self, project_path: Path, manifest: ManifestSpec) -> Generator[Project, None, None]:
         deps: List[Tuple[Path, ManifestSpec]] = []
         refurl: Optional[str] = None
+        filter_ = self.filter_
         done: List[str] = self.__done
         if self.resolve_url:
             git = Git(project_path)
@@ -87,20 +103,24 @@ class ProjectIter:
         _LOGGER.debug("%r", manifest)
 
         for spec in manifest.dependencies:
-            dep = Project.from_spec(manifest.defaults, manifest.remotes, spec, refurl=refurl)
+            dep_project = Project.from_spec(manifest.defaults, manifest.remotes, spec, refurl=refurl)
 
             # Update every path just once
-            if dep.path in done:
-                _LOGGER.debug("DUPLICATE %r", dep)
+            if dep_project.path in done:
+                _LOGGER.debug("DUPLICATE %r", dep_project)
                 continue
-            _LOGGER.debug("%r", dep)
-            done.append(dep.path)
+            done.append(dep_project.path)
 
-            dep_project_path = self.workspace.path / dep.path
-            yield dep
+            dep_project_path = self.workspace.path / dep_project.path
+            if not filter_(dep_project):
+                _LOGGER.debug("FILTERED OUT %r", dep_project)
+                continue
+
+            _LOGGER.debug("%r", dep_project)
+            yield dep_project
 
             # Recursive
-            dep_manifest_path = dep_project_path / dep.manifest_path
+            dep_manifest_path = dep_project_path / dep_project.manifest_path
             dep_manifest = ManifestSpec.load(dep_manifest_path, default=_MANIFEST_DEFAULT)
             if dep_manifest != _MANIFEST_DEFAULT:
                 deps.append((dep_project_path, dep_manifest))

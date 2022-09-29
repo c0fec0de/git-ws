@@ -42,6 +42,7 @@ def test_init(tmp_path):
             "",
             'main_path = "main"',
             'manifest_path = "resolved.toml"',
+            'groups = ""',
             "",
         ]
 

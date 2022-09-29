@@ -15,6 +15,7 @@ from ._util import resolve_relative
 from .const import ANYREPO_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError
 from .manifest import Project
+from .types import Groups
 
 _LOGGER = logging.getLogger("anyrepo")
 
@@ -27,12 +28,14 @@ class Info(BaseModel):
     invocations.
 
     Keyword Args:
-        main_path (Path): Path to main project. Relative to workspace root directory.
-        mainfest_path (Path): Path to manifest file. Relative to `main_path`.
+        main_path: Path to main project. Relative to workspace root directory.
+        mainfest_path: Path to manifest file. Relative to `main_path`.
+        groups: Group Filtering.
     """
 
     main_path: Path
     manifest_path: Path = MANIFEST_PATH_DEFAULT
+    groups: Optional[str] = None
 
     @staticmethod
     def load(path: Path) -> "Info":
@@ -46,9 +49,11 @@ class Info(BaseModel):
         """
         infopath = path / INFO_PATH
         doc = tomlkit.parse(infopath.read_text())
+        groups = doc.get("groups", None) or None  # legacy support
         return Info(
             main_path=doc["main_path"],
             manifest_path=doc["manifest_path"],
+            groups=groups,
         )
 
     def save(self, path: Path):
@@ -70,8 +75,10 @@ class Info(BaseModel):
             doc.add(tomlkit.nl())
             doc.add("main_path", "")  # type: ignore
             doc.add("manifest_path", "")  # type: ignore
+            doc.add("groups", "")  # type: ignore
         doc["main_path"] = str(self.main_path)
         doc["manifest_path"] = str(self.manifest_path)
+        doc["groups"] = self.groups or ""
         infopath.write_text(tomlkit.dumps(doc))
 
 
@@ -139,11 +146,13 @@ class Workspace:
         path = Workspace.find_path(path=path)
         _LOGGER.info("path=%s", path)
         info = Info.load(path)
-        _LOGGER.info("Loaded %s %s %s", path, info.main_path, info.manifest_path)
+        _LOGGER.info("Loaded %s %r", path, info)
         return Workspace(path, info)
 
     @staticmethod
-    def init(path: Path, main_path: Path, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> "Workspace":
+    def init(
+        path: Path, main_path: Path, manifest_path: Path = MANIFEST_PATH_DEFAULT, groups: Groups = None
+    ) -> "Workspace":
         """
         Initialize new :any:`Workspace` at `path`.
 
@@ -170,9 +179,9 @@ class Workspace:
             raise OutsideWorkspaceError(path, main_path) from None
 
         # Initialize Info
-        info = Info(main_path=main_path, manifest_path=manifest_path)
+        info = Info(main_path=main_path, manifest_path=manifest_path, groups=groups)
         info.save(path)
-        _LOGGER.info("Initialized %s %s %s", path, info.main_path, info.manifest_path)
+        _LOGGER.info("Initialized %s %r", path, info)
         return Workspace(path, info)
 
     @property
@@ -180,13 +189,22 @@ class Workspace:
         """Path to main project."""
         return self.path / self.info.main_path
 
-    def get_project_path(self, project: Project) -> Path:
+    def get_project_path(self, project: Project, relative: bool = False) -> Path:
         """Project Path."""
-        return self.path / project.path
+        project_path = self.path / project.path
+        if relative:
+            project_path = resolve_relative(project_path)
+        return project_path
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
         """Manifest Path."""
         return self.main_path / (manifest_path or self.info.manifest_path)
+
+    def get_groups(self, groups: Groups = None) -> Groups:
+        """Group Filter."""
+        if groups is None:
+            return self.info.groups
+        return groups
 
     def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
         """Remove everything except `used`."""
