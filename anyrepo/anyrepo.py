@@ -14,7 +14,7 @@ from ._git import Git, get_repo_top
 from ._util import no_echo, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
-from .exceptions import ManifestExistError
+from .exceptions import GitCloneMissingError, ManifestExistError
 from .filters import Filter, default_filter
 from .iters import ManifestIter, ProjectIter
 from .types import Groups, ProjectFilter
@@ -204,6 +204,9 @@ class AnyRepo:
             cmdstr = " ".join(shlex.quote(part) for part in command)
             self.echo(cmdstr, fg=_COLOR_ACTION)
             project_path = workspace.get_project_path(project, relative=True)
+            git = Git(project_path)
+            if not git.is_cloned():
+                raise GitCloneMissingError(resolve_relative(project_path))
             run(command, cwd=project_path)
 
     def iter(
@@ -216,7 +219,10 @@ class AnyRepo:
     ) -> Generator[Project, None, None]:
         """Create/Update all dependent projects."""
         project_paths_filter = self._create_project_paths_filter(project_paths)
-        filter_ = self._create_groups_filter(groups)
+        groups = self.workspace.get_groups(groups)
+        filter_ = self.create_groups_filter(groups)
+        if groups:
+            self.echo(f"Groups: {groups!r}", bold=True)
         for project in self.iter_projects(manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url):
             self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
             if project_paths_filter(project):
@@ -255,13 +261,15 @@ class AnyRepo:
         manifest_spec.save(manifest_path)
         return manifest_path
 
-    def get_manifest_spec(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
+    def get_manifest_spec(self, groups: Groups = None, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
         """Get Manifest."""
         workspace = self.workspace
         manifest_spec = self.manifest_spec
         if resolve:
             rdeps: List[ProjectSpec] = []
-            for project in self.iter_projects(skip_main=True):
+            groups = self.workspace.get_groups(groups)
+            filter_ = self.create_groups_filter(groups)
+            for project in self.iter_projects(filter_=filter_, skip_main=True):
                 project_spec = ProjectSpec.from_project(project)
                 rdeps.append(project_spec)
             manifest_spec = manifest_spec.new(dependencies=rdeps)
@@ -273,6 +281,8 @@ class AnyRepo:
             for project_spec, project in zip(manifest_spec.dependencies, manifest.dependencies):
                 project_path = workspace.get_project_path(project)
                 git = Git(project_path)
+                if not git.is_cloned():
+                    raise GitCloneMissingError(resolve_relative(project_path))
                 revision = git.get_tag() or git.get_sha()
                 fdeps.append(project_spec.new(revision=revision))
             manifest_spec = manifest_spec.new(dependencies=fdeps)
@@ -291,16 +301,13 @@ class AnyRepo:
             return lambda project: resolve_relative(workspace_path / project.path, base=workspace_path) in project_paths
         return default_filter
 
-    def _create_groups_filter(self, groups):
-        groups = self.workspace.get_groups(groups)
-        if groups:
-            filter_ = Filter.from_str(groups)
+    def create_groups_filter(self, groups):
+        """Create Filter Method for `groups`."""
+        filter_ = Filter.from_str(groups or "")
 
-            def func(project):
-                groups = [group.name for group in project.groups]
-                disabled = [group.name for group in project.groups if not group.optional]
-                return filter_(groups, disabled=disabled)
+        def func(project):
+            groups = [group.name for group in project.groups]
+            disabled = [group.name for group in project.groups if group.optional]
+            return filter_(groups, disabled=disabled)
 
-            return func
-
-        return None
+        return func

@@ -45,3 +45,14 @@ TODO: more details.
 Initial clone/init filter settings by default.
 """
     return click.option("--groups", "-G", "groups", help=help_)
+
+
+def output_option():
+    """Manifest Output Option."""
+    return click.option(
+        "--output",
+        "-O",
+        "output",
+        type=click.Path(dir_okay=False),
+        help="Write Manifest to file instead of STDOUT.",
+    )

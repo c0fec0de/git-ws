@@ -67,7 +67,7 @@ class Group(BaseModel):
     def info(self):
         """`repr`-like information string."""
         if self.optional:
-            return f"?{self.name}"
+            return f"{self.name}?"
         return self.name
 
 
@@ -100,7 +100,7 @@ class Project(BaseModel):
             kwargs=(
                 ("revision", self.revision, ""),
                 ("path", str(self.path)),
-                ("group", ",".join(group.info for group in self.groups), ""),
+                ("groups", ",".join(group.info for group in self.groups), ""),
             )
         )
         return f"{self.name} ({options})"
