@@ -260,14 +260,15 @@ class AnyRepo:
     def get_manifest_spec(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
         """Get Manifest."""
         workspace = self.workspace
+        manifest_spec = self.manifest_spec
         if resolve:
             rdeps: List[ProjectSpec] = []
             for project in self.iter_projects(skip_main=True):
                 project_spec = ProjectSpec.from_project(project)
                 rdeps.append(project_spec)
-            manifest_spec = self.manifest_spec.new(dependencies=rdeps)
+            manifest_spec = manifest_spec.new(dependencies=rdeps)
         else:
-            manifest_spec = self.manifest_spec.copy()
+            manifest_spec = manifest_spec.copy()
         if freeze:
             manifest = Manifest.from_spec(manifest_spec)
             fdeps: List[ProjectSpec] = []
@@ -302,5 +303,12 @@ class AnyRepo:
         groups = self.workspace.get_groups(groups)
         if groups:
             filter_ = Filter.from_str(groups)
-            return lambda project: filter_(project.groups)
+
+            def func(project):
+                groups = [group.name for group in project.groups]
+                disabled = [group.name for group in project.groups if not group.optional]
+                return filter_(groups, disabled=disabled)
+
+            return func
+
         return None

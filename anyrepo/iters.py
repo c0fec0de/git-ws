@@ -103,7 +103,7 @@ class ProjectIter:
         _LOGGER.debug("%r", manifest)
 
         for spec in manifest.dependencies:
-            dep_project = Project.from_spec(manifest.defaults, manifest.remotes, spec, refurl=refurl)
+            dep_project = Project.from_spec(manifest, spec, refurl=refurl)
 
             # Update every path just once
             if dep_project.path in done:

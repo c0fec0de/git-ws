@@ -30,7 +30,6 @@ def repos(tmp_path):
     with git_repo(repos_path / "main", commit="initial") as path:
         (path / "data.txt").write_text("main")
         ManifestSpec(
-            optional_groups=("test",),
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep2", url="../dep2", revision="1-feature"),
