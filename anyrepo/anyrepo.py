@@ -218,7 +218,7 @@ class AnyRepo:
         project_paths_filter = self._create_project_paths_filter(project_paths)
         filter_ = self._create_groups_filter(groups)
         for project in self.iter_projects(manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url):
-            self._printbanner(project)
+            self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
             if project_paths_filter(project):
                 yield project
             else:
@@ -283,12 +283,6 @@ class AnyRepo:
         manifest_path = self.workspace.get_manifest_path()
         manifest_spec = self.get_manifest_spec(freeze=freeze, resolve=resolve)
         return Manifest.from_spec(manifest_spec, path=str(manifest_path))
-
-    def _printbanner(self, project):
-        project_path = resolve_relative(self.workspace.path / project.path)
-        name = project.name
-        revision = project.revision
-        self.echo(f"===== {name} (revision={revision!r}, path={str(project_path)!r}) =====", fg=_COLOR_BANNER)
 
     def _create_project_paths_filter(self, project_paths):
         workspace_path = self.workspace.path

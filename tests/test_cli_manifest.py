@@ -113,7 +113,7 @@ def test_manifest_freeze(tmp_path, arepo):
         f"===== dep4 (revision={sha4!r}, path='dep4') =====",
         "Fetching.",
         f"Checking out {sha4!r} (previously 'main').",
-        f"===== dep3 (revision={sha3!r}, path='dep3') =====",
+        f"===== dep3 (revision={sha3!r}, path='dep3', group='test,doc') =====",
         "Fetching.",
         f"Checking out {sha3!r} (previously 'main').",
         "",
@@ -133,7 +133,7 @@ def test_manifest_freeze(tmp_path, arepo):
         "Nothing to do.",
         f"===== dep4 (revision={sha4!r}, path='dep4') =====",
         "Nothing to do.",
-        f"===== dep3 (revision={sha3!r}, path='dep3') =====",
+        f"===== dep3 (revision={sha3!r}, path='dep3', group='test,doc') =====",
         "Nothing to do.",
         "",
     ]

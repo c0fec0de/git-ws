@@ -14,7 +14,7 @@ from pydantic import Field, root_validator
 
 from ._basemodel import BaseModel
 from ._url import urljoin
-from ._util import resolve_relative
+from ._util import get_repr, resolve_relative
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestError, ManifestNotFoundError
 
@@ -63,6 +63,13 @@ class Group(BaseModel):
     name: str
     optional: bool = False
 
+    @property
+    def info(self):
+        """`repr`-like information string."""
+        if self.optional:
+            return f"?{self.name}"
+        return self.name
+
 
 class Project(BaseModel):
 
@@ -85,6 +92,18 @@ class Project(BaseModel):
     revision: Optional[str] = None
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
     groups: Tuple[Group, ...] = tuple()
+
+    @property
+    def info(self):
+        """`repr`-like info string but more condensed."""
+        options = get_repr(
+            kwargs=(
+                ("revision", self.revision, ""),
+                ("path", str(self.path)),
+                ("group", ",".join(group.info for group in self.groups), ""),
+            )
+        )
+        return f"{self.name} ({options})"
 
     @staticmethod
     def from_spec(manifest_spec: "ManifestSpec", spec: "ProjectSpec", refurl: Optional[str] = None) -> "Project":

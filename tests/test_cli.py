@@ -61,7 +61,7 @@ def test_git(tmp_path, arepo):
         "git status",
         "===== dep4 (revision='main', path='dep4') =====",
         "git status",
-        "===== dep3 (revision=None, path='dep3') =====",
+        "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
         "git status",
         "",
     ]
@@ -77,7 +77,7 @@ def test_git(tmp_path, arepo):
         "git status",
         "===== dep4 (revision='main', path='dep4') =====",
         "git status",
-        "===== dep3 (revision=None, path='dep3') =====",
+        "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
         "SKIPPING",
         "",
     ]
@@ -96,7 +96,7 @@ def test_foreach(tmp_path, arepo):
         "git status",
         "===== dep4 (revision='main', path='dep4') =====",
         "git status",
-        "===== dep3 (revision=None, path='dep3') =====",
+        "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
         "git status",
         "",
     ]
@@ -137,7 +137,7 @@ def test_update(tmp_path, repos, arepo):
         "Pulling branch '1-feature'.",
         "===== dep4 (revision='main', path='dep4') =====",
         "SKIPPING",
-        "===== dep3 (revision=None, path='dep3') =====",
+        "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
         "SKIPPING",
         "",
     ]
@@ -154,7 +154,7 @@ def test_update(tmp_path, repos, arepo):
         "Pulling branch 'main'.",
         "===== dep5 (revision=None, path='dep5') =====",
         f"Cloning '{tmp_path!s}/repos/dep5'.",
-        "===== dep3 (revision=None, path='dep3') =====",
+        "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
         "Pulling branch 'main'.",
         "",
     ]
@@ -171,7 +171,7 @@ def test_update(tmp_path, repos, arepo):
         "Pulling branch 'main'.",
         "===== dep5 (revision=None, path='dep5') =====",
         "Pulling branch 'main'.",
-        "===== dep3 (revision=None, path='dep3') =====",
+        "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
         "Pulling branch 'main'.",
         "",
     ]
@@ -220,7 +220,7 @@ def test_update_rebase(tmp_path, repos, arepo):
         "Rebasing branch 'main'.",
         "===== dep5 (revision=None, path='dep5') =====",
         f"Cloning '{tmp_path!s}/repos/dep5'.",
-        "===== dep3 (revision=None, path='dep3') =====",
+        "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "",
@@ -241,7 +241,7 @@ def test_update_rebase(tmp_path, repos, arepo):
         "===== dep5 (revision=None, path='dep5') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep3 (revision=None, path='dep3') =====",
+        "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "",
@@ -294,7 +294,7 @@ def _test_foreach(tmp_path, arepo, command):
         f"git {command}",
         "===== dep4 (revision='main', path='dep4') =====",
         f"git {command}",
-        "===== dep3 (revision=None, path='dep3') =====",
+        "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
         f"git {command}",
         "",
     ]

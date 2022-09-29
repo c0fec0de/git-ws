@@ -50,3 +50,17 @@ def resolve_relative(path: Path, base: Optional[Path] = None):
         return path.relative_to(base)
     except ValueError:
         return path.resolve()
+
+
+def get_repr(args=None, kwargs=None):
+    """Return `repr()` string."""
+    parts = list(args or [])
+    for item in kwargs:
+        try:
+            name, value = item
+            parts.append(f"{name}={value!r}")
+        except ValueError:
+            name, value, default = item
+            if value != default:
+                parts.append(f"{name}={value!r}")
+    return ", ".join(parts)

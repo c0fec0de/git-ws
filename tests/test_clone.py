@@ -62,7 +62,7 @@ def test_cli_clone_update(tmp_path, repos):
             f"Cloning '{tmp_path}/repos/dep2'.",
             "===== dep4 (revision='main', path='dep4') =====",
             f"Cloning '{tmp_path}/repos/dep4'.",
-            "===== dep3 (revision=None, path='dep3') =====",
+            "===== dep3 (revision=None, path='dep3', group='test,doc') =====",
             f"Cloning '{tmp_path}/repos/dep3'.",
             "",
         ]
