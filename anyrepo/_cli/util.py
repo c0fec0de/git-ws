@@ -54,13 +54,15 @@ def exceptionhandling(context: Context):
         raise Error(f"{exc!s} Try:\n\n    anyrepo init\n\nor:\n\n    anyrepo clone\n") from None
     except NoGitError as exc:
         _print_traceback(context, exc)
-        raise Error(f"{exc!s} Try:\n\n    git init\n\nor:\n\n    git clone\n") from None
+        raise Error(
+            f"{exc!s} Change to your existing git clone or try:\n\n    git init\n\nor:\n\n    git clone\n"
+        ) from None
     except ManifestNotFoundError as exc:
         _print_traceback(context, exc)
-        raise Error(f"{exc!s} Try\n\n    anyrepo create-manifest --manifest='{exc.path!s}'\n") from None
+        raise Error(f"{exc!s} Try:\n\n    anyrepo create-manifest --manifest='{exc.path!s}'\n") from None
     except GitCloneMissingError as exc:
         _print_traceback(context, exc)
-        raise Error(f"{exc!s} Try\n\n    anyrepo update\n") from None
+        raise Error(f"{exc!s} Try:\n\n    anyrepo update\n") from None
     except Exception as exc:
         _print_traceback(context, exc)
         raise Error(f"{exc!s}") from None
@@ -70,4 +72,4 @@ def _print_traceback(context: Context, exc: Exception):
     if context.verbose > 1:  # pragma: no cover
         # pylint: disable=no-value-for-parameter
         lines = "".join(traceback.format_exc())
-        click.secho(lines, fg="red", error=True)
+        click.secho(lines, fg="red", err=True)

@@ -263,7 +263,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         except FileNotFoundError:
             if default:
                 return default
-            raise ManifestNotFoundError(path) from None
+            raise ManifestNotFoundError(resolve_relative(path)) from None
         try:
             doc = tomlkit.parse(content)
             data = dict(doc)

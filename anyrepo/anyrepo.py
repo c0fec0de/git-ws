@@ -118,7 +118,7 @@ class AnyRepo:
         name = Path(parsedurl.path).name
         echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        project_path = path / name
+        project_path = path / name.removesuffix('.git')
         git = Git(project_path)
         git.clone(url)
         return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)

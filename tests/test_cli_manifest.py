@@ -46,7 +46,7 @@ def test_validate(tmp_path, arepo):
     )
     result = CliRunner().invoke(main, ["manifest", "validate"])
     assert result.output.split("\n") == [
-        "Error: Manifest main/anyrepo.toml is broken: 1 validation error for ManifestSpec",
+        "Error: Manifest 'main/anyrepo.toml' is broken: 1 validation error for ManifestSpec",
         "dependencies -> 0 -> name",
         "  field required (type=value_error.missing)",
         "",
@@ -83,7 +83,7 @@ def test_freeze(tmp_path, arepo):
     # STDOUT
     result = CliRunner().invoke(main, ["manifest", "freeze", "-G", "+test"])
     assert result.output.split("\n") == [
-        "Error: Git Clone dep3 is missing. Try",
+        "Error: Git Clone 'dep3' is missing. Try:",
         "",
         "    anyrepo update",
         "",
