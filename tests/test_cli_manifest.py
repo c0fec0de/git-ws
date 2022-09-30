@@ -23,7 +23,7 @@ def arepo(tmp_path, repos):
         yield arepo
 
 
-def test_manifest_validate(tmp_path, arepo):
+def test_validate(tmp_path, arepo):
     """Manifest Validate."""
     result = CliRunner().invoke(main, ["manifest", "validate"])
     assert result.output.split("\n") == [""]
@@ -54,15 +54,12 @@ def test_manifest_validate(tmp_path, arepo):
     assert result.exit_code == 1
 
 
-def test_manifest_freeze(tmp_path, arepo):
+def test_freeze(tmp_path, arepo):
     """Manifest Freeze."""
     sha1 = get_sha(arepo.path / "dep1")
     sha2 = get_sha(arepo.path / "dep2")
-    sha3 = "v1.0"
     sha4 = get_sha(arepo.path / "dep4")
     lines = [
-        'optional_groups = ["test"]',
-        "",
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',
@@ -81,18 +78,30 @@ def test_manifest_freeze(tmp_path, arepo):
         f'revision = "{sha4}"',
         'path = "dep4"',
         "",
-        "[[dependencies]]",
-        'name = "dep3"',
-        'url = "../dep3"',
-        f'revision = "{sha3}"',
-        'path = "dep3"',
-        'groups = ["test", "doc"]',
-        "",
     ]
 
     # STDOUT
-    result = CliRunner().invoke(main, ["manifest", "freeze"])
-    assert result.output.split("\n") == lines + [""]
+    result = CliRunner().invoke(main, ["manifest", "freeze", "-G", "+test"])
+    assert result.output.split("\n") == [
+        "Error: Git Clone dep3 is missing. Try",
+        "",
+        "    anyrepo update",
+        "",
+        "",
+    ]
+    assert result.exit_code == 1
+    CliRunner().invoke(main, ["update", "-G", "+test"])
+    result = CliRunner().invoke(main, ["manifest", "freeze", "-G", "+test"])
+    assert result.output.split("\n") == lines + [
+        "[[dependencies]]",
+        'name = "dep3"',
+        'url = "../dep3"',
+        'revision = "v1.0"',
+        'path = "dep3"',
+        'groups = ["test"]',
+        "",
+        "",
+    ]
     assert result.exit_code == 0
 
     # FILE
@@ -115,9 +124,6 @@ def test_manifest_freeze(tmp_path, arepo):
         f"===== dep4 (revision={sha4!r}, path='dep4') =====",
         "Fetching.",
         f"Checking out {sha4!r} (previously 'main').",
-        f"===== dep3 (revision={sha3!r}, path='dep3') =====",
-        "Fetching.",
-        f"Checking out {sha3!r} (previously 'main').",
         "",
     ]
     assert result.exit_code == 0
@@ -135,18 +141,14 @@ def test_manifest_freeze(tmp_path, arepo):
         "Nothing to do.",
         f"===== dep4 (revision={sha4!r}, path='dep4') =====",
         "Nothing to do.",
-        f"===== dep3 (revision={sha3!r}, path='dep3') =====",
-        "Nothing to do.",
         "",
     ]
     assert result.exit_code == 0
 
 
-def test_manifest_resolve(tmp_path, arepo):
+def test_resolve(tmp_path, arepo):
     """Manifest Resolve."""
     lines = [
-        'optional_groups = ["test"]',
-        "",
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',
@@ -163,12 +165,6 @@ def test_manifest_resolve(tmp_path, arepo):
         'url = "../dep4"',
         'revision = "main"',
         'path = "dep4"',
-        "",
-        "[[dependencies]]",
-        'name = "dep3"',
-        'url = "../dep3"',
-        'path = "dep3"',
-        'groups = ["test", "doc"]',
         "",
     ]
 
@@ -187,7 +183,7 @@ def test_manifest_resolve(tmp_path, arepo):
     assert output_path.read_text().split("\n") == lines
 
 
-def test_manifest_path(tmp_path, arepo):
+def test_path(tmp_path, arepo):
     """Manifest Path."""
     result = CliRunner().invoke(main, ["manifest", "path"])
     main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
@@ -198,7 +194,7 @@ def test_manifest_path(tmp_path, arepo):
     assert result.exit_code == 0
 
 
-def test_manifest_paths(tmp_path, arepo):
+def test_paths(tmp_path, arepo):
     """Manifest Paths."""
     result = CliRunner().invoke(main, ["manifest", "paths"])
     main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"

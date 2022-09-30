@@ -7,3 +7,4 @@ poetry.lock
 build
 /docs/api
 /.vscode
+dist/

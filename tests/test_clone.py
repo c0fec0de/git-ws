@@ -62,8 +62,6 @@ def test_cli_clone_update(tmp_path, repos):
             f"Cloning '{tmp_path}/repos/dep2'.",
             "===== dep4 (revision='main', path='dep4') =====",
             f"Cloning '{tmp_path}/repos/dep4'.",
-            "===== dep3 (revision=None, path='dep3') =====",
-            f"Cloning '{tmp_path}/repos/dep3'.",
             "",
         ]
         assert result.exit_code == 0
@@ -71,9 +69,57 @@ def test_cli_clone_update(tmp_path, repos):
     check(workspace, "main")
     check(workspace, "dep1")
     check(workspace, "dep2", content="dep2-feature")
-    check(workspace, "dep3")
+    check(workspace, "dep3", exists=False)
     check(workspace, "dep4")
     check(workspace, "dep5", exists=False)
+
+
+def test_cli_clone_groups(tmp_path, repos):
+    """Cloning via CLI with groups."""
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    with chdir(workspace):
+        result = CliRunner().invoke(main, ["clone", str(repos / "main"), "-G", "+test"])
+        assert result.output.split("\n") == [
+            "===== main (revision=None, path='main') =====",
+            "Cloning " f"'{tmp_path}/repos/main'.",
+            "Workspace initialized at '.'. Please continue with:",
+            "",
+            "    anyrepo update",
+            "",
+            "",
+        ]
+        assert result.exit_code == 0
+
+        check(workspace, "main")
+        check(workspace, "dep1", exists=False)
+        check(workspace, "dep2", exists=False)
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4", exists=False)
+        check(workspace, "dep5", exists=False)
+
+        result = CliRunner().invoke(main, ["update"])
+        assert result.output.split("\n") == [
+            "Groups: '+test'",
+            "===== dep1 (revision=None, path='dep1') =====",
+            f"Cloning '{tmp_path}/repos/dep1'.",
+            "===== dep2 (revision='1-feature', path='dep2') =====",
+            f"Cloning '{tmp_path}/repos/dep2'.",
+            "===== dep4 (revision='main', path='dep4') =====",
+            f"Cloning '{tmp_path}/repos/dep4'.",
+            "===== dep3 (revision=None, path='dep3', groups='test?') =====",
+            f"Cloning '{tmp_path}/repos/dep3'.",
+            "",
+        ]
+        assert result.exit_code == 0
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3")
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
 
 
 def test_clone(tmp_path, repos):
@@ -91,7 +137,7 @@ def test_clone(tmp_path, repos):
         check(workspace, "main")
         check(workspace, "dep1")
         check(workspace, "dep2", content="dep2-feature")
-        check(workspace, "dep3")
+        check(workspace, "dep3", exists=False)
         check(workspace, "dep4")
         check(workspace, "dep5", exists=False)
 
@@ -127,7 +173,7 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "main")
         check(workspace, "dep1")
         check(workspace, "dep2", content="dep2-feature")
-        check(workspace, "dep3")
+        check(workspace, "dep3", exists=False)
         check(workspace, "dep4")
         check(workspace, "dep5", exists=False)
 
@@ -137,7 +183,7 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "main")
         check(workspace, "dep1")
         check(workspace, "dep2", content="dep2-feature")
-        check(workspace, "dep3")
+        check(workspace, "dep3", exists=False)
         check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
 

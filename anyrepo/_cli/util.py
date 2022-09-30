@@ -6,7 +6,7 @@ from typing import Any, Optional
 import click
 from pydantic import BaseModel
 
-from anyrepo import ManifestNotFoundError, NoGitError, UninitializedError
+from anyrepo import GitCloneMissingError, ManifestNotFoundError, NoGitError, UninitializedError
 
 
 class Context(BaseModel):
@@ -48,6 +48,9 @@ def exceptionhandling(context: Context):
     except ManifestNotFoundError as exc:
         _print_traceback(context, exc)
         raise Error(f"{exc!s} Try\n\n    anyrepo create-manifest --manifest='{exc.path!s}'\n") from None
+    except GitCloneMissingError as exc:
+        _print_traceback(context, exc)
+        raise Error(f"{exc!s} Try\n\n    anyrepo update\n") from None
     except Exception as exc:
         _print_traceback(context, exc)
         raise Error(f"{exc!s}") from None

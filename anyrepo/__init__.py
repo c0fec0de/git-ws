@@ -15,6 +15,7 @@ import logging
 
 from .anyrepo import AnyRepo
 from .exceptions import (
+    GitCloneMissingError,
     InitializedError,
     ManifestExistError,
     ManifestNotFoundError,

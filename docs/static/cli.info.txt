@@ -1,0 +1,10 @@
+Usage: anyrepo info [OPTIONS] COMMAND [ARGS]...
+
+  AnyRepo Information.
+
+Options:
+  -h, --help  Show this message and exit.
+
+Commands:
+  project-paths   Print Paths to all git clones.
+  workspace-path  Print Path to Workspace.

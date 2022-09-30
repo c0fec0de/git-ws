@@ -73,3 +73,11 @@ class InvalidConfigurationLocationError(RuntimeError):
     def __init__(self, location: str):
         super().__init__(f"The configuration location {location} is not known")
         self.location = location
+
+
+class GitCloneMissingError(RuntimeError):
+    """Git Clone Missing Error."""
+
+    def __init__(self, project_path):
+        super().__init__(f"Git Clone {project_path} is missing.")
+        self.project_path = project_path
