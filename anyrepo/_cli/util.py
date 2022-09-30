@@ -60,4 +60,4 @@ def _print_traceback(context: Context, exc: Exception):
     if context.verbose > 1:  # pragma: no cover
         # pylint: disable=no-value-for-parameter
         lines = "".join(traceback.format_exc())
-        click.secho(lines, fg="red")
+        click.secho(lines, fg="red", error=True)
