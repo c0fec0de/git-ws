@@ -54,27 +54,19 @@ def test_git(tmp_path, arepo):
     result = CliRunner().invoke(main, ["git", "status"])
     assert result.output.split("\n") == [
         "===== main (revision=None, path='main') =====",
-        "git status",
         "===== dep1 (revision=None, path='dep1') =====",
-        "git status",
         "===== dep2 (revision='1-feature', path='dep2') =====",
-        "git status",
         "===== dep4 (revision='main', path='dep4') =====",
-        "git status",
         "",
     ]
     assert result.exit_code == 0
 
     result = CliRunner().invoke(main, ["git", "status", "-P", "dep2", "-P", "./dep4"])
     assert result.output.split("\n") == [
-        "===== main (revision=None, path='main') =====",
-        "SKIPPING",
-        "===== dep1 (revision=None, path='dep1') =====",
-        "SKIPPING",
+        "===== SKIPPING main (revision=None, path='main') =====",
+        "===== SKIPPING dep1 (revision=None, path='dep1') =====",
         "===== dep2 (revision='1-feature', path='dep2') =====",
-        "git status",
         "===== dep4 (revision='main', path='dep4') =====",
-        "git status",
         "",
     ]
     assert result.exit_code == 0
@@ -85,13 +77,9 @@ def test_foreach(tmp_path, arepo):
     result = CliRunner().invoke(main, ["foreach", "git", "status"])
     assert result.output.split("\n") == [
         "===== main (revision=None, path='main') =====",
-        "git status",
         "===== dep1 (revision=None, path='dep1') =====",
-        "git status",
         "===== dep2 (revision='1-feature', path='dep2') =====",
-        "git status",
         "===== dep4 (revision='main', path='dep4') =====",
-        "git status",
         "",
     ]
     assert result.exit_code == 0
@@ -102,7 +90,6 @@ def test_foreach_fail(tmp_path, arepo):
     result = CliRunner().invoke(main, ["foreach", "--", "git", "status", "--invalidoption"])
     assert result.output.split("\n") == [
         "===== main (revision=None, path='main') =====",
-        "git status --invalidoption",
         "Error: Command '('git', 'status', '--invalidoption')' returned non-zero exit status 129.",
         "",
     ]
@@ -125,12 +112,10 @@ def test_update(tmp_path, repos, arepo):
     # Update project
     result = CliRunner().invoke(main, ["update", "-P", "dep2"])
     assert result.output.split("\n") == [
-        "===== dep1 (revision=None, path='dep1') =====",
-        "SKIPPING",
+        "===== SKIPPING dep1 (revision=None, path='dep1') =====",
         "===== dep2 (revision='1-feature', path='dep2') =====",
         "Pulling branch '1-feature'.",
-        "===== dep4 (revision='main', path='dep4') =====",
-        "SKIPPING",
+        "===== SKIPPING dep4 (revision='main', path='dep4') =====",
         "",
     ]
     assert result.exit_code == 0
@@ -269,13 +254,9 @@ def _test_foreach(tmp_path, arepo, command):
     result = CliRunner().invoke(main, [command])
     assert result.output.split("\n") == [
         "===== main (revision=None, path='main') =====",
-        f"git {command}",
         "===== dep1 (revision=None, path='dep1') =====",
-        f"git {command}",
         "===== dep2 (revision='1-feature', path='dep2') =====",
-        f"git {command}",
         "===== dep4 (revision='main', path='dep4') =====",
-        f"git {command}",
         "",
     ]
     assert result.exit_code == 0
