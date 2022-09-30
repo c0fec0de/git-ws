@@ -4,6 +4,7 @@ Usage: anyrepo [OPTIONS] COMMAND [ARGS]...
 
 Options:
   -v, --verbose
+  --version      Show the version and exit.
   -h, --help     Show this message and exit.
 
 Commands:

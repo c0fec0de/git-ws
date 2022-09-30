@@ -181,6 +181,37 @@ class AppConfig:
                 self._get_config_file_path(location), str(validation_error)
             ) from validation_error
 
+    def save_configuration(self, config: AppConfigData, location: AppConfigLocation):
+        """
+        Save the configuration back to disk.
+
+        This saves the given configuration back to a file on disk.
+
+        Args:
+            config: The configuration options to be saved to disk.
+            location: The location where to store.
+
+        Raises:
+            InvalidConfigurationLocationError: The location is not valid.
+            InvalidConfigurationFileError: The target configuration file exists but is broken and cannot be updated.
+            UninitializedError: Tries to save to a workspace configuration but we are not within a valid workspace.
+        """
+        doc = self._load_configuration(location)
+        values = config.dict()
+
+        # Modify the document "in-place" to keep comments etc
+        for key, value in values.items():
+            if value is not None:
+                doc[key] = value
+            else:
+                del doc[key]
+
+        doc_path = self._get_config_file_path(location)
+        doc_path.write_text(doc.as_string(), encoding="utf-8")
+
+        # Clear the cached merged config so we'll reload it on next access
+        self._merged_config = None
+
     @property
     def options(self) -> AppConfigData:
         """
