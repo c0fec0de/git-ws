@@ -19,6 +19,7 @@ _COLOR_INFO = "blue"
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("-v", "--verbose", count=True)
+@click.version_option()
 @click.pass_context
 def main(ctx=None, verbose=0):
     """
