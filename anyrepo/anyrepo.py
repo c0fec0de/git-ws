@@ -272,7 +272,7 @@ class AnyRepo:
             for project in self.projects(filter_=filter_, skip_main=True):
                 project_spec = ProjectSpec.from_project(project)
                 rdeps.append(project_spec)
-            manifest_spec = manifest_spec.new(dependencies=rdeps)
+            manifest_spec = manifest_spec.update(dependencies=rdeps)
         else:
             manifest_spec = manifest_spec.copy()
         if freeze:
@@ -284,8 +284,8 @@ class AnyRepo:
                 if not git.is_cloned():
                     raise GitCloneMissingError(resolve_relative(project_path))
                 revision = git.get_tag() or git.get_sha()
-                fdeps.append(project_spec.new(revision=revision))
-            manifest_spec = manifest_spec.new(dependencies=fdeps)
+                fdeps.append(project_spec.update(revision=revision))
+            manifest_spec = manifest_spec.update(dependencies=fdeps)
         return manifest_spec
 
     def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:

@@ -2,7 +2,6 @@
 import logging
 import traceback
 from contextlib import contextmanager
-from typing import Any, Optional
 
 import click
 from pydantic import BaseModel
@@ -26,7 +25,6 @@ class Context(BaseModel):
     """Command Line Context."""
 
     verbose: int
-    anyrepo: Optional[Any] = None
 
 
 pass_context = click.make_pass_decorator(Context)

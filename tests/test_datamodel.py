@@ -14,6 +14,10 @@ def test_remote():
     assert remote.name == "origin2"
     assert remote.url_base == "base"
 
+    # Immutable
+    with raises(TypeError):
+        remote.name = "other"
+
 
 def test_defaults():
     """Test Defaults."""
@@ -29,6 +33,10 @@ def test_defaults():
     assert defaults.remote is None
     assert defaults.revision == "Revision"
 
+    # Immutable
+    with raises(TypeError):
+        defaults.remote = "other"
+
 
 def test_project_group():
     """Group."""
@@ -39,6 +47,10 @@ def test_project_group():
     group = Group(name="name", optional=False)
     assert group.name == "name"
     assert not group.optional
+
+    # Immutable
+    with raises(TypeError):
+        group.name = "other"
 
 
 def test_project_spec():
@@ -57,6 +69,10 @@ def test_project_spec():
     with raises(ValueError):
         ProjectSpec(name="name", sub_url="sub-url")
 
+    # Immutable
+    with raises(TypeError):
+        project_spec.name = "other"
+
 
 def test_manifest_spec(tmp_path):
     """Test ManifestSpec."""
@@ -68,6 +84,10 @@ def test_manifest_spec(tmp_path):
     filepath = tmp_path / "manifest.toml"
     manifest_spec.save(filepath)
     assert filepath.read_text().split("\n") == [""]
+
+    # Immutable
+    with raises(TypeError):
+        manifest_spec.defaults = Defaults()
 
 
 def test_manifest_spec_from_data(tmp_path):
