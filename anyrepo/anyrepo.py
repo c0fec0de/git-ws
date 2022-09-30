@@ -10,7 +10,7 @@ import urllib
 from pathlib import Path
 from typing import Generator, List, Optional
 
-from ._git import Git, get_repo_top
+from ._git import Git
 from ._util import no_echo, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
@@ -96,7 +96,7 @@ class AnyRepo:
         :param manifest_path: Path to the manifest file.
         """
         echo = echo or no_echo
-        project_path = get_repo_top(path=project_path)
+        project_path = Git.find_path(path=project_path)
         name = project_path.name
         echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(project_path / manifest_path)

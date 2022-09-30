@@ -7,16 +7,6 @@ from ._util import run
 from .exceptions import NoGitError
 
 
-def get_repo_top(path: Optional[Path]) -> Path:
-    """Determine Git Clone Repository Top Directory."""
-    path = path or Path.cwd()
-    result = run(("git", "rev-parse", "--show-cdup"), capture_output=True, check=False, cwd=path)
-    if result.stderr:
-        raise NoGitError()
-    cdup = result.stdout.decode("utf-8").strip()
-    return (path / cdup).resolve()
-
-
 class Git:
 
     """
@@ -30,9 +20,19 @@ class Git:
         self.path = path
 
     @staticmethod
+    def find_path(path: Optional[Path]) -> Path:
+        """Determine Top Directory of Git Clone."""
+        path = path or Path.cwd()
+        result = run(("git", "rev-parse", "--show-cdup"), capture_output=True, check=False, cwd=path)
+        if result.stderr:
+            raise NoGitError()
+        cdup = result.stdout.decode("utf-8").strip()
+        return (path / cdup).resolve()
+
+    @staticmethod
     def from_path(path: Optional[Path]) -> "Git":
         """Create GIT Repo Helper from `path`."""
-        path = get_repo_top(path=path)
+        path = Git.find_path(path=path)
         return Git(path=path)
 
     def is_cloned(self) -> bool:

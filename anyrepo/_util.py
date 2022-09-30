@@ -7,17 +7,6 @@ from typing import Optional
 _LOGGER = logging.getLogger("anyrepo")
 # Dependencies to any anyrepo module are forbidden here!
 
-_LOGLEVELMAP = {
-    0: logging.WARNING,
-    1: logging.INFO,
-    2: logging.DEBUG,
-}
-
-
-def get_loglevel(verbose: int):
-    """Return `logging.level` according to verbosity."""
-    return _LOGLEVELMAP.get(verbose, logging.DEBUG)
-
 
 def run(cmd, cwd=None, capture_output=False, check=True):
     """Simplified wrapper around :any:`subprocess.run`."""

@@ -3,7 +3,13 @@ import pydantic
 
 
 class BaseModel(pydantic.BaseModel):
-    """Refined :any:`pydantic.BaseModel`."""
+    """
+    Refined :any:`pydantic.BaseModel`.
+
+    * Data Models are immutable.
+    * The `repr` implementation skips fields, which are identical to their default value.
+    * A `new` implementation eases the creation of new instances with the same values.
+    """
 
     class Config:
         """Configure."""
