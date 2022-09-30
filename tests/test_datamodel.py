@@ -34,7 +34,7 @@ def test_project_group():
     """Group."""
     group = Group(name="name")
     assert group.name == "name"
-    assert not group.optional
+    assert group.optional
 
     group = Group(name="name", optional=False)
     assert group.name == "name"
@@ -82,7 +82,7 @@ def test_manifest_spec_from_data(tmp_path):
             {"name": "remote1", "url-base": "https://git.example.com/base1"},
         ],
         "groups": [
-            {"name": "foo", "optional": True},
+            {"name": "foo", "optional": False},
             {"name": "bar"},
         ],
         "dependencies": [
@@ -97,7 +97,7 @@ def test_manifest_spec_from_data(tmp_path):
         Remote(name="remote2", url_base="https://git.example.com/base2"),
         Remote(name="remote1", url_base="https://git.example.com/base1"),
     )
-    assert manifest_spec.groups == (Group(name="foo", optional=True), Group(name="bar"))
+    assert manifest_spec.groups == (Group(name="foo", optional=False), Group(name="bar"))
     assert manifest_spec.dependencies == (
         ProjectSpec(name="dep1", remote="remote1", groups=("test", "foo")),
         ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
@@ -121,7 +121,7 @@ def test_manifest_spec_from_data(tmp_path):
         "",
         "[[groups]]",
         'name = "foo"',
-        "optional = true",
+        "optional = false",
         "",
         "[[groups]]",
         'name = "bar"',
@@ -152,7 +152,7 @@ def test_manifest_spec_from_data(tmp_path):
             url="https://git.example.com/base1/dep1",
             revision="v1.3",
             path="dep1",
-            groups=(Group(name="test"), Group(name="foo", optional=True)),
+            groups=(Group(name="test"), Group(name="foo", optional=False)),
         ),
         Project(name="dep2", url="https://git.example.com/base3/dep2.git", revision="v1.3", path="dep2dir"),
         Project(name="dep3", url="https://git.example.com/base1/sub.git", revision="main", path="dep3"),

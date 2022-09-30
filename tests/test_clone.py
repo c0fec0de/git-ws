@@ -108,7 +108,7 @@ def test_cli_clone_groups(tmp_path, repos):
             f"Cloning '{tmp_path}/repos/dep2'.",
             "===== dep4 (revision='main', path='dep4') =====",
             f"Cloning '{tmp_path}/repos/dep4'.",
-            "===== dep3 (revision=None, path='dep3', groups='test?') =====",
+            "===== dep3 (revision=None, path='dep3', groups='test') =====",
             f"Cloning '{tmp_path}/repos/dep3'.",
             "",
         ]

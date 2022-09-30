@@ -1,4 +1,5 @@
 """Command Line Interface Utilities."""
+import logging
 import traceback
 from contextlib import contextmanager
 from typing import Any, Optional
@@ -7,6 +8,17 @@ import click
 from pydantic import BaseModel
 
 from anyrepo import GitCloneMissingError, ManifestNotFoundError, NoGitError, UninitializedError
+
+_LOGLEVELMAP = {
+    0: logging.WARNING,
+    1: logging.INFO,
+    2: logging.DEBUG,
+}
+
+
+def get_loglevel(verbose: int):
+    """Return `logging.level` according to verbosity."""
+    return _LOGLEVELMAP.get(verbose, logging.DEBUG)
 
 
 class Context(BaseModel):
@@ -60,4 +72,4 @@ def _print_traceback(context: Context, exc: Exception):
     if context.verbose > 1:  # pragma: no cover
         # pylint: disable=no-value-for-parameter
         lines = "".join(traceback.format_exc())
-        click.secho(lines, fg="red")
+        click.secho(lines, fg="red", error=True)
