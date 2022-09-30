@@ -10,7 +10,7 @@ from pydantic import BaseSettings, Extra, ValidationError
 
 from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError, UninitializedError
 
-from .const import ANYREPO_PATH, SYSTEM_CONFIG_DIR, USER_CONFIG_DIR
+from .const import ANYREPO_PATH, MANIFEST_PATH_DEFAULT, SYSTEM_CONFIG_DIR, USER_CONFIG_DIR
 from .workspace import Workspace
 
 
@@ -20,11 +20,13 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
 
     This class holds the concrete configuration values of the application.
     The following values are defined:
-
-    :param color_ui: Defines if outputs by the tool shall be colored.
     """
 
     color_ui: Optional[bool]
+    """Defines if outputs by the tool shall be colored."""
+
+    manifest_path: Optional[str]
+    """The path of the manifest file within a repository."""
 
 
 class _EnvAppConfigData(AppConfigData, env_prefix="anyrepo_", case_sensitive=False):
@@ -195,13 +197,13 @@ class AppConfig:
             sys_config = self.load_configuration(AppConfigLocation.SYSTEM)
             user_config = self.load_configuration(AppConfigLocation.USER)
             workspace_config = self.load_configuration(AppConfigLocation.WORKSPACE)
-            merged_config_data = {}
-            merged_config_data.update(sys_config.dict())
-            merged_config_data.update(user_config.dict())
-            merged_config_data.update(workspace_config.dict())
+            merged_config_data: dict = {}
+            merged_config_data.update(sys_config.dict(exclude_none=True))
+            merged_config_data.update(user_config.dict(exclude_none=True))
+            merged_config_data.update(workspace_config.dict(exclude_none=True))
             if self._use_config_from_env:
                 env_config = _EnvAppConfigData()
-                merged_config_data.update(env_config.dict())
+                merged_config_data.update(env_config.dict(exclude_none=True))
             self._merged_config = AppConfigData(**merged_config_data)
             self._fill_in_defaults(self._merged_config)
         return self._merged_config
@@ -211,3 +213,5 @@ class AppConfig:
         """Fill in some sensible defaults in the given config object."""
         if config.color_ui is None:
             config.color_ui = True
+        if config.manifest_path is None:
+            config.manifest_path = str(MANIFEST_PATH_DEFAULT)
