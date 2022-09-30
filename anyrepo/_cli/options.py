@@ -1,4 +1,4 @@
-"""Common Options."""
+"""Common Command Line Options."""
 import click
 
 from ..const import MANIFEST_PATH_DEFAULT

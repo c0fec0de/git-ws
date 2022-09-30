@@ -61,13 +61,13 @@ class Group(BaseModel):
     """
 
     name: str
-    optional: bool = False
+    optional: bool = True
 
     @property
     def info(self):
         """`repr`-like information string."""
-        if self.optional:
-            return f"{self.name}?"
+        if not self.optional:
+            return f"+{self.name}"
         return self.name
 
 

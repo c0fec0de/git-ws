@@ -10,7 +10,7 @@ import urllib
 from pathlib import Path
 from typing import Generator, List, Optional
 
-from ._git import Git, get_repo_top
+from ._git import Git
 from ._util import no_echo, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
@@ -96,7 +96,7 @@ class AnyRepo:
         :param manifest_path: Path to the manifest file.
         """
         echo = echo or no_echo
-        project_path = get_repo_top(path=project_path)
+        project_path = Git.find_path(path=project_path)
         name = project_path.name
         echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(project_path / manifest_path)
@@ -217,20 +217,20 @@ class AnyRepo:
         skip_main: bool = False,
         resolve_url: bool = False,
     ) -> Generator[Project, None, None]:
-        """Create/Update all dependent projects."""
+        """Iterate of all dependent projects."""
         project_paths_filter = self._create_project_paths_filter(project_paths)
         groups = self.workspace.get_groups(groups)
         filter_ = self.create_groups_filter(groups)
         if groups:
             self.echo(f"Groups: {groups!r}", bold=True)
-        for project in self.iter_projects(manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url):
+        for project in self.projects(manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url):
             self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
             if project_paths_filter(project):
                 yield project
             else:
                 self.echo("SKIPPING", fg=_COLOR_SKIP)
 
-    def iter_projects(
+    def projects(
         self,
         manifest_path: Optional[Path] = None,
         filter_: ProjectFilter = None,
@@ -242,7 +242,7 @@ class AnyRepo:
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
         yield from ProjectIter(workspace, manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url)
 
-    def iter_manifests(
+    def manifests(
         self, manifest_path: Optional[Path] = None, filter_: ProjectFilter = None
     ) -> Generator[Manifest, None, None]:
         """Iterate over Manifests."""
@@ -269,10 +269,10 @@ class AnyRepo:
             rdeps: List[ProjectSpec] = []
             groups = self.workspace.get_groups(groups)
             filter_ = self.create_groups_filter(groups)
-            for project in self.iter_projects(filter_=filter_, skip_main=True):
+            for project in self.projects(filter_=filter_, skip_main=True):
                 project_spec = ProjectSpec.from_project(project)
                 rdeps.append(project_spec)
-            manifest_spec = manifest_spec.new(dependencies=rdeps)
+            manifest_spec = manifest_spec.update(dependencies=rdeps)
         else:
             manifest_spec = manifest_spec.copy()
         if freeze:
@@ -284,8 +284,8 @@ class AnyRepo:
                 if not git.is_cloned():
                     raise GitCloneMissingError(resolve_relative(project_path))
                 revision = git.get_tag() or git.get_sha()
-                fdeps.append(project_spec.new(revision=revision))
-            manifest_spec = manifest_spec.new(dependencies=fdeps)
+                fdeps.append(project_spec.update(revision=revision))
+            manifest_spec = manifest_spec.update(dependencies=fdeps)
         return manifest_spec
 
     def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:

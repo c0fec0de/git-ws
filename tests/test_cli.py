@@ -170,7 +170,7 @@ def test_update(tmp_path, repos, arepo):
     assert result.output.split("\n") == [
         "===== dep1 (revision=None, path='dep1') =====",
         "Pulling branch 'main'.",
-        "===== dep6 (revision=None, path='sub/dep6', groups='foo,bar,fast') =====",
+        "===== dep6 (revision=None, path='sub/dep6', groups='+foo,+bar,+fast') =====",
         f"Cloning '{tmp_path}/repos/dep6'.",
         "===== dep4 (revision='4-feature', path='dep4') =====",
         "Fetching.",
@@ -235,7 +235,7 @@ def test_update_rebase(tmp_path, repos, arepo):
         "===== dep1 (revision=None, path='dep1') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep6 (revision=None, path='sub/dep6', groups='foo,bar,fast') =====",
+        "===== dep6 (revision=None, path='sub/dep6', groups='+foo,+bar,+fast') =====",
         f"Cloning '{tmp_path}/repos/dep6'.",
         "===== dep4 (revision='4-feature', path='dep4') =====",
         "Fetching.",

@@ -6,13 +6,13 @@ import click
 import coloredlogs  # type: ignore
 
 from anyrepo import AnyRepo
-from anyrepo._util import get_loglevel, resolve_relative
+from anyrepo._util import resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
 from .info import info
 from .manifest import manifest
 from .options import groups_option, manifest_option, projects_option, update_option
-from .util import Context, exceptionhandling, pass_context
+from .util import Context, exceptionhandling, get_loglevel, pass_context
 
 _COLOR_INFO = "blue"
 

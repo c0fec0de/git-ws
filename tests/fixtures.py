@@ -38,11 +38,16 @@ def repos(tmp_path):
 
     with chdir(repos_path / "main"):
         ManifestSpec(
+            groups=[
+                Group(name="foo", optional=False),
+                Group(name="bar", optional=False),
+                Group(name="fast", optional=False),
+            ],
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep6", url="../dep6", path="sub/dep6", groups=["foo", "bar", "fast"]),
                 ProjectSpec(name="dep4", url="../dep4", revision="4-feature"),
-            ]
+            ],
         ).save(path / "other.toml")
         run(("git", "add", "other.toml"), check=True)
         run(("git", "commit", "-m", "other"), check=True)

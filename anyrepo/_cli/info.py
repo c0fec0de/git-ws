@@ -35,6 +35,6 @@ def project_paths(context, groups):
     """
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path()
-        for project in anyrepo.iter_projects(filter_=anyrepo.create_groups_filter(groups)):
+        for project in anyrepo.projects(filter_=anyrepo.create_groups_filter(groups)):
             project_path = anyrepo.workspace.get_project_path(project)
             click.echo(project_path)
