@@ -122,14 +122,16 @@ class Project(BaseModel):
         if not url:
             # URL assembly
             project_remote = spec.remote or defaults.remote
+            project_sub_url = spec.sub_url or spec.name
             if project_remote:
-                project_sub_url = spec.sub_url or spec.name
                 for remote in remotes:
                     if remote.name == project_remote:
                         url = f"{remote.url_base}/{project_sub_url}"
                         break
                 else:
                     raise ValueError(f"Unknown remote {spec.remote} for project {spec.name}")
+            else:
+                url = f"../{project_sub_url}"
 
         # Resolve relative URLs.
         url = urljoin(refurl, url)
@@ -263,7 +265,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         except FileNotFoundError:
             if default:
                 return default
-            raise ManifestNotFoundError(path) from None
+            raise ManifestNotFoundError(resolve_relative(path)) from None
         try:
             doc = tomlkit.parse(content)
             data = dict(doc)

@@ -15,7 +15,7 @@ def test_cli_nogit(tmp_path):
     with chdir(main_path):
         result = CliRunner().invoke(main, ["init"])
     assert result.output.split("\n") == [
-        "Error: git clone has not been initialized yet. Try:",
+        "Error: git clone has not been found or initialized yet. Change to your existing git clone or try:",
         "",
         "    git init",
         "",
@@ -40,9 +40,9 @@ def test_cli_git(tmp_path):
         assert result.exit_code == 1
         assert result.output.split("\n") == [
             "===== main (revision=None, path='main') =====",
-            f"Error: Manifest has not been found at {tmp_path!s}/main/anyrepo.toml Try",
+            "Error: Manifest has not been found at 'anyrepo.toml'. Try:",
             "",
-            f"    anyrepo create-manifest --manifest='{tmp_path!s}/main/anyrepo.toml'",
+            "    anyrepo create-manifest --manifest='anyrepo.toml'",
             "",
             "",
         ]
@@ -69,7 +69,7 @@ def test_cli_git(tmp_path):
         result = CliRunner().invoke(main, ["init"])
         assert result.output.split("\n") == [
             "===== main (revision=None, path='main') =====",
-            f"Error: anyrepo has already been initialized yet at {tmp_path!s}.",
+            f"Error: anyrepo has already been initialized yet at '{tmp_path!s}'.",
             "",
         ]
         assert result.exit_code == 1

@@ -4,7 +4,6 @@ Multi Repository Management.
 The :any:`AnyRepo` class provides a simple facade to all inner `AnyRepo` functionality.
 """
 import logging
-import shlex
 import shutil
 import urllib
 from pathlib import Path
@@ -118,7 +117,7 @@ class AnyRepo:
         name = Path(parsedurl.path).name
         echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        project_path = path / name
+        project_path = path / name.removesuffix(".git")
         git = Git(project_path)
         git.clone(url)
         return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
@@ -201,8 +200,6 @@ class AnyRepo:
         """Run `command` on each project."""
         workspace = self.workspace
         for project in self.iter(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
-            cmdstr = " ".join(shlex.quote(part) for part in command)
-            self.echo(cmdstr, fg=_COLOR_ACTION)
             project_path = workspace.get_project_path(project, relative=True)
             git = Git(project_path)
             if not git.is_cloned():
@@ -224,11 +221,11 @@ class AnyRepo:
         if groups:
             self.echo(f"Groups: {groups!r}", bold=True)
         for project in self.projects(manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url):
-            self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
             if project_paths_filter(project):
+                self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
                 yield project
             else:
-                self.echo("SKIPPING", fg=_COLOR_SKIP)
+                self.echo(f"===== SKIPPING {project.info} =====", fg=_COLOR_SKIP)
 
     def projects(
         self,
@@ -253,6 +250,9 @@ class AnyRepo:
     @staticmethod
     def create_manifest(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
         """Create ManifestSpec File at `manifest_path`within `project`."""
+        if project_path is None:
+            project_path = manifest_path.parent
+            manifest_path = manifest_path.relative_to(project_path)
         git = Git.from_path(path=project_path)
         manifest_path = resolve_relative(git.path / manifest_path)
         if manifest_path.exists():
