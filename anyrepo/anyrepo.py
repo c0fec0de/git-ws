@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Generator, List, Optional
 
 from ._git import Git
-from ._util import no_echo, resolve_relative, run
+from ._util import no_echo, removesuffix, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
 from .exceptions import GitCloneMissingError, ManifestExistError
@@ -117,7 +117,7 @@ class AnyRepo:
         name = Path(parsedurl.path).name
         echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        project_path = path / name.removesuffix(".git")
+        project_path = path / removesuffix(name, ".git")
         git = Git(project_path)
         git.clone(url)
         return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)

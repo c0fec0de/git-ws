@@ -53,3 +53,17 @@ def get_repr(args=None, kwargs=None):
             if value != default:
                 parts.append(f"{name}={value!r}")
     return ", ".join(parts)
+
+
+def removesuffix(text, suffix):
+    """
+    Remove Suffix identical to function available since python 3.9.
+
+    >>> removesuffix('my text', 'xt')
+    'my te'
+    >>> removesuffix('my text', 'other')
+    'my text'
+    """
+    if text.endswith(suffix):
+        return text[: -len(suffix)]
+    return text
