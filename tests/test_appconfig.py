@@ -137,11 +137,9 @@ def test_write_config():
         assert options.color_ui
         assert options.manifest_path == "anyrepo.toml"
 
-        sys_conf = config.load_configuration(AppConfigLocation.SYSTEM)
-        sys_conf.color_ui = False
-        sys_conf.manifest_path = "foo.toml"
-
-        config.save_configuration(sys_conf, AppConfigLocation.SYSTEM)
+        with config.edit_configuration(AppConfigLocation.SYSTEM) as sys_conf:
+            sys_conf.color_ui = False
+            sys_conf.manifest_path = "foo.toml"
 
         options = config.options
         assert not options.color_ui

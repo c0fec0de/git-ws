@@ -7,18 +7,19 @@ across several configuration files. In addition, that class also allows to read 
 config files.
 """
 
+from contextlib import contextmanager
 from enum import Enum, auto
 from pathlib import Path
-from typing import Optional
+from typing import Generator, Optional
 
 import tomlkit
 import tomlkit.exceptions
 from pydantic import BaseSettings, Extra, ValidationError
 
+import anyrepo.workspace
 from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError, UninitializedError
 
 from .const import ANYREPO_PATH, MANIFEST_PATH_DEFAULT, SYSTEM_CONFIG_DIR, USER_CONFIG_DIR
-from .workspace import Workspace
 
 
 class AppConfigData(BaseSettings, extra=Extra.allow):
@@ -45,6 +46,15 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     If this is not defined, the default is :any:`MANIFEST_PATH_DEFAULT`.
 
     This option can be overridden by specifying the `ANYREPO_MANIFEST_PATH` environment variable.
+    """
+
+    groups: Optional[str]
+    """
+    The groups to operate on.
+
+    This is a filter for groups to operate on during workspace actions.
+
+    This option can be overridden by specifying the `ANYREPO_GROUPS` environment variable.
     """
 
 
@@ -152,7 +162,7 @@ class AppConfig:
             user_config_dir = USER_CONFIG_DIR
         if workspace_config_dir is None:
             try:
-                workspace_config_dir = str(Workspace.find_path() / ANYREPO_PATH)
+                workspace_config_dir = str(anyrepo.workspace.Workspace.find_path() / ANYREPO_PATH)
             except UninitializedError:
                 pass
         self._system_config_dir = system_config_dir
@@ -283,6 +293,25 @@ class AppConfig:
 
         # Clear the cached merged config so we'll reload it on next access
         self._merged_config = None
+
+    @contextmanager
+    def edit_configuration(self, location: AppConfigLocation) -> Generator[AppConfigData, None, None]:
+        """
+        Edit a configuration file.
+
+        This method can be used to conveniently edit a configuration file:
+
+        .. code-block:: python
+
+            with app_config.edit_configuration(AppConfigLocation.WORKSPACE) as cfg:
+                cfg.color_ui = False
+
+        It basically combines :any:`load_configuration` and :any:`save_configuration` into
+        a single method call which can be used with a `with` statement.
+        """
+        config = self.load_configuration(location)
+        yield config
+        self.save_configuration(config, location)
 
     CONFIG_FILE_NAME = "config.toml"
     """The name of the configuration file."""

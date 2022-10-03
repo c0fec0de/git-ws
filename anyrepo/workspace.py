@@ -12,6 +12,7 @@ import tomlkit
 
 from ._basemodel import BaseModel
 from ._util import resolve_relative
+from .appconfig import AppConfig, AppConfigLocation
 from .const import ANYREPO_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 from .datamodel import Project
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError
@@ -29,13 +30,9 @@ class Info(BaseModel):
 
     Keyword Args:
         main_path: Path to main project. Relative to workspace root directory.
-        mainfest_path: Path to manifest file. Relative to `main_path`.
-        groups: Group Filtering.
     """
 
     main_path: Path
-    manifest_path: Path = MANIFEST_PATH_DEFAULT
-    groups: Optional[str] = None
 
     @staticmethod
     def load(path: Path) -> "Info":
@@ -49,11 +46,8 @@ class Info(BaseModel):
         """
         infopath = path / INFO_PATH
         doc = tomlkit.parse(infopath.read_text())
-        groups = doc.get("groups", None) or None  # legacy support
         return Info(
             main_path=doc["main_path"],
-            manifest_path=doc["manifest_path"],
-            groups=groups,
         )
 
     def save(self, path: Path):
@@ -74,8 +68,6 @@ class Info(BaseModel):
             doc.add(tomlkit.comment("AnyRepo System File. DO NOT EDIT."))
             doc.add(tomlkit.nl())
             doc.add("main_path", "")  # type: ignore
-            doc.add("manifest_path", "")  # type: ignore
-            doc.add("groups", "")  # type: ignore
         doc["main_path"] = str(self.main_path)
         doc["manifest_path"] = str(self.manifest_path)
         doc["groups"] = self.groups or ""
@@ -99,6 +91,7 @@ class Workspace:
         super().__init__()
         self.path = path
         self.info = info
+        self.app_config = AppConfig(workspace_config_dir=str(path / ANYREPO_PATH))
 
     def __eq__(self, other):
         if isinstance(other, Workspace):
@@ -198,12 +191,12 @@ class Workspace:
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
         """Manifest Path."""
-        return self.main_path / (manifest_path or self.info.manifest_path)
+        return self.main_path / (manifest_path or self.app_config.options.manifest_path)
 
     def get_groups(self, groups: Groups = None) -> Groups:
         """Group Filter."""
         if groups is None:
-            return self.info.groups
+            return self.app_config.options.groups
         return groups
 
     def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
