@@ -85,21 +85,21 @@ basepython = python3
 [testenv:py]
 allowlist_externals = *
 commands =
-    poetry install --sync
-    black .
-    isort .
-    coverage run --branch -m pytest --doctest-glob=docs/*.rst --doctest-modules --ignore-glob=tests/testdata* --ignore=docs/conf.py --log-level=DEBUG -vv --junitxml=report.xml
-    coverage report
-    coverage html
-    coverage xml
-    pylint anyrepo tests
-    mypy anyrepo
-    make html -C docs
+    poetry install --with=dev --with=doc --sync
+    poetry run black .
+    poetry run isort .
+    poetry run coverage run --branch -m pytest --doctest-glob=docs/*.rst --doctest-modules --ignore-glob=tests/testdata* --ignore=docs/conf.py --log-level=DEBUG -vv --junitxml=report.xml
+    poetry run coverage report
+    poetry run coverage html
+    poetry run coverage xml
+    poetry run pylint anyrepo tests
+    poetry run mypy anyrepo
+    poetry run make html -C docs
 
 [testenv:py-min]
 allowlist_externals = *
 commands =
     poetry install --without=dev --without=doc --sync
-    python -c 'import anyrepo'
-    anyrepo --version
+    poetry run python -c 'import anyrepo'
+    poetry run anyrepo --version
 """
