@@ -36,7 +36,7 @@ def format_output(result, tmp_path=None):
 def format_logs(caplog, tmp_path=None):
     """Format Logs."""
     lines = [record.message for record in caplog.records]
-    if tmp_path:
+    if tmp_path:  # pragma: no cover
         lines = [replace_tmp_path(line, tmp_path) for line in lines]
     return lines
 
