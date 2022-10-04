@@ -7,3 +7,5 @@ poetry.lock
 build
 /docs/api
 dist/
+*.egg-info/
+setup.py
