@@ -85,7 +85,7 @@ basepython = python3
 [testenv:py]
 allowlist_externals = *
 commands =
-    poetry install --with=dev --with=doc --sync
+    poetry install --with=dev --with=doc
     poetry run black .
     poetry run isort .
     poetry run coverage run --branch -m pytest --doctest-glob=docs/*.rst --doctest-modules --ignore-glob=tests/testdata* --ignore=docs/conf.py --log-level=DEBUG -vv --junitxml=report.xml
@@ -99,7 +99,7 @@ commands =
 [testenv:py-min]
 allowlist_externals = *
 commands =
-    poetry install --without=dev --without=doc --sync
+    poetry install --without=dev --without=doc
     poetry run python -c 'import anyrepo'
     poetry run anyrepo --version
 """
