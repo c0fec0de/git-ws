@@ -69,7 +69,7 @@ def test_cli_git(tmp_path):
         result = CliRunner().invoke(main, ["init"])
         assert result.output.split("\n") == [
             "===== main (revision=None, path='main') =====",
-            f"Error: anyrepo has already been initialized yet at '{tmp_path!s}'.",
+            f"Error: anyrepo has already been initialized at '{tmp_path!s}'.",
             "",
         ]
         assert result.exit_code == 1

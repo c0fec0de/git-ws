@@ -12,7 +12,7 @@ class InitializedError(RuntimeError):
     """AnyRepo Workspace has been initialized."""
 
     def __init__(self, path):
-        super().__init__(f"anyrepo has already been initialized yet at {str(path)!r}.")
+        super().__init__(f"anyrepo has already been initialized at {str(path)!r}.")
         self.path = path
 
 
