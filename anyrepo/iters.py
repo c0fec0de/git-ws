@@ -81,9 +81,10 @@ class ProjectIter:
         self.__done: List[str] = []
 
     def __iter__(self) -> Generator[Project, None, None]:
+        workspace = self.workspace
+        info = workspace.info
+        self.__done = [str(info.main_path)]
         if not self.skip_main:
-            workspace = self.workspace
-            info = workspace.info
             project = Project(name=info.main_path.name, path=str(info.main_path))
             if self.filter_(project):
                 yield project
@@ -95,7 +96,7 @@ class ProjectIter:
         refurl: Optional[str] = None
         filter_ = self.filter_
         done: List[str] = self.__done
-        if self.resolve_url:
+        if self.resolve_url and manifest.dependencies:
             git = Git(project_path)
             assert git.is_cloned()
             refurl = git.get_url()

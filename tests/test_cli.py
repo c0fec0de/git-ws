@@ -91,29 +91,32 @@ def test_foreach(tmp_path, arepo, caplog):
     ]
     assert result.exit_code == 0
     assert format_logs(caplog, tmp_path) == [
-        "path=TMP/workspace",
-        "Loaded TMP/workspace Info(main_path=PosixPath('main'), manifest_path=PosixPath('anyrepo.toml'))",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd='main') OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
-        "ManifestSpec(defaults=Defaults(), dependencies=(ProjectSpec(name='dep1', "
-        "url='../dep1'), ProjectSpec(name='dep2', url='../dep2', "
-        "revision='1-feature')))",
-        "Project(name='dep1', path='dep1', url='../dep1')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd='dep1') OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None",
-        "Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd='dep2') OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'status'), cwd='dep2') OK stdout=None stderr=None",
-        "ManifestSpec(defaults=Defaults(), dependencies=(ProjectSpec(name='dep4', "
-        "url='../dep4', revision='main'),))",
-        "Project(name='dep4', path='dep4', url='../dep4', revision='main')",
-        "run(('git', 'rev-parse', '--show-cdup'), cwd='dep4') OK stdout=b'\\n' stderr=b''",
-        "run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None",
-        "ManifestSpec(defaults=Defaults(), groups=(Group(name='test'),), "
-        "dependencies=(ProjectSpec(name='dep3', url='../dep3', groups=('test',)), "
-        "ProjectSpec(name='dep4', url='../dep4', revision='main')))",
-        "FILTERED OUT Project(name='dep3', path='dep3', url='../dep3', groups=(Group(name='test'),))",
-        "DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')",
+        "INFO    anyrepo path=TMP/workspace",
+        "INFO    anyrepo Loaded TMP/workspace Info(main_path=PosixPath('main'), "
+        "manifest_path=PosixPath('anyrepo.toml'))",
+        "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='main') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
+        "DEBUG   anyrepo ManifestSpec(defaults=Defaults(), "
+        "dependencies=(ProjectSpec(name='dep1', url='../dep1'), "
+        "ProjectSpec(name='dep2', url='../dep2', revision='1-feature')))",
+        "DEBUG   anyrepo Project(name='dep1', path='dep1', url='../dep1')",
+        "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='dep1') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None",
+        "DEBUG   anyrepo Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
+        "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='dep2') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(('git', 'status'), cwd='dep2') OK stdout=None stderr=None",
+        "DEBUG   anyrepo ManifestSpec(defaults=Defaults(), "
+        "dependencies=(ProjectSpec(name='dep4', url='../dep4', revision='main'),))",
+        "DEBUG   anyrepo Project(name='dep4', path='dep4', url='../dep4', revision='main')",
+        "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='dep4') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None",
+        "DEBUG   anyrepo ManifestSpec(defaults=Defaults(), "
+        "groups=(Group(name='test'),), dependencies=(ProjectSpec(name='dep3', "
+        "url='../dep3', groups=('test',)), ProjectSpec(name='dep4', url='../dep4', "
+        "revision='main')))",
+        "DEBUG   anyrepo FILTERED OUT Project(name='dep3', path='dep3', "
+        "url='../dep3', groups=(Group(name='test'),))",
+        "DEBUG   anyrepo DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')",
     ]
 
 
