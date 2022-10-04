@@ -14,4 +14,4 @@ build:
     - pip install --upgrade --no-cache-dir pip
     - pip install --no-cache-dir tox poetry
     - poetry install --with=doc --without=test
-    - make html -C docs
+    - poetry run make html -C docs

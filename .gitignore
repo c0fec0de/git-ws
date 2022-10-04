@@ -1,11 +1,12 @@
+*.egg-info/
 *.sublime-workspace
 *.xml
 .coverage
 .tox
-__pycache__
-poetry.lock
-build
 /docs/api
+__pycache__
+build
 dist/
-*.egg-info/
+docs/_readthedocs/
+poetry.lock
 setup.py
