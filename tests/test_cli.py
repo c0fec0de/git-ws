@@ -1,4 +1,6 @@
 """Command Line Interface."""
+from shutil import rmtree
+
 from click.testing import CliRunner
 from pytest import fixture
 
@@ -8,7 +10,7 @@ from anyrepo.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import,duplicate-code
 from .fixtures import repos
-from .util import chdir, get_sha, run
+from .util import chdir, format_logs, get_sha, run
 
 
 @fixture
@@ -24,29 +26,34 @@ def arepo(tmp_path, repos):
         yield arepo
 
 
-def test_pull(tmp_path, arepo):
+def test_pull(tmp_path, arepo, caplog):
     """Test pull."""
-    _test_foreach(tmp_path, arepo, "pull")
+    _test_foreach(tmp_path, arepo, caplog, "pull")
 
 
-def test_fetch(tmp_path, arepo):
+def test_fetch(tmp_path, arepo, caplog):
     """Test fetch."""
-    _test_foreach(tmp_path, arepo, "fetch")
+    _test_foreach(tmp_path, arepo, caplog, "fetch")
 
 
-def test_rebase(tmp_path, arepo):
+def test_rebase(tmp_path, arepo, caplog):
     """Test rebase."""
-    _test_foreach(tmp_path, arepo, "rebase")
+    _test_foreach(tmp_path, arepo, caplog, "rebase")
 
 
-def test_diff(tmp_path, arepo):
+def test_diff(tmp_path, arepo, caplog):
     """Test diff."""
-    _test_foreach(tmp_path, arepo, "diff")
+    _test_foreach(tmp_path, arepo, caplog, "diff")
 
 
-def test_status(tmp_path, arepo):
+def test_status(tmp_path, arepo, caplog):
     """Test status."""
-    _test_foreach(tmp_path, arepo, "status")
+    _test_foreach(tmp_path, arepo, caplog, "status")
+
+
+def test_status_short(tmp_path, arepo, caplog):
+    """Test status short."""
+    _test_foreach(tmp_path, arepo, caplog, "status", "-s")
 
 
 def test_git(tmp_path, arepo):
@@ -72,7 +79,7 @@ def test_git(tmp_path, arepo):
     assert result.exit_code == 0
 
 
-def test_foreach(tmp_path, arepo):
+def test_foreach(tmp_path, arepo, caplog):
     """Test foreach."""
     result = CliRunner().invoke(main, ["foreach", "git", "status"])
     assert result.output.split("\n") == [
@@ -83,6 +90,48 @@ def test_foreach(tmp_path, arepo):
         "",
     ]
     assert result.exit_code == 0
+    assert format_logs(caplog, tmp_path) == [
+        "path=TMP/workspace",
+        "Loaded TMP/workspace Info(main_path=PosixPath('main'), manifest_path=PosixPath('anyrepo.toml'))",
+        "run(('git', 'rev-parse', '--show-cdup'), cwd='main') OK stdout=b'\\n' stderr=b''",
+        "run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
+        "ManifestSpec(defaults=Defaults(), dependencies=(ProjectSpec(name='dep1', "
+        "url='../dep1'), ProjectSpec(name='dep2', url='../dep2', "
+        "revision='1-feature')))",
+        "Project(name='dep1', path='dep1', url='../dep1')",
+        "run(('git', 'rev-parse', '--show-cdup'), cwd='dep1') OK stdout=b'\\n' stderr=b''",
+        "run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None",
+        "Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
+        "run(('git', 'rev-parse', '--show-cdup'), cwd='dep2') OK stdout=b'\\n' stderr=b''",
+        "run(('git', 'status'), cwd='dep2') OK stdout=None stderr=None",
+        "ManifestSpec(defaults=Defaults(), dependencies=(ProjectSpec(name='dep4', "
+        "url='../dep4', revision='main'),))",
+        "Project(name='dep4', path='dep4', url='../dep4', revision='main')",
+        "run(('git', 'rev-parse', '--show-cdup'), cwd='dep4') OK stdout=b'\\n' stderr=b''",
+        "run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None",
+        "ManifestSpec(defaults=Defaults(), groups=(Group(name='test'),), "
+        "dependencies=(ProjectSpec(name='dep3', url='../dep3', groups=('test',)), "
+        "ProjectSpec(name='dep4', url='../dep4', revision='main')))",
+        "FILTERED OUT Project(name='dep3', path='dep3', url='../dep3', groups=(Group(name='test'),))",
+        "DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')",
+    ]
+
+
+def test_foreach_missing(tmp_path, arepo, caplog):
+    """Test foreach."""
+    rmtree(tmp_path / "workspace" / "dep2")
+    result = CliRunner().invoke(main, ["foreach", "git", "status"])
+    assert result.output.split("\n") == [
+        "===== main (revision=None, path='main') =====",
+        "===== dep1 (revision=None, path='dep1') =====",
+        "===== dep2 (revision='1-feature', path='dep2') =====",
+        "Error: Git Clone 'dep2' is missing. Try:",
+        "",
+        "    anyrepo update",
+        "",
+        "",
+    ]
+    assert result.exit_code == 1
 
 
 def test_foreach_fail(tmp_path, arepo):
@@ -250,8 +299,8 @@ def test_outside(tmp_path, arepo):
         assert result.exit_code == 1
 
 
-def _test_foreach(tmp_path, arepo, command):
-    result = CliRunner().invoke(main, [command])
+def _test_foreach(tmp_path, arepo, caplog, *command):
+    result = CliRunner().invoke(main, command)
     assert result.output.split("\n") == [
         "===== main (revision=None, path='main') =====",
         "===== dep1 (revision=None, path='dep1') =====",

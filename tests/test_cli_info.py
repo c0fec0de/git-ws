@@ -23,6 +23,15 @@ def arepo(tmp_path, repos):
         yield arepo
 
 
+def test_main_path(tmp_path, arepo):
+    """Main Path."""
+    workspace_path = tmp_path / "workspace"
+    main_path = workspace_path / "main"
+    result = CliRunner().invoke(main, ["info", "main-path"])
+    assert result.output.split("\n") == [str(main_path), ""]
+    assert result.exit_code == 0
+
+
 def test_workspace_path(tmp_path, arepo):
     """Workspace Path."""
     workspace_path = tmp_path / "workspace"
