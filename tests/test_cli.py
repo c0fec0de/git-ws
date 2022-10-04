@@ -21,7 +21,7 @@ def arepo(tmp_path, repos):
 
     with chdir(workspace):
         arepo = AnyRepo.clone(str(repos / "main"))
-        arepo.update()
+        arepo.update(skip_main=True)
 
         yield arepo
 
@@ -164,6 +164,7 @@ def test_update(tmp_path, repos, arepo):
     # Update project
     result = CliRunner().invoke(main, ["update", "-P", "dep2"])
     assert format_output(result) == [
+        "===== SKIPPING main (revision=None, path='main') =====",
         "===== SKIPPING dep1 (revision=None, path='dep1') =====",
         "===== dep2 (revision='1-feature', path='dep2') =====",
         "Pulling branch '1-feature'.",
@@ -175,6 +176,8 @@ def test_update(tmp_path, repos, arepo):
     # Update
     result = CliRunner().invoke(main, ["update"])
     assert format_output(result, tmp_path) == [
+        "===== main (revision=None, path='main') =====",
+        "Pulling branch 'main'.",
         "===== dep1 (revision=None, path='dep1') =====",
         "Pulling branch 'main'.",
         "===== dep2 (revision='1-feature', path='dep2') =====",
@@ -190,6 +193,8 @@ def test_update(tmp_path, repos, arepo):
     # Update again
     result = CliRunner().invoke(main, ["update"])
     assert format_output(result) == [
+        "===== main (revision=None, path='main') =====",
+        "Pulling branch 'main'.",
         "===== dep1 (revision=None, path='dep1') =====",
         "Pulling branch 'main'.",
         "===== dep2 (revision='1-feature', path='dep2') =====",
@@ -205,6 +210,8 @@ def test_update(tmp_path, repos, arepo):
     # Update other.toml
     result = CliRunner().invoke(main, ["update", "--manifest", "other.toml"])
     assert format_output(result, tmp_path) == [
+        "===== main (revision=None, path='main') =====",
+        "Pulling branch 'main'.",
         "===== dep1 (revision=None, path='dep1') =====",
         "Pulling branch 'main'.",
         "===== dep6 (revision=None, path='sub/dep6', groups='+foo,+bar,+fast') =====",
@@ -234,6 +241,9 @@ def test_update_rebase(tmp_path, repos, arepo):
     # Rebase
     result = CliRunner().invoke(main, ["update", "--rebase"])
     assert format_output(result, tmp_path) == [
+        "===== main (revision=None, path='main') =====",
+        "Fetching.",
+        "Rebasing branch 'main'.",
         "===== dep1 (revision=None, path='dep1') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
@@ -251,6 +261,9 @@ def test_update_rebase(tmp_path, repos, arepo):
 
     result = CliRunner().invoke(main, ["update", "--rebase"])
     assert format_output(result) == [
+        "===== main (revision=None, path='main') =====",
+        "Fetching.",
+        "Rebasing branch 'main'.",
         "===== dep1 (revision=None, path='dep1') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
@@ -269,6 +282,9 @@ def test_update_rebase(tmp_path, repos, arepo):
 
     result = CliRunner().invoke(main, ["update", "--manifest", "other.toml", "--rebase"])
     assert format_output(result, tmp_path) == [
+        "===== main (revision=None, path='main') =====",
+        "Fetching.",
+        "Rebasing branch 'main'.",
         "===== dep1 (revision=None, path='dep1') =====",
         "Fetching.",
         "Rebasing branch 'main'.",

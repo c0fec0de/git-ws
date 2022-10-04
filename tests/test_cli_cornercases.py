@@ -77,7 +77,7 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         check(workspace, "dep2", exists=False)
         check(workspace, "dep3", exists=False)
 
-        arepo.update()
+        arepo.update(skip_main=True)
 
         check(workspace, "top")
         check(workspace, "dep1")

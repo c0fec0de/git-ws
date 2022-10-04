@@ -127,6 +127,7 @@ class AnyRepo:
         project_paths=None,
         manifest_path: Path = None,
         groups: Groups = None,
+        skip_main: bool = False,
         prune: bool = False,
         rebase: bool = False,
     ):
@@ -134,7 +135,11 @@ class AnyRepo:
         workspace = self.workspace
         used: List[Path] = [workspace.info.main_path]
         for project in self.iter(
-            project_paths=project_paths, manifest_path=manifest_path, groups=groups, skip_main=True, resolve_url=True
+            project_paths=project_paths,
+            manifest_path=manifest_path,
+            groups=groups,
+            skip_main=skip_main,
+            resolve_url=True,
         ):
             used.append(Path(project.path))
             project_path = workspace.get_project_path(project, relative=True)

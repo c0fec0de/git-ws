@@ -46,7 +46,7 @@ def init(context, manifest_path=None, groups=None, update: bool = False):
         arepo = AnyRepo.init(manifest_path=manifest_path, groups=groups, echo=click.secho)
         click.secho(f"Workspace initialized at {str(resolve_relative(arepo.path))!r}.")
         if update:
-            arepo.update()
+            arepo.update(skip_main=True)
         else:
             click.secho(
                 "Please continue with:\n\n    anyrepo update\n",
@@ -67,7 +67,7 @@ def clone(context, url, manifest_path=None, groups=None, update: bool = False):
     with exceptionhandling(context):
         arepo = AnyRepo.clone(url, manifest_path=manifest_path, groups=groups, echo=click.secho)
         if update:
-            arepo.update()
+            arepo.update(skip_main=True)
         else:
             click.secho(
                 f"Workspace initialized at {str(resolve_relative(arepo.path))!r}. "
@@ -80,14 +80,30 @@ def clone(context, url, manifest_path=None, groups=None, update: bool = False):
 @projects_option()
 @manifest_option()
 @groups_option()
+@click.option("--skip-main", "-S", is_flag=True, default=False, help="Skip Main Repository")
 @click.option("--rebase", is_flag=True, default=False, help="Run 'git rebase' instead of 'git pull'")
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
 @pass_context
-def update(context, projects=None, manifest_path=None, groups=None, rebase: bool = False, prune: bool = False):
+def update(
+    context,
+    projects=None,
+    manifest_path=None,
+    groups=None,
+    skip_main: bool = False,
+    rebase: bool = False,
+    prune: bool = False,
+):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
-        arepo.update(project_paths=projects, manifest_path=manifest_path, groups=groups, rebase=rebase, prune=prune)
+        arepo.update(
+            project_paths=projects,
+            manifest_path=manifest_path,
+            groups=groups,
+            skip_main=skip_main,
+            rebase=rebase,
+            prune=prune,
+        )
 
 
 @main.command()

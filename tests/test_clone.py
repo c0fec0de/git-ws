@@ -102,6 +102,8 @@ def test_cli_clone_groups(tmp_path, repos):
         result = CliRunner().invoke(main, ["update"])
         assert result.output.split("\n") == [
             "Groups: '+test'",
+            "===== main (revision=None, path='main') =====",
+            "Pulling branch 'main'.",
             "===== dep1 (revision=None, path='dep1') =====",
             f"Cloning '{tmp_path}/repos/dep1'.",
             "===== dep2 (revision='1-feature', path='dep2') =====",

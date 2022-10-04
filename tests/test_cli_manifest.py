@@ -115,6 +115,8 @@ def test_freeze(tmp_path, arepo):
 
     result = CliRunner().invoke(main, ["update", "--manifest", str(output_path)])
     assert format_output(result) == [
+        "===== main (revision=None, path='main') =====",
+        "Pulling branch 'main'.",
         f"===== dep1 (revision={sha1!r}, path='dep1') =====",
         "Fetching.",
         f"Checking out {sha1!r} (previously 'main').",
@@ -135,6 +137,8 @@ def test_freeze(tmp_path, arepo):
 
     result = CliRunner().invoke(main, ["update", "--manifest", str(output_path)])
     assert format_output(result) == [
+        "===== main (revision=None, path='main') =====",
+        "Pulling branch 'main'.",
         f"===== dep1 (revision={sha1!r}, path='dep1') =====",
         "Nothing to do.",
         f"===== dep2 (revision={sha2!r}, path='dep2') =====",
