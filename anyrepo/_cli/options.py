@@ -22,7 +22,9 @@ def manifest_option(initial=False):
         help_ = f"Manifest file. '{MANIFEST_PATH_DEFAULT!s}' by default."
     else:
         help_ = "Manifest file. Initial clone/init settings by default."
-    return click.option("--manifest", "-M", type=click.Path(dir_okay=False), default=MANIFEST_PATH_DEFAULT, help=help_)
+    return click.option(
+        "--manifest", "-M", "manifest_path", type=click.Path(dir_okay=False), default=MANIFEST_PATH_DEFAULT, help=help_
+    )
 
 
 def update_option(default=None):
