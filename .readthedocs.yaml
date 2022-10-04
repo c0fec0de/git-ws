@@ -6,14 +6,12 @@ version: 2
 
 # Set the version of Python and other tools you might need
 build:
-  os: ubuntu-20.04
+  os: ubuntu-22.04
   tools:
     python: "3.9"
 
-sphinx:
-   configuration: docs/conf.py
-
-# Optionally declare the Python requirements required to build your docs
-python:
-   install:
-   - requirements: docs/requirements.txt
+  commands:
+    - pip install --upgrade --no-cache-dir pip
+    - pip install --no-cache-dir tox poetry
+    - poetry install --with=doc --without=test
+    - make html -C docs
