@@ -76,16 +76,16 @@ disable = [
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py
+envlist = py,py-min
 isolated_build = True
 
 [tox:.package]
 basepython = python3
 
-[testenv]
+[testenv:py]
 allowlist_externals = *
 commands =
-    poetry install
+    poetry install --sync
     black .
     isort .
     coverage run --branch -m pytest --doctest-glob=docs/*.rst --doctest-modules --ignore-glob=tests/testdata* --ignore=docs/conf.py --log-level=DEBUG -vv --junitxml=report.xml
@@ -95,4 +95,11 @@ commands =
     pylint anyrepo tests
     mypy anyrepo
     make html -C docs
+
+[testenv:py-min]
+allowlist_externals = *
+commands =
+    poetry install --without=dev --without=doc --sync
+    python -c 'import anyrepo'
+    anyrepo --version
 """
