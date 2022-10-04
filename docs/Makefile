@@ -16,7 +16,7 @@ help:
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: api gen Makefile
+%: api gen deps Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 
@@ -38,3 +38,7 @@ gen:
 	anyrepo rebase --help > static/cli.rebase.txt
 	anyrepo status --help > static/cli.status.txt
 	anyrepo update --help > static/cli.update.txt
+
+deps:
+	# We need to keep deps in sync for doc build
+	(cd .. && poetry export --without-hashes --without-urls --with=doc --output docs/requirements.txt)

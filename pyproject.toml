@@ -14,17 +14,20 @@ coloredlogs = '*'
 pydantic = '>=1.10.0'
 tomlkit = '*'
 
-[tool.poetry.dev-dependencies]
+
+[tool.poetry.group.test.dependencies]
 black = '>=21.9b0'
 coverage = '>=6.4.4'
 isort = '>=5.9'
 mypy = "^0.971"
 pylint = '>=2.13.5'
 pytest = '>=6.2'
-sphinx = '>=5.1.1'
-sphinx-rtd-theme = ">=1.0.0"
 types-PyYAML = '*'
 tabulate = '*'
+
+[tool.poetry.group.doc.dependencies]
+sphinx = '>=5.1.1'
+sphinx-rtd-theme = ">=1.0.0"
 
 
 [build-system]
