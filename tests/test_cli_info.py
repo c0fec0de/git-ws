@@ -7,7 +7,7 @@ from anyrepo._cli import main
 
 # pylint: disable=unused-import,duplicate-code
 from .fixtures import repos
-from .util import chdir, get_sha, run
+from .util import chdir, format_output, get_sha, run
 
 
 @fixture
@@ -28,7 +28,7 @@ def test_main_path(tmp_path, arepo):
     workspace_path = tmp_path / "workspace"
     main_path = workspace_path / "main"
     result = CliRunner().invoke(main, ["info", "main-path"])
-    assert result.output.split("\n") == [str(main_path), ""]
+    assert format_output(result) == [str(main_path), ""]
     assert result.exit_code == 0
 
 
@@ -36,7 +36,7 @@ def test_workspace_path(tmp_path, arepo):
     """Workspace Path."""
     workspace_path = tmp_path / "workspace"
     result = CliRunner().invoke(main, ["info", "workspace-path"])
-    assert result.output.split("\n") == [str(workspace_path), ""]
+    assert format_output(result) == [str(workspace_path), ""]
     assert result.exit_code == 0
 
 
@@ -46,5 +46,5 @@ def test_project_paths(tmp_path, arepo):
 
     result = CliRunner().invoke(main, ["info", "project-paths"])
     paths = ["main", "dep1", "dep2", "dep4"]
-    assert result.output.split("\n") == [str(workspace_path / path) for path in paths] + [""]
+    assert format_output(result) == [str(workspace_path / path) for path in paths] + [""]
     assert result.exit_code == 0

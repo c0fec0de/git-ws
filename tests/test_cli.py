@@ -10,7 +10,7 @@ from anyrepo.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import,duplicate-code
 from .fixtures import repos
-from .util import chdir, format_logs, get_sha, run
+from .util import chdir, format_logs, format_output, get_sha, run
 
 
 @fixture
@@ -59,7 +59,7 @@ def test_status_short(tmp_path, arepo, caplog):
 def test_git(tmp_path, arepo):
     """Test git."""
     result = CliRunner().invoke(main, ["git", "status"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "===== main (revision=None, path='main') =====",
         "===== dep1 (revision=None, path='dep1') =====",
         "===== dep2 (revision='1-feature', path='dep2') =====",
@@ -69,7 +69,7 @@ def test_git(tmp_path, arepo):
     assert result.exit_code == 0
 
     result = CliRunner().invoke(main, ["git", "status", "-P", "dep2", "-P", "./dep4"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "===== SKIPPING main (revision=None, path='main') =====",
         "===== SKIPPING dep1 (revision=None, path='dep1') =====",
         "===== dep2 (revision='1-feature', path='dep2') =====",
@@ -82,7 +82,7 @@ def test_git(tmp_path, arepo):
 def test_foreach(tmp_path, arepo, caplog):
     """Test foreach."""
     result = CliRunner().invoke(main, ["foreach", "git", "status"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "===== main (revision=None, path='main') =====",
         "===== dep1 (revision=None, path='dep1') =====",
         "===== dep2 (revision='1-feature', path='dep2') =====",
@@ -121,7 +121,7 @@ def test_foreach_missing(tmp_path, arepo, caplog):
     """Test foreach."""
     rmtree(tmp_path / "workspace" / "dep2")
     result = CliRunner().invoke(main, ["foreach", "git", "status"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "===== main (revision=None, path='main') =====",
         "===== dep1 (revision=None, path='dep1') =====",
         "===== dep2 (revision='1-feature', path='dep2') =====",
@@ -137,7 +137,7 @@ def test_foreach_missing(tmp_path, arepo, caplog):
 def test_foreach_fail(tmp_path, arepo):
     """Test foreach failing."""
     result = CliRunner().invoke(main, ["foreach", "--", "git", "status", "--invalidoption"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "===== main (revision=None, path='main') =====",
         "Error: Command '('git', 'status', '--invalidoption')' returned non-zero exit status 129.",
         "",
@@ -160,7 +160,7 @@ def test_update(tmp_path, repos, arepo):
 
     # Update project
     result = CliRunner().invoke(main, ["update", "-P", "dep2"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "===== SKIPPING dep1 (revision=None, path='dep1') =====",
         "===== dep2 (revision='1-feature', path='dep2') =====",
         "Pulling branch '1-feature'.",
@@ -171,7 +171,7 @@ def test_update(tmp_path, repos, arepo):
 
     # Update
     result = CliRunner().invoke(main, ["update"])
-    assert result.output.split("\n") == [
+    assert format_output(result, tmp_path) == [
         "===== dep1 (revision=None, path='dep1') =====",
         "Pulling branch 'main'.",
         "===== dep2 (revision='1-feature', path='dep2') =====",
@@ -179,14 +179,14 @@ def test_update(tmp_path, repos, arepo):
         "===== dep4 (revision='main', path='dep4') =====",
         "Pulling branch 'main'.",
         "===== dep5 (revision=None, path='dep5') =====",
-        f"Cloning '{tmp_path!s}/repos/dep5'.",
+        "Cloning 'TMP/repos/dep5'.",
         "",
     ]
     assert result.exit_code == 0
 
     # Update again
     result = CliRunner().invoke(main, ["update"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "===== dep1 (revision=None, path='dep1') =====",
         "Pulling branch 'main'.",
         "===== dep2 (revision='1-feature', path='dep2') =====",
@@ -201,11 +201,11 @@ def test_update(tmp_path, repos, arepo):
 
     # Update other.toml
     result = CliRunner().invoke(main, ["update", "--manifest", "other.toml"])
-    assert result.output.split("\n") == [
+    assert format_output(result, tmp_path) == [
         "===== dep1 (revision=None, path='dep1') =====",
         "Pulling branch 'main'.",
         "===== dep6 (revision=None, path='sub/dep6', groups='+foo,+bar,+fast') =====",
-        f"Cloning '{tmp_path}/repos/dep6'.",
+        "Cloning 'TMP/repos/dep6'.",
         "===== dep4 (revision='4-feature', path='dep4') =====",
         "Fetching.",
         "Checking out '4-feature' (previously 'main').",
@@ -230,7 +230,7 @@ def test_update_rebase(tmp_path, repos, arepo):
 
     # Rebase
     result = CliRunner().invoke(main, ["update", "--rebase"])
-    assert result.output.split("\n") == [
+    assert format_output(result, tmp_path) == [
         "===== dep1 (revision=None, path='dep1') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
@@ -241,13 +241,13 @@ def test_update_rebase(tmp_path, repos, arepo):
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep5 (revision=None, path='dep5') =====",
-        f"Cloning '{tmp_path!s}/repos/dep5'.",
+        "Cloning 'TMP/repos/dep5'.",
         "",
     ]
     assert result.exit_code == 0
 
     result = CliRunner().invoke(main, ["update", "--rebase"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "===== dep1 (revision=None, path='dep1') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
@@ -265,12 +265,12 @@ def test_update_rebase(tmp_path, repos, arepo):
     assert result.exit_code == 0
 
     result = CliRunner().invoke(main, ["update", "--manifest", "other.toml", "--rebase"])
-    assert result.output.split("\n") == [
+    assert format_output(result, tmp_path) == [
         "===== dep1 (revision=None, path='dep1') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep6 (revision=None, path='sub/dep6', groups='+foo,+bar,+fast') =====",
-        f"Cloning '{tmp_path}/repos/dep6'.",
+        "Cloning 'TMP/repos/dep6'.",
         "===== dep4 (revision='4-feature', path='dep4') =====",
         "Fetching.",
         "Checking out '4-feature' (previously 'main').",
@@ -285,7 +285,7 @@ def test_outside(tmp_path, arepo):
 
     with chdir(tmp_path):
         result = CliRunner().invoke(main, ["update"])
-        assert result.output.split("\n") == [
+        assert format_output(result) == [
             "Error: anyrepo has not been initialized yet. Try:",
             "",
             "    anyrepo init",
@@ -301,7 +301,7 @@ def test_outside(tmp_path, arepo):
 
 def _test_foreach(tmp_path, arepo, caplog, *command):
     result = CliRunner().invoke(main, command)
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "===== main (revision=None, path='main') =====",
         "===== dep1 (revision=None, path='dep1') =====",
         "===== dep2 (revision='1-feature', path='dep2') =====",

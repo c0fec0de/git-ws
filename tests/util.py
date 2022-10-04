@@ -25,10 +25,20 @@ def get_sha(path):
     return result.stdout.decode("utf-8").strip()
 
 
-def format_logs(caplog, tmp_path):
-    """Format Logs."""
+def format_output(result, tmp_path=None):
+    """Format Command Output."""
+    lines = result.output.split("\n")
+    if tmp_path:
+        lines = [replace_tmp_path(line, tmp_path) for line in lines]
+    return lines
 
-    return [replace_tmp_path(record.message, tmp_path) for record in caplog.records]
+
+def format_logs(caplog, tmp_path=None):
+    """Format Logs."""
+    lines = [record.message for record in caplog.records]
+    if tmp_path:
+        lines = [replace_tmp_path(line, tmp_path) for line in lines]
+    return lines
 
 
 def replace_tmp_path(text, tmp_path):
