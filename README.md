@@ -7,7 +7,7 @@ AnyRepo is a lightweight tool for creating and managing *workspaces* consisting 
 👉 You can read more about the used nomenclature in the [documentation](./docs/manual/nomenclature.rst).
 
 
-# Installation
+# 📦 Installation
 
 AnyRepo is written in Python and - as usual - installing it is pretty easy:
 
@@ -22,7 +22,7 @@ And that's it! Ideally, if your project also uses Python, we recommend adding An
 poetry add --group dev anyrepo
 ```
 
-# Usage
+# 📔 Usage
 
 AnyRepo comes with a command line client called `anyrepo` - this is what you will be using most of the time.
 
@@ -103,7 +103,11 @@ These are basically wrapper commands around the generic `anyrepo foreach` comman
 anyrepo foreach -- git status
 ```
 
-## Alternatives
+## 🐍 Python API
+
+AnyRepo is written in Python. Besides the `anyrepo` command line tool, there is also an API which you can use to further automate workspace creation and maintenance. If you are interested, have a look into the [API documentation](https://anyrepo.readthedocs.io/en/latest/api/anyrepo.html).
+
+## 🤝 Alternatives
 
 Before writing AnyRepo, we investigates several other existing tools in the hope they would fulfil out needs. In particular, we looked into the following tools and methodologies which are widely used to organize large projects:
 
