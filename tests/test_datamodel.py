@@ -279,3 +279,24 @@ def test_default_url():
         Project(name="dep1", path="dep1", url="../dep1"),
         Project(name="dep2", path="dep2", url="../dep2"),
     )
+
+    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main")
+    assert not manifest.groups
+    assert manifest.dependencies == (
+        Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1"),
+        Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2"),
+    )
+
+    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.git")
+    assert not manifest.groups
+    assert manifest.dependencies == (
+        Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1.git"),
+        Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2.git"),
+    )
+
+    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.suffix")
+    assert not manifest.groups
+    assert manifest.dependencies == (
+        Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1.suffix"),
+        Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2.suffix"),
+    )
