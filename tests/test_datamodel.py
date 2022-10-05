@@ -14,6 +14,10 @@ def test_remote():
     assert remote.name == "origin2"
     assert remote.url_base == "base"
 
+    # Immutable
+    with raises(TypeError):
+        remote.name = "other"
+
 
 def test_defaults():
     """Test Defaults."""
@@ -29,6 +33,10 @@ def test_defaults():
     assert defaults.remote is None
     assert defaults.revision == "Revision"
 
+    # Immutable
+    with raises(TypeError):
+        defaults.remote = "other"
+
 
 def test_project_group():
     """Group."""
@@ -39,6 +47,10 @@ def test_project_group():
     group = Group(name="name", optional=False)
     assert group.name == "name"
     assert not group.optional
+
+    # Immutable
+    with raises(TypeError):
+        group.name = "other"
 
 
 def test_project_spec():
@@ -57,6 +69,10 @@ def test_project_spec():
     with raises(ValueError):
         ProjectSpec(name="name", sub_url="sub-url")
 
+    # Immutable
+    with raises(TypeError):
+        project_spec.name = "other"
+
 
 def test_manifest_spec(tmp_path):
     """Test ManifestSpec."""
@@ -68,6 +84,10 @@ def test_manifest_spec(tmp_path):
     filepath = tmp_path / "manifest.toml"
     manifest_spec.save(filepath)
     assert filepath.read_text().split("\n") == [""]
+
+    # Immutable
+    with raises(TypeError):
+        manifest_spec.defaults = Defaults()
 
 
 def test_manifest_spec_from_data(tmp_path):
@@ -187,7 +207,7 @@ def test_manifest_spec_not_remote():
     manifest_spec = ManifestSpec(remotes=remotes)
     project = Project.from_spec(manifest_spec, spec=ProjectSpec(name="foo"))
     assert project.name == "foo"
-    assert project.url is None
+    assert project.url == "../foo"
 
 
 def test_manifest_spec_missing_remote():
@@ -235,3 +255,27 @@ def test_manifest():
         Project(name="dep3", path="dep3", url="url1/sub.git", revision="main", groups=(Group(name="test"),)),
     )
     assert manifest.path is None
+
+
+def test_default_url():
+    """Top should be default URL."""
+    data = {
+        "dependencies": [
+            {"name": "dep1"},
+            {"name": "dep2"},
+        ],
+    }
+    manifest_spec = ManifestSpec(**data)
+    assert not manifest_spec.remotes
+    assert not manifest_spec.groups
+    assert manifest_spec.dependencies == (
+        ProjectSpec(name="dep1"),
+        ProjectSpec(name="dep2"),
+    )
+
+    manifest = Manifest.from_spec(manifest_spec)
+    assert not manifest.groups
+    assert manifest.dependencies == (
+        Project(name="dep1", path="dep1", url="../dep1"),
+        Project(name="dep2", path="dep2", url="../dep2"),
+    )

@@ -220,8 +220,9 @@ def foreach(context, projects, manifest, groups, command):
 @pass_context
 def create_manifest(context, project, manifest):
     """Create Manifest."""
+    project = Path(project) if project else None
     with exceptionhandling(context):
-        path = AnyRepo.create_manifest(project, manifest)
+        path = AnyRepo.create_manifest(project, Path(manifest))
         click.secho(f"Manifest {str(path)!r} created.", fg=_COLOR_INFO)
 
 

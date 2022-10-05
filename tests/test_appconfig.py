@@ -2,28 +2,28 @@
 
 import os
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import mock
 
 from pytest import raises
 
 import anyrepo.const
-from anyrepo.appconfig import AppConfig
+from anyrepo.appconfig import AppConfig, AppConfigLocation
 from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError
 
 TEST_DATA_ROOT = Path(__file__).parent / "testdata" / "appconfig"
 
 
 def _app_config_from(scenario: str, include_workspace=True, **kwargs):
-    extra_args = {}
+    args = {
+        "system_config_dir": str(TEST_DATA_ROOT / scenario / "system"),
+        "user_config_dir": str(TEST_DATA_ROOT / scenario / "user"),
+    }
     if include_workspace:
-        extra_args["workspace_config_dir"] = str(TEST_DATA_ROOT / scenario / "workspace")
+        args["workspace_config_dir"] = str(TEST_DATA_ROOT / scenario / "workspace")
+    args.update(kwargs)
 
-    return AppConfig(
-        system_config_dir=str(TEST_DATA_ROOT / scenario / "system"),
-        user_config_dir=str(TEST_DATA_ROOT / scenario / "user"),
-        **extra_args,
-        **kwargs
-    )
+    return AppConfig(**args)
 
 
 def test_default_construction():
@@ -120,3 +120,37 @@ def test_invalid_config_location():
     """If - for whatever reason - an invalid config location is used, we expect a specific exception."""
     with raises(InvalidConfigurationLocationError):
         AppConfig()._load_configuration("Hello World")  # pylint: disable=protected-access
+
+
+def test_write_config():
+    """Test if writing configuration values works."""
+    with TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir)
+        (tmp_path / "system").mkdir()
+        config = AppConfig(
+            system_config_dir=tmp_path / "system",
+            user_config_dir=tmp_path / "user",
+            workspace_config_dir=tmp_path / "workspace",
+            use_config_from_env=False,
+        )
+        options = config.options
+        assert options.color_ui
+        assert options.manifest_path == "anyrepo.toml"
+
+        with config.edit_configuration(AppConfigLocation.SYSTEM) as sys_conf:
+            sys_conf.color_ui = False
+            sys_conf.manifest_path = "foo.toml"
+
+        options = config.options
+        assert not options.color_ui
+        assert options.manifest_path == "foo.toml"
+
+        sys_conf = config.load_configuration(AppConfigLocation.SYSTEM)
+        sys_conf.color_ui = None
+        sys_conf.manifest_path = None
+
+        config.save_configuration(sys_conf, AppConfigLocation.SYSTEM)
+
+        options = config.options
+        assert options.color_ui
+        assert options.manifest_path == "anyrepo.toml"

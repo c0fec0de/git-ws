@@ -27,6 +27,17 @@ def workspace_path(context):
 
 
 @info.command()
+@pass_context
+def main_path(context):
+    """
+    Print Path to Main Git Clone.
+    """
+    with exceptionhandling(context):
+        anyrepo = AnyRepo.from_path()
+        click.echo(str(anyrepo.workspace.main_path))
+
+
+@info.command()
 @groups_option()
 @pass_context
 def project_paths(context, groups):
