@@ -13,7 +13,7 @@ import tomlkit
 from pydantic import Field, root_validator
 
 from ._basemodel import BaseModel
-from ._url import urljoin
+from ._url import urljoin, urlsub
 from ._util import get_repr, resolve_relative
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestError, ManifestNotFoundError
@@ -122,7 +122,7 @@ class Project(BaseModel):
         if not url:
             # URL assembly
             project_remote = spec.remote or defaults.remote
-            project_sub_url = spec.sub_url or spec.name
+            project_sub_url = spec.sub_url or urlsub(refurl, spec.name)
             if project_remote:
                 for remote in remotes:
                     if remote.name == project_remote:
