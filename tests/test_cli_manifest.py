@@ -7,7 +7,7 @@ from anyrepo._cli import main
 
 # pylint: disable=unused-import,duplicate-code
 from .fixtures import repos
-from .util import chdir, get_sha, run
+from .util import chdir, format_output, get_sha, run
 
 
 @fixture
@@ -26,7 +26,7 @@ def arepo(tmp_path, repos):
 def test_validate(tmp_path, arepo):
     """Manifest Validate."""
     result = CliRunner().invoke(main, ["manifest", "validate"])
-    assert result.output.split("\n") == [""]
+    assert format_output(result) == [""]
     assert result.exit_code == 0
 
     manifest_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
@@ -45,7 +45,7 @@ def test_validate(tmp_path, arepo):
         )
     )
     result = CliRunner().invoke(main, ["manifest", "validate"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "Error: Manifest 'main/anyrepo.toml' is broken: 1 validation error for ManifestSpec",
         "dependencies -> 0 -> name",
         "  field required (type=value_error.missing)",
@@ -82,7 +82,7 @@ def test_freeze(tmp_path, arepo):
 
     # STDOUT
     result = CliRunner().invoke(main, ["manifest", "freeze", "-G", "+test"])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "Error: Git Clone 'dep3' is missing. Try:",
         "",
         "    anyrepo update",
@@ -92,7 +92,7 @@ def test_freeze(tmp_path, arepo):
     assert result.exit_code == 1
     CliRunner().invoke(main, ["update", "-G", "+test"])
     result = CliRunner().invoke(main, ["manifest", "freeze", "-G", "+test"])
-    assert result.output.split("\n") == lines + [
+    assert format_output(result) == lines + [
         "[[dependencies]]",
         'name = "dep3"',
         'url = "../dep3"',
@@ -107,14 +107,16 @@ def test_freeze(tmp_path, arepo):
     # FILE
     output_path = tmp_path / "manifest.toml"
     result = CliRunner().invoke(main, ["manifest", "freeze", "--output", str(output_path)])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "",
     ]
     assert result.exit_code == 0
     assert output_path.read_text().split("\n") == lines
 
     result = CliRunner().invoke(main, ["update", "--manifest", str(output_path)])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
+        "===== main (revision=None, path='main') =====",
+        "Pulling branch 'main'.",
         f"===== dep1 (revision={sha1!r}, path='dep1') =====",
         "Fetching.",
         f"Checking out {sha1!r} (previously 'main').",
@@ -130,11 +132,13 @@ def test_freeze(tmp_path, arepo):
 
     # STDOUT again
     result = CliRunner().invoke(main, ["manifest", "freeze"])
-    assert result.output.split("\n") == lines + [""]
+    assert format_output(result) == lines + [""]
     assert result.exit_code == 0
 
     result = CliRunner().invoke(main, ["update", "--manifest", str(output_path)])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
+        "===== main (revision=None, path='main') =====",
+        "Pulling branch 'main'.",
         f"===== dep1 (revision={sha1!r}, path='dep1') =====",
         "Nothing to do.",
         f"===== dep2 (revision={sha2!r}, path='dep2') =====",
@@ -170,13 +174,13 @@ def test_resolve(tmp_path, arepo):
 
     # STDOUT
     result = CliRunner().invoke(main, ["manifest", "resolve"])
-    assert result.output.split("\n") == lines + [""]
+    assert format_output(result) == lines + [""]
     assert result.exit_code == 0
 
     # FILE
     output_path = tmp_path / "manifest.toml"
     result = CliRunner().invoke(main, ["manifest", "resolve", "--output", str(output_path)])
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         "",
     ]
     assert result.exit_code == 0
@@ -187,7 +191,7 @@ def test_path(tmp_path, arepo):
     """Manifest Path."""
     result = CliRunner().invoke(main, ["manifest", "path"])
     main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         f"{main_path!s}",
         "",
     ]
@@ -200,7 +204,7 @@ def test_paths(tmp_path, arepo):
     main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
     dep1_path = tmp_path / "workspace" / "dep1" / "anyrepo.toml"
     dep2_path = tmp_path / "workspace" / "dep2" / "anyrepo.toml"
-    assert result.output.split("\n") == [
+    assert format_output(result) == [
         f"{main_path!s}",
         f"{dep1_path!s}",
         f"{dep2_path!s}",

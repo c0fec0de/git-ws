@@ -161,7 +161,8 @@ class Workspace:
         """
         infopath = path / INFO_PATH
         if infopath.exists():
-            raise InitializedError(path)
+            info = Info.load(path)
+            raise InitializedError(path, info.main_path)
 
         # Normalize
         main_path = main_path.resolve()

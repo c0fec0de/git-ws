@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "anyrepo"
-version = "0.2.0"
+version = "0.3.0"
 description = "Multi Repository Management Tool"
 authors = []
 
@@ -15,20 +15,22 @@ pydantic = '^1.10.0'
 tomlkit = '>=0.11.5,<1.0.0'
 appdirs = "^1.4.4"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.test.dependencies]
 black = '^22.3.0'
 coverage = '^6.4.4'
 isort = '^5.9'
 mypy = ">=0.971"
 pylint = '^2.13.5'
 pytest = '^6.2'
-sphinx = '^5.1.1'
-sphinx-rtd-theme = "^1.0.0"
 tabulate = '>=0.8.10,<1.0.0'
 types-appdirs = "^1.4.3"
 
+[tool.poetry.group.doc.dependencies]
+sphinx = '^5.1.1'
+sphinx-rtd-theme = "^1.0.0"
+
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["setuptools", "poetry_core>=1.0"]
 build-backend = "poetry.core.masonry.api"
 
 
@@ -73,23 +75,30 @@ disable = [
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py
+envlist = py,py-min
 isolated_build = True
 
 [tox:.package]
 basepython = python3
 
-[testenv]
+[testenv:py]
 allowlist_externals = *
 commands =
-    poetry install
-    black .
-    isort .
-    coverage run --branch -m pytest --doctest-glob=docs/*.rst --doctest-modules --ignore-glob=tests/testdata* --ignore=docs/conf.py --log-level=DEBUG -vv --junitxml=report.xml
-    coverage report
-    coverage html
-    coverage xml
-    pylint anyrepo tests
-    mypy anyrepo
-    make html -C docs
+    poetry install --with=dev --with=doc
+    poetry run black .
+    poetry run isort .
+    poetry run coverage run --branch -m pytest --doctest-glob=docs/*.rst --doctest-modules --ignore-glob=tests/testdata* --ignore=docs/conf.py --log-level=DEBUG -vv --junitxml=report.xml
+    poetry run coverage report
+    poetry run coverage html
+    poetry run coverage xml
+    poetry run pylint anyrepo tests
+    poetry run mypy anyrepo
+    poetry run make html -C docs
+
+[testenv:py-min]
+allowlist_externals = *
+commands =
+    poetry install --without=dev --without=doc
+    poetry run python -c 'import anyrepo'
+    poetry run anyrepo --version
 """

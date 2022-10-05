@@ -13,9 +13,10 @@ class UninitializedError(RuntimeError):
 class InitializedError(RuntimeError):
     """AnyRepo Workspace has been initialized."""
 
-    def __init__(self, path):
-        super().__init__(f"anyrepo has already been initialized yet at {str(path)!r}.")
+    def __init__(self, path, main_path):
+        super().__init__(f"anyrepo has already been initialized at {str(path)!r} with main repo at {str(main_path)!r}.")
         self.path = path
+        self.main_path = main_path
 
 
 class NoGitError(RuntimeError):

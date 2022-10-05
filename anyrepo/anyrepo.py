@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Generator, List, Optional
 
 from ._git import Git
-from ._util import no_echo, resolve_relative, run
+from ._util import no_echo, removesuffix, resolve_relative, run
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
 from .exceptions import GitCloneMissingError, ManifestExistError
@@ -117,7 +117,7 @@ class AnyRepo:
         name = Path(parsedurl.path).name
         echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        project_path = path / name.removesuffix(".git")
+        project_path = path / removesuffix(name, ".git")
         git = Git(project_path)
         git.clone(url)
         return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
@@ -127,6 +127,7 @@ class AnyRepo:
         project_paths=None,
         manifest_path: Path = None,
         groups: Groups = None,
+        skip_main: bool = False,
         prune: bool = False,
         rebase: bool = False,
     ):
@@ -134,7 +135,11 @@ class AnyRepo:
         workspace = self.workspace
         used: List[Path] = [workspace.info.main_path]
         for project in self.iter(
-            project_paths=project_paths, manifest_path=manifest_path, groups=groups, skip_main=True, resolve_url=True
+            project_paths=project_paths,
+            manifest_path=manifest_path,
+            groups=groups,
+            skip_main=skip_main,
+            resolve_url=True,
         ):
             used.append(Path(project.path))
             project_path = workspace.get_project_path(project, relative=True)
