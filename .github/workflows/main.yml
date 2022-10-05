@@ -22,7 +22,3 @@ jobs:
           pip install tox poetry
       - name: TOX
         run: tox
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
