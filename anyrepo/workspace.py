@@ -69,8 +69,6 @@ class Info(BaseModel):
             doc.add(tomlkit.nl())
             doc.add("main_path", "")  # type: ignore
         doc["main_path"] = str(self.main_path)
-        doc["manifest_path"] = str(self.manifest_path)
-        doc["groups"] = self.groups or ""
         infopath.write_text(tomlkit.dumps(doc))
 
 
