@@ -7,7 +7,9 @@ from appdirs import site_config_dir, user_config_dir
 ANYREPO_PATH = Path(".anyrepo")
 """The sub-folder in which the tool stores workspace related data."""
 
+CONFIG_FILE_NAME = "config.toml"
 INFO_PATH = ANYREPO_PATH / "info.toml"
+CONFIG_PATH = ANYREPO_PATH / CONFIG_FILE_NAME
 
 MANIFEST_PATH_DEFAULT: Path = Path("anyrepo.toml")
 """

@@ -4,6 +4,7 @@ from pytest import raises
 
 from anyrepo import AnyRepo, InitializedError, ManifestExistError
 from anyrepo._cli import main
+from anyrepo.const import CONFIG_PATH, INFO_PATH
 
 from .util import chdir, format_output, run
 
@@ -116,13 +117,16 @@ def test_git(tmp_path):
         arepo = AnyRepo.init()
 
         assert arepo.path == tmp_path
-        info_file = arepo.path / ".anyrepo" / "info.toml"
+        info_file = arepo.path / INFO_PATH
         assert info_file.read_text().split("\n") == [
             "# AnyRepo System File. DO NOT EDIT.",
             "",
             'main_path = "main"',
+            "",
+        ]
+        config_file = arepo.path / CONFIG_PATH
+        assert config_file.read_text().split("\n") == [
             'manifest_path = "anyrepo.toml"',
-            'groups = ""',
             "",
         ]
 

@@ -16,10 +16,10 @@ import tomlkit
 import tomlkit.exceptions
 from pydantic import BaseSettings, Extra, ValidationError
 
-import anyrepo.workspace
 from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError, UninitializedError
 
-from .const import ANYREPO_PATH, MANIFEST_PATH_DEFAULT, SYSTEM_CONFIG_DIR, USER_CONFIG_DIR
+from .const import ANYREPO_PATH, CONFIG_FILE_NAME, MANIFEST_PATH_DEFAULT, SYSTEM_CONFIG_DIR, USER_CONFIG_DIR
+from .workspacefinder import find_workspace
 
 
 class AppConfigData(BaseSettings, extra=Extra.allow):
@@ -161,10 +161,9 @@ class AppConfig:
         if user_config_dir is None:
             user_config_dir = USER_CONFIG_DIR
         if workspace_config_dir is None:
-            try:
-                workspace_config_dir = str(anyrepo.workspace.Workspace.find_path() / ANYREPO_PATH)
-            except UninitializedError:
-                pass
+            workspace_dir = find_workspace()
+            if workspace_dir:
+                workspace_config_dir = str(workspace_dir / ANYREPO_PATH)
         self._system_config_dir = system_config_dir
         self._user_config_dir = user_config_dir
         self._workspace_config_dir = workspace_config_dir
@@ -285,7 +284,7 @@ class AppConfig:
         for key, value in values.items():
             if value is not None:
                 doc[key] = value
-            else:
+            elif key in doc:
                 del doc[key]
 
         doc_path = self._get_config_file_path(location)
@@ -312,9 +311,6 @@ class AppConfig:
         config = self.load_configuration(location)
         yield config
         self.save_configuration(config, location)
-
-    CONFIG_FILE_NAME = "config.toml"
-    """The name of the configuration file."""
 
     @staticmethod
     def _load_config_from_path(file_path: Path) -> tomlkit.TOMLDocument:
@@ -364,13 +360,13 @@ class AppConfig:
             InvalidConfigurationLocationError: The location given is invalid.
         """
         if location == AppConfigLocation.SYSTEM:
-            return Path(self._system_config_dir) / AppConfig.CONFIG_FILE_NAME
+            return Path(self._system_config_dir) / CONFIG_FILE_NAME
         if location == AppConfigLocation.USER:
-            return Path(self._user_config_dir) / AppConfig.CONFIG_FILE_NAME
+            return Path(self._user_config_dir) / CONFIG_FILE_NAME
         if location == AppConfigLocation.WORKSPACE:
             workspace_config_dir = self._workspace_config_dir
             if workspace_config_dir is not None:
-                return Path(workspace_config_dir) / AppConfig.CONFIG_FILE_NAME
+                return Path(workspace_config_dir) / CONFIG_FILE_NAME
             raise UninitializedError()
         raise InvalidConfigurationLocationError(str(location))
 
