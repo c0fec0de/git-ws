@@ -25,7 +25,7 @@ sphinx = '>=5.1.1'
 sphinx-rtd-theme = ">=1.0.0"
 types-PyYAML = '*'
 tabulate = '*'
-
+sphinxemoji = "^0.2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

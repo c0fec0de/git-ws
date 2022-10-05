@@ -21,6 +21,7 @@ use. The following chapters provide details and guide through the usage of the
    :caption: User Manual:
 
    manual/why
+   manual/nomenclature
 
 
 Besides use on the command line, AnyRepo also has a public API which can be used
@@ -28,7 +29,7 @@ for more advanced automatization of your projects:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Python API:
+   :caption: Programmer's Manual:
 
    api/modules
 
