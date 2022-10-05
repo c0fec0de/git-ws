@@ -88,7 +88,7 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         "INFO    anyrepo run(['git', 'clone', '--', 'TMP/repos/top', "
         "'TMP/workspace/top'], cwd='None') OK stdout=None stderr=None",
         "INFO    anyrepo Initialized TMP/workspace Info(main_path=PosixPath('top')) "
-        "AppConfigData(color_ui=True, manifest_path='anyrepo.toml', groups=None)",
+        "AppConfigData(manifest_path='anyrepo.toml', color_ui=True, groups=None)",
         "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='top') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'remote', 'get-url', 'origin'), cwd='top') OK "
         "stdout=b'TMP/repos/top\\n' stderr=b''",

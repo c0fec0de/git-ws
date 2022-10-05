@@ -14,48 +14,13 @@ from typing import Generator, Optional
 
 import tomlkit
 import tomlkit.exceptions
-from pydantic import BaseSettings, Extra, ValidationError
+from pydantic import ValidationError
 
 from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError, UninitializedError
 
-from .const import ANYREPO_PATH, CONFIG_FILE_NAME, MANIFEST_PATH_DEFAULT, SYSTEM_CONFIG_DIR, USER_CONFIG_DIR
+from .const import ANYREPO_PATH, CONFIG_FILE_NAME, SYSTEM_CONFIG_DIR, USER_CONFIG_DIR
+from .datamodel import AppConfigData
 from .workspacefinder import find_workspace
-
-
-class AppConfigData(BaseSettings, extra=Extra.allow):
-    """
-    Configuration data of the application.
-
-    This class holds the concrete configuration values of the application.
-    The following values are defined:
-    """
-
-    color_ui: Optional[bool]
-    """
-    Defines if outputs by the tool shall be colored.
-
-    If this is not defined, output will be colored by default.
-
-    This option can be overridden by specifying the `ANYREPO_COLOR_UI` environment variable.
-    """
-
-    manifest_path: Optional[str]
-    """
-    The path of the manifest file within a repository.
-
-    If this is not defined, the default is :any:`MANIFEST_PATH_DEFAULT`.
-
-    This option can be overridden by specifying the `ANYREPO_MANIFEST_PATH` environment variable.
-    """
-
-    groups: Optional[str]
-    """
-    The groups to operate on.
-
-    This is a filter for groups to operate on during workspace actions.
-
-    This option can be overridden by specifying the `ANYREPO_GROUPS` environment variable.
-    """
 
 
 class _EnvAppConfigData(AppConfigData, env_prefix="anyrepo_", case_sensitive=False):
@@ -114,7 +79,7 @@ class AppConfig:
         options = config.options
         # Now we can use the values defined in the options
 
-    Alternatively, the two methods :any:`load_configuration` and :any:`save_configuration`
+    Alternatively, the two methods :any:`load` and :any:`save`
     can be used to load and save configuration files explicitly.
 
     By default, three configuration files will be loaded and merged:
@@ -191,19 +156,19 @@ class AppConfig:
                 # Print without additional styling
 
         Note that the value is computed on first access, meaning that accessing this property
-        can potentially raise an exception. See the documentation of the :any:`load_configuration` method
+        can potentially raise an exception. See the documentation of the :any:`load` method
         to learn which exceptions are expected.
 
         Also note that the value is cached between accesses. Once the AppConfig object
         is created and this property is read once, its value will be reused between calls.
-        An exception is when modifying configuration values using :any:`save_configuration`. In this
+        An exception is when modifying configuration values using :any:`save`. In this
         case, the currently merged configurations are discarded and re-read on the next access of this
         property.
         """
         if self._merged_config is None:
-            sys_config = self.load_configuration(AppConfigLocation.SYSTEM)
-            user_config = self.load_configuration(AppConfigLocation.USER)
-            workspace_config = self.load_configuration(AppConfigLocation.WORKSPACE)
+            sys_config = self.load(AppConfigLocation.SYSTEM)
+            user_config = self.load(AppConfigLocation.USER)
+            workspace_config = self.load(AppConfigLocation.WORKSPACE)
             merged_config_data: dict = {}
             merged_config_data.update(sys_config.dict(exclude_none=True))
             merged_config_data.update(user_config.dict(exclude_none=True))
@@ -215,7 +180,7 @@ class AppConfig:
             self._fill_in_defaults(self._merged_config)
         return self._merged_config
 
-    def load_configuration(self, location: AppConfigLocation) -> AppConfigData:
+    def load(self, location: AppConfigLocation) -> AppConfigData:
         """
         Load the configuration from the specified location.
 
@@ -225,7 +190,7 @@ class AppConfig:
 
         The main purpose of this method is to obtain a copy of the current configuration
         values from a specific configuration file, modify them and then write them back via
-        :any:`save_configuration`.
+        :any:`save`.
 
         Args:
             location: The location to load the configuration from.
@@ -235,7 +200,7 @@ class AppConfig:
             InvalidConfigurationLocationError: The location is invalid.
         """
         try:
-            doc = self._load_configuration(location)
+            doc = self._load(location)
         except UninitializedError:
             return AppConfigData()
         try:
@@ -245,19 +210,19 @@ class AppConfig:
                 self._get_config_file_path(location), str(validation_error)
             ) from validation_error
 
-    def save_configuration(self, config: AppConfigData, location: AppConfigLocation):
+    def save(self, config: AppConfigData, location: AppConfigLocation):
         """
         Save the configuration back to disk.
 
         This saves the given configuration back to a file on disk. Use it together
-        with the :any:`load_configuration` method to modify configuration values on disk:
+        with the :any:`load` method to modify configuration values on disk:
 
         .. code-block:: python
 
             config = AppConfig()
 
             # Load configuration values from disk:
-            values = config.load_configuration(AppConfigLocation.WORKSPACE)
+            values = config.load(AppConfigLocation.WORKSPACE)
 
             # Request not to color output
             values.color_ui = False
@@ -266,7 +231,7 @@ class AppConfig:
             values.manifest_path = None
 
             # Save values back:
-            config.save_configuration(AppConfigLocation.WORKSPACE)
+            config.save(AppConfigLocation.WORKSPACE)
 
         Args:
             config: The configuration options to be saved to disk.
@@ -277,7 +242,7 @@ class AppConfig:
             InvalidConfigurationFileError: The target configuration file exists but is broken and cannot be updated.
             UninitializedError: Tried to save to a workspace configuration but we are not within a valid workspace.
         """
-        doc = self._load_configuration(location)
+        doc = self._load(location)
         values = config.dict()
 
         # Modify the document "in-place" to keep comments etc
@@ -294,7 +259,7 @@ class AppConfig:
         self._merged_config = None
 
     @contextmanager
-    def edit_configuration(self, location: AppConfigLocation) -> Generator[AppConfigData, None, None]:
+    def edit(self, location: AppConfigLocation) -> Generator[AppConfigData, None, None]:
         """
         Edit a configuration file.
 
@@ -302,15 +267,15 @@ class AppConfig:
 
         .. code-block:: python
 
-            with app_config.edit_configuration(AppConfigLocation.WORKSPACE) as cfg:
+            with app_config.edit(AppConfigLocation.WORKSPACE) as cfg:
                 cfg.color_ui = False
 
-        It basically combines :any:`load_configuration` and :any:`save_configuration` into
+        It basically combines :any:`load` and :any:`save` into
         a single method call which can be used with a `with` statement.
         """
-        config = self.load_configuration(location)
+        config = self.load(location)
         yield config
-        self.save_configuration(config, location)
+        self.save(config, location)
 
     @staticmethod
     def _load_config_from_path(file_path: Path) -> tomlkit.TOMLDocument:
@@ -335,7 +300,7 @@ class AppConfig:
             # safely continue
             raise InvalidConfigurationFileError(file_path, str(parse_error)) from parse_error
 
-    def _load_configuration(self, location: AppConfigLocation) -> tomlkit.TOMLDocument:
+    def _load(self, location: AppConfigLocation) -> tomlkit.TOMLDocument:
         """
         Load a configuration file from a location.
 
@@ -373,7 +338,6 @@ class AppConfig:
     @staticmethod
     def _fill_in_defaults(config: AppConfigData):
         """Fill in some sensible defaults in the given config object."""
-        if config.color_ui is None:
-            config.color_ui = True
-        if config.manifest_path is None:
-            config.manifest_path = str(MANIFEST_PATH_DEFAULT)
+        for name, default in AppConfigData.defaults().items():
+            if getattr(config, name) is None:
+                setattr(config, name, default)

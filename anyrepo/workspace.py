@@ -171,7 +171,7 @@ class Workspace:
         info = Info(main_path=main_path)
         info.save(path)
         workspace = Workspace(path, info)
-        with workspace.app_config.edit_configuration(AppConfigLocation.WORKSPACE) as config:
+        with workspace.app_config.edit(AppConfigLocation.WORKSPACE) as config:
             config.manifest_path = str(manifest_path)
             config.groups = groups
         _LOGGER.info("Initialized %s %r %r", path, info, workspace.config)

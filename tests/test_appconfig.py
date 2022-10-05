@@ -119,7 +119,7 @@ def test_invalid_config_file_2():
 def test_invalid_config_location():
     """If - for whatever reason - an invalid config location is used, we expect a specific exception."""
     with raises(InvalidConfigurationLocationError):
-        AppConfig()._load_configuration("Hello World")  # pylint: disable=protected-access
+        AppConfig()._load("Hello World")  # pylint: disable=protected-access
 
 
 def test_write_config():
@@ -137,7 +137,7 @@ def test_write_config():
         assert options.color_ui
         assert options.manifest_path == "anyrepo.toml"
 
-        with config.edit_configuration(AppConfigLocation.SYSTEM) as sys_conf:
+        with config.edit(AppConfigLocation.SYSTEM) as sys_conf:
             sys_conf.color_ui = False
             sys_conf.manifest_path = "foo.toml"
 
@@ -145,11 +145,11 @@ def test_write_config():
         assert not options.color_ui
         assert options.manifest_path == "foo.toml"
 
-        sys_conf = config.load_configuration(AppConfigLocation.SYSTEM)
+        sys_conf = config.load(AppConfigLocation.SYSTEM)
         sys_conf.color_ui = None
         sys_conf.manifest_path = None
 
-        config.save_configuration(sys_conf, AppConfigLocation.SYSTEM)
+        config.save(sys_conf, AppConfigLocation.SYSTEM)
 
         options = config.options
         assert options.color_ui
