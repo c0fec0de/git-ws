@@ -9,13 +9,13 @@ import urllib
 from pathlib import Path
 from typing import Generator, List, Optional
 
-from ._git import Git
 from ._util import no_echo, removesuffix, resolve_relative, run
 from .clone import Clone
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
 from .exceptions import GitCloneMissingError, ManifestExistError
 from .filters import Filter, default_filter
+from .git import Git
 from .iters import ManifestIter, ProjectIter
 from .types import Groups, ProjectFilter
 from .workspace import Workspace

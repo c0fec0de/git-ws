@@ -3,9 +3,9 @@ import logging
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
-from ._git import Git
 from .datamodel import Manifest, ManifestSpec, Project
 from .filters import default_filter
+from .git import Git
 from .types import ProjectFilter
 from .workspace import Workspace
 

@@ -1,8 +1,8 @@
 """Clone."""
 
-from ._git import Git
 from ._util import get_repr
 from .datamodel import Project
+from .git import Git
 from .workspace import Workspace
 
 

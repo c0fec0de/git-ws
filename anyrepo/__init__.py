@@ -25,3 +25,4 @@ from .exceptions import (
     OutsideWorkspaceError,
     UninitializedError,
 )
+from .git import Git
