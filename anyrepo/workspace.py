@@ -12,10 +12,12 @@ import tomlkit
 
 from ._basemodel import BaseModel
 from ._util import resolve_relative
+from .appconfig import AppConfig, AppConfigData, AppConfigLocation
 from .const import ANYREPO_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 from .datamodel import Project
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError
 from .types import Groups
+from .workspacefinder import find_workspace
 
 _LOGGER = logging.getLogger("anyrepo")
 
@@ -29,13 +31,9 @@ class Info(BaseModel):
 
     Keyword Args:
         main_path: Path to main project. Relative to workspace root directory.
-        mainfest_path: Path to manifest file. Relative to `main_path`.
-        groups: Group Filtering.
     """
 
     main_path: Path
-    manifest_path: Path = MANIFEST_PATH_DEFAULT
-    groups: Optional[str] = None
 
     @staticmethod
     def load(path: Path) -> "Info":
@@ -49,11 +47,8 @@ class Info(BaseModel):
         """
         infopath = path / INFO_PATH
         doc = tomlkit.parse(infopath.read_text())
-        groups = doc.get("groups", None) or None  # legacy support
         return Info(
             main_path=doc["main_path"],
-            manifest_path=doc["manifest_path"],
-            groups=groups,
         )
 
     def save(self, path: Path):
@@ -74,11 +69,7 @@ class Info(BaseModel):
             doc.add(tomlkit.comment("AnyRepo System File. DO NOT EDIT."))
             doc.add(tomlkit.nl())
             doc.add("main_path", "")  # type: ignore
-            doc.add("manifest_path", "")  # type: ignore
-            doc.add("groups", "")  # type: ignore
         doc["main_path"] = str(self.main_path)
-        doc["manifest_path"] = str(self.manifest_path)
-        doc["groups"] = self.groups or ""
         infopath.write_text(tomlkit.dumps(doc))
 
 
@@ -99,6 +90,7 @@ class Workspace:
         super().__init__()
         self.path = path
         self.info = info
+        self.app_config = AppConfig(workspace_config_dir=str(path / ANYREPO_PATH))
 
     def __eq__(self, other):
         if isinstance(other, Workspace):
@@ -119,14 +111,9 @@ class Workspace:
         The workspace root directory contains a sub directory `.anyrepo`.
         This one is searched upwards the given `path`.
         """
-        spath = path or Path.cwd()
-        while True:
-            anyrepopath = spath / ANYREPO_PATH
-            if anyrepopath.exists():
-                return spath
-            if spath == spath.parent:
-                break
-            spath = spath.parent
+        path = find_workspace(path=path)
+        if path:
+            return path
         raise UninitializedError()
 
     @staticmethod
@@ -146,8 +133,9 @@ class Workspace:
         path = Workspace.find_path(path=path)
         _LOGGER.info("path=%s", path)
         info = Info.load(path)
-        _LOGGER.info("Loaded %s %r", path, info)
-        return Workspace(path, info)
+        workspace = Workspace(path, info)
+        _LOGGER.info("Loaded %s %r %r", path, info, workspace.config)
+        return workspace
 
     @staticmethod
     def init(
@@ -180,15 +168,24 @@ class Workspace:
             raise OutsideWorkspaceError(path, main_path) from None
 
         # Initialize Info
-        info = Info(main_path=main_path, manifest_path=manifest_path, groups=groups)
+        info = Info(main_path=main_path)
         info.save(path)
-        _LOGGER.info("Initialized %s %r", path, info)
-        return Workspace(path, info)
+        workspace = Workspace(path, info)
+        with workspace.app_config.edit(AppConfigLocation.WORKSPACE) as config:
+            config.manifest_path = str(manifest_path)
+            config.groups = groups
+        _LOGGER.info("Initialized %s %r %r", path, info, workspace.config)
+        return workspace
 
     @property
     def main_path(self) -> Path:
         """Path to main project."""
         return self.path / self.info.main_path
+
+    @property
+    def config(self) -> AppConfigData:
+        """Application Configuration Values."""
+        return self.app_config.options
 
     def get_project_path(self, project: Project, relative: bool = False) -> Path:
         """Project Path."""
@@ -199,12 +196,12 @@ class Workspace:
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
         """Manifest Path."""
-        return self.main_path / (manifest_path or self.info.manifest_path)
+        return self.main_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
 
     def get_groups(self, groups: Groups = None) -> Groups:
         """Group Filter."""
         if groups is None:
-            return self.info.groups
+            return self.app_config.options.groups
         return groups
 
     def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:

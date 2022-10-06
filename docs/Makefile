@@ -21,7 +21,7 @@ help:
 
 
 api:
-	sphinx-apidoc --append-syspath --output-dir api .. ../anyrepo/const.py ../anyrepo/cli ../docs ../tests $(wildcard ../*.py) --separate --force --module-first
+	sphinx-apidoc --output-dir api .. ../anyrepo/cli ../docs ../tests $(wildcard ../*.py) --separate --force --module-first
 .PHONY: api
 
 gen:

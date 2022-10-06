@@ -5,7 +5,7 @@ from pathlib import Path
 from pytest import raises
 
 from anyrepo import OutsideWorkspaceError, UninitializedError
-from anyrepo.const import INFO_PATH
+from anyrepo.const import CONFIG_PATH, INFO_PATH
 from anyrepo.workspace import Info, Workspace
 
 from .util import chdir, run
@@ -41,8 +41,11 @@ def test_init(tmp_path):
             "# AnyRepo System File. DO NOT EDIT.",
             "",
             'main_path = "main"',
+            "",
+        ]
+        config_path = workspace.path / CONFIG_PATH
+        assert config_path.read_text().split("\n") == [
             'manifest_path = "resolved.toml"',
-            'groups = ""',
             "",
         ]
 

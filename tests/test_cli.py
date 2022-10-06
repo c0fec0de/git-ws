@@ -92,8 +92,8 @@ def test_foreach(tmp_path, arepo, caplog):
     assert result.exit_code == 0
     assert format_logs(caplog, tmp_path) == [
         "INFO    anyrepo path=TMP/workspace",
-        "INFO    anyrepo Loaded TMP/workspace Info(main_path=PosixPath('main'), "
-        "manifest_path=PosixPath('anyrepo.toml'))",
+        "INFO    anyrepo Loaded TMP/workspace Info(main_path=PosixPath('main')) "
+        "AppConfigData(manifest_path='anyrepo.toml', color_ui=True, groups=None)",
         "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='main') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
         "DEBUG   anyrepo ManifestSpec(defaults=Defaults(), "
