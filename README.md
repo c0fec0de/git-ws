@@ -51,10 +51,12 @@ To build a workspace from a project prepared like that, simply clone it via `any
 cd $HOME/Projects
 mkdir my_app_workspace
 cd my_app_workspace
-anyrepo clone git@github.com:example/myapp.git
+anyrepo clone --update git@github.com:example/myapp.git
 ```
 
-This will clone the app repository and also the library side-by-side:
+👉 Without the `--update` option, only the main repository will be fetched.
+
+The above will clone the app repository and also the library side-by-side:
 
 ```bash
 ls -a
@@ -67,8 +69,10 @@ As you can see, besides the two repositories we wanted, there is also a hidden `
 Sometimes there are use cases where using `anyrepo clone` cannot be used. For example, when a CI/CD system creates the initial clone of the main repository, you may need a way to fetch the remaining projects. This can be done by simply running the following within the main project:
 
 ```bash
-anyrepo init
+anyrepo init --update
 ```
+
+👉 As with `anyrepo clone`, without the `--update`, no dependencies will be fetched.
 
 Another important use case is keeping a workspace up-to-date. Lets say you pull in an update in the main repository, which in turn might cause changes in the manifest to be pulled in as well. Updating the existing workspace is as simple as
 
