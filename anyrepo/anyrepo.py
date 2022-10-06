@@ -306,7 +306,7 @@ class AnyRepo:
             return lambda project: resolve_relative(workspace_path / project.path, base=workspace_path) in project_paths
         return default_filter
 
-    def create_groups_filter(self, groups):
+    def create_groups_filter(self, groups=None):
         """Create Filter Method for `groups`."""
         filter_ = Filter.from_str(groups or "")
 
