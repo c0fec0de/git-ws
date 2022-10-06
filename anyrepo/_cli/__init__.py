@@ -120,7 +120,7 @@ def git(context, command, projects=None, manifest_path=None, groups=None):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
-        arepo.foreach(("git",) + command, project_paths=projects, groups=groups)
+        arepo.run(("git",) + command, project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -136,7 +136,7 @@ def fetch(context, projects=None, manifest_path=None, groups=None):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
-        arepo.foreach(("git", "fetch"), project_paths=projects, groups=groups)
+        arepo.run(("git", "fetch"), project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -152,7 +152,7 @@ def pull(context, projects=None, manifest_path=None, groups=None):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
-        arepo.foreach(("git", "pull"), project_paths=projects, groups=groups)
+        arepo.run(("git", "pull"), project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -168,7 +168,7 @@ def rebase(context, projects=None, manifest_path=None, groups=None):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
-        arepo.foreach(("git", "rebase"), project_paths=projects, groups=groups)
+        arepo.run(("git", "rebase"), project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -188,7 +188,7 @@ def status(context, projects=None, manifest_path=None, groups=None, short=False)
         cmd.append("-s")
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
-        arepo.foreach(cmd, project_paths=projects, groups=groups)
+        arepo.run(cmd, project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -204,7 +204,7 @@ def diff(context, projects=None, manifest_path=None, groups=None):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
-        arepo.foreach(("git", "diff"), project_paths=projects, groups=groups)
+        arepo.run(("git", "diff"), project_paths=projects, groups=groups)
 
 
 @main.command()
@@ -222,7 +222,7 @@ def foreach(context, command, projects=None, manifest_path=None, groups=None):
     """
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
-        arepo.foreach(command, project_paths=projects, groups=groups)
+        arepo.run(command, project_paths=projects, groups=groups)
 
 
 @main.command()

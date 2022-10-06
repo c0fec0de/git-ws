@@ -202,7 +202,7 @@ class AnyRepo:
             # TODO: safety check.
             shutil.rmtree(obsolete_path, ignore_errors=True)
 
-    def foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
+    def run(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
         """Run `command` on each project."""
         for clone in self.clones(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
             if not clone.git.is_cloned():
