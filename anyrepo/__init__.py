@@ -14,6 +14,8 @@ See :any:`AnyRepo` for any details.
 import logging
 
 from .anyrepo import AnyRepo
+from .clone import Clone
+from .datamodel import Group, Manifest, Project
 from .exceptions import (
     GitCloneMissingError,
     InitializedError,

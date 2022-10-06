@@ -1,7 +1,7 @@
 """Clone Testing."""
 from click.testing import CliRunner
 
-from anyrepo import AnyRepo
+from anyrepo import AnyRepo, Group, Manifest, Project
 from anyrepo._cli import main
 
 # pylint: disable=unused-import
@@ -145,6 +145,100 @@ def test_clone(tmp_path, repos):
 
         rrepo = AnyRepo.from_path()
         assert arepo == rrepo
+
+        assert list(arepo.projects()) == [
+            Project(name="main", path="main"),
+            Project(name="dep1", path="dep1", url="../dep1"),
+            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+            Project(name="dep4", path="dep4", url="../dep4", revision="main"),
+        ]
+        assert list(arepo.manifests()) == [
+            Manifest(
+                dependencies=(
+                    Project(name="dep1", path="dep1", url="../dep1"),
+                    Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+                ),
+                path=str(workspace / "main/anyrepo.toml"),
+            ),
+            Manifest(
+                dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
+                path=str(workspace / "dep1/anyrepo.toml"),
+            ),
+            Manifest(
+                groups=(Group(name="test"),),
+                dependencies=(
+                    Project(name="dep3", path="dep3", url="../dep3", groups=(Group(name="test"),)),
+                    Project(name="dep4", path="dep4", url="../dep4", revision="main"),
+                ),
+                path=str(workspace / "dep2/anyrepo.toml"),
+            ),
+        ]
+        assert list(str(item) for item in arepo.clones()) == [
+            "Clone(Project(name='main', path='main'), Git(PosixPath('main')))",
+            "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('dep1')))",
+            "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), Git(PosixPath('dep2')))",
+            "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('dep4')))",
+        ]
+
+
+def test_clone_groups(tmp_path, repos):
+    """Test Cloning."""
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    with chdir(workspace):
+        main_path = repos / "main"
+        arepo = AnyRepo.clone(str(main_path), groups="+test")
+        arepo.update()
+        assert arepo.get_manifest().path == str(workspace / "main" / "anyrepo.toml")
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3")
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
+
+        rrepo = AnyRepo.from_path()
+        assert arepo == rrepo
+
+        assert list(arepo.projects()) == [
+            Project(name="main", path="main"),
+            Project(name="dep1", path="dep1", url="../dep1"),
+            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+            Project(name="dep4", path="dep4", url="../dep4", revision="main"),
+            Project(name="dep3", path="dep3", url="../dep3", groups=(Group(name="test"),)),
+        ]
+        assert list(arepo.manifests()) == [
+            Manifest(
+                dependencies=(
+                    Project(name="dep1", path="dep1", url="../dep1"),
+                    Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+                ),
+                path=str(workspace / "main/anyrepo.toml"),
+            ),
+            Manifest(
+                dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
+                path=str(workspace / "dep1/anyrepo.toml"),
+            ),
+            Manifest(
+                groups=(Group(name="test"),),
+                dependencies=(
+                    Project(name="dep3", path="dep3", url="../dep3", groups=(Group(name="test"),)),
+                    Project(name="dep4", path="dep4", url="../dep4", revision="main"),
+                ),
+                path=str(workspace / "dep2/anyrepo.toml"),
+            ),
+        ]
+        assert list(str(item) for item in arepo.clones()) == [
+            "Clone(Project(name='main', path='main'), Git(PosixPath('main')))",
+            "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('dep1')))",
+            "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), Git(PosixPath('dep2')))",
+            "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('dep4')))",
+            "Clone(Project(name='dep3', path='dep3', url='../dep3', "
+            "groups=(Group(name='test'),)), Git(PosixPath('dep3')))",
+        ]
 
 
 def test_clone_other(tmp_path, repos):

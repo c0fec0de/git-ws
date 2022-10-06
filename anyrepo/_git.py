@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Optional
 
-from ._util import run
+from ._util import get_repr, run
 from .exceptions import NoGitError
 
 
@@ -16,8 +16,11 @@ class Git:
     But we just want to have a lean programmatic interface to git.
     """
 
-    def __init__(self, path):
+    def __init__(self, path: Path):
         self.path = path
+
+    def __repr__(self):
+        return get_repr(self, (self.path,))
 
     @staticmethod
     def find_path(path: Optional[Path]) -> Path:

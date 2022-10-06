@@ -11,6 +11,7 @@ from typing import Generator, List, Optional
 
 from ._git import Git
 from ._util import no_echo, removesuffix, resolve_relative, run
+from .clone import Clone
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
 from .exceptions import GitCloneMissingError, ManifestExistError
@@ -134,22 +135,22 @@ class AnyRepo:
         """Create/Update all dependent projects."""
         workspace = self.workspace
         used: List[Path] = [workspace.info.main_path]
-        for project in self.iter(
+        for clone in self.clones(
             project_paths=project_paths,
             manifest_path=manifest_path,
             groups=groups,
             skip_main=skip_main,
             resolve_url=True,
         ):
-            used.append(Path(project.path))
-            project_path = workspace.get_project_path(project, relative=True)
-            git = Git(project_path)
-            self._update(git, project, rebase)
+            used.append(Path(clone.project.path))
+            self._update(clone, rebase)
         if prune:
             self._prune(workspace, used)
 
-    def _update(self, git, project, rebase):
+    def _update(self, clone: Clone, rebase: bool):
         # Clone
+        project = clone.project
+        git = clone.git
         if not git.is_cloned():
             self.echo(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
             git.clone(project.url, revision=project.revision)
@@ -203,32 +204,31 @@ class AnyRepo:
 
     def foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
         """Run `command` on each project."""
-        workspace = self.workspace
-        for project in self.iter(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
-            project_path = workspace.get_project_path(project, relative=True)
-            git = Git(project_path)
-            if not git.is_cloned():
-                raise GitCloneMissingError(resolve_relative(project_path))
-            run(command, cwd=project_path)
+        for clone in self.clones(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
+            if not clone.git.is_cloned():
+                raise GitCloneMissingError(clone.git.path)
+            run(command, cwd=clone.git.path)
 
-    def iter(
+    def clones(
         self,
         project_paths=None,
         manifest_path: Path = None,
         groups: Groups = None,
         skip_main: bool = False,
         resolve_url: bool = False,
-    ) -> Generator[Project, None, None]:
+    ) -> Generator[Clone, None, None]:
         """Iterate of all dependent projects."""
+        workspace = self.workspace
         project_paths_filter = self._create_project_paths_filter(project_paths)
-        groups = self.workspace.get_groups(groups)
+        groups = self.workspace.get_groups(groups=groups)
         filter_ = self.create_groups_filter(groups)
         if groups:
             self.echo(f"Groups: {groups!r}", bold=True)
         for project in self.projects(manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url):
+            clone = Clone.from_project(workspace, project)
             if project_paths_filter(project):
                 self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
-                yield project
+                yield clone
             else:
                 self.echo(f"===== SKIPPING {project.info} =====", fg=_COLOR_SKIP)
 
@@ -242,6 +242,9 @@ class AnyRepo:
         """Iterate over Projects."""
         workspace = self.workspace
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
+        if filter_ is None:
+            groups = self.workspace.get_groups()
+            filter_ = self.create_groups_filter(groups)
         yield from ProjectIter(workspace, manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url)
 
     def manifests(
@@ -250,6 +253,9 @@ class AnyRepo:
         """Iterate over Manifests."""
         workspace = self.workspace
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
+        if filter_ is None:
+            groups = self.workspace.get_groups()
+            filter_ = self.create_groups_filter(groups)
         yield from ManifestIter(workspace, manifest_path, filter_=filter_)
 
     @staticmethod
