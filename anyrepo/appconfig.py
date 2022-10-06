@@ -119,7 +119,6 @@ class AppConfig:
         workspace_config_dir: Optional[str] = None,
         use_config_from_env: bool = True,
     ) -> None:
-        super().__init__()
         self._use_config_from_env = use_config_from_env
         if system_config_dir is None:
             system_config_dir = SYSTEM_CONFIG_DIR
