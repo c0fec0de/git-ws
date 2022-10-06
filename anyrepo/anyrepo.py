@@ -135,7 +135,7 @@ class AnyRepo:
         """Create/Update all dependent projects."""
         workspace = self.workspace
         used: List[Path] = [workspace.info.main_path]
-        for clone in self.clones(
+        for clone in self.foreach(
             project_paths=project_paths,
             manifest_path=manifest_path,
             groups=groups,
@@ -204,12 +204,12 @@ class AnyRepo:
 
     def run_foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
         """Run `command` on each project."""
-        for clone in self.clones(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
+        for clone in self.foreach(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
             if not clone.git.is_cloned():
                 raise GitCloneMissingError(clone.git.path)
             run(command, cwd=clone.git.path)
 
-    def clones(
+    def foreach(
         self,
         project_paths=None,
         manifest_path: Path = None,
@@ -217,20 +217,32 @@ class AnyRepo:
         skip_main: bool = False,
         resolve_url: bool = False,
     ) -> Generator[Clone, None, None]:
-        """Iterate of all dependent projects."""
-        workspace = self.workspace
+        """User Level Clone Iteration."""
         project_paths_filter = self._create_project_paths_filter(project_paths)
         groups = self.workspace.get_groups(groups=groups)
-        filter_ = self.create_groups_filter(groups)
+        filter_ = self.create_groups_filter(groups=groups)
         if groups:
             self.echo(f"Groups: {groups!r}", bold=True)
-        for project in self.projects(manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url):
-            clone = Clone.from_project(workspace, project)
+        for clone in self.clones(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url):
+            project = clone.project
             if project_paths_filter(project):
                 self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
                 yield clone
             else:
                 self.echo(f"===== SKIPPING {project.info} =====", fg=_COLOR_SKIP)
+
+    def clones(
+        self,
+        manifest_path: Path = None,
+        filter_: ProjectFilter = None,
+        skip_main: bool = False,
+        resolve_url: bool = False,
+    ) -> Generator[Clone, None, None]:
+        """Iterate over Clones."""
+        workspace = self.workspace
+        for project in self.projects(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url):
+            clone = Clone.from_project(workspace, project)
+            yield clone
 
     def projects(
         self,
@@ -242,9 +254,7 @@ class AnyRepo:
         """Iterate over Projects."""
         workspace = self.workspace
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
-        if filter_ is None:
-            groups = self.workspace.get_groups()
-            filter_ = self.create_groups_filter(groups)
+        filter_ = filter_ or self.create_groups_filter()
         yield from ProjectIter(workspace, manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url)
 
     def manifests(
@@ -253,9 +263,7 @@ class AnyRepo:
         """Iterate over Manifests."""
         workspace = self.workspace
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
-        if filter_ is None:
-            groups = self.workspace.get_groups()
-            filter_ = self.create_groups_filter(groups)
+        filter_ = filter_ or self.create_groups_filter()
         yield from ManifestIter(workspace, manifest_path, filter_=filter_)
 
     @staticmethod
@@ -314,6 +322,9 @@ class AnyRepo:
 
     def create_groups_filter(self, groups=None):
         """Create Filter Method for `groups`."""
+        if groups is None:
+            groups = self.workspace.get_groups()
+
         filter_ = Filter.from_str(groups or "")
 
         def func(project):
