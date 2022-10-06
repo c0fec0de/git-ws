@@ -156,15 +156,15 @@ class AnyRepo:
             return
 
         # Determine actual version
-        sha = git.get_sha()
         tag = git.get_tag()
         branch = git.get_branch()
+        sha = git.get_sha()
 
         if project.revision in (sha, tag) and not branch:
             self.echo("Nothing to do.", fg=_COLOR_ACTION)
             return
 
-        revision = branch or tag or sha
+        revision = tag or branch or sha
 
         # Checkout
         fetched = False
@@ -175,7 +175,7 @@ class AnyRepo:
             self.echo(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
             git.checkout(project.revision)
             branch = git.get_branch()
-            revision = branch or tag or sha
+            revision = tag or branch or sha
 
         # Pull or Rebase in case we are on a branch (or have switched to it.)
         if branch:

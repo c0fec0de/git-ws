@@ -58,17 +58,21 @@ class Git:
         cmd += ["--", str(url), str(self.path)]
         run(cmd)
 
-    def get_branch(self) -> Optional[str]:
-        """Get Branch."""
-        return self._run2str(("branch", "--show-current")) or None
-
     def get_tag(self) -> Optional[str]:
         """Get Tag."""
         return self._run2str(("describe", "--exact-match", "--tags"), check=False) or None
 
+    def get_branch(self) -> Optional[str]:
+        """Get Branch."""
+        return self._run2str(("branch", "--show-current")) or None
+
     def get_sha(self, revision="HEAD") -> str:
         """Get SHA."""
         return self._run2str(("rev-parse", revision))
+
+    def get_revision(self):
+        """Get Revision."""
+        return self.get_tag() or self.get_branch() or self.get_sha()
 
     def get_url(self) -> Optional[str]:
         """Get actual url."""
