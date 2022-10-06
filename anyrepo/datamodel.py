@@ -7,13 +7,13 @@ They do not implement any business logic on purpose.
 """
 
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import tomlkit
-from pydantic import Field, root_validator
+from pydantic import BaseSettings, Extra, Field, root_validator
 
 from ._basemodel import BaseModel
-from ._url import urljoin
+from ._url import urljoin, urlsub
 from ._util import get_repr, resolve_relative
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestError, ManifestNotFoundError
@@ -122,7 +122,7 @@ class Project(BaseModel):
         if not url:
             # URL assembly
             project_remote = spec.remote or defaults.remote
-            project_sub_url = spec.sub_url or spec.name
+            project_sub_url = spec.sub_url or urlsub(refurl, spec.name)
             if project_remote:
                 for remote in remotes:
                     if remote.name == project_remote:
@@ -288,3 +288,53 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         """
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(self.dump())
+
+
+class AppConfigData(BaseSettings, extra=Extra.allow):
+    """
+    Configuration data of the application.
+
+    This class holds the concrete configuration values of the application.
+    The following values are defined:
+    """
+
+    manifest_path: Optional[str]
+    """
+    The path of the manifest file within a repository.
+
+    If this is not defined, the default is :any:`MANIFEST_PATH_DEFAULT`.
+
+    This option can be overridden by specifying the `ANYREPO_MANIFEST_PATH` environment variable.
+    """
+
+    color_ui: Optional[bool]
+    """
+    Defines if outputs by the tool shall be colored.
+
+    If this is not defined, output will be colored by default.
+
+    This option can be overridden by specifying the `ANYREPO_COLOR_UI` environment variable.
+    """
+
+    groups: Optional[str]
+    """
+    The groups to operate on.
+
+    This is a filter for groups to operate on during workspace actions.
+
+    This option can be overridden by specifying the `ANYREPO_GROUPS` environment variable.
+    """
+
+    @staticmethod
+    def defaults() -> Dict[str, Any]:
+        """
+        As all configuration options must be optional, this option provides the default values.
+
+        >>> for item in AppConfigData.defaults().items(): print(item)
+        ('color_ui', True)
+        ('manifest_path', 'anyrepo.toml')
+        """
+        return {
+            "color_ui": True,
+            "manifest_path": str(MANIFEST_PATH_DEFAULT),
+        }

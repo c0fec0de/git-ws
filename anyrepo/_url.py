@@ -41,3 +41,29 @@ def urljoin(base, url):
     joined = parse.urljoin(httpbase, url)
     joinedparsed = parse.urlparse(joined)
     return parse.urlunparse((baseparsed.scheme,) + joinedparsed[1:])
+
+
+def urlsub(base, name):
+    """
+    Create sub-url for `name` with suffix of `base`.
+
+    >>> urlsub('https://domain.com/base/repo1', 'repo2')
+    'repo2'
+    >>> urlsub('https://domain.com/base/repo1.git', 'repo2')
+    'repo2.git'
+    >>> urlsub('https://domain.com/base/repo1.suffix', 'repo2')
+    'repo2.suffix'
+    >>> urlsub(None, 'repo2')
+    'repo2'
+    >>> urlsub(None, 'repo2.git')
+    'repo2.git'
+    """
+    if not base:
+        return name
+    bpath = parse.urlparse(base).path
+    bname = bpath.rsplit("/", 1)[1]
+    try:
+        _, bsuffix = bname.split(".")
+    except ValueError:
+        return name
+    return f"{name}.{bsuffix}"

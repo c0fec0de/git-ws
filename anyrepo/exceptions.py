@@ -1,5 +1,7 @@
 """Collection Of All Exceptions Which Might Occur."""
 
+from pathlib import Path
+
 
 class UninitializedError(RuntimeError):
     """AnyRepo Workspace has not been initialized."""
@@ -11,9 +13,10 @@ class UninitializedError(RuntimeError):
 class InitializedError(RuntimeError):
     """AnyRepo Workspace has been initialized."""
 
-    def __init__(self, path):
-        super().__init__(f"anyrepo has already been initialized yet at {str(path)!r}.")
+    def __init__(self, path, main_path):
+        super().__init__(f"anyrepo has already been initialized at {str(path)!r} with main repo at {str(main_path)!r}.")
         self.path = path
+        self.main_path = main_path
 
 
 class NoGitError(RuntimeError):
@@ -54,6 +57,23 @@ class ManifestError(RuntimeError):
         super().__init__(f"Manifest {str(path)!r} is broken: {details}")
         self.path = path
         self.details = details
+
+
+class InvalidConfigurationFileError(RuntimeError):
+    """A configuration file is invalid and cannot be used."""
+
+    def __init__(self, path: Path, details: str):
+        super().__init__(f"The configuration file {path} cannot be read: {details}")
+        self.path = path
+        self.details = details
+
+
+class InvalidConfigurationLocationError(RuntimeError):
+    """An invalid location for configuration data has been used."""
+
+    def __init__(self, location: str):
+        super().__init__(f"The configuration location {location} is not known")
+        self.location = location
 
 
 class GitCloneMissingError(RuntimeError):
