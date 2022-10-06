@@ -2,9 +2,9 @@
 
 AnyRepo is a lightweight tool for creating and managing *workspaces* consisting of several interdependent `git` repositories. Starting from a *main repository*, AnyRepo discovers dependencies specified in a *manifest file*, fetching any specified required repositories and assembling them into a single workspace.
 
-![Workspace](./docs/images/workspace.png)
+![Workspace](https://github.com/c0fec0de/anyrepo/raw/main/docs/images/workspace.png)
 
-👉 You can read more about the used nomenclature in the [documentation](./docs/manual/nomenclature.rst).
+👉 You can read more about the used nomenclature in the [documentation](https://anyrepo.readthedocs.io/en/latest/manual/nomenclature.html).
 
 
 # 📦 Installation
@@ -137,5 +137,5 @@ And that's what we did - AnyRepo is a our tool for managing a large workspace co
 
 👉 Please note that our view on the various features might be biased. As we did, always look at all the options available to you before deciding for one tool or the other. While the other tools in comparison did not model what we needed for our workflow, they might just be what you are looking for.
 
-If you want to learn more, have a look into the [documentation](./docs/manual/why.rst).
+If you want to learn more, have a look into the [documentation](https://anyrepo.readthedocs.io/en/latest/manual/why.html).
 
