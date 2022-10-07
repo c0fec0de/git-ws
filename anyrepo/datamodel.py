@@ -303,7 +303,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         )
 
 
-class Manifest(BaseModel):
+class Manifest(BaseModel, extra=Extra.allow):
 
     """
     Manifest.
@@ -454,7 +454,33 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         else:
             path.write_text(self.dump())
 
-    def _create(self) -> tomlkit.TOMLDocument:
+    @classmethod
+    def upgrade(cls, path: Path):
+        """Upgrade :any:`ManifestSpec` at `path` to latest revision including documentation."""
+        # read
+        try:
+            content = path.read_text()
+        except FileNotFoundError:
+            raise ManifestNotFoundError(resolve_relative(path)) from None
+        try:
+            olddoc = tomlkit.parse(content)
+            data = dict(olddoc)
+            obj = cls(**data)
+        except Exception as exc:
+            raise ManifestError(resolve_relative(path), str(exc)) from None
+
+        # merge
+        newdoc = cls._create()
+        for key, value in olddoc.items():
+            newdoc[key] = value
+        for key, value in as_dict(obj).items():
+            newdoc[key] = value
+
+        # write
+        path.write_text(tomlkit.dumps(newdoc))
+
+    @staticmethod
+    def _create() -> tomlkit.TOMLDocument:
         doc = tomlkit.document()
 
         # Version

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import click
 
-from anyrepo import AnyRepo
+from anyrepo import AnyRepo, ManifestSpec
 
 from .common import COLOR_INFO, exceptionhandling, pass_context
 from .options import groups_option, manifest_option, output_option
@@ -102,3 +102,19 @@ def create(context, manifest_path):
     with exceptionhandling(context):
         path = AnyRepo.create_manifest(Path(manifest_path))
         click.secho(f"Manifest {str(path)!r} created.", fg=COLOR_INFO)
+
+
+@manifest.command()
+@manifest_option(initial=True)
+@pass_context
+def upgrade(context, manifest_path):
+    """
+    Update Manifest To Latest Version.
+
+    User data is kept.
+    User comments are removed.
+    Comments are updated to the latest documentation.
+    """
+    with exceptionhandling(context):
+        ManifestSpec.upgrade(Path(manifest_path))
+        click.secho(f"Manifest {str(manifest_path)!r} upgraded.", fg=COLOR_INFO)
