@@ -21,7 +21,7 @@ help:
 
 
 api:
-	sphinx-apidoc --output-dir api .. ../anyrepo/cli ../docs ../tests $(wildcard ../*.py) --separate --force --module-first
+	sphinx-apidoc --output-dir api .. ../anyrepo/cli ../docs ../tests $(wildcard ../*.py) --separate --force --module-first --maxdepth 2
 .PHONY: api
 
 gen:
