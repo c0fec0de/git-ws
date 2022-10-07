@@ -53,6 +53,8 @@ def urlsub(base, name):
     'repo2.git'
     >>> urlsub('https://domain.com/base/repo1.suffix', 'repo2')
     'repo2.suffix'
+    >>> urlsub('https://domain.com/base/repo1.first.second', 'repo2')
+    'repo2.second'
     >>> urlsub(None, 'repo2')
     'repo2'
     >>> urlsub(None, 'repo2.git')
@@ -63,7 +65,7 @@ def urlsub(base, name):
     bpath = parse.urlparse(base).path
     bname = bpath.rsplit("/", 1)[1]
     try:
-        _, bsuffix = bname.split(".")
+        _, bsuffix = bname.rsplit(".", 1)
     except ValueError:
         return name
     return f"{name}.{bsuffix}"
