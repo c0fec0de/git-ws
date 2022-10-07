@@ -1,15 +1,14 @@
 """
 Central :any:`AnyRepo` Datamodel.
 
-* :any:`Remote`: Remote Alias.
+* :any:`AppConfigData`: :any:`AnyRepo` Configuration.
 * :any:`Defaults`: Default Values.
 * :any:`Group`: Dependency Group.
-* :any:`Project`: A Single Dependency as needed by :any:`AnyRepo`.
-* :any:`ProjectSpec`: Dependency Specification from Manifest File.
 * :any:`Manifest`: Manifest as needed by :any:`AnyRepo`.
 * :any:`ManifestSpec`: Specification of the actual project.
-* :any:`AppConfigData`: :any:`AnyRepo` Configuration.
-
+* :any:`Project`: A Single Dependency as needed by :any:`AnyRepo`.
+* :any:`ProjectSpec`: Dependency Specification from Manifest File.
+* :any:`Remote`: Remote Alias.
 """
 
 from pathlib import Path
