@@ -103,6 +103,10 @@ class AnyRepo:
         path = project_path.parent
         return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
 
+    def deinit(self):
+        """De-Initialize :any:`AnyRepo`."""
+        return self.workspace.deinit()
+
     @staticmethod
     def clone(
         url: str,

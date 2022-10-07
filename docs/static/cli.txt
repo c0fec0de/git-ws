@@ -9,6 +9,7 @@ Options:
 
 Commands:
   clone     Create a git clone, initialize AnyRepo workspace and create...
+  deinit    Deinitialize AnyRepo workspace.
   diff      Run 'git diff' on projects.
   fetch     Run 'git fetch' on projects.
   foreach   Run 'command' on projects.

@@ -56,6 +56,30 @@ def test_status_short(tmp_path, arepo, caplog):
     _test_foreach(tmp_path, arepo, caplog, "status", "-s")
 
 
+def test_deinit(tmp_path, arepo, caplog):
+    """Test deinit."""
+    result = CliRunner().invoke(main, ["deinit"])
+    assert format_output(result) == ["Workspace deinitialized at '.'.", ""]
+
+    assert result.exit_code == 0
+    assert not (tmp_path / "workspace/.anyrepo").exists()
+    assert (tmp_path / "workspace/main").exists()
+
+    result = CliRunner().invoke(main, ["deinit"])
+    assert format_output(result, tmp_path) == [
+        "Error: anyrepo has not been initialized yet. Try:",
+        "",
+        "    anyrepo init",
+        "",
+        "or:",
+        "",
+        "    anyrepo clone",
+        "",
+        "",
+    ]
+    assert result.exit_code == 1
+
+
 def test_git(tmp_path, arepo):
     """Test git."""
     result = CliRunner().invoke(main, ["git", "status"])

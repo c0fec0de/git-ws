@@ -5,6 +5,7 @@ The :any:`Workspace` class represents the file system location containing all gi
 :any:`Info` is a helper.
 """
 import logging
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
@@ -175,6 +176,14 @@ class Workspace:
             config.groups = groups
         _LOGGER.info("Initialized %s %r %r", path, info, workspace.config)
         return workspace
+
+    def deinit(self):
+        """
+        Deinitialize.
+
+        Remove `ANYREPO_PATH` directory.
+        """
+        shutil.rmtree(self.path / ANYREPO_PATH)
 
     @property
     def main_path(self) -> Path:

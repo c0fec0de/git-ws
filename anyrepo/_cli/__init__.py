@@ -53,6 +53,18 @@ def init(context, manifest_path=None, groups=None, update: bool = False):
 
 
 @main.command()
+@pass_context
+def deinit(context):
+    """
+    Deinitialize AnyRepo workspace.
+    """
+    with exceptionhandling(context):
+        arepo = AnyRepo.from_path(echo=click.secho)
+        arepo.deinit()
+        click.secho(f"Workspace deinitialized at {str(resolve_relative(arepo.path))!r}.")
+
+
+@main.command()
 @click.argument("url")
 @manifest_option(initial=True)
 @groups_option(initial=True)
