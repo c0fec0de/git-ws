@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-from appdirs import site_config_dir, user_config_dir
-
 ANYREPO_PATH = Path(".anyrepo")
 """The sub-folder in which the tool stores workspace related data, relative to the workspace folder."""
 
@@ -24,10 +22,3 @@ APP_NAME = "AnyRepo"
 
 APP_AUTHOR = "c0fec0de"
 """Application Author."""
-
-# TODO: move to appconfig.py
-SYSTEM_CONFIG_DIR = site_config_dir(APP_NAME, appauthor=APP_AUTHOR)
-"""The default location where to look for system wide configuration files."""
-
-USER_CONFIG_DIR = user_config_dir(APP_NAME, appauthor=APP_AUTHOR)
-"""The default location where to look for user configuration files."""

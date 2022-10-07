@@ -14,13 +14,20 @@ from typing import Generator, Optional
 
 import tomlkit
 import tomlkit.exceptions
+from appdirs import site_config_dir, user_config_dir
 from pydantic import ValidationError
 
 from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError, UninitializedError
 
-from .const import ANYREPO_PATH, CONFIG_FILE_NAME, SYSTEM_CONFIG_DIR, USER_CONFIG_DIR
+from .const import ANYREPO_PATH, APP_AUTHOR, APP_NAME, CONFIG_FILE_NAME
 from .datamodel import AppConfigData
 from .workspacefinder import find_workspace
+
+_SYSTEM_CONFIG_DIR = site_config_dir(APP_NAME, appauthor=APP_AUTHOR)
+"""The default location where to look for system wide configuration files."""
+
+_USER_CONFIG_DIR = user_config_dir(APP_NAME, appauthor=APP_AUTHOR)
+"""The default location where to look for user configuration files."""
 
 
 class _EnvAppConfigData(AppConfigData, env_prefix="anyrepo_", case_sensitive=False):
@@ -42,16 +49,14 @@ class AppConfigLocation(Enum):
     """
     System wide configuration.
 
-    Use this to refer to configuration options for the entire system. By default, the system configuration is
-    looked for in the path pointed to by :any:`SYSTEM_CONFIG_DIR`.
+    Use this to refer to configuration options for the entire system.
     """
 
     USER = auto()
     """
     User configuration.
 
-    Use this to refer to configuration specific to the current user. By default, the user configuration is
-    looked for in the path pointed to by :any:`USER_CONFIG_DIR`.
+    Use this to refer to configuration specific to the current user.
     """
 
     WORKSPACE = auto()
@@ -121,9 +126,9 @@ class AppConfig:
     ) -> None:
         self._use_config_from_env = use_config_from_env
         if system_config_dir is None:
-            system_config_dir = SYSTEM_CONFIG_DIR
+            system_config_dir = _SYSTEM_CONFIG_DIR
         if user_config_dir is None:
-            user_config_dir = USER_CONFIG_DIR
+            user_config_dir = _USER_CONFIG_DIR
         if workspace_config_dir is None:
             workspace_dir = find_workspace()
             if workspace_dir:
