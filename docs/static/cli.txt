@@ -9,6 +9,7 @@ Options:
 
 Commands:
   clone            Create a git clone, initialize AnyRepo workspace and...
+  config           Read and modify configuration values.
   create-manifest  Create Manifest.
   diff             Run 'git diff' on projects.
   fetch            Run 'git fetch' on projects.

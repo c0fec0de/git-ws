@@ -9,6 +9,7 @@ from anyrepo import AnyRepo
 from anyrepo._util import resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
+from .config import config
 from .info import info
 from .manifest import manifest
 from .options import groups_option, manifest_option, projects_option, update_option
@@ -242,5 +243,6 @@ def create_manifest(context, manifest_path, project=None):
         click.secho(f"Manifest {str(path)!r} created.", fg=_COLOR_INFO)
 
 
-main.add_command(manifest)
+main.add_command(config)
 main.add_command(info)
+main.add_command(manifest)

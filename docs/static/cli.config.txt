@@ -1,0 +1,12 @@
+Usage: anyrepo config [OPTIONS] COMMAND [ARGS]...
+
+  Read and modify configuration values.
+
+Options:
+  -h, --help  Show this message and exit.
+
+Commands:
+  delete  Remove the option from the configuration.
+  get     Get the value of a configuration option.
+  list    List all configuration options.
+  set     Set the configuration option to the given value.

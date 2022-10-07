@@ -27,6 +27,7 @@ api:
 gen:
 	anyrepo --help > static/cli.txt
 	anyrepo clone --help > static/cli.clone.txt
+	anyrepo config --help > static/cli.config.txt
 	anyrepo create-manifest --help > static/cli.create-manifest.txt
 	anyrepo fetch --help > static/cli.fetch.txt
 	anyrepo foreach --help > static/cli.foreach.txt
