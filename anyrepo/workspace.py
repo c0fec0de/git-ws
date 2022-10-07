@@ -87,7 +87,6 @@ class Workspace:
     """
 
     def __init__(self, path: Path, info: Info):
-        super().__init__()
         self.path = path
         self.info = info
         self.app_config = AppConfig(workspace_config_dir=str(path / ANYREPO_PATH))

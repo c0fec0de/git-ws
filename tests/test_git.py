@@ -3,7 +3,7 @@ import re
 
 from pytest import fixture
 
-from anyrepo._git import Git
+from anyrepo.git import Git
 
 
 def is_sha(sha):
@@ -53,6 +53,7 @@ def test_git_revisions(git):
     assert git.get_branch() == "main"
     assert git.get_tag() is None
     assert is_sha(sha1)
+    assert git.get_revision() == "main"
 
     # create sha2
     (path / "end.txt").touch()
@@ -66,6 +67,7 @@ def test_git_revisions(git):
     assert git.get_branch() is None
     assert git.get_tag() == "mytag"
     assert git.get_sha() == sha0
+    assert git.get_revision() == "mytag"
 
     # on sha0
     git.checkout(sha0)
@@ -73,6 +75,7 @@ def test_git_revisions(git):
     assert git.get_branch() is None
     assert git.get_tag() == "mytag"
     assert git.get_sha() == sha0
+    assert git.get_revision() == "mytag"
 
     # on sha1
     git.checkout(sha1)
@@ -80,6 +83,7 @@ def test_git_revisions(git):
     assert git.get_branch() is None
     assert git.get_tag() is None
     assert git.get_sha() == sha1
+    assert git.get_revision() == sha1
 
     # on another tag
     git.tag("myother", msg="other")
@@ -87,9 +91,11 @@ def test_git_revisions(git):
     assert git.get_branch() is None
     assert git.get_tag() == "myother"
     assert git.get_sha() == sha1
+    assert git.get_revision() == "myother"
 
     # on branch
     git.checkout("main")
     assert git.get_branch() == "main"
     assert git.get_tag() is None
     assert git.get_sha() == sha2
+    assert git.get_revision() == "main"
