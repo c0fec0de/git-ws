@@ -28,10 +28,10 @@ Besides use on the command line, AnyRepo also has a public API which can be used
 for more advanced automatization of your projects:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Programmer's Manual:
 
-   api/modules
+   api/anyrepo
 
 
 Indices and tables

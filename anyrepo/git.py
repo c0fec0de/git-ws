@@ -14,7 +14,7 @@ class Git:
 
     We know, that there are libraries for that.
     But we just want to have a lean programmatic interface to git.
-    Just with the functionality subset **we** need. Not more.
+    Just with the functionality **we** need. Not more.
 
     We currently do NOT check the git version, but try to use a quite common subset.
 

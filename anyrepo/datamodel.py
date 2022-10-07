@@ -172,9 +172,9 @@ class Project(BaseModel):
 
         Args:
             manifest_spec:
-            defaults (Defaults): Default settings if not given by `spec`.
-            remotes (List[Remote]): Remotes
-            spec (ProjectSpec): Base project to be resolved.
+            defaults: Default settings if not given by `spec`.
+            remotes: Remotes
+            spec: Base project to be resolved.
 
         :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
         :any:`ProjectSpec.from_project()` does the reverse.
@@ -344,7 +344,7 @@ class Manifest(BaseModel):
             path: File path of the `spec`.
             refurl: URL of the repository containing `spec`.
 
-        If `refurl` is specified, any relative URL in the :any:`ManifestSpec` and referred :any:`ProjectSpec`s
+        If `refurl` is specified, any relative URL in the :any:`ManifestSpec` and referred :any:`ProjectSpec` s
         is resolved to an absolute URL.
         """
         dependencies = [Project.from_spec(spec, project_spec, refurl=refurl) for project_spec in spec.dependencies]
@@ -394,7 +394,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     """Dependencies."""
 
     @classmethod
-    def load(cls, path: Path, default: Optional["ManifestSpec"] = None) -> "ManifestSpec":
+    def load(cls, path: Path) -> "ManifestSpec":
         """
         Load :any:`ManifestSpec` from `path`.
 
@@ -408,8 +408,6 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         try:
             content = path.read_text()
         except FileNotFoundError:
-            if default:
-                return default
             raise ManifestNotFoundError(resolve_relative(path)) from None
         try:
             doc = tomlkit.parse(content)
