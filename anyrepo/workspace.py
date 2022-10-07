@@ -187,18 +187,26 @@ class Workspace:
         return self.app_config.options
 
     def get_project_path(self, project: Project, relative: bool = False) -> Path:
-        """Project Path."""
+        """
+        Determine Project Path.
+
+        Args:
+            project. Project to determine path for.
+
+        Keyword Args:
+            relative: Return relative instead of absolute path.
+        """
         project_path = self.path / project.path
         if relative:
             project_path = resolve_relative(project_path)
         return project_path
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
-        """Manifest Path."""
+        """Get Manifest Path."""
         return self.main_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
 
     def get_groups(self, groups: Groups = None) -> Groups:
-        """Group Filter."""
+        """Get Groups Filter."""
         if groups is None:
             return self.app_config.options.groups
         return groups

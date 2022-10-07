@@ -6,6 +6,7 @@ Options:
   -h, --help  Show this message and exit.
 
 Commands:
+  create    Create Manifest.
   freeze    Print The Resolved Manifest With SHAs For All Project Revisions.
   path      Print Path to Main Manifest File.
   paths     Print Paths to ALL Manifest Files.

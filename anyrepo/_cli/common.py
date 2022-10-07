@@ -8,6 +8,9 @@ from pydantic import BaseModel
 
 from anyrepo import GitCloneMissingError, ManifestNotFoundError, NoGitError, UninitializedError
 
+COLOR_INFO = "blue"
+
+
 _LOGLEVELMAP = {
     0: logging.WARNING,
     1: logging.INFO,
@@ -59,7 +62,7 @@ def exceptionhandling(context: Context):
         ) from None
     except ManifestNotFoundError as exc:
         _print_traceback(context, exc)
-        raise Error(f"{exc!s} Try:\n\n    anyrepo create-manifest --manifest='{exc.path!s}'\n") from None
+        raise Error(f"{exc!s} Try:\n\n    anyrepo manifest create --manifest='{exc.path!s}'\n") from None
     except GitCloneMissingError as exc:
         _print_traceback(context, exc)
         raise Error(f"{exc!s} Try:\n\n    anyrepo update\n") from None

@@ -1,0 +1,14 @@
+Usage: anyrepo push [OPTIONS]
+
+  Run 'git push' on projects.
+
+  This command behaves identical to `anyrepo foreach -- git push`.
+
+Options:
+  -P, --project DIRECTORY  Project path to operate on only. All by default.
+                           This option can be specified multiple times.
+  -M, --manifest FILE      Manifest file. Initial clone/init settings by
+                           default.
+  -G, --groups TEXT        Group Filtering. TODO: more details. Initial
+                           clone/init filter settings by default.
+  -h, --help               Show this message and exit.

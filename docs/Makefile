@@ -27,7 +27,6 @@ api:
 gen:
 	anyrepo --help > static/cli.txt
 	anyrepo clone --help > static/cli.clone.txt
-	anyrepo create-manifest --help > static/cli.create-manifest.txt
 	anyrepo fetch --help > static/cli.fetch.txt
 	anyrepo foreach --help > static/cli.foreach.txt
 	anyrepo git --help > static/cli.git.txt
@@ -35,6 +34,9 @@ gen:
 	anyrepo init --help > static/cli.init.txt
 	anyrepo manifest --help > static/cli.manifest.txt
 	anyrepo pull --help > static/cli.pull.txt
+	anyrepo push --help > static/cli.push.txt
 	anyrepo rebase --help > static/cli.rebase.txt
 	anyrepo status --help > static/cli.status.txt
 	anyrepo update --help > static/cli.update.txt
+	rm -f static/manifest.toml
+	anyrepo manifest create -M static/manifest.toml

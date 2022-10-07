@@ -44,12 +44,12 @@ def test_cli_git(tmp_path):
             "===== main =====",
             "Error: Manifest has not been found at 'anyrepo.toml'. Try:",
             "",
-            "    anyrepo create-manifest --manifest='anyrepo.toml'",
+            "    anyrepo manifest create --manifest='anyrepo.toml'",
             "",
             "",
         ]
 
-        result = CliRunner().invoke(main, ["create-manifest"])
+        result = CliRunner().invoke(main, ["manifest", "create"])
         assert format_output(result) == ["Manifest 'anyrepo.toml' created.", ""]
         assert result.exit_code == 0
 
@@ -85,7 +85,7 @@ def test_cli_git_update(tmp_path):
         run(("git", "init"), check=True)
         assert (main_path / ".git").exists()
 
-        result = CliRunner().invoke(main, ["create-manifest"])
+        result = CliRunner().invoke(main, ["manifest", "create"])
         assert format_output(result) == ["Manifest 'anyrepo.toml' created.", ""]
         assert result.exit_code == 0
 

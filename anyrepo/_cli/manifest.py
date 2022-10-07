@@ -5,8 +5,8 @@ import click
 
 from anyrepo import AnyRepo
 
+from .common import COLOR_INFO, exceptionhandling, pass_context
 from .options import groups_option, manifest_option, output_option
-from .util import exceptionhandling, pass_context
 
 
 @click.group()
@@ -92,3 +92,13 @@ def paths(context, manifest_path=None):
         anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
         for manifest in anyrepo.manifests():
             click.echo(str(manifest.path))
+
+
+@manifest.command()
+@manifest_option(initial=True)
+@pass_context
+def create(context, manifest_path):
+    """Create Manifest."""
+    with exceptionhandling(context):
+        path = AnyRepo.create_manifest(Path(manifest_path))
+        click.secho(f"Manifest {str(path)!r} created.", fg=COLOR_INFO)

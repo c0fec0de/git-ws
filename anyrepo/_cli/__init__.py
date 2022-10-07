@@ -9,12 +9,10 @@ from anyrepo import AnyRepo
 from anyrepo._util import resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
+from .common import COLOR_INFO, Context, exceptionhandling, get_loglevel, pass_context
 from .info import info
 from .manifest import manifest
 from .options import groups_option, manifest_option, projects_option, update_option
-from .util import Context, exceptionhandling, get_loglevel, pass_context
-
-_COLOR_INFO = "blue"
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
@@ -50,7 +48,7 @@ def init(context, manifest_path=None, groups=None, update: bool = False):
         else:
             click.secho(
                 "Please continue with:\n\n    anyrepo update\n",
-                fg=_COLOR_INFO,
+                fg=COLOR_INFO,
             )
 
 
@@ -72,7 +70,7 @@ def clone(context, url, manifest_path=None, groups=None, update: bool = False):
             click.secho(
                 f"Workspace initialized at {str(resolve_relative(arepo.path))!r}. "
                 "Please continue with:\n\n    anyrepo update\n",
-                fg=_COLOR_INFO,
+                fg=COLOR_INFO,
             )
 
 
@@ -160,6 +158,22 @@ def pull(context, projects=None, manifest_path=None, groups=None):
 @manifest_option()
 @groups_option()
 @pass_context
+def push(context, projects=None, manifest_path=None, groups=None):
+    """
+    Run 'git push' on projects.
+
+    This command behaves identical to `anyrepo foreach -- git push`.
+    """
+    with exceptionhandling(context):
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo.run_foreach(("git", "push"), project_paths=projects, groups=groups)
+
+
+@main.command()
+@projects_option()
+@manifest_option()
+@groups_option()
+@pass_context
 def rebase(context, projects=None, manifest_path=None, groups=None):
     """
     Run 'git rebase' on projects.
@@ -223,23 +237,6 @@ def foreach(context, command, projects=None, manifest_path=None, groups=None):
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
         arepo.run_foreach(command, project_paths=projects, groups=groups)
-
-
-@main.command()
-@click.option(
-    "--project",
-    "-P",
-    type=click.Path(file_okay=False),
-    help="Project Path. Current working directory by default.",
-)
-@manifest_option(initial=True)
-@pass_context
-def create_manifest(context, manifest_path, project=None):
-    """Create Manifest."""
-    project = Path(project) if project else None
-    with exceptionhandling(context):
-        path = AnyRepo.create_manifest(project, Path(manifest_path))
-        click.secho(f"Manifest {str(path)!r} created.", fg=_COLOR_INFO)
 
 
 main.add_command(manifest)

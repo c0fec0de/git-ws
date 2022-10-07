@@ -12,7 +12,7 @@ def default_filter(item: Any) -> bool:
 class Filter(BaseModel):
 
     """
-    Filter.
+    A Generic Filter With A String Interface.
 
     Keyword Args:
         only: Limit to these only. Highest precedence.
@@ -23,7 +23,7 @@ class Filter(BaseModel):
 
     >>> filter_ = Filter.from_str("+doc,-test")
     >>> filter_
-    Filter(with_=('doc',), without=('test',))
+    Filter(without=('test',), with_=('doc',))
     >>> filter_(('other', ))
     True
     >>> filter_(('doc', ))
@@ -70,8 +70,13 @@ class Filter(BaseModel):
     """
 
     only: Tuple[str, ...] = tuple()
-    with_: Tuple[str, ...] = tuple()
+    """Only select items matching. Highest Precedence."""
+
     without: Tuple[str, ...] = tuple()
+    """Deselect items matching. Mid Precedence."""
+
+    with_: Tuple[str, ...] = tuple()
+    """Include optional items matching. Lowest Precedence."""
 
     @staticmethod
     def from_str(expr: str) -> "Filter":
@@ -83,9 +88,9 @@ class Filter(BaseModel):
         >>> Filter.from_str("+test")
         Filter(with_=('test',))
         >>> Filter.from_str("-test,-doc, +lint, imp")
-        Filter(only=('imp',), with_=('lint',), without=('test', 'doc'))
+        Filter(only=('imp',), without=('test', 'doc'), with_=('lint',))
         >>> Filter.from_str("+lint, -doc")
-        Filter(with_=('lint',), without=('doc',))
+        Filter(without=('doc',), with_=('lint',))
         """
         parts = tuple(part.strip() for part in expr.split(",") if part.strip())
         only = tuple(part for part in parts if not part.startswith(("+", "-")))

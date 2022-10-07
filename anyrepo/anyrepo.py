@@ -276,13 +276,8 @@ class AnyRepo:
         yield from ManifestIter(workspace, manifest_path, filter_=filter_)
 
     @staticmethod
-    def create_manifest(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
+    def create_manifest(manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
         """Create ManifestSpec File at `manifest_path`within `project`."""
-        if project_path is None:
-            project_path = manifest_path.parent
-            manifest_path = manifest_path.relative_to(project_path)
-        git = Git.from_path(path=project_path)
-        manifest_path = resolve_relative(git.path / manifest_path)
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
         manifest_spec = ManifestSpec()
