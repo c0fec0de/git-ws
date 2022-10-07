@@ -141,6 +141,7 @@ class AnyRepo:
             groups=groups,
             skip_main=skip_main,
             resolve_url=True,
+            no_warn=True,
         ):
             used.append(Path(clone.project.path))
             self._update(clone, rebase)
@@ -216,6 +217,7 @@ class AnyRepo:
         groups: Groups = None,
         skip_main: bool = False,
         resolve_url: bool = False,
+        no_warn: bool = False,
     ) -> Generator[Clone, None, None]:
         """User Level Clone Iteration."""
         project_paths_filter = self._create_project_paths_filter(project_paths)
@@ -225,8 +227,15 @@ class AnyRepo:
             self.echo(f"Groups: {groups!r}", bold=True)
         for clone in self.clones(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url):
             project = clone.project
+            projectrev = project.revision
+            try:
+                clonerev = clone.git.get_revision()
+            except FileNotFoundError:
+                clonerev = None
             if project_paths_filter(project):
                 self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
+                if not no_warn and projectrev and clonerev and projectrev != clonerev:
+                    _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
                 yield clone
             else:
                 self.echo(f"===== SKIPPING {project.info} =====", fg=_COLOR_SKIP)
