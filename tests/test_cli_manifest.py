@@ -5,6 +5,8 @@ from pytest import fixture
 from anyrepo import AnyRepo
 from anyrepo._cli import main
 
+from .common import MANIFEST_DEFAULT
+
 # pylint: disable=unused-import,duplicate-code
 from .fixtures import repos
 from .util import chdir, format_output, get_sha, run
@@ -59,7 +61,7 @@ def test_freeze(tmp_path, arepo):
     sha1 = get_sha(arepo.path / "dep1")
     sha2 = get_sha(arepo.path / "dep2")
     sha4 = get_sha(arepo.path / "dep4")
-    lines = [
+    lines = MANIFEST_DEFAULT.split("\n")[:-1] + [
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',
@@ -115,15 +117,15 @@ def test_freeze(tmp_path, arepo):
 
     result = CliRunner().invoke(main, ["update", "--manifest", str(output_path)])
     assert format_output(result) == [
-        "===== main (revision=None, path='main') =====",
+        "===== main =====",
         "Pulling branch 'main'.",
-        f"===== dep1 (revision={sha1!r}, path='dep1') =====",
+        f"===== dep1 (revision={sha1!r}) =====",
         "Fetching.",
         f"Checking out {sha1!r} (previously 'main').",
-        f"===== dep2 (revision={sha2!r}, path='dep2') =====",
+        f"===== dep2 (revision={sha2!r}) =====",
         "Fetching.",
         f"Checking out {sha2!r} (previously '1-feature').",
-        f"===== dep4 (revision={sha4!r}, path='dep4') =====",
+        f"===== dep4 (revision={sha4!r}) =====",
         "Fetching.",
         f"Checking out {sha4!r} (previously 'main').",
         "",
@@ -137,13 +139,13 @@ def test_freeze(tmp_path, arepo):
 
     result = CliRunner().invoke(main, ["update", "--manifest", str(output_path)])
     assert format_output(result) == [
-        "===== main (revision=None, path='main') =====",
+        "===== main =====",
         "Pulling branch 'main'.",
-        f"===== dep1 (revision={sha1!r}, path='dep1') =====",
+        f"===== dep1 (revision={sha1!r}) =====",
         "Nothing to do.",
-        f"===== dep2 (revision={sha2!r}, path='dep2') =====",
+        f"===== dep2 (revision={sha2!r}) =====",
         "Nothing to do.",
-        f"===== dep4 (revision={sha4!r}, path='dep4') =====",
+        f"===== dep4 (revision={sha4!r}) =====",
         "Nothing to do.",
         "",
     ]
@@ -152,7 +154,7 @@ def test_freeze(tmp_path, arepo):
 
 def test_resolve(tmp_path, arepo):
     """Manifest Resolve."""
-    lines = [
+    lines = MANIFEST_DEFAULT.split("\n")[:-1] + [
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',

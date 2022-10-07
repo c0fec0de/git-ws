@@ -60,20 +60,20 @@ def test_git(tmp_path, arepo):
     """Test git."""
     result = CliRunner().invoke(main, ["git", "status"])
     assert format_output(result) == [
-        "===== main (revision=None, path='main') =====",
-        "===== dep1 (revision=None, path='dep1') =====",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
-        "===== dep4 (revision='main', path='dep4') =====",
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
         "",
     ]
     assert result.exit_code == 0
 
     result = CliRunner().invoke(main, ["git", "status", "-P", "dep2", "-P", "./dep4"])
     assert format_output(result) == [
-        "===== SKIPPING main (revision=None, path='main') =====",
-        "===== SKIPPING dep1 (revision=None, path='dep1') =====",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
-        "===== dep4 (revision='main', path='dep4') =====",
+        "===== SKIPPING main =====",
+        "===== SKIPPING dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
         "",
     ]
     assert result.exit_code == 0
@@ -83,10 +83,10 @@ def test_foreach(tmp_path, arepo, caplog):
     """Test foreach."""
     result = CliRunner().invoke(main, ["foreach", "git", "status"])
     assert format_output(result) == [
-        "===== main (revision=None, path='main') =====",
-        "===== dep1 (revision=None, path='dep1') =====",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
-        "===== dep4 (revision='main', path='dep4') =====",
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
         "",
     ]
     assert result.exit_code == 0
@@ -96,24 +96,22 @@ def test_foreach(tmp_path, arepo, caplog):
         "AppConfigData(manifest_path='anyrepo.toml', color_ui=True, groups=None)",
         "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='main') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
-        "DEBUG   anyrepo ManifestSpec(defaults=Defaults(), "
-        "dependencies=(ProjectSpec(name='dep1', url='../dep1'), "
-        "ProjectSpec(name='dep2', url='../dep2', revision='1-feature')))",
+        "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
+        "url='../dep1'), ProjectSpec(name='dep2', url='../dep2', "
+        "revision='1-feature')))",
         "DEBUG   anyrepo Project(name='dep1', path='dep1', url='../dep1')",
         "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='dep1') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None",
         "DEBUG   anyrepo Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
         "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='dep2') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='dep2') OK stdout=None stderr=None",
-        "DEBUG   anyrepo ManifestSpec(defaults=Defaults(), "
-        "dependencies=(ProjectSpec(name='dep4', url='../dep4', revision='main'),))",
+        "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep4', url='../dep4', revision='main'),))",
         "DEBUG   anyrepo Project(name='dep4', path='dep4', url='../dep4', revision='main')",
         "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='dep4') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None",
-        "DEBUG   anyrepo ManifestSpec(defaults=Defaults(), "
-        "groups=(Group(name='test'),), dependencies=(ProjectSpec(name='dep3', "
-        "url='../dep3', groups=('test',)), ProjectSpec(name='dep4', url='../dep4', "
-        "revision='main')))",
+        "DEBUG   anyrepo ManifestSpec(groups=(Group(name='test'),), "
+        "dependencies=(ProjectSpec(name='dep3', url='../dep3', groups=('test',)), "
+        "ProjectSpec(name='dep4', url='../dep4', revision='main')))",
         "DEBUG   anyrepo FILTERED OUT Project(name='dep3', path='dep3', "
         "url='../dep3', groups=(Group(name='test'),))",
         "DEBUG   anyrepo DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')",
@@ -125,9 +123,9 @@ def test_foreach_missing(tmp_path, arepo, caplog):
     rmtree(tmp_path / "workspace" / "dep2")
     result = CliRunner().invoke(main, ["foreach", "git", "status"])
     assert format_output(result) == [
-        "===== main (revision=None, path='main') =====",
-        "===== dep1 (revision=None, path='dep1') =====",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
         "Error: Git Clone 'dep2' is missing. Try:",
         "",
         "    anyrepo update",
@@ -141,7 +139,7 @@ def test_foreach_fail(tmp_path, arepo):
     """Test foreach failing."""
     result = CliRunner().invoke(main, ["foreach", "--", "git", "status", "--invalidoption"])
     assert format_output(result) == [
-        "===== main (revision=None, path='main') =====",
+        "===== main =====",
         "Error: Command '('git', 'status', '--invalidoption')' returned non-zero exit status 129.",
         "",
     ]
@@ -164,11 +162,11 @@ def test_update(tmp_path, repos, arepo):
     # Update project
     result = CliRunner().invoke(main, ["update", "-P", "dep2"])
     assert format_output(result) == [
-        "===== SKIPPING main (revision=None, path='main') =====",
-        "===== SKIPPING dep1 (revision=None, path='dep1') =====",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
+        "===== SKIPPING main =====",
+        "===== SKIPPING dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
         "Pulling branch '1-feature'.",
-        "===== SKIPPING dep4 (revision='main', path='dep4') =====",
+        "===== SKIPPING dep4 (revision='main') =====",
         "",
     ]
     assert result.exit_code == 0
@@ -176,15 +174,15 @@ def test_update(tmp_path, repos, arepo):
     # Update
     result = CliRunner().invoke(main, ["update"])
     assert format_output(result, tmp_path) == [
-        "===== main (revision=None, path='main') =====",
+        "===== main =====",
         "Pulling branch 'main'.",
-        "===== dep1 (revision=None, path='dep1') =====",
+        "===== dep1 =====",
         "Pulling branch 'main'.",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
+        "===== dep2 (revision='1-feature') =====",
         "Pulling branch '1-feature'.",
-        "===== dep4 (revision='main', path='dep4') =====",
+        "===== dep4 (revision='main') =====",
         "Pulling branch 'main'.",
-        "===== dep5 (revision=None, path='dep5') =====",
+        "===== dep5 =====",
         "Cloning 'TMP/repos/dep5'.",
         "",
     ]
@@ -193,15 +191,15 @@ def test_update(tmp_path, repos, arepo):
     # Update again
     result = CliRunner().invoke(main, ["update"])
     assert format_output(result) == [
-        "===== main (revision=None, path='main') =====",
+        "===== main =====",
         "Pulling branch 'main'.",
-        "===== dep1 (revision=None, path='dep1') =====",
+        "===== dep1 =====",
         "Pulling branch 'main'.",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
+        "===== dep2 (revision='1-feature') =====",
         "Pulling branch '1-feature'.",
-        "===== dep4 (revision='main', path='dep4') =====",
+        "===== dep4 (revision='main') =====",
         "Pulling branch 'main'.",
-        "===== dep5 (revision=None, path='dep5') =====",
+        "===== dep5 =====",
         "Pulling branch 'main'.",
         "",
     ]
@@ -210,13 +208,13 @@ def test_update(tmp_path, repos, arepo):
     # Update other.toml
     result = CliRunner().invoke(main, ["update", "--manifest", "other.toml"])
     assert format_output(result, tmp_path) == [
-        "===== main (revision=None, path='main') =====",
+        "===== main =====",
         "Pulling branch 'main'.",
-        "===== dep1 (revision=None, path='dep1') =====",
+        "===== dep1 =====",
         "Pulling branch 'main'.",
-        "===== dep6 (revision=None, path='sub/dep6', groups='+foo,+bar,+fast') =====",
+        "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
         "Cloning 'TMP/repos/dep6'.",
-        "===== dep4 (revision='4-feature', path='dep4') =====",
+        "===== dep4 (revision='4-feature') =====",
         "Fetching.",
         "Checking out '4-feature' (previously 'main').",
         "Merging branch '4-feature'.",
@@ -241,19 +239,19 @@ def test_update_rebase(tmp_path, repos, arepo):
     # Rebase
     result = CliRunner().invoke(main, ["update", "--rebase"])
     assert format_output(result, tmp_path) == [
-        "===== main (revision=None, path='main') =====",
+        "===== main =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep1 (revision=None, path='dep1') =====",
+        "===== dep1 =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
+        "===== dep2 (revision='1-feature') =====",
         "Fetching.",
         "Rebasing branch '1-feature'.",
-        "===== dep4 (revision='main', path='dep4') =====",
+        "===== dep4 (revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep5 (revision=None, path='dep5') =====",
+        "===== dep5 =====",
         "Cloning 'TMP/repos/dep5'.",
         "",
     ]
@@ -261,19 +259,19 @@ def test_update_rebase(tmp_path, repos, arepo):
 
     result = CliRunner().invoke(main, ["update", "--rebase"])
     assert format_output(result) == [
-        "===== main (revision=None, path='main') =====",
+        "===== main =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep1 (revision=None, path='dep1') =====",
+        "===== dep1 =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
+        "===== dep2 (revision='1-feature') =====",
         "Fetching.",
         "Rebasing branch '1-feature'.",
-        "===== dep4 (revision='main', path='dep4') =====",
+        "===== dep4 (revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep5 (revision=None, path='dep5') =====",
+        "===== dep5 =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "",
@@ -282,15 +280,15 @@ def test_update_rebase(tmp_path, repos, arepo):
 
     result = CliRunner().invoke(main, ["update", "--manifest", "other.toml", "--rebase"])
     assert format_output(result, tmp_path) == [
-        "===== main (revision=None, path='main') =====",
+        "===== main =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep1 (revision=None, path='dep1') =====",
+        "===== dep1 =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep6 (revision=None, path='sub/dep6', groups='+foo,+bar,+fast') =====",
+        "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
         "Cloning 'TMP/repos/dep6'.",
-        "===== dep4 (revision='4-feature', path='dep4') =====",
+        "===== dep4 (revision='4-feature') =====",
         "Fetching.",
         "Checking out '4-feature' (previously 'main').",
         "Rebasing branch '4-feature'.",
@@ -321,10 +319,10 @@ def test_outside(tmp_path, arepo):
 def _test_foreach(tmp_path, arepo, caplog, *command):
     result = CliRunner().invoke(main, command)
     assert format_output(result) == [
-        "===== main (revision=None, path='main') =====",
-        "===== dep1 (revision=None, path='dep1') =====",
-        "===== dep2 (revision='1-feature', path='dep2') =====",
-        "===== dep4 (revision='main', path='dep4') =====",
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
         "",
     ]
     assert result.exit_code == 0

@@ -4,6 +4,8 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
+import tomlkit
+
 _LOGGER = logging.getLogger("anyrepo")
 # Dependencies to any anyrepo module are forbidden here!
 
@@ -41,10 +43,12 @@ def resolve_relative(path: Path, base: Optional[Path] = None):
         return path.resolve()
 
 
-def get_repr(args=None, kwargs=None):
+def get_repr(obj=None, args=None, kwargs=None):
     """Return `repr()` string."""
-    parts = list(args or [])
-    for item in kwargs:
+    parts = []
+    for arg in args or []:
+        parts.append(f"{arg!r}")
+    for item in kwargs or []:
         try:
             name, value = item
             parts.append(f"{name}={value!r}")
@@ -52,7 +56,10 @@ def get_repr(args=None, kwargs=None):
             name, value, default = item
             if value != default:
                 parts.append(f"{name}={value!r}")
-    return ", ".join(parts)
+    joined = ", ".join(parts)
+    if obj:
+        return f"{obj.__class__.__qualname__}({joined})"
+    return joined
 
 
 def removesuffix(text, suffix):
@@ -67,3 +74,22 @@ def removesuffix(text, suffix):
     if text.endswith(suffix):
         return text[: -len(suffix)]
     return text
+
+
+def add_info(doc: tomlkit.TOMLDocument, text):
+    """Add Multi-Line Documentation to TOML document."""
+    for line in text.split("\n"):
+        comment = f"## {line}" if line else "##"
+        doc.add(tomlkit.items.Comment(tomlkit.items.Trivia(comment_ws="  ", comment=comment)))
+
+
+def add_comment(doc: tomlkit.TOMLDocument, text):
+    """Add Multi-Line Comment to TOML document."""
+    for line in text.split("\n"):
+        comment = f"# {line}" if line else "#"
+        doc.add(tomlkit.items.Comment(tomlkit.items.Trivia(comment_ws="  ", comment=comment)))
+
+
+def as_dict(obj):
+    """Transform to dictionary."""
+    return obj.dict(by_alias=True, exclude_none=True, exclude_defaults=True)
