@@ -1,4 +1,8 @@
-"""Clone."""
+"""
+Clone.
+
+A :any:`Clone` is just the assembly of a :any:`Project` and its corresponding git interface (:any:`Git`).
+"""
 
 from ._util import get_repr
 from .datamodel import Project

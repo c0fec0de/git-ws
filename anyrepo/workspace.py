@@ -5,6 +5,7 @@ The :any:`Workspace` class represents the file system location containing all gi
 :any:`Info` is a helper.
 """
 import logging
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
@@ -176,6 +177,14 @@ class Workspace:
         _LOGGER.info("Initialized %s %r %r", path, info, workspace.config)
         return workspace
 
+    def deinit(self):
+        """
+        Deinitialize.
+
+        Remove `ANYREPO_PATH` directory.
+        """
+        shutil.rmtree(self.path / ANYREPO_PATH)
+
     @property
     def main_path(self) -> Path:
         """Path to main project."""
@@ -187,18 +196,26 @@ class Workspace:
         return self.app_config.options
 
     def get_project_path(self, project: Project, relative: bool = False) -> Path:
-        """Project Path."""
+        """
+        Determine Project Path.
+
+        Args:
+            project. Project to determine path for.
+
+        Keyword Args:
+            relative: Return relative instead of absolute path.
+        """
         project_path = self.path / project.path
         if relative:
             project_path = resolve_relative(project_path)
         return project_path
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
-        """Manifest Path."""
+        """Get Manifest Path."""
         return self.main_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
 
     def get_groups(self, groups: Groups = None) -> Groups:
-        """Group Filter."""
+        """Get Groups Filter."""
         if groups is None:
             return self.app_config.options.groups
         return groups

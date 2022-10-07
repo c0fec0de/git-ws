@@ -10,10 +10,7 @@ def find_workspace(path: Optional[Path] = None) -> Optional[Path]:
     Find Workspace Root Directory.
 
     Keyword Args:
-        path (Path): directory or file within the workspace. Current working directory be default.
-
-    Raises:
-        UninitializedError: If directory of file is not within a workspace.
+        path (Path): directory or file within the workspace. Current working directory by default.
 
     The workspace root directory contains a sub directory `.anyrepo`.
     This one is searched upwards the given `path`.

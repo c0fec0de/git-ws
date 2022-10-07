@@ -1,0 +1,7 @@
+Usage: anyrepo manifest create [OPTIONS]
+
+  Create Manifest.
+
+Options:
+  -M, --manifest FILE  Manifest file. 'anyrepo.toml' by default.
+  -h, --help           Show this message and exit.

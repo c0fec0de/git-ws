@@ -4,6 +4,8 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
+import tomlkit
+
 _LOGGER = logging.getLogger("anyrepo")
 # Dependencies to any anyrepo module are forbidden here!
 
@@ -72,3 +74,22 @@ def removesuffix(text, suffix):
     if text.endswith(suffix):
         return text[: -len(suffix)]
     return text
+
+
+def add_info(doc: tomlkit.TOMLDocument, text):
+    """Add Multi-Line Documentation to TOML document."""
+    for line in text.split("\n"):
+        comment = f"## {line}" if line else "##"
+        doc.add(tomlkit.items.Comment(tomlkit.items.Trivia(comment_ws="  ", comment=comment)))
+
+
+def add_comment(doc: tomlkit.TOMLDocument, text):
+    """Add Multi-Line Comment to TOML document."""
+    for line in text.split("\n"):
+        comment = f"# {line}" if line else "#"
+        doc.add(tomlkit.items.Comment(tomlkit.items.Trivia(comment_ws="  ", comment=comment)))
+
+
+def as_dict(obj):
+    """Transform to dictionary."""
+    return obj.dict(by_alias=True, exclude_none=True, exclude_defaults=True)

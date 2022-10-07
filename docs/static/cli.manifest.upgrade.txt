@@ -1,0 +1,10 @@
+Usage: anyrepo manifest upgrade [OPTIONS]
+
+  Update Manifest To Latest Version.
+
+  User data is kept. User comments are removed. Comments are updated to the
+  latest documentation.
+
+Options:
+  -M, --manifest FILE  Manifest file. 'anyrepo.toml' by default.
+  -h, --help           Show this message and exit.

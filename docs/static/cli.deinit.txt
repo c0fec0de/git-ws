@@ -1,0 +1,6 @@
+Usage: anyrepo deinit [OPTIONS]
+
+  Deinitialize AnyRepo workspace.
+
+Options:
+  -h, --help  Show this message and exit.

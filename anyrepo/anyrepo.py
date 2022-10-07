@@ -98,10 +98,14 @@ class AnyRepo:
         echo = echo or no_echo
         project_path = Git.find_path(path=project_path)
         name = project_path.name
-        echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
+        echo(f"===== {name} =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(project_path / manifest_path)
         path = project_path.parent
         return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
+
+    def deinit(self):
+        """De-Initialize :any:`AnyRepo`."""
+        return self.workspace.deinit()
 
     @staticmethod
     def clone(
@@ -116,7 +120,7 @@ class AnyRepo:
         path = path or Path.cwd()
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
-        echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
+        echo(f"===== {name} =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
         project_path = path / removesuffix(name, ".git")
         git = Git(project_path)
@@ -276,13 +280,8 @@ class AnyRepo:
         yield from ManifestIter(workspace, manifest_path, filter_=filter_)
 
     @staticmethod
-    def create_manifest(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
+    def create_manifest(manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
         """Create ManifestSpec File at `manifest_path`within `project`."""
-        if project_path is None:
-            project_path = manifest_path.parent
-            manifest_path = manifest_path.relative_to(project_path)
-        git = Git.from_path(path=project_path)
-        manifest_path = resolve_relative(git.path / manifest_path)
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
         manifest_spec = ManifestSpec()

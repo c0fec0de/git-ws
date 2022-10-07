@@ -1,9 +1,10 @@
-"""ManifestSpec and Project Iterators."""
+""":any:`Manifest` and :any:`Project` Iterators."""
 import logging
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
 from .datamodel import Manifest, ManifestSpec, Project
+from .exceptions import ManifestNotFoundError
 from .filters import default_filter
 from .git import Git
 from .types import ProjectFilter
@@ -14,7 +15,26 @@ _MANIFEST_DEFAULT = ManifestSpec()
 
 
 class ManifestIter:
-    """Iterator to resolve the manifest dependencies."""
+    """
+    Iterate over all :any:`Manifest` s.
+
+    The iterator takes a `workspace` and the path to a manifest file (`manifest_path`) of the main project.
+    The manifest is read (:any:`ManifestSpec`) and translated to a :any:`Manifest`, which is yielded.
+    The manifest files of the dependencies are also read, translated to a :any:`Manifest` and yielded likewise,
+    until all manifest files and their dependencies are read.
+    Dependencies which have been already yielded are not evaluated again.
+    Means the first dependency (i.e. from the MAIN project) wins. Including the specified attributes (i.e. revision).
+
+    Args:
+        workspace: The actual workspace
+        manifest_path: Path to the manifest file **in the main project**.
+
+    Keyword Args:
+        filter_: Filter function. Only projects where the filter method returns `True` on, are evaluated.
+
+    Yields:
+        Manifest
+    """
 
     # pylint: disable=too-few-public-methods
     def __init__(self, workspace: Workspace, manifest_path: Path, filter_: Optional[ProjectFilter] = None):
@@ -61,7 +81,29 @@ class ManifestIter:
 
 
 class ProjectIter:
-    """Iterator to resolve the project dependencies."""
+    """
+    Iterate over all :any:`Project` s.
+
+    The iterator takes a `workspace` and the path to a manifest file (`manifest_path`) of the main project.
+    The manifest is read (:any:`ManifestSpec`) and all dependencies are translated to :any:`Project` s, which are
+    yielded.
+    The manifest files of the dependencies are also read, translated to a :any:`Project` s and yielded likewise,
+    until all manifest files and their dependencies are read.
+    Dependencies which have been already yielded are not evaluated again.
+    Means the first dependency (i.e. from the MAIN project) wins. Including the specified attributes (i.e. revision).
+
+    Args:
+        workspace: The actual workspace
+        manifest_path: Path to the manifest file **in the main project**.
+
+    Keyword Args:
+        filter_: Filter function. Only projects where the filter method returns `True` on, are evaluated.
+        skip_main: Do not yield main project.
+        resolve_url: Resolve relative URLs to absolute ones.
+
+    Yields:
+        Project
+    """
 
     # pylint: disable=too-few-public-methods
 
@@ -88,23 +130,27 @@ class ProjectIter:
             project = Project(name=info.main_path.name, path=str(info.main_path))
             if self.filter_(project):
                 yield project
-        manifest = ManifestSpec.load(self.manifest_path, default=ManifestSpec())
-        yield from self.__iter(self.workspace.main_path, manifest)
+        try:
+            manifest_spec = ManifestSpec.load(self.manifest_path)
+        except ManifestNotFoundError:
+            pass
+        else:
+            yield from self.__iter(self.workspace.main_path, manifest_spec)
 
-    def __iter(self, project_path: Path, manifest: ManifestSpec) -> Generator[Project, None, None]:
+    def __iter(self, project_path: Path, manifest_spec: ManifestSpec) -> Generator[Project, None, None]:
         deps: List[Tuple[Path, ManifestSpec]] = []
         refurl: Optional[str] = None
         filter_ = self.filter_
         done: List[str] = self.__done
-        if self.resolve_url and manifest.dependencies:
+        if self.resolve_url and manifest_spec.dependencies:
             git = Git(project_path)
             assert git.is_cloned()
             refurl = git.get_url()
 
-        _LOGGER.debug("%r", manifest)
+        _LOGGER.debug("%r", manifest_spec)
 
-        for spec in manifest.dependencies:
-            dep_project = Project.from_spec(manifest, spec, refurl=refurl)
+        for spec in manifest_spec.dependencies:
+            dep_project = Project.from_spec(manifest_spec, spec, refurl=refurl)
 
             # Update every path just once
             if dep_project.path in done:
@@ -122,8 +168,11 @@ class ProjectIter:
 
             # Recursive
             dep_manifest_path = dep_project_path / dep_project.manifest_path
-            dep_manifest = ManifestSpec.load(dep_manifest_path, default=_MANIFEST_DEFAULT)
-            if dep_manifest != _MANIFEST_DEFAULT:
+            try:
+                dep_manifest = ManifestSpec.load(dep_manifest_path)
+            except ManifestNotFoundError:
+                pass
+            else:
                 deps.append((dep_project_path, dep_manifest))
 
         # We resolve all dependencies in a second iteration to prioritize the manifest

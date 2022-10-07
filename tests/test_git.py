@@ -29,7 +29,7 @@ def test_git(git):
     path = git.path
 
     (path / "data.txt").touch()
-    git.add("data.txt")
+    git.add(("data.txt",))
     git.commit("initial")
 
 
@@ -38,7 +38,7 @@ def test_git_revisions(git):
     # on branch, sha0
     path = git.path
     (path / "data.txt").touch()
-    git.add("data.txt")
+    git.add(("data.txt",))
     git.commit("initial")
 
     sha0 = git.get_sha()
@@ -46,7 +46,7 @@ def test_git_revisions(git):
 
     # create sha1
     (path / "other.txt").touch()
-    git.add("other.txt")
+    git.add(("other.txt",))
     git.commit("other")
     sha1 = git.get_sha()
 
@@ -57,7 +57,7 @@ def test_git_revisions(git):
 
     # create sha2
     (path / "end.txt").touch()
-    git.add("end.txt")
+    git.add(("end.txt",))
     git.commit("end")
     sha2 = git.get_sha()
 
