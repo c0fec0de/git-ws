@@ -1,3 +1,11 @@
+[![pypi-version](https://badge.fury.io/py/anyrepo.svg)](https://badge.fury.io/py/anyrepo)
+[![pypi-downloads](https://img.shields.io/pypi/dm/anyrepo.svg?label=pypi%20downloads)](https://pypi.python.org/pypi/anyrepo)
+[![doc](https://readthedocs.org/projects/anyrepo/badge/?version=latest)](https://anyrepo.readthedocs.io/en/latest/?badge=latest)
+[![coverage](https://coveralls.io/repos/github/c0fec0de/anyrepo/badge.svg)](https://coveralls.io/github/c0fec0de/anyrepo)
+[![python-versions](https://img.shields.io/pypi/pyversions/anyrepo.svg)](https://pypi.python.org/pypi/anyrepo)
+[![pylint](https://img.shields.io/badge/linter-pylint-%231674b1?style=flat)](https://www.pylint.org/)
+[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 # Multi Repository Management Tool
 
 AnyRepo is a lightweight tool for creating and managing *workspaces* consisting of several interdependent `git` repositories. Starting from a *main repository*, AnyRepo discovers dependencies specified in a *manifest file*, fetching any specified required repositories and assembling them into a single workspace.
