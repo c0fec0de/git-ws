@@ -37,18 +37,33 @@ def test_git_revisions(git):
     """Git Versioning."""
     # on branch, sha0
     path = git.path
+
+    assert git.is_clean()
+
     (path / "data.txt").touch()
+
+    assert not git.is_clean()
+
     git.add(("data.txt",))
+
+    assert not git.is_clean()
+
     git.commit("initial")
+
+    assert git.is_clean()
 
     sha0 = git.get_sha()
     git.tag("mytag")
+
+    assert git.is_clean()
 
     # create sha1
     (path / "other.txt").touch()
     git.add(("other.txt",))
     git.commit("other")
     sha1 = git.get_sha()
+
+    assert git.is_clean()
 
     assert git.get_branch() == "main"
     assert git.get_tag() is None
