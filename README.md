@@ -12,7 +12,7 @@ AnyRepo is a lightweight tool for creating and managing *workspaces* consisting 
 
 ![Workspace](https://github.com/c0fec0de/anyrepo/raw/main/docs/images/workspace.png)
 
-👉 You can read more about the used nomenclature in the [documentation](https://anyrepo.readthedocs.io/en/latest/manual/nomenclature.html).
+👉 You can read more about the used [nomenclature](https://anyrepo.readthedocs.io/en/latest/manual/nomenclature.html) in the [documentation](https://anyrepo.readthedocs.io/en/latest/index.html).
 
 
 # 📦 Installation
@@ -85,10 +85,7 @@ anyrepo init --update
 Another important use case is keeping a workspace up-to-date. Lets say you pull in an update in the main repository, which in turn might cause changes in the manifest to be pulled in as well. Updating the existing workspace is as simple as
 
 ```bash
-# Get changes, e.g. by pulling in from the remote:
-git pull
-
-# Update the workspace:
+# Update the workspace (main and all dependent repositories):
 anyrepo update
 
 # Alternatively, run `git rebase` instead of `git pull` in dependencies:
