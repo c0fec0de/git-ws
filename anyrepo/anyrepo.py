@@ -7,15 +7,15 @@ import logging
 import shutil
 import urllib
 from pathlib import Path
-from typing import Generator, List, Optional
+from typing import Generator, List, Optional, Tuple
 
 from ._util import no_echo, removesuffix, resolve_relative, run
-from .clone import Clone
+from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
 from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError
 from .filters import Filter, default_filter
-from .git import Git
+from .git import Git, Status
 from .iters import ManifestIter, ProjectIter
 from .types import Groups, ProjectFilter
 from .workspace import Workspace
@@ -210,6 +210,37 @@ class AnyRepo:
                 shutil.rmtree(obsolete_path, ignore_errors=True)
             else:
                 raise GitCloneNotCleanError(resolve_relative(obsolete_path))
+
+    def status(
+        self,
+        project_paths=None,
+        manifest_path: Path = None,
+        groups: Groups = None,
+    ) -> Generator[Status, None, None]:
+        """Iterate over Status."""
+        for clone in self.foreach(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
+            path = clone.git.path
+            for status in clone.git.status():
+                yield status.with_path(path)
+
+    def add(self, paths: Tuple[Path, ...]):
+        """Add."""
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            if cpaths:
+                clone.git.add(cpaths)
+
+    def reset(self, paths: Tuple[Path, ...]):
+        """Reset."""
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            if cpaths:
+                clone.git.reset(cpaths)
+
+    def commit(self, msg: str, paths: Tuple[Path, ...]):
+        """Commit."""
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            if cpaths:
+                self.echo(f"===== {clone.project.info} =====", fg=_COLOR_BANNER)
+                clone.git.commit(msg, paths=cpaths)
 
     def run_foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
         """Run `command` on each project."""

@@ -1,13 +1,11 @@
 """Command Line Interface."""
-from click.testing import CliRunner
 from pytest import fixture
 
 from anyrepo import AnyRepo, Git
-from anyrepo._cli import main
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, format_output
+from .util import chdir, cli, format_output
 
 
 @fixture
@@ -23,52 +21,105 @@ def arepo(tmp_path, repos):
         yield arepo
 
 
-def test_status(tmp_path, arepo, caplog):
+def test_status(tmp_path, arepo):
     """Test status."""
-    result = CliRunner().invoke(main, ("status",))
-    assert format_output(result) == [
+    assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
     ]
-    assert result.exit_code == 0
 
 
-def test_status_modified(tmp_path, arepo, caplog):
+def test_full(tmp_path, arepo):
     """Test status."""
 
     workspace = tmp_path / "workspace"
     dep1 = workspace / "dep1"
+    dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
     git4 = Git(dep4)
 
     (dep1 / "foo.txt").touch()
+    (dep2 / "bb.txt").touch()
     (dep4 / "foo.txt").touch()
     git4.add(("foo.txt",))
 
-    result = CliRunner().invoke(main, ("status",))
-    assert format_output(result) == [
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "?? dep1/foo.txt",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/bb.txt",
+        "===== dep4 (revision='main') =====",
+        "A  dep4/foo.txt",
+        "",
+    ]
+
+    with chdir(dep1):
+        assert cli(("status",)) == [
+            "===== main =====",
+            "===== dep1 =====",
+            "?? foo.txt",
+            "===== dep2 (revision='1-feature') =====",
+            "?? ../dep2/bb.txt",
+            "===== dep4 (revision='main') =====",
+            "A  ../dep4/foo.txt",
+            "",
+        ]
+
+    assert cli(("add", "dep2/bb.txt", "dep1/foo.txt", "missing/file.txt"), exit_code=1) == [
+        "Error: 'missing/file.txt' cannot be associated with any clone.",
+        "",
+    ]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "?? dep1/foo.txt",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/bb.txt",
+        "===== dep4 (revision='main') =====",
+        "A  dep4/foo.txt",
+        "",
+    ]
+
+    assert cli(("add", "dep2/bb.txt", "dep1/foo.txt")) == [""]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "A  dep1/foo.txt",
+        "===== dep2 (revision='1-feature') =====",
+        "A  dep2/bb.txt",
+        "===== dep4 (revision='main') =====",
+        "A  dep4/foo.txt",
+        "",
+    ]
+
+    assert cli(("commit", "dep2/bb.txt", "dep4/foo.txt", "-m", "messi")) == [
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "A  dep1/foo.txt",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("reset", "dep1/foo.txt")) == [""]
+
+    assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
-        "A  dep4/foo.txt",
         "",
     ]
-    assert result.exit_code == 0
-
-    with chdir(dep1):
-        result = CliRunner().invoke(main, ("status",))
-        assert format_output(result) == [
-            "===== main =====",
-            "===== dep1 =====",
-            "?? foo.txt",
-            "===== dep2 (revision='1-feature') =====",
-            "===== dep4 (revision='main') =====",
-            "A  ../dep4/foo.txt",
-            "",
-        ]
-        assert result.exit_code == 0

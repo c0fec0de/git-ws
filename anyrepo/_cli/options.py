@@ -20,10 +20,12 @@ def manifest_option(initial=False):
     """Manifest Option."""
     if initial:
         help_ = f"Manifest file. '{MANIFEST_PATH_DEFAULT!s}' by default."
+        default = MANIFEST_PATH_DEFAULT
     else:
         help_ = "Manifest file. Initial clone/init settings by default."
+        default = None
     return click.option(
-        "--manifest", "-M", "manifest_path", type=click.Path(dir_okay=False), default=MANIFEST_PATH_DEFAULT, help=help_
+        "--manifest", "-M", "manifest_path", type=click.Path(dir_okay=False), default=default, help=help_
     )
 
 
@@ -63,3 +65,8 @@ def output_option():
         type=click.Path(dir_okay=False),
         help="Write Manifest to file instead of STDOUT.",
     )
+
+
+def paths_argument():
+    """Paths."""
+    return click.argument("paths", nargs=-1, type=click.UNPROCESSED)

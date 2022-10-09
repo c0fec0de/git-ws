@@ -8,7 +8,9 @@ Options:
   -h, --help     Show this message and exit.
 
 Commands:
+  add       Run 'git add' on paths and choose the right git clone...
   clone     Create a git clone, initialize AnyRepo workspace and create...
+  commit    Run 'git commit' on paths and choose the right git clone...
   deinit    Deinitialize AnyRepo workspace.
   diff      Run 'git diff' on projects.
   fetch     Run 'git fetch' on projects.
@@ -20,5 +22,6 @@ Commands:
   pull      Run 'git pull' on projects.
   push      Run 'git push' on projects.
   rebase    Run 'git rebase' on projects.
-  status    Run 'git status' on projects.
+  reset     Run 'git reset' on paths and choose the right git clone...
+  status    Run 'git status' (displayed paths include the actual clone...
   update    Create/update all dependent git clones.

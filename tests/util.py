@@ -6,6 +6,10 @@ import re
 # pylint: disable=unused-import
 from subprocess import run  # noqa
 
+from click.testing import CliRunner
+
+from anyrepo._cli import main
+
 
 @contextlib.contextmanager
 def chdir(path):
@@ -53,3 +57,10 @@ def replace_tmp_path(text, tmp_path):
         return f"TMP{sub}"
 
     return regex.sub(repl, text)
+
+
+def cli(command, exit_code=0, output=None):
+    """Invoke CLI."""
+    result = CliRunner().invoke(main, command)
+    assert result.exit_code == exit_code, result.exit_code
+    return format_output(result)

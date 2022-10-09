@@ -77,9 +77,7 @@ class Git:
 
     The easiest way to start:
 
-    .. code-block:: python
-
-        git = Git.from_path()
+    >>> git = Git.from_path()
     """
 
     # pylint: disable=too-many-public-methods
@@ -91,7 +89,7 @@ class Git:
         return get_repr(self, (self.path,))
 
     @staticmethod
-    def find_path(path: Optional[Path]) -> Path:
+    def find_path(path: Optional[Path] = None) -> Path:
         """Determine Top Directory of Git Clone."""
         path = path or Path.cwd()
         result = run(("git", "rev-parse", "--show-cdup"), capture_output=True, check=False, cwd=path)
@@ -101,7 +99,7 @@ class Git:
         return (path / cdup).resolve()
 
     @staticmethod
-    def from_path(path: Optional[Path]) -> "Git":
+    def from_path(path: Optional[Path] = None) -> "Git":
         """Create GIT Repo Helper from `path`."""
         path = Git.find_path(path=path)
         return Git(path=path)
@@ -174,21 +172,24 @@ class Git:
         """Pull."""
         self._run(("pull",))
 
-    def push(self):
-        """Push."""
-        self._run(("push",))
-
     def rebase(self):
         """Rebase."""
         self._run(("rebase",))
 
-    def add(self, files: Tuple[Path]):
+    def add(self, paths: Tuple[Path, ...]):
         """Add."""
-        self._run(["add"] + [str(file) for file in files])
+        self._run(["add"] + [str(path) for path in paths])
 
-    def commit(self, msg):
+    def reset(self, paths: Tuple[Path, ...]):
+        """Reset."""
+        self._run(["reset"] + [str(path) for path in paths])
+
+    def commit(self, msg, paths: Optional[Tuple[Path, ...]] = None):
         """Commit."""
-        self._run(("commit", "-m", msg))
+        if paths:
+            self._run(["commit", "-m", msg] + [str(path) for path in paths])
+        else:
+            self._run(("commit", "-m", msg))
 
     def tag(self, name, msg=None):
         """Create Tag."""

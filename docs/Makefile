@@ -27,7 +27,9 @@ api:
 gen:
 	rm -f static/manifest.toml
 	anyrepo --help > static/cli.txt
+	anyrepo add --help > static/cli.add.txt
 	anyrepo clone --help > static/cli.clone.txt
+	anyrepo commit --help > static/cli.commit.txt
 	anyrepo deinit --help > static/cli.deinit.txt
 	anyrepo fetch --help > static/cli.fetch.txt
 	anyrepo foreach --help > static/cli.foreach.txt
@@ -41,5 +43,6 @@ gen:
 	anyrepo pull --help > static/cli.pull.txt
 	anyrepo push --help > static/cli.push.txt
 	anyrepo rebase --help > static/cli.rebase.txt
+	anyrepo reset --help > static/cli.reset.txt
 	anyrepo status --help > static/cli.status.txt
 	anyrepo update --help > static/cli.update.txt

@@ -1,0 +1,6 @@
+Usage: anyrepo add [OPTIONS] [PATHS]...
+
+  Run 'git add' on paths and choose the right git clone automatically.
+
+Options:
+  -h, --help  Show this message and exit.
