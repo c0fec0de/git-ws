@@ -2,7 +2,20 @@
 name = "anyrepo"
 version = "0.4.0"
 description = "Multi Repository Management Tool"
-authors = []
+readme = "README.md"
+authors = [
+    "c0fec0de <c0fec0de@gmail.com>",
+    "Martin Höhe <martin@rpdev.net>",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/c0fec0de/anyrepo"
+"Documentation" = "https://anyrepo.readthedocs.io/en/latest/"
+"Bug Tracker" = "https://github.com/c0fec0de/anyrepo/issues"
 
 [tool.poetry.scripts]
 anyrepo = 'anyrepo._cli:main'
