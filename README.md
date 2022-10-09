@@ -8,19 +8,18 @@
 
 # Multi Repository Management Tool
 
-[Installation](#installation)
-
-[Usage](#usage)
-
-[Python API](#api)
-
-[Alternatives](#alternatives)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Cheat-Sheet](#cheatsheet)
+* [Python API](#api)
+* [Alternatives](#alternatives)
 
 AnyRepo is a lightweight tool for creating and managing *workspaces* consisting of several interdependent `git` repositories. Starting from a *main repository*, AnyRepo discovers dependencies specified in a *manifest file*, fetching any specified required repositories and assembling them into a single workspace.
 
 ![Workspace](https://github.com/c0fec0de/anyrepo/raw/main/docs/images/workspace.png)
 
 👉 You can read more about the used [nomenclature](https://anyrepo.readthedocs.io/en/latest/manual/nomenclature.html) in the [documentation](https://anyrepo.readthedocs.io/en/latest/index.html).
+
 
 <a name="installation"/>
 
@@ -38,6 +37,7 @@ And that's it! Ideally, if your project also uses Python, we recommend adding An
 # Add AnyRepo as development dependency:
 poetry add --group dev anyrepo
 ```
+
 
 <a name="usage"/>
 
@@ -102,32 +102,39 @@ anyrepo update
 # Alternatively, run `git rebase` instead of `git pull` in dependencies:
 anyrepo update --rebase
 ```
+<a name="cheatsheet"/>
 
-AnyRepo also comes with some handy tools to run `git` operations on all the repositories in the workspace. For example:
+## Cheat-Sheet
 
-```bash
-# Run a `git pull` on all repos:
-anyrepo pull
-
-# Or a `git fetch`:
-anyrepo fetch
-
-# Or a `rebase`:
-anyrepo rebase
-```
-
-These are basically wrapper commands around the generic `anyrepo foreach` command, which allows to run any kind of command in each repository:
-
-```bash
-# Run `git status` in each repository:
-anyrepo foreach -- git status
-```
+| Command | Description |
+| --- | --- |
+| `anyrepo clone URL` | Clone git repository from URL as main repository and initialize AnyRepo workspace |
+| `anyrepo init` | Initialize AnyRepo workspace. Use existing git clone as main repository |
+| `anyrepo manifest create -M path/anyrepo.toml` | Create well documented, empty manifest |
+| `anyrepo update` | Pull latest changes on main repository and all dependent repositories (and clone them if needed) |
+| `anyrepo update --rebase` | Same as above, but fetch and rebase instead |
+| `anyrepo status` | Run `git status` on all repositories (displayed paths include the actual clone path) |
+| `anyrepo add FILES` | Run `git add FILE` on FILES in the corresponding repositories |
+| `anyrepo reset FILES` | Run `git reset FILE` on FILES in the corresponding repositories. Undo `git add` |
+| `anyrepo commit FILES -m MESSAGE` | Run `git commit FILE` on FILES in the corresponding repositories |
+| `anyrepo checkout FILES` | Run `git checkout FILE` on FILES in the corresponding repositories |
+| `anyrepo checkout` | Checkout git revision specified as specified in the manifests |
+| `anyrepo push` | Run `git push` on all repositories |
+| `anyrepo fetch` | Run `git fetch` on all repositories |
+| `anyrepo rebase` | Run `git rebase` on all repositories |
+| `anyrepo pull` | Run `git pull` on all repositories |
+| `anyrepo diff` | Run `git diff` on all repositories |
+| `anyrepo git CMD` | Run `git CMD` on all repositories |
+| `anyrepo foreach CMD` | Run `CMD` on all repositories |
+| `anyrepo manifest freeze` | Print The Resolved Manifest With SHAs For All Project Revisions |
+| `anyrepo manifest resolve` | Print The Manifest With All Imports Resolved |
 
 <a name="api"/>
 
 ## 🐍 Python API
 
 AnyRepo is written in Python. Besides the `anyrepo` command line tool, there is also an API which you can use to further automate workspace creation and maintenance. If you are interested, have a look into the [API documentation](https://anyrepo.readthedocs.io/en/latest/api/anyrepo.html).
+
 
 <a name="alternatives"/>
 
