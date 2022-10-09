@@ -6,7 +6,7 @@ from contextlib import contextmanager
 import click
 from pydantic import BaseModel
 
-from anyrepo import GitCloneMissingError, ManifestNotFoundError, NoGitError, UninitializedError
+from anyrepo import GitCloneMissingError, GitCloneNotCleanError, ManifestNotFoundError, NoGitError, UninitializedError
 
 COLOR_INFO = "blue"
 
@@ -66,6 +66,9 @@ def exceptionhandling(context: Context):
     except GitCloneMissingError as exc:
         _print_traceback(context, exc)
         raise Error(f"{exc!s} Try:\n\n    anyrepo update\n") from None
+    except GitCloneNotCleanError as exc:
+        _print_traceback(context, exc)
+        raise Error(f"{exc!s}\n\nCommit/Push all your changes and branches or use '--force'\n") from None
     except Exception as exc:
         _print_traceback(context, exc)
         raise Error(f"{exc!s}") from None

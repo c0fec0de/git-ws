@@ -393,6 +393,30 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     dependencies: Tuple[ProjectSpec, ...] = tuple()
     """Dependencies."""
 
+    @root_validator(allow_reuse=True)
+    def _remotes_unique(cls, values):
+        # pylint: disable=no-self-argument,no-self-use
+        names = set()
+        for remote in values.get("remotes", None) or []:
+            name = remote.name
+            if name not in names:
+                names.add(name)
+            else:
+                raise ValueError(f"Remote name {name!r} is used more than once")
+        return values
+
+    @root_validator(allow_reuse=True)
+    def _groups_unique(cls, values):
+        # pylint: disable=no-self-argument,no-self-use
+        names = set()
+        for group in values.get("groups", None) or []:
+            name = group.name
+            if name not in names:
+                names.add(name)
+            else:
+                raise ValueError(f"Group name {name!r} is used more than once")
+        return values
+
     @classmethod
     def load(cls, path: Path) -> "ManifestSpec":
         """

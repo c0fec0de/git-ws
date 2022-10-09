@@ -25,6 +25,8 @@ class Git:
         git = Git.from_path()
     """
 
+    # pylint: disable=too-many-public-methods
+
     def __init__(self, path: Path):
         self.path = path
 
@@ -138,6 +140,16 @@ class Git:
             cmd += ["-m", msg]
         self._run(cmd)
 
+    def is_clean(self):
+        """Clone is clean and does not contain any changes."""
+        status = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
+        if "..." in status[0]:
+            return False
+        if status[1:]:
+            return False
+        # TODO: check other branches
+        return True
+
     def _run(self, cmd, cwd=None, **kwargs):
         cwd = cwd or self.path
         cmd = ("git",) + tuple(cmd)
@@ -147,5 +159,4 @@ class Git:
         result = self._run(cmd, cwd=cwd, check=check, capture_output=True)
         if result.stderr.strip():
             return ""
-        stdout = result.stdout.decode("utf-8").strip()
-        return stdout
+        return result.stdout.decode("utf-8").strip()

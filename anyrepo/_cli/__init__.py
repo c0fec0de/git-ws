@@ -12,7 +12,7 @@ from anyrepo.const import MANIFEST_PATH_DEFAULT
 from .common import COLOR_INFO, Context, exceptionhandling, get_loglevel, pass_context
 from .info import info
 from .manifest import manifest
-from .options import groups_option, manifest_option, projects_option, update_option
+from .options import force_option, groups_option, manifest_option, projects_option, update_option
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
@@ -93,6 +93,7 @@ def clone(context, url, manifest_path=None, groups=None, update: bool = False):
 @click.option("--skip-main", "-S", is_flag=True, default=False, help="Skip Main Repository")
 @click.option("--rebase", is_flag=True, default=False, help="Run 'git rebase' instead of 'git pull'")
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
+@force_option()
 @pass_context
 def update(
     context,
@@ -102,6 +103,7 @@ def update(
     skip_main: bool = False,
     rebase: bool = False,
     prune: bool = False,
+    force: bool = False,
 ):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
@@ -113,6 +115,7 @@ def update(
             skip_main=skip_main,
             rebase=rebase,
             prune=prune,
+            force=force,
         )
 
 

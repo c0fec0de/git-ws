@@ -82,3 +82,11 @@ class GitCloneMissingError(RuntimeError):
     def __init__(self, project_path):
         super().__init__(f"Git Clone {str(project_path)!r} is missing.")
         self.project_path = project_path
+
+
+class GitCloneNotCleanError(RuntimeError):
+    """Git Clone Contains Changes."""
+
+    def __init__(self, project_path):
+        super().__init__(f"Git Clone {str(project_path)!r} contains changes.")
+        self.project_path = project_path

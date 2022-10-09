@@ -13,7 +13,7 @@ from ._util import no_echo, removesuffix, resolve_relative, run
 from .clone import Clone
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
-from .exceptions import GitCloneMissingError, ManifestExistError
+from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError
 from .filters import Filter, default_filter
 from .git import Git
 from .iters import ManifestIter, ProjectIter
@@ -135,6 +135,7 @@ class AnyRepo:
         skip_main: bool = False,
         prune: bool = False,
         rebase: bool = False,
+        force: bool = False,
     ):
         """Create/Update all dependent projects."""
         workspace = self.workspace
@@ -150,7 +151,7 @@ class AnyRepo:
             used.append(Path(clone.project.path))
             self._update(clone, rebase)
         if prune:
-            self._prune(workspace, used)
+            self._prune(workspace, used, force=force)
 
     def _update(self, clone: Clone, rebase: bool):
         # Clone
@@ -199,13 +200,16 @@ class AnyRepo:
                     self.echo(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
                     git.merge()
 
-    def _prune(self, workspace: Workspace, used: List[Path]):
+    def _prune(self, workspace: Workspace, used: List[Path], force: bool = False):
         for obsolete_path in workspace.iter_obsoletes(used):
             name = resolve_relative(obsolete_path, workspace.path)
             self.echo(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
             self.echo(f"Removing {str(obsolete_path)!r}.", fg=_COLOR_ACTION)
-            # TODO: safety check.
-            shutil.rmtree(obsolete_path, ignore_errors=True)
+            git = Git(obsolete_path)
+            if force or not git.is_cloned() or git.is_clean():
+                shutil.rmtree(obsolete_path, ignore_errors=True)
+            else:
+                raise GitCloneNotCleanError(resolve_relative(obsolete_path))
 
     def run_foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
         """Run `command` on each project."""
