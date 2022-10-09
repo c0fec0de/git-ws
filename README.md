@@ -9,8 +9,11 @@
 # Multi Repository Management Tool
 
 [Installation](#installation)
+
 [Usage](#usage)
+
 [Python API](#api)
+
 [Alternatives](#alternatives)
 
 AnyRepo is a lightweight tool for creating and managing *workspaces* consisting of several interdependent `git` repositories. Starting from a *main repository*, AnyRepo discovers dependencies specified in a *manifest file*, fetching any specified required repositories and assembling them into a single workspace.
