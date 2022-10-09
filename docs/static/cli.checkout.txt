@@ -1,0 +1,9 @@
+Usage: anyrepo checkout [OPTIONS] [PATHS]...
+
+  Run 'git checkout' on paths and choose the right git clone and manifest
+  revision automatically.
+
+  Checkout all clones to their manifest revision, if no paths are given.
+
+Options:
+  -h, --help  Show this message and exit.

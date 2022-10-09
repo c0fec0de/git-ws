@@ -1,8 +1,11 @@
 """Utilities."""
 import logging
+import os
 import subprocess
 from pathlib import Path
 from typing import Optional
+
+import tomlkit
 
 _LOGGER = logging.getLogger("anyrepo")
 # Dependencies to any anyrepo module are forbidden here!
@@ -38,7 +41,13 @@ def resolve_relative(path: Path, base: Optional[Path] = None):
     try:
         return path.relative_to(base)
     except ValueError:
-        return path.resolve()
+        # Try to determine a relative path, which is save
+        abspath = path.resolve()
+        relpath = Path(os.path.relpath(path, start=base))
+        resolvedpath = (base / relpath).resolve()
+        if abspath == (resolvedpath):
+            return relpath
+        return abspath
 
 
 def get_repr(obj=None, args=None, kwargs=None):
@@ -72,3 +81,22 @@ def removesuffix(text, suffix):
     if text.endswith(suffix):
         return text[: -len(suffix)]
     return text
+
+
+def add_info(doc: tomlkit.TOMLDocument, text):
+    """Add Multi-Line Documentation to TOML document."""
+    for line in text.split("\n"):
+        comment = f"## {line}" if line else "##"
+        doc.add(tomlkit.items.Comment(tomlkit.items.Trivia(comment_ws="  ", comment=comment)))
+
+
+def add_comment(doc: tomlkit.TOMLDocument, text):
+    """Add Multi-Line Comment to TOML document."""
+    for line in text.split("\n"):
+        comment = f"# {line}" if line else "#"
+        doc.add(tomlkit.items.Comment(tomlkit.items.Trivia(comment_ws="  ", comment=comment)))
+
+
+def as_dict(obj):
+    """Transform to dictionary."""
+    return obj.dict(by_alias=True, exclude_none=True, exclude_defaults=True)

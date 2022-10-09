@@ -29,7 +29,7 @@ def test_git(git):
     path = git.path
 
     (path / "data.txt").touch()
-    git.add("data.txt")
+    git.add(("data.txt",))
     git.commit("initial")
 
 
@@ -37,18 +37,33 @@ def test_git_revisions(git):
     """Git Versioning."""
     # on branch, sha0
     path = git.path
+
+    assert git.is_clean()
+
     (path / "data.txt").touch()
-    git.add("data.txt")
+
+    assert not git.is_clean()
+
+    git.add(("data.txt",))
+
+    assert not git.is_clean()
+
     git.commit("initial")
+
+    assert git.is_clean()
 
     sha0 = git.get_sha()
     git.tag("mytag")
 
+    assert git.is_clean()
+
     # create sha1
     (path / "other.txt").touch()
-    git.add("other.txt")
+    git.add(("other.txt",))
     git.commit("other")
     sha1 = git.get_sha()
+
+    assert git.is_clean()
 
     assert git.get_branch() == "main"
     assert git.get_tag() is None
@@ -57,7 +72,7 @@ def test_git_revisions(git):
 
     # create sha2
     (path / "end.txt").touch()
-    git.add("end.txt")
+    git.add(("end.txt",))
     git.commit("end")
     sha2 = git.get_sha()
 
@@ -99,3 +114,35 @@ def test_git_revisions(git):
     assert git.get_tag() is None
     assert git.get_sha() == sha2
     assert git.get_revision() == "main"
+
+
+def test_git_status(git):
+    """Git Status."""
+    path = git.path
+
+    assert [str(item) for item in git.status()] == []
+
+    (path / "data.txt").touch()
+    (path / "other.txt").touch()
+
+    assert [str(item) for item in git.status()] == ["?? data.txt", "?? other.txt"]
+
+    git.add(("data.txt",))
+
+    assert [str(item) for item in git.status()] == ["A  data.txt", "?? other.txt"]
+
+    (path / "data.txt").unlink()
+
+    assert [str(item) for item in git.status()] == ["AD data.txt", "?? other.txt"]
+
+    git.commit("initial")
+
+    assert [str(item) for item in git.status()] == [" D data.txt", "?? other.txt"]
+
+    (path / "data.txt").touch()
+
+    assert [str(item) for item in git.status()] == ["?? other.txt"]
+
+    (path / "other.txt").unlink()
+
+    assert [str(item) for item in git.status()] == []

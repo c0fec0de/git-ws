@@ -14,15 +14,24 @@ See :any:`AnyRepo` for any details.
 import logging
 
 from .anyrepo import AnyRepo
-from .clone import Clone
-from .datamodel import Group, Manifest, Project
+from .appconfig import AppConfig, AppConfigLocation
+from .clone import Clone, map_paths
+from .datamodel import AppConfigData, Defaults, Group, Manifest, ManifestSpec, Project, ProjectSpec, Remote
 from .exceptions import (
     GitCloneMissingError,
+    GitCloneNotCleanError,
     InitializedError,
+    InvalidConfigurationFileError,
+    InvalidConfigurationLocationError,
+    ManifestError,
     ManifestExistError,
     ManifestNotFoundError,
     NoGitError,
     OutsideWorkspaceError,
     UninitializedError,
 )
+from .filters import Filter
 from .git import Git
+from .iters import ManifestIter, ProjectIter
+from .workspace import Workspace
+from .workspacefinder import find_workspace

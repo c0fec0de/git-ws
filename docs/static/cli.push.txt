@@ -1,6 +1,8 @@
-Usage: anyrepo update [OPTIONS]
+Usage: anyrepo push [OPTIONS]
 
-  Create/update all dependent git clones.
+  Run 'git push' on projects.
+
+  This command behaves identical to `anyrepo foreach -- git push`.
 
 Options:
   -P, --project DIRECTORY  Project path to operate on only. All by default.
@@ -9,8 +11,4 @@ Options:
                            default.
   -G, --groups TEXT        Group Filtering. TODO: more details. Initial
                            clone/init filter settings by default.
-  -S, --skip-main          Skip Main Repository
-  --rebase                 Run 'git rebase' instead of 'git pull'
-  --prune                  Remove obsolete git clones
-  -f, --force              Enfore operation.
   -h, --help               Show this message and exit.

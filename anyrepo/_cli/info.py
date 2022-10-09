@@ -4,8 +4,8 @@ import click
 
 from anyrepo import AnyRepo
 
+from .common import exceptionhandling, pass_context
 from .options import groups_option, manifest_option
-from .util import exceptionhandling, pass_context
 
 
 @click.group()
@@ -24,7 +24,7 @@ def workspace_path(context, manifest_path=None):
     """
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
-        click.echo(str(anyrepo.path))
+        context.echo(str(anyrepo.path))
 
 
 @info.command()
@@ -36,7 +36,7 @@ def main_path(context, manifest_path=None):
     """
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
-        click.echo(str(anyrepo.workspace.main_path))
+        context.echo(str(anyrepo.workspace.main_path))
 
 
 @info.command()
@@ -51,4 +51,4 @@ def project_paths(context, manifest_path=None, groups=None):
         anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
         for project in anyrepo.projects(filter_=anyrepo.create_groups_filter(groups)):
             project_path = anyrepo.workspace.get_project_path(project)
-            click.echo(project_path)
+            context.echo(project_path)

@@ -3,10 +3,10 @@ from pathlib import Path
 
 import click
 
-from anyrepo import AnyRepo
+from anyrepo import AnyRepo, ManifestSpec
 
+from .common import COLOR_INFO, exceptionhandling, pass_context
 from .options import groups_option, manifest_option, output_option
-from .util import exceptionhandling, pass_context
 
 
 @click.group()
@@ -33,7 +33,7 @@ def resolve(context, manifest_path=None, groups=None, output=None):
         if output:
             manifest.save(Path(output))
         else:
-            click.echo(manifest.dump())
+            context.echo(manifest.dump())
 
 
 @manifest.command()
@@ -54,7 +54,7 @@ def freeze(context, manifest_path=None, groups=None, output=None):
         if output:
             manifest.save(Path(output))
         else:
-            click.echo(manifest.dump())
+            context.echo(manifest.dump())
 
 
 @manifest.command()
@@ -78,7 +78,7 @@ def path(context, manifest_path=None):
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
         manifest = next(anyrepo.manifests())
-        click.echo(str(manifest.path))
+        context.echo(str(manifest.path))
 
 
 @manifest.command()
@@ -91,4 +91,30 @@ def paths(context, manifest_path=None):
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
         for manifest in anyrepo.manifests():
-            click.echo(str(manifest.path))
+            context.echo(str(manifest.path))
+
+
+@manifest.command()
+@manifest_option(initial=True)
+@pass_context
+def create(context, manifest_path):
+    """Create Manifest."""
+    with exceptionhandling(context):
+        path = AnyRepo.create_manifest(Path(manifest_path))
+        click.secho(f"Manifest {str(path)!r} created.", fg=COLOR_INFO)
+
+
+@manifest.command()
+@manifest_option(initial=True)
+@pass_context
+def upgrade(context, manifest_path):
+    """
+    Update Manifest To Latest Version.
+
+    User data is kept.
+    User comments are removed.
+    Comments are updated to the latest documentation.
+    """
+    with exceptionhandling(context):
+        ManifestSpec.upgrade(Path(manifest_path))
+        click.secho(f"Manifest {str(manifest_path)!r} upgraded.", fg=COLOR_INFO)

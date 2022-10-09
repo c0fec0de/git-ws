@@ -11,7 +11,7 @@ from anyrepo.datamodel import AppConfigData
 from anyrepo.exceptions import InvalidConfigurationOptionError, InvalidConfigurationValueError, UninitializedError
 from anyrepo.workspace import Workspace
 
-from .util import exceptionhandling, pass_context
+from .common import exceptionhandling, pass_context
 
 
 class Format(str, Enum):

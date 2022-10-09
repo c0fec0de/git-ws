@@ -6,6 +6,7 @@ from anyrepo import AnyRepo, InitializedError, ManifestExistError
 from anyrepo._cli import main
 from anyrepo.const import CONFIG_PATH, INFO_PATH
 
+from .common import MANIFEST_DEFAULT
 from .util import chdir, format_output, run
 
 
@@ -40,25 +41,25 @@ def test_cli_git(tmp_path):
         result = CliRunner().invoke(main, ["init"])
         assert result.exit_code == 1
         assert format_output(result) == [
-            "===== main (revision=None, path='main') =====",
+            "===== main =====",
             "Error: Manifest has not been found at 'anyrepo.toml'. Try:",
             "",
-            "    anyrepo create-manifest --manifest='anyrepo.toml'",
+            "    anyrepo manifest create --manifest='anyrepo.toml'",
             "",
             "",
         ]
 
-        result = CliRunner().invoke(main, ["create-manifest"])
+        result = CliRunner().invoke(main, ["manifest", "create"])
         assert format_output(result) == ["Manifest 'anyrepo.toml' created.", ""]
         assert result.exit_code == 0
 
         manifest_path = main_path / "anyrepo.toml"
-        assert manifest_path.read_text().split("\n") == [""]
+        assert manifest_path.read_text() == MANIFEST_DEFAULT
 
         result = CliRunner().invoke(main, ["init"])
         assert format_output(result, tmp_path) == [
-            "===== main (revision=None, path='main') =====",
-            "Workspace initialized at 'TMP'.",
+            "===== main =====",
+            "Workspace initialized at '..'.",
             "Please continue with:",
             "",
             "    anyrepo update",
@@ -69,7 +70,7 @@ def test_cli_git(tmp_path):
 
         result = CliRunner().invoke(main, ["init"])
         assert format_output(result, tmp_path) == [
-            "===== main (revision=None, path='main') =====",
+            "===== main =====",
             "Error: anyrepo has already been initialized at 'TMP' with main repo at 'main'.",
             "",
         ]
@@ -84,17 +85,17 @@ def test_cli_git_update(tmp_path):
         run(("git", "init"), check=True)
         assert (main_path / ".git").exists()
 
-        result = CliRunner().invoke(main, ["create-manifest"])
+        result = CliRunner().invoke(main, ["manifest", "create"])
         assert format_output(result) == ["Manifest 'anyrepo.toml' created.", ""]
         assert result.exit_code == 0
 
         manifest_path = main_path / "anyrepo.toml"
-        assert manifest_path.read_text().split("\n") == [""]
+        assert manifest_path.read_text() == MANIFEST_DEFAULT
 
         result = CliRunner().invoke(main, ["init", "--update"])
         assert format_output(result, tmp_path) == [
-            "===== main (revision=None, path='main') =====",
-            "Workspace initialized at 'TMP'.",
+            "===== main =====",
+            "Workspace initialized at '..'.",
             "",
         ]
         assert result.exit_code == 0
@@ -109,7 +110,7 @@ def test_git(tmp_path):
 
         AnyRepo.create_manifest()
         manifest_path = main_path / "anyrepo.toml"
-        assert manifest_path.read_text().split("\n") == [""]
+        assert manifest_path.read_text() == MANIFEST_DEFAULT
 
         with raises(ManifestExistError):
             AnyRepo.create_manifest()

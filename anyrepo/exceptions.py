@@ -4,14 +4,14 @@ from pathlib import Path
 
 
 class UninitializedError(RuntimeError):
-    """AnyRepo Workspace has not been initialized."""
+    """Anyrepo Workspace Has Not Been Initialized."""
 
     def __init__(self):
         super().__init__("anyrepo has not been initialized yet.")
 
 
 class InitializedError(RuntimeError):
-    """AnyRepo Workspace has been initialized."""
+    """Anyrepo Workspace Has Already Been Initialized."""
 
     def __init__(self, path, main_path):
         super().__init__(f"anyrepo has already been initialized at {str(path)!r} with main repo at {str(main_path)!r}.")
@@ -20,14 +20,14 @@ class InitializedError(RuntimeError):
 
 
 class NoGitError(RuntimeError):
-    """Git Clone has not been initialized."""
+    """Git Clone Has Not Been Initialized."""
 
     def __init__(self):
         super().__init__("git clone has not been found or initialized yet.")
 
 
 class ManifestNotFoundError(RuntimeError):
-    """Manifest File has not been found."""
+    """Manifest File Has Not Been Found."""
 
     def __init__(self, path):
         super().__init__(f"Manifest has not been found at {str(path)!r}.")
@@ -35,14 +35,14 @@ class ManifestNotFoundError(RuntimeError):
 
 
 class ManifestExistError(RuntimeError):
-    """Manifest already exists."""
+    """Manifest Already Exists."""
 
     def __init__(self, path):
         super().__init__(f"Manifest exists at {str(path)!r}.")
 
 
 class OutsideWorkspaceError(RuntimeError):
-    """Project is located outside of Workspace."""
+    """Project Is Located Outside Of Workspace."""
 
     def __init__(self, path, project_path):
         super().__init__(f"Project {str(project_path)!r} is located outside {str(path)!r}.")
@@ -51,7 +51,7 @@ class OutsideWorkspaceError(RuntimeError):
 
 
 class ManifestError(RuntimeError):
-    """Manifest Error."""
+    """The Manifest Is Invalid."""
 
     def __init__(self, path, details):
         super().__init__(f"Manifest {str(path)!r} is broken: {details}")
@@ -60,7 +60,7 @@ class ManifestError(RuntimeError):
 
 
 class InvalidConfigurationFileError(RuntimeError):
-    """A configuration file is invalid and cannot be used."""
+    """A Configuration File Is Invalid And Cannot Be Used."""
 
     def __init__(self, path: Path, details: str):
         super().__init__(f"The configuration file {path} cannot be read: {details}")
@@ -69,7 +69,7 @@ class InvalidConfigurationFileError(RuntimeError):
 
 
 class InvalidConfigurationLocationError(RuntimeError):
-    """An invalid location for configuration data has been used."""
+    """An Invalid Location For Configuration Data Has Been Used."""
 
     def __init__(self, location: str):
         super().__init__(f"The configuration location {location} is not known")
@@ -94,8 +94,16 @@ class InvalidConfigurationOptionError(RuntimeError):
 
 
 class GitCloneMissingError(RuntimeError):
-    """Git Clone Missing Error."""
+    """Git Clone Is Missing."""
 
     def __init__(self, project_path):
         super().__init__(f"Git Clone {str(project_path)!r} is missing.")
+        self.project_path = project_path
+
+
+class GitCloneNotCleanError(RuntimeError):
+    """Git Clone Contains Changes."""
+
+    def __init__(self, project_path):
+        super().__init__(f"Git Clone {str(project_path)!r} contains changes.")
         self.project_path = project_path

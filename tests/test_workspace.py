@@ -1,5 +1,4 @@
 """Workspace Testing."""
-# pylint: disable=duplicate-code
 from pathlib import Path
 
 from pytest import raises

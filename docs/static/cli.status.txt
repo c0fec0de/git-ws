@@ -1,15 +1,8 @@
 Usage: anyrepo status [OPTIONS]
 
-  Run 'git status' on projects.
-
-  This command behaves identical to `anyrepo foreach -- git status`.
+  Run 'git status' (displayed paths include the actual clone path).
 
 Options:
   -P, --project DIRECTORY  Project path to operate on only. All by default.
                            This option can be specified multiple times.
-  -M, --manifest FILE      Manifest file. Initial clone/init settings by
-                           default.
-  -G, --groups TEXT        Group Filtering. TODO: more details. Initial
-                           clone/init filter settings by default.
-  -s, --short
   -h, --help               Show this message and exit.

@@ -7,15 +7,15 @@ import logging
 import shutil
 import urllib
 from pathlib import Path
-from typing import Generator, List, Optional
+from typing import Generator, List, Optional, Tuple
 
 from ._util import no_echo, removesuffix, resolve_relative, run
-from .clone import Clone
+from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
-from .exceptions import GitCloneMissingError, ManifestExistError
+from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError
 from .filters import Filter, default_filter
-from .git import Git
+from .git import Git, Status
 from .iters import ManifestIter, ProjectIter
 from .types import Groups, ProjectFilter
 from .workspace import Workspace
@@ -34,6 +34,8 @@ class AnyRepo:
         workspace (Workspace): workspace.
         manifest_spec (ManifestSpec): manifest.
     """
+
+    # pylint: disable=too-many-public-methods
 
     def __init__(self, workspace: Workspace, manifest_spec: ManifestSpec, echo=None):
         self.workspace = workspace
@@ -98,10 +100,14 @@ class AnyRepo:
         echo = echo or no_echo
         project_path = Git.find_path(path=project_path)
         name = project_path.name
-        echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
+        echo(f"===== {name} =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(project_path / manifest_path)
         path = project_path.parent
         return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
+
+    def deinit(self):
+        """De-Initialize :any:`AnyRepo`."""
+        return self.workspace.deinit()
 
     @staticmethod
     def clone(
@@ -116,7 +122,7 @@ class AnyRepo:
         path = path or Path.cwd()
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
-        echo(f"===== {name} (revision=None, path={name!r}) =====", fg=_COLOR_BANNER)
+        echo(f"===== {name} =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
         project_path = path / removesuffix(name, ".git")
         git = Git(project_path)
@@ -131,6 +137,7 @@ class AnyRepo:
         skip_main: bool = False,
         prune: bool = False,
         rebase: bool = False,
+        force: bool = False,
     ):
         """Create/Update all dependent projects."""
         workspace = self.workspace
@@ -146,7 +153,7 @@ class AnyRepo:
             used.append(Path(clone.project.path))
             self._update(clone, rebase)
         if prune:
-            self._prune(workspace, used)
+            self._prune(workspace, used, force=force)
 
     def _update(self, clone: Clone, rebase: bool):
         # Clone
@@ -195,13 +202,62 @@ class AnyRepo:
                     self.echo(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
                     git.merge()
 
-    def _prune(self, workspace: Workspace, used: List[Path]):
+    def _prune(self, workspace: Workspace, used: List[Path], force: bool = False):
         for obsolete_path in workspace.iter_obsoletes(used):
             name = resolve_relative(obsolete_path, workspace.path)
             self.echo(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
             self.echo(f"Removing {str(obsolete_path)!r}.", fg=_COLOR_ACTION)
-            # TODO: safety check.
-            shutil.rmtree(obsolete_path, ignore_errors=True)
+            git = Git(obsolete_path)
+            if force or not git.is_cloned() or git.is_clean():
+                shutil.rmtree(obsolete_path, ignore_errors=True)
+            else:
+                raise GitCloneNotCleanError(resolve_relative(obsolete_path))
+
+    def status(
+        self,
+        project_paths=None,
+        manifest_path: Path = None,
+        groups: Groups = None,
+    ) -> Generator[Status, None, None]:
+        """Iterate over Status."""
+        for clone in self.foreach(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
+            path = clone.git.path
+            for status in clone.git.status():
+                yield status.with_path(path)
+
+    def checkout(self, paths: Tuple[Path, ...]):
+        """Checkout."""
+        if paths:
+            # Checkout specific files only
+            for clone, cpaths in map_paths(tuple(self.clones()), paths):
+                self._echo_project_banner(clone.project)
+                if cpaths:
+                    clone.git.checkout(revision=clone.project.revision, paths=cpaths)
+        else:
+            # Checkout all branches
+            for clone in self.clones():
+                self._echo_project_banner(clone.project)
+                if clone.project.revision:
+                    clone.git.checkout(revision=clone.project.revision)
+
+    def add(self, paths: Tuple[Path, ...]):
+        """Add."""
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            if cpaths:
+                clone.git.add(cpaths)
+
+    def reset(self, paths: Tuple[Path, ...]):
+        """Reset."""
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            if cpaths:
+                clone.git.reset(cpaths)
+
+    def commit(self, msg: str, paths: Tuple[Path, ...]):
+        """Commit."""
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            if cpaths:
+                self._echo_project_banner(clone.project)
+                clone.git.commit(msg, paths=cpaths)
 
     def run_foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
         """Run `command` on each project."""
@@ -233,7 +289,7 @@ class AnyRepo:
             except FileNotFoundError:
                 clonerev = None
             if project_paths_filter(project):
-                self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
+                self._echo_project_banner(clone.project)
                 if not no_warn and projectrev and clonerev and projectrev != clonerev:
                     _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
                 yield clone
@@ -276,13 +332,8 @@ class AnyRepo:
         yield from ManifestIter(workspace, manifest_path, filter_=filter_)
 
     @staticmethod
-    def create_manifest(project_path: Path = None, manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
+    def create_manifest(manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
         """Create ManifestSpec File at `manifest_path`within `project`."""
-        if project_path is None:
-            project_path = manifest_path.parent
-            manifest_path = manifest_path.relative_to(project_path)
-        git = Git.from_path(path=project_path)
-        manifest_path = resolve_relative(git.path / manifest_path)
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
         manifest_spec = ManifestSpec()
@@ -342,3 +393,6 @@ class AnyRepo:
             return filter_(groups, disabled=disabled)
 
         return func
+
+    def _echo_project_banner(self, project):
+        self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)

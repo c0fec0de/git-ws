@@ -5,6 +5,7 @@ The :any:`Workspace` class represents the file system location containing all gi
 :any:`Info` is a helper.
 """
 import logging
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
@@ -34,13 +35,16 @@ class Info(BaseModel):
     """
 
     main_path: Path
+    """
+    Path to main project. Relative to workspace root directory.
+    """
 
     @staticmethod
     def load(path: Path) -> "Info":
         """
         Load Workspace Information from AnyRepo root directory at `path`.
 
-        The workspace information is stored at `{path}/.anyrepo/info.yaml`.
+        The workspace information is stored at `{path}/.anyrepo/info.toml`.
 
         Args:
             path (Path): Path to AnyRepo root directory.
@@ -55,7 +59,7 @@ class Info(BaseModel):
         """
         Save Workspace Information at AnyRepo root directory at `path`.
 
-        The workspace information is stored at `{path}/.anyrepo/info.yaml`.
+        The workspace information is stored at `{path}/.anyrepo/info.toml`.
 
         Args:
             path (Path): Path to AnyRepo root directory.
@@ -97,12 +101,12 @@ class Workspace:
         return NotImplemented
 
     @staticmethod
-    def find_path(path: Optional[Path] = None):
+    def find_path(path: Optional[Path] = None) -> Path:
         """
         Find Workspace Root Directory.
 
         Keyword Args:
-            path (Path): directory or file within the workspace. Current working directory be default.
+            path (Path): directory or file within the workspace. Current working directory by default.
 
         Raises:
             UninitializedError: If directory of file is not within a workspace.
@@ -121,7 +125,7 @@ class Workspace:
         Create :any:`Workspace` for existing workspace at `path`.
 
         Keyword Args:
-            path (Path): directory or file within the workspace. Current working directory be default.
+            path (Path): directory or file within the workspace. Current working directory by default.
 
         Raises:
             UninitializedError: If directory of file is not within a workspace.
@@ -145,10 +149,10 @@ class Workspace:
 
         Args:
             path (Path):  Path to the workspace
-            main_path (Path):  Path to the main project.
+            main_path (Path):  Path to the main project. Relative to `path`.
 
         Keyword Args:
-            manifest_path (Path):  Path to the manifest file.
+            manifest_path (Path):  Path to the manifest file. Relative to `main_path`.
 
         Raises:
             OutsideWorkspaceError: `main_path` is not within `path`.
@@ -176,6 +180,14 @@ class Workspace:
         _LOGGER.info("Initialized %s %r %r", path, info, workspace.config)
         return workspace
 
+    def deinit(self):
+        """
+        Deinitialize.
+
+        Remove `ANYREPO_PATH` directory.
+        """
+        shutil.rmtree(self.path / ANYREPO_PATH)
+
     @property
     def main_path(self) -> Path:
         """Path to main project."""
@@ -187,24 +199,32 @@ class Workspace:
         return self.app_config.options
 
     def get_project_path(self, project: Project, relative: bool = False) -> Path:
-        """Project Path."""
+        """
+        Determine Project Path.
+
+        Args:
+            project: Project to determine path for.
+
+        Keyword Args:
+            relative: Return relative instead of absolute path.
+        """
         project_path = self.path / project.path
         if relative:
             project_path = resolve_relative(project_path)
         return project_path
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
-        """Manifest Path."""
+        """Get Manifest Path."""
         return self.main_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
 
     def get_groups(self, groups: Groups = None) -> Groups:
-        """Group Filter."""
+        """Get Groups Filter."""
         if groups is None:
             return self.app_config.options.groups
         return groups
 
     def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
-        """Remove everything except `used`."""
+        """Yield obsolete paths except `used` ones."""
         usemap: Dict[str, Any] = {ANYREPO_PATH.name: {}}
         for path in used:
             pathmap = usemap
