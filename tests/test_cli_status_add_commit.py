@@ -33,13 +33,19 @@ def test_status(tmp_path, arepo):
 
 
 def test_full(tmp_path, arepo):
-    """Test status."""
+    """Test Full Workflow."""
 
     workspace = tmp_path / "workspace"
     dep1 = workspace / "dep1"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
+    git2 = Git(dep2)
     git4 = Git(dep4)
+
+    git2.set_config("user.email", "you@example.com")
+    git2.set_config("user.name", "you")
+    git4.set_config("user.email", "you@example.com")
+    git4.set_config("user.name", "you")
 
     (dep1 / "foo.txt").touch()
     (dep2 / "bb.txt").touch()
