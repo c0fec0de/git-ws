@@ -211,20 +211,19 @@ def rebase(context, projects=None, manifest_path=None, groups=None):
 @projects_option()
 @manifest_option()
 @groups_option()
-@click.option("-s", "--short", is_flag=True)
 @pass_context
-def status(context, projects=None, manifest_path=None, groups=None, short=False):
+def status(context, projects=None, manifest_path=None, groups=None):
     """
     Run 'git status' on projects.
 
     This command behaves identical to `anyrepo foreach -- git status`.
     """
-    cmd = ["git", "status"]
-    if short:
-        cmd.append("-s")
     with exceptionhandling(context):
         arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
-        arepo.run_foreach(cmd, project_paths=projects, groups=groups)
+        for clone in arepo.foreach(project_paths=projects, groups=groups):
+            git = clone.git
+            for status in git.status():
+                context.echo(str(status.with_path(git.path)))
 
 
 @main.command()

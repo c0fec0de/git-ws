@@ -7,9 +7,9 @@ from pytest import fixture
 from anyrepo import AnyRepo
 from anyrepo._cli import main
 
-# pylint: disable=unused-import,duplicate-code
+# pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, format_logs, format_output, get_sha, run
+from .util import chdir, format_logs, format_output
 
 
 @fixture
@@ -43,16 +43,6 @@ def test_rebase(tmp_path, arepo, caplog):
 def test_diff(tmp_path, arepo, caplog):
     """Test diff."""
     _test_foreach(tmp_path, arepo, caplog, "diff")
-
-
-def test_status(tmp_path, arepo, caplog):
-    """Test status."""
-    _test_foreach(tmp_path, arepo, caplog, "status")
-
-
-def test_status_short(tmp_path, arepo, caplog):
-    """Test status short."""
-    _test_foreach(tmp_path, arepo, caplog, "status", "-s")
 
 
 def test_deinit(tmp_path, arepo, caplog):

@@ -5,9 +5,9 @@ from pytest import fixture
 from anyrepo import AnyRepo
 from anyrepo._cli import main
 
-# pylint: disable=unused-import,duplicate-code
+# pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, format_output, get_sha, run
+from .util import chdir, format_output
 
 
 @fixture

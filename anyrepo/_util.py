@@ -1,5 +1,6 @@
 """Utilities."""
 import logging
+import os
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -40,7 +41,13 @@ def resolve_relative(path: Path, base: Optional[Path] = None):
     try:
         return path.relative_to(base)
     except ValueError:
-        return path.resolve()
+        # Try to determine a relative path, which is save
+        abspath = path.resolve()
+        relpath = Path(os.path.relpath(path, start=base))
+        resolvedpath = (base / relpath).resolve()
+        if abspath == (resolvedpath):
+            return relpath
+        return abspath
 
 
 def get_repr(obj=None, args=None, kwargs=None):

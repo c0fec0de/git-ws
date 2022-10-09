@@ -1,10 +1,67 @@
 """Git Utilities."""
 
+import re
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Generator, Optional, Tuple
 
+from ._basemodel import BaseModel
 from ._util import get_repr, run
 from .exceptions import NoGitError
+
+_RE_STATUS = re.compile(r"\A(?P<index>.)(?P<work>.)\s((?P<orig_path>.+) -> )?(?P<path>.+)\Z")
+
+
+class Status(BaseModel):
+
+    """
+    Git Status Line.
+
+    >>> status = Status.from_str("?? file.txt")
+    >>> status
+    Status(index='?', work='?', path=PosixPath('file.txt'))
+    >>> str(status)
+    '?? file.txt'
+    >>> str(status.with_path(Path("base")))
+    '?? base/file.txt'
+
+    >>> status = Status.from_str("?? src.txt -> dest.txt")
+    >>> status
+    Status(index='?', work='?', path=PosixPath('dest.txt'), orig_path=PosixPath('src.txt'))
+    >>> str(status)
+    '?? src.txt -> dest.txt'
+    >>> str(status.with_path(Path("base")))
+    '?? base/src.txt -> base/dest.txt'
+    """
+
+    index: str
+    """Status of the Index."""
+
+    work: str
+    """Status of Workiing Tree."""
+
+    path: Path
+    """File Path."""
+
+    orig_path: Optional[Path] = None
+    """File Path of the original file in case of a move."""
+
+    def __str__(self):
+        if self.orig_path:
+            return f"{self.index}{self.work} {self.orig_path!s} -> {self.path!s}"
+        return f"{self.index}{self.work} {self.path!s}"
+
+    @staticmethod
+    def from_str(line) -> "Status":
+        """Create v1 porcelain output."""
+        mat = _RE_STATUS.match(line)
+        assert mat, f"Invalid pattern {line}"
+        return Status(**mat.groupdict())
+
+    def with_path(self, path: Path) -> "Status":
+        """Return :any:`Status` with `path`."""
+        if self.orig_path:
+            return self.update(path=path / self.path, orig_path=path / self.orig_path)
+        return self.update(path=path / self.path)
 
 
 class Git:
@@ -140,6 +197,12 @@ class Git:
             cmd += ["-m", msg]
         self._run(cmd)
 
+    def status(self) -> Generator[Status, None, None]:
+        """Git Status."""
+        for line in self._run2str(("status", "--porcelain=v1")).split("\n"):
+            if line:
+                yield Status.from_str(line)
+
     def is_clean(self):
         """Clone is clean and does not contain any changes."""
         status = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
@@ -159,4 +222,4 @@ class Git:
         result = self._run(cmd, cwd=cwd, check=check, capture_output=True)
         if result.stderr.strip():
             return ""
-        return result.stdout.decode("utf-8").strip()
+        return result.stdout.decode("utf-8").rstrip()

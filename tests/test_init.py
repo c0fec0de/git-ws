@@ -59,7 +59,7 @@ def test_cli_git(tmp_path):
         result = CliRunner().invoke(main, ["init"])
         assert format_output(result, tmp_path) == [
             "===== main =====",
-            "Workspace initialized at 'TMP'.",
+            "Workspace initialized at '..'.",
             "Please continue with:",
             "",
             "    anyrepo update",
@@ -95,7 +95,7 @@ def test_cli_git_update(tmp_path):
         result = CliRunner().invoke(main, ["init", "--update"])
         assert format_output(result, tmp_path) == [
             "===== main =====",
-            "Workspace initialized at 'TMP'.",
+            "Workspace initialized at '..'.",
             "",
         ]
         assert result.exit_code == 0

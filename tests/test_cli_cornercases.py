@@ -4,10 +4,9 @@ from pytest import fixture
 from anyrepo import AnyRepo
 from anyrepo.datamodel import ManifestSpec, ProjectSpec
 
+# pylint: disable=unused-import
 from .fixtures import git_repo
-
-# pylint: disable=unused-import,duplicate-code
-from .util import chdir, format_logs, format_output, get_sha, run
+from .util import chdir, format_logs
 
 
 def check(workspace, name, content=None, exists=True):

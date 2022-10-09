@@ -6,9 +6,9 @@ from anyrepo import AnyRepo
 from anyrepo._cli import main
 from anyrepo.datamodel import ManifestSpec, ProjectSpec
 
-# pylint: disable=unused-import,duplicate-code
+# pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, format_logs, format_output, get_sha, run
+from .util import chdir, format_output, run
 
 
 @fixture
