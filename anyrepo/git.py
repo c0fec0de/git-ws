@@ -2,7 +2,7 @@
 
 import re
 from pathlib import Path
-from typing import Generator, Optional, Tuple
+from typing import Generator, List, Optional, Tuple, Union
 
 from ._basemodel import BaseModel
 from ._util import get_repr, run
@@ -121,11 +121,11 @@ class Git:
 
     def clone(self, url, revision=None):
         """Clone."""
-        cmd = ["git", "clone"]
+        args = ["git", "clone"]
         if revision:
-            cmd += ["--branch", revision]
-        cmd += ["--", str(url), str(self.path)]
-        run(cmd)
+            args += ["--branch", revision]
+        args += ["--", str(url), str(self.path)]
+        run(args)
 
     def get_tag(self) -> Optional[str]:
         """Get Actual Tag."""
@@ -156,9 +156,12 @@ class Git:
         """Get Actual URL of 'origin'."""
         return self._run2str(("remote", "get-url", "origin"), check=False) or None
 
-    def checkout(self, revision):
+    def checkout(self, revision: Optional[str] = None, paths: Optional[Tuple[Path, ...]] = None):
         """Checkout Revision."""
-        self._run(("checkout", revision))
+        if revision:
+            self._run(("checkout", revision), paths=paths)
+        else:
+            self._run(("checkout",), paths=paths)
 
     def fetch(self):
         """Fetch."""
@@ -178,25 +181,22 @@ class Git:
 
     def add(self, paths: Tuple[Path, ...]):
         """Add."""
-        self._run(["add"] + [str(path) for path in paths])
+        self._run(("add",), paths=paths)
 
     def reset(self, paths: Tuple[Path, ...]):
         """Reset."""
-        self._run(["reset"] + [str(path) for path in paths])
+        self._run(("reset",), paths=paths)
 
     def commit(self, msg, paths: Optional[Tuple[Path, ...]] = None):
         """Commit."""
-        if paths:
-            self._run(["commit", "-m", msg] + [str(path) for path in paths])
-        else:
-            self._run(("commit", "-m", msg))
+        self._run(("commit", "-m", msg), paths=paths)
 
     def tag(self, name, msg=None):
         """Create Tag."""
-        cmd = ["tag", name]
+        args = ["tag", name]
         if msg:
-            cmd += ["-m", msg]
-        self._run(cmd)
+            args += ["-m", msg]
+        self._run(args)
 
     def status(self) -> Generator[Status, None, None]:
         """Git Status."""
@@ -213,13 +213,16 @@ class Git:
             return False
         return True
 
-    def _run(self, cmd, cwd=None, **kwargs):
-        cwd = cwd or self.path
-        cmd = ("git",) + tuple(cmd)
-        return run(cmd, cwd=cwd, **kwargs)
+    def _run(self, args: Union[List[str], Tuple[str, ...]], paths: Optional[Tuple[Path, ...]] = None, **kwargs):
+        cmd = ["git"]
+        cmd.extend(args)
+        if paths:
+            cmd.append("--")
+            cmd.extend([str(path) for path in paths])
+        return run(cmd, cwd=self.path, **kwargs)
 
-    def _run2str(self, cmd, cwd=None, check=True) -> str:
-        result = self._run(cmd, cwd=cwd, check=check, capture_output=True)
+    def _run2str(self, args: Union[List[str], Tuple[str, ...]], check=True) -> str:
+        result = self._run(args, check=check, capture_output=True)
         if result.stderr.strip():
             return ""
         return result.stdout.decode("utf-8").rstrip()
