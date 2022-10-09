@@ -1,7 +1,8 @@
 """Clone Testing."""
 from click.testing import CliRunner
+from pytest import raises
 
-from anyrepo import AnyRepo, Group, Manifest, Project
+from anyrepo import AnyRepo, GitCloneNotCleanError, Group, Manifest, Project
 from anyrepo._cli import main
 
 # pylint: disable=unused-import
@@ -274,7 +275,6 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         arepo.update()
-        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -285,8 +285,18 @@ def test_clone_other(tmp_path, repos):
 
         (workspace / "dep5").touch()
 
-        arepo.update(prune=True)
-        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
+        with raises(GitCloneNotCleanError) as exc:
+            arepo.update(prune=True)
+        assert str(exc.value) == "Git Clone 'dep2' contains changes."
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4", content="dep4-feature")
+        check(workspace, "dep5", exists=False)
+
+        arepo.update(prune=True, force=True)
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -294,3 +304,5 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep3", exists=False)
         check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
+
+        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")

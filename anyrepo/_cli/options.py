@@ -32,6 +32,11 @@ def update_option(default=None):
     return click.option("--update", "-U", is_flag=True, help="Run 'anyrepo update' too.")
 
 
+def force_option(default=None):
+    """Force Option."""
+    return click.option("--force", "-f", is_flag=True, help="Enfore operation.")
+
+
 def groups_option(initial=False):
     """Group Filter Option."""
     if initial:
