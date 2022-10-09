@@ -35,13 +35,16 @@ class Info(BaseModel):
     """
 
     main_path: Path
+    """
+    Path to main project. Relative to workspace root directory.
+    """
 
     @staticmethod
     def load(path: Path) -> "Info":
         """
         Load Workspace Information from AnyRepo root directory at `path`.
 
-        The workspace information is stored at `{path}/.anyrepo/info.yaml`.
+        The workspace information is stored at `{path}/.anyrepo/info.toml`.
 
         Args:
             path (Path): Path to AnyRepo root directory.
@@ -56,7 +59,7 @@ class Info(BaseModel):
         """
         Save Workspace Information at AnyRepo root directory at `path`.
 
-        The workspace information is stored at `{path}/.anyrepo/info.yaml`.
+        The workspace information is stored at `{path}/.anyrepo/info.toml`.
 
         Args:
             path (Path): Path to AnyRepo root directory.
@@ -98,12 +101,12 @@ class Workspace:
         return NotImplemented
 
     @staticmethod
-    def find_path(path: Optional[Path] = None):
+    def find_path(path: Optional[Path] = None) -> Path:
         """
         Find Workspace Root Directory.
 
         Keyword Args:
-            path (Path): directory or file within the workspace. Current working directory be default.
+            path (Path): directory or file within the workspace. Current working directory by default.
 
         Raises:
             UninitializedError: If directory of file is not within a workspace.
@@ -122,7 +125,7 @@ class Workspace:
         Create :any:`Workspace` for existing workspace at `path`.
 
         Keyword Args:
-            path (Path): directory or file within the workspace. Current working directory be default.
+            path (Path): directory or file within the workspace. Current working directory by default.
 
         Raises:
             UninitializedError: If directory of file is not within a workspace.
@@ -146,10 +149,10 @@ class Workspace:
 
         Args:
             path (Path):  Path to the workspace
-            main_path (Path):  Path to the main project.
+            main_path (Path):  Path to the main project. Relative to `path`.
 
         Keyword Args:
-            manifest_path (Path):  Path to the manifest file.
+            manifest_path (Path):  Path to the manifest file. Relative to `main_path`.
 
         Raises:
             OutsideWorkspaceError: `main_path` is not within `path`.
@@ -200,7 +203,7 @@ class Workspace:
         Determine Project Path.
 
         Args:
-            project. Project to determine path for.
+            project: Project to determine path for.
 
         Keyword Args:
             relative: Return relative instead of absolute path.
@@ -221,7 +224,7 @@ class Workspace:
         return groups
 
     def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
-        """Remove everything except `used`."""
+        """Yield obsolete paths except `used` ones."""
         usemap: Dict[str, Any] = {ANYREPO_PATH.name: {}}
         for path in used:
             pathmap = usemap
