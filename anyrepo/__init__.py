@@ -19,6 +19,7 @@ from .clone import Clone
 from .datamodel import AppConfigData, Defaults, Group, Manifest, ManifestSpec, Project, ProjectSpec, Remote
 from .exceptions import (
     GitCloneMissingError,
+    GitCloneNotCleanError,
     InitializedError,
     InvalidConfigurationFileError,
     InvalidConfigurationLocationError,
