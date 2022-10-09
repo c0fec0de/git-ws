@@ -680,3 +680,15 @@ def test_default_url():
         Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1.suffix"),
         Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2.suffix"),
     )
+
+
+def test_remotes_unique():
+    """Remote names must be unique."""
+    with raises(ValueError):
+        ManifestSpec(remotes=(Remote(name="foo", url_base="url"), Remote(name="foo", url_base="url")))
+
+
+def test_groups_unique():
+    """Group names must be unique."""
+    with raises(ValueError):
+        ManifestSpec(groups=(Group(name="foo"), Group(name="foo")))
