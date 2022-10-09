@@ -30,6 +30,11 @@ def test_pull(tmp_path, arepo, caplog):
     _test_foreach(tmp_path, arepo, caplog, "pull")
 
 
+def test_push(tmp_path, arepo, caplog):
+    """Test push."""
+    _test_foreach(tmp_path, arepo, caplog, "push")
+
+
 def test_fetch(tmp_path, arepo, caplog):
     """Test fetch."""
     _test_foreach(tmp_path, arepo, caplog, "fetch")

@@ -210,7 +210,6 @@ class Git:
             return False
         if status[1:]:
             return False
-        # TODO: check other branches
         return True
 
     def _run(self, cmd, cwd=None, **kwargs):

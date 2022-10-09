@@ -27,12 +27,12 @@ def manifest_option(initial=False):
     )
 
 
-def update_option(default=None):
+def update_option():
     """Update Option."""
     return click.option("--update", "-U", is_flag=True, help="Run 'anyrepo update' too.")
 
 
-def force_option(default=None):
+def force_option():
     """Force Option."""
     return click.option("--force", "-f", is_flag=True, help="Enfore operation.")
 

@@ -44,10 +44,10 @@ class ManifestIter:
         self.__done: List[str] = []
 
     def __iter__(self) -> Generator[Manifest, None, None]:
-        yield from self.__iter(self.workspace.main_path, self.manifest_path)
+        yield from self.__iter(self.manifest_path)
 
-    def __iter(self, project_path: Path, manifest_path: Path) -> Generator[Manifest, None, None]:
-        deps: List[Tuple[Path, Path]] = []
+    def __iter(self, manifest_path: Path) -> Generator[Manifest, None, None]:
+        deps: List[Path] = []
         done: List[str] = self.__done
         filter_ = self.filter_
 
@@ -73,11 +73,11 @@ class ManifestIter:
             # Recursive
             dep_manifest_path = dep_project_path / dep_project.manifest_path
             if dep_manifest_path.exists():
-                deps.append((dep_project_path, dep_manifest_path))
+                deps.append(dep_manifest_path)
 
         # We resolve all dependencies in a second iteration to prioritize the manifest
-        for dep_project_path, dep_manifest_path in deps:
-            yield from self.__iter(dep_project_path, dep_manifest_path)
+        for dep_manifest_path in deps:
+            yield from self.__iter(dep_manifest_path)
 
 
 class ProjectIter:
