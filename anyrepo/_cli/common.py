@@ -28,6 +28,13 @@ class Context(BaseModel):
     """Command Line Context."""
 
     verbose: int
+    color: bool
+
+    def echo(self, *args, **kwargs):
+        """Print with color support similar to :any:`click.secho()."""
+        if self.color:
+            return click.secho(*args, **kwargs)
+        return click.echo(*args)
 
 
 pass_context = click.make_pass_decorator(Context)
@@ -36,8 +43,12 @@ pass_context = click.make_pass_decorator(Context)
 class Error(click.ClickException):
     """Common CLI Error."""
 
+    color = True
+
     def format_message(self) -> str:
-        return click.style(self.message, fg="red")
+        if self.color:
+            return click.style(self.message, fg="red")
+        return self.message
 
 
 @contextmanager
@@ -75,4 +86,4 @@ def _print_traceback(context: Context, exc: Exception):
     if context.verbose > 1:  # pragma: no cover
         # pylint: disable=no-value-for-parameter
         lines = "".join(traceback.format_exc())
-        click.secho(lines, fg="red", err=True)
+        context.echo(lines, fg="red", err=True)
