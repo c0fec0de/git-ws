@@ -8,12 +8,18 @@
 
 # Multi Repository Management Tool
 
+[Installation](#installation)
+[Usage](#usage)
+[Python API](#api)
+[Alternatives](#alternatives)
+
 AnyRepo is a lightweight tool for creating and managing *workspaces* consisting of several interdependent `git` repositories. Starting from a *main repository*, AnyRepo discovers dependencies specified in a *manifest file*, fetching any specified required repositories and assembling them into a single workspace.
 
 ![Workspace](https://github.com/c0fec0de/anyrepo/raw/main/docs/images/workspace.png)
 
 👉 You can read more about the used [nomenclature](https://anyrepo.readthedocs.io/en/latest/manual/nomenclature.html) in the [documentation](https://anyrepo.readthedocs.io/en/latest/index.html).
 
+<a name="installation"/>
 
 # 📦 Installation
 
@@ -29,6 +35,8 @@ And that's it! Ideally, if your project also uses Python, we recommend adding An
 # Add AnyRepo as development dependency:
 poetry add --group dev anyrepo
 ```
+
+<a name="usage"/>
 
 # 📔 Usage
 
@@ -112,9 +120,13 @@ These are basically wrapper commands around the generic `anyrepo foreach` comman
 anyrepo foreach -- git status
 ```
 
+<a name="api"/>
+
 ## 🐍 Python API
 
 AnyRepo is written in Python. Besides the `anyrepo` command line tool, there is also an API which you can use to further automate workspace creation and maintenance. If you are interested, have a look into the [API documentation](https://anyrepo.readthedocs.io/en/latest/api/anyrepo.html).
+
+<a name="alternatives"/>
 
 ## 🤝 Alternatives
 
