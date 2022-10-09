@@ -12,7 +12,7 @@ from anyrepo.const import MANIFEST_PATH_DEFAULT
 from .common import COLOR_INFO, Context, Error, exceptionhandling, get_loglevel, pass_context
 from .info import info
 from .manifest import manifest
-from .options import force_option, groups_option, manifest_option, projects_option, update_option
+from .options import force_option, groups_option, manifest_option, paths_argument, projects_option, update_option
 
 _LOGGING_FORMAT = "%(name)s %(levelname)s %(message)s"
 
@@ -209,22 +209,68 @@ def rebase(context, projects=None, manifest_path=None, groups=None):
 
 @main.command()
 @projects_option()
-@manifest_option()
-@groups_option()
-@click.option("-s", "--short", is_flag=True)
 @pass_context
-def status(context, projects=None, manifest_path=None, groups=None, short=False):
+def status(context, projects=None):
     """
-    Run 'git status' on projects.
-
-    This command behaves identical to `anyrepo foreach -- git status`.
+    Run 'git status' (displayed paths include the actual clone path).
     """
-    cmd = ["git", "status"]
-    if short:
-        cmd.append("-s")
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
-        arepo.run_foreach(cmd, project_paths=projects, groups=groups)
+        arepo = AnyRepo.from_path(echo=context.echo)
+        for status in arepo.status(project_paths=projects):
+            context.echo(str(status))
+
+
+@main.command()
+@paths_argument()
+@pass_context
+def checkout(context, paths):
+    """
+    Run 'git checkout' on paths and choose the right git clone and manifest revision automatically.
+
+    Checkout all clones to their manifest revision, if no paths are given.
+    """
+    with exceptionhandling(context):
+        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo.checkout([Path(path) for path in paths])
+
+
+@main.command()
+@paths_argument()
+@pass_context
+def add(context, paths):
+    """
+    Run 'git add' on paths and choose the right git clone automatically.
+    """
+    with exceptionhandling(context):
+        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo.add([Path(path) for path in paths])
+
+
+@main.command()
+@paths_argument()
+@pass_context
+def reset(context, paths):
+    """
+    Run 'git reset' on paths and choose the right git clone automatically.
+    """
+    with exceptionhandling(context):
+        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo.reset([Path(path) for path in paths])
+
+
+@main.command()
+@click.option("--message", "-m", help="commit message")
+@paths_argument()
+@pass_context
+def commit(context, paths, message=None):
+    """
+    Run 'git commit' on paths and choose the right git clone automatically.
+    """
+    with exceptionhandling(context):
+        if not message:
+            raise ValueError("Please provide a commit message.")
+        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo.commit(message, [Path(path) for path in paths])
 
 
 @main.command()

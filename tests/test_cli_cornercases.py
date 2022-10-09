@@ -4,10 +4,9 @@ from pytest import fixture
 from anyrepo import AnyRepo
 from anyrepo.datamodel import ManifestSpec, ProjectSpec
 
+# pylint: disable=unused-import
 from .fixtures import git_repo
-
-# pylint: disable=unused-import,duplicate-code
-from .util import chdir, format_logs, format_output, get_sha, run
+from .util import chdir, format_logs
 
 
 def check(workspace, name, content=None, exists=True):
@@ -89,8 +88,8 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         "'TMP/workspace/top'], cwd='None') OK stdout=None stderr=None",
         "INFO    anyrepo Initialized TMP/workspace Info(main_path=PosixPath('top')) "
         "AppConfigData(manifest_path='anyrepo.toml', color_ui=True, groups=None)",
-        "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='top') OK stdout=b'\\n' stderr=b''",
-        "INFO    anyrepo run(('git', 'remote', 'get-url', 'origin'), cwd='top') OK "
+        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='top') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(['git', 'remote', 'get-url', 'origin'], cwd='top') OK "
         "stdout=b'TMP/repos/top\\n' stderr=b''",
         "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
         "url='../dep1'), ProjectSpec(name='dep2', url='../dep2')))",
@@ -100,8 +99,8 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         "DEBUG   anyrepo Project(name='dep2', path='dep2', url='TMP/repos/dep2')",
         "INFO    anyrepo run(['git', 'clone', '--', 'TMP/repos/dep2', 'dep2'], "
         "cwd='None') OK stdout=None stderr=None",
-        "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='dep1') OK stdout=b'\\n' stderr=b''",
-        "INFO    anyrepo run(('git', 'remote', 'get-url', 'origin'), cwd='dep1') OK "
+        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(['git', 'remote', 'get-url', 'origin'], cwd='dep1') OK "
         "stdout=b'TMP/repos/dep1\\n' stderr=b''",
         "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep3', "
         "url='../dep3', revision='main'), ProjectSpec(name='top', url='../top')))",
@@ -109,13 +108,13 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         "INFO    anyrepo run(['git', 'clone', '--branch', 'main', '--', "
         "'TMP/repos/dep3', 'dep3'], cwd='None') OK stdout=None stderr=None",
         "DEBUG   anyrepo DUPLICATE Project(name='top', path='top', url='TMP/repos/top')",
-        "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='dep3') OK stdout=b'\\n' stderr=b''",
-        "INFO    anyrepo run(('git', 'remote', 'get-url', 'origin'), cwd='dep3') OK "
+        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep3') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(['git', 'remote', 'get-url', 'origin'], cwd='dep3') OK "
         "stdout=b'TMP/repos/dep3\\n' stderr=b''",
         "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='top'),))",
         "DEBUG   anyrepo DUPLICATE Project(name='top', path='top', url='TMP/repos/top')",
-        "INFO    anyrepo run(('git', 'rev-parse', '--show-cdup'), cwd='dep2') OK stdout=b'\\n' stderr=b''",
-        "INFO    anyrepo run(('git', 'remote', 'get-url', 'origin'), cwd='dep2') OK "
+        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep2') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(['git', 'remote', 'get-url', 'origin'], cwd='dep2') OK "
         "stdout=b'TMP/repos/dep2\\n' stderr=b''",
         "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep3', url='../dep3', revision='main'),))",
         "DEBUG   anyrepo DUPLICATE Project(name='dep3', path='dep3', url='TMP/repos/dep3', revision='main')",

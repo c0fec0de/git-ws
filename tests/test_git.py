@@ -114,3 +114,35 @@ def test_git_revisions(git):
     assert git.get_tag() is None
     assert git.get_sha() == sha2
     assert git.get_revision() == "main"
+
+
+def test_git_status(git):
+    """Git Status."""
+    path = git.path
+
+    assert [str(item) for item in git.status()] == []
+
+    (path / "data.txt").touch()
+    (path / "other.txt").touch()
+
+    assert [str(item) for item in git.status()] == ["?? data.txt", "?? other.txt"]
+
+    git.add(("data.txt",))
+
+    assert [str(item) for item in git.status()] == ["A  data.txt", "?? other.txt"]
+
+    (path / "data.txt").unlink()
+
+    assert [str(item) for item in git.status()] == ["AD data.txt", "?? other.txt"]
+
+    git.commit("initial")
+
+    assert [str(item) for item in git.status()] == [" D data.txt", "?? other.txt"]
+
+    (path / "data.txt").touch()
+
+    assert [str(item) for item in git.status()] == ["?? other.txt"]
+
+    (path / "other.txt").unlink()
+
+    assert [str(item) for item in git.status()] == []

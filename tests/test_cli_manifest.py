@@ -7,9 +7,9 @@ from anyrepo._cli import main
 
 from .common import MANIFEST_DEFAULT
 
-# pylint: disable=unused-import,duplicate-code
+# pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, format_output, get_sha, run
+from .util import chdir, format_output, get_sha
 
 
 @fixture

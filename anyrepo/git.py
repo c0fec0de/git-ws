@@ -1,10 +1,67 @@
 """Git Utilities."""
 
+import re
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Generator, List, Optional, Tuple, Union
 
+from ._basemodel import BaseModel
 from ._util import get_repr, run
 from .exceptions import NoGitError
+
+_RE_STATUS = re.compile(r"\A(?P<index>.)(?P<work>.)\s((?P<orig_path>.+) -> )?(?P<path>.+)\Z")
+
+
+class Status(BaseModel):
+
+    """
+    Git Status Line.
+
+    >>> status = Status.from_str("?? file.txt")
+    >>> status
+    Status(index='?', work='?', path=PosixPath('file.txt'))
+    >>> str(status)
+    '?? file.txt'
+    >>> str(status.with_path(Path("base")))
+    '?? base/file.txt'
+
+    >>> status = Status.from_str("?? src.txt -> dest.txt")
+    >>> status
+    Status(index='?', work='?', path=PosixPath('dest.txt'), orig_path=PosixPath('src.txt'))
+    >>> str(status)
+    '?? src.txt -> dest.txt'
+    >>> str(status.with_path(Path("base")))
+    '?? base/src.txt -> base/dest.txt'
+    """
+
+    index: str
+    """Status of the Index."""
+
+    work: str
+    """Status of Workiing Tree."""
+
+    path: Path
+    """File Path."""
+
+    orig_path: Optional[Path] = None
+    """File Path of the original file in case of a move."""
+
+    def __str__(self):
+        if self.orig_path:
+            return f"{self.index}{self.work} {self.orig_path!s} -> {self.path!s}"
+        return f"{self.index}{self.work} {self.path!s}"
+
+    @staticmethod
+    def from_str(line) -> "Status":
+        """Create v1 porcelain output."""
+        mat = _RE_STATUS.match(line)
+        assert mat, f"Invalid pattern {line}"
+        return Status(**mat.groupdict())
+
+    def with_path(self, path: Path) -> "Status":
+        """Return :any:`Status` with `path`."""
+        if self.orig_path:
+            return self.update(path=path / self.path, orig_path=path / self.orig_path)
+        return self.update(path=path / self.path)
 
 
 class Git:
@@ -20,9 +77,7 @@ class Git:
 
     The easiest way to start:
 
-    .. code-block:: python
-
-        git = Git.from_path()
+    >>> git = Git.from_path()
     """
 
     # pylint: disable=too-many-public-methods
@@ -34,7 +89,7 @@ class Git:
         return get_repr(self, (self.path,))
 
     @staticmethod
-    def find_path(path: Optional[Path]) -> Path:
+    def find_path(path: Optional[Path] = None) -> Path:
         """Determine Top Directory of Git Clone."""
         path = path or Path.cwd()
         result = run(("git", "rev-parse", "--show-cdup"), capture_output=True, check=False, cwd=path)
@@ -44,7 +99,7 @@ class Git:
         return (path / cdup).resolve()
 
     @staticmethod
-    def from_path(path: Optional[Path]) -> "Git":
+    def from_path(path: Optional[Path] = None) -> "Git":
         """Create GIT Repo Helper from `path`."""
         path = Git.find_path(path=path)
         return Git(path=path)
@@ -66,11 +121,11 @@ class Git:
 
     def clone(self, url, revision=None):
         """Clone."""
-        cmd = ["git", "clone"]
+        args = ["git", "clone"]
         if revision:
-            cmd += ["--branch", revision]
-        cmd += ["--", str(url), str(self.path)]
-        run(cmd)
+            args += ["--branch", revision]
+        args += ["--", str(url), str(self.path)]
+        run(args)
 
     def get_tag(self) -> Optional[str]:
         """Get Actual Tag."""
@@ -101,9 +156,12 @@ class Git:
         """Get Actual URL of 'origin'."""
         return self._run2str(("remote", "get-url", "origin"), check=False) or None
 
-    def checkout(self, revision):
+    def checkout(self, revision: Optional[str] = None, paths: Optional[Tuple[Path, ...]] = None):
         """Checkout Revision."""
-        self._run(("checkout", revision))
+        if revision:
+            self._run(("checkout", revision), paths=paths)
+        else:
+            self._run(("checkout",), paths=paths)
 
     def fetch(self):
         """Fetch."""
@@ -117,28 +175,34 @@ class Git:
         """Pull."""
         self._run(("pull",))
 
-    def push(self):
-        """Push."""
-        self._run(("push",))
-
     def rebase(self):
         """Rebase."""
         self._run(("rebase",))
 
-    def add(self, files: Tuple[Path]):
+    def add(self, paths: Tuple[Path, ...]):
         """Add."""
-        self._run(["add"] + [str(file) for file in files])
+        self._run(("add",), paths=paths)
 
-    def commit(self, msg):
+    def reset(self, paths: Tuple[Path, ...]):
+        """Reset."""
+        self._run(("reset",), paths=paths)
+
+    def commit(self, msg, paths: Optional[Tuple[Path, ...]] = None):
         """Commit."""
-        self._run(("commit", "-m", msg))
+        self._run(("commit", "-m", msg), paths=paths)
 
     def tag(self, name, msg=None):
         """Create Tag."""
-        cmd = ["tag", name]
+        args = ["tag", name]
         if msg:
-            cmd += ["-m", msg]
-        self._run(cmd)
+            args += ["-m", msg]
+        self._run(args)
+
+    def status(self) -> Generator[Status, None, None]:
+        """Git Status."""
+        for line in self._run2str(("status", "--porcelain=v1")).split("\n"):
+            if line:
+                yield Status.from_str(line)
 
     def is_clean(self):
         """Clone is clean and does not contain any changes."""
@@ -147,16 +211,18 @@ class Git:
             return False
         if status[1:]:
             return False
-        # TODO: check other branches
         return True
 
-    def _run(self, cmd, cwd=None, **kwargs):
-        cwd = cwd or self.path
-        cmd = ("git",) + tuple(cmd)
-        return run(cmd, cwd=cwd, **kwargs)
+    def _run(self, args: Union[List[str], Tuple[str, ...]], paths: Optional[Tuple[Path, ...]] = None, **kwargs):
+        cmd = ["git"]
+        cmd.extend(args)
+        if paths:
+            cmd.append("--")
+            cmd.extend([str(path) for path in paths])
+        return run(cmd, cwd=self.path, **kwargs)
 
-    def _run2str(self, cmd, cwd=None, check=True) -> str:
-        result = self._run(cmd, cwd=cwd, check=check, capture_output=True)
+    def _run2str(self, args: Union[List[str], Tuple[str, ...]], check=True) -> str:
+        result = self._run(args, check=check, capture_output=True)
         if result.stderr.strip():
             return ""
-        return result.stdout.decode("utf-8").strip()
+        return result.stdout.decode("utf-8").rstrip()

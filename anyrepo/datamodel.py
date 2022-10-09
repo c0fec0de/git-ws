@@ -482,10 +482,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     def upgrade(cls, path: Path):
         """Upgrade :any:`ManifestSpec` at `path` to latest revision including documentation."""
         # read
-        try:
-            content = path.read_text()
-        except FileNotFoundError:
-            raise ManifestNotFoundError(resolve_relative(path)) from None
+        content = path.read_text()
         try:
             olddoc = tomlkit.parse(content)
             data = dict(olddoc)

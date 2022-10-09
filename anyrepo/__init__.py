@@ -15,7 +15,7 @@ import logging
 
 from .anyrepo import AnyRepo
 from .appconfig import AppConfig, AppConfigLocation
-from .clone import Clone
+from .clone import Clone, map_paths
 from .datamodel import AppConfigData, Defaults, Group, Manifest, ManifestSpec, Project, ProjectSpec, Remote
 from .exceptions import (
     GitCloneMissingError,
