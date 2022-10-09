@@ -33,7 +33,7 @@ def resolve(context, manifest_path=None, groups=None, output=None):
         if output:
             manifest.save(Path(output))
         else:
-            click.echo(manifest.dump())
+            context.echo(manifest.dump())
 
 
 @manifest.command()
@@ -54,7 +54,7 @@ def freeze(context, manifest_path=None, groups=None, output=None):
         if output:
             manifest.save(Path(output))
         else:
-            click.echo(manifest.dump())
+            context.echo(manifest.dump())
 
 
 @manifest.command()
@@ -78,7 +78,7 @@ def path(context, manifest_path=None):
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
         manifest = next(anyrepo.manifests())
-        click.echo(str(manifest.path))
+        context.echo(str(manifest.path))
 
 
 @manifest.command()
@@ -91,7 +91,7 @@ def paths(context, manifest_path=None):
     with exceptionhandling(context):
         anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
         for manifest in anyrepo.manifests():
-            click.echo(str(manifest.path))
+            context.echo(str(manifest.path))
 
 
 @manifest.command()

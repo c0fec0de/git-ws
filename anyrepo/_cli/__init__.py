@@ -5,14 +5,16 @@ from pathlib import Path
 import click
 import coloredlogs  # type: ignore
 
-from anyrepo import AnyRepo
+from anyrepo import AnyRepo, AppConfig
 from anyrepo._util import resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
-from .common import COLOR_INFO, Context, exceptionhandling, get_loglevel, pass_context
+from .common import COLOR_INFO, Context, Error, exceptionhandling, get_loglevel, pass_context
 from .info import info
 from .manifest import manifest
 from .options import force_option, groups_option, manifest_option, projects_option, update_option
+
+_LOGGING_FORMAT = "%(name)s %(levelname)s %(message)s"
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
@@ -23,9 +25,14 @@ def main(ctx=None, verbose=0):
     """
     Multi Repository Management Tool.
     """
+    app_config = AppConfig()
     level = get_loglevel(verbose)
-    coloredlogs.install(level=level, fmt="%(name)s %(levelname)s %(message)s")
-    ctx.obj = Context(verbose=verbose)
+    color = Error.color = app_config.options.color_ui
+    if color:
+        coloredlogs.install(level=level, fmt=_LOGGING_FORMAT)
+    else:
+        logging.basicConfig(level=level, format=_LOGGING_FORMAT)
+    ctx.obj = Context(verbose=verbose, color=color)
 
 
 @main.command()
@@ -41,7 +48,7 @@ def init(context, manifest_path=None, groups=None, update: bool = False):
     be either created by 'git init' or 'git clone'.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.init(manifest_path=manifest_path, groups=groups, echo=click.secho)
+        arepo = AnyRepo.init(manifest_path=manifest_path, groups=groups, echo=context.echo)
         click.secho(f"Workspace initialized at {str(resolve_relative(arepo.path))!r}.")
         if update:
             arepo.update(skip_main=True)
@@ -59,7 +66,7 @@ def deinit(context):
     Deinitialize AnyRepo workspace.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(echo=click.secho)
+        arepo = AnyRepo.from_path(echo=context.echo)
         arepo.deinit()
         click.secho(f"Workspace deinitialized at {str(resolve_relative(arepo.path))!r}.")
 
@@ -75,7 +82,7 @@ def clone(context, url, manifest_path=None, groups=None, update: bool = False):
     Create a git clone, initialize AnyRepo workspace and create all dependent git clones.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.clone(url, manifest_path=manifest_path, groups=groups, echo=click.secho)
+        arepo = AnyRepo.clone(url, manifest_path=manifest_path, groups=groups, echo=context.echo)
         if update:
             arepo.update(skip_main=True)
         else:
@@ -107,7 +114,7 @@ def update(
 ):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.update(
             project_paths=projects,
             manifest_path=manifest_path,
@@ -132,7 +139,7 @@ def git(context, command, projects=None, manifest_path=None, groups=None):
     This command behaves identical to `anyrepo foreach -- git`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git",) + command, project_paths=projects, groups=groups)
 
 
@@ -148,7 +155,7 @@ def fetch(context, projects=None, manifest_path=None, groups=None):
     This command behaves identical to `anyrepo foreach -- git fetch`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "fetch"), project_paths=projects, groups=groups)
 
 
@@ -164,7 +171,7 @@ def pull(context, projects=None, manifest_path=None, groups=None):
     This command behaves identical to `anyrepo foreach -- git pull`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "pull"), project_paths=projects, groups=groups)
 
 
@@ -180,7 +187,7 @@ def push(context, projects=None, manifest_path=None, groups=None):
     This command behaves identical to `anyrepo foreach -- git push`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "push"), project_paths=projects, groups=groups)
 
 
@@ -196,7 +203,7 @@ def rebase(context, projects=None, manifest_path=None, groups=None):
     This command behaves identical to `anyrepo foreach -- git rebase`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "rebase"), project_paths=projects, groups=groups)
 
 
@@ -216,7 +223,7 @@ def status(context, projects=None, manifest_path=None, groups=None, short=False)
     if short:
         cmd.append("-s")
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(cmd, project_paths=projects, groups=groups)
 
 
@@ -232,7 +239,7 @@ def diff(context, projects=None, manifest_path=None, groups=None):
     This command behaves identical to `anyrepo foreach -- git diff`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "diff"), project_paths=projects, groups=groups)
 
 
@@ -250,7 +257,7 @@ def foreach(context, command, projects=None, manifest_path=None, groups=None):
     (i.e. `anyrepo foreach -- ls -l`)
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=click.secho)
+        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(command, project_paths=projects, groups=groups)
 
 
