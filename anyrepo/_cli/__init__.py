@@ -223,6 +223,20 @@ def status(context, projects=None):
 @main.command()
 @paths_argument()
 @pass_context
+def checkout(context, paths):
+    """
+    Run 'git checkout' on paths and choose the right git clone and manifest revision automatically.
+
+    Checkout all clones to their manifest revision, if no paths are given.
+    """
+    with exceptionhandling(context):
+        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo.checkout([Path(path) for path in paths])
+
+
+@main.command()
+@paths_argument()
+@pass_context
 def add(context, paths):
     """
     Run 'git add' on paths and choose the right git clone automatically.

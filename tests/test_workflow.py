@@ -32,7 +32,7 @@ def test_status(tmp_path, arepo):
     ]
 
 
-def test_full(tmp_path, arepo):
+def test_workflow(tmp_path, arepo):
     """Test Full Workflow."""
 
     workspace = tmp_path / "workspace"
@@ -127,5 +127,107 @@ def test_full(tmp_path, arepo):
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+
+def test_checkout_file(tmp_path, arepo):
+    """Checkout files."""
+
+    workspace = tmp_path / "workspace"
+    dep2 = workspace / "dep2"
+    dep4 = workspace / "dep4"
+
+    (dep2 / "data.txt").write_text("My Change")
+    (dep4 / "data.txt").write_text("Other Change")
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        " M dep2/data.txt",
+        "===== dep4 (revision='main') =====",
+        " M dep4/data.txt",
+        "",
+    ]
+
+    assert cli(("checkout", "dep1/missing.txt"), exit_code=1) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "Error: Command '['git', 'checkout', '--', 'missing.txt']' returned non-zero exit status 1.",
+        "",
+    ]
+
+    assert cli(("checkout", "dep1/data.txt")) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        " M dep2/data.txt",
+        "===== dep4 (revision='main') =====",
+        " M dep4/data.txt",
+        "",
+    ]
+
+    assert cli(("checkout", "dep2/data.txt")) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        " M dep4/data.txt",
+        "",
+    ]
+
+
+def test_checkout(tmp_path, arepo):
+    """Checkout files."""
+
+    workspace = tmp_path / "workspace"
+    dep2 = workspace / "dep2"
+    dep4 = workspace / "dep4"
+
+    (dep2 / "data.txt").write_text("My Change")
+    (dep4 / "data.txt").write_text("Other Change")
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        " M dep2/data.txt",
+        "===== dep4 (revision='main') =====",
+        " M dep4/data.txt",
+        "",
+    ]
+
+    assert cli(("checkout")) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        " M dep2/data.txt",
+        "===== dep4 (revision='main') =====",
+        " M dep4/data.txt",
         "",
     ]

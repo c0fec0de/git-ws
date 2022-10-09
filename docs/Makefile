@@ -28,6 +28,7 @@ gen:
 	rm -f static/manifest.toml
 	anyrepo --help > static/cli.txt
 	anyrepo add --help > static/cli.add.txt
+	anyrepo checkout --help > static/cli.checkout.txt
 	anyrepo clone --help > static/cli.clone.txt
 	anyrepo commit --help > static/cli.commit.txt
 	anyrepo deinit --help > static/cli.deinit.txt

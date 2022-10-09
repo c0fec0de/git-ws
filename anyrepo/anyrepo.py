@@ -35,6 +35,8 @@ class AnyRepo:
         manifest_spec (ManifestSpec): manifest.
     """
 
+    # pylint: disable=too-many-public-methods
+
     def __init__(self, workspace: Workspace, manifest_spec: ManifestSpec, echo=None):
         self.workspace = workspace
         self.manifest_spec = manifest_spec
@@ -223,6 +225,21 @@ class AnyRepo:
             for status in clone.git.status():
                 yield status.with_path(path)
 
+    def checkout(self, paths: Tuple[Path, ...]):
+        """Checkout."""
+        if paths:
+            # Checkout specific files only
+            for clone, cpaths in map_paths(tuple(self.clones()), paths):
+                self._echo_project_banner(clone.project)
+                if cpaths:
+                    clone.git.checkout(revision=clone.project.revision, paths=cpaths)
+        else:
+            # Checkout all branches
+            for clone in self.clones():
+                self._echo_project_banner(clone.project)
+                if clone.project.revision:
+                    clone.git.checkout(revision=clone.project.revision)
+
     def add(self, paths: Tuple[Path, ...]):
         """Add."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
@@ -239,7 +256,7 @@ class AnyRepo:
         """Commit."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             if cpaths:
-                self.echo(f"===== {clone.project.info} =====", fg=_COLOR_BANNER)
+                self._echo_project_banner(clone.project)
                 clone.git.commit(msg, paths=cpaths)
 
     def run_foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
@@ -272,7 +289,7 @@ class AnyRepo:
             except FileNotFoundError:
                 clonerev = None
             if project_paths_filter(project):
-                self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
+                self._echo_project_banner(clone.project)
                 if not no_warn and projectrev and clonerev and projectrev != clonerev:
                     _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
                 yield clone
@@ -376,3 +393,6 @@ class AnyRepo:
             return filter_(groups, disabled=disabled)
 
         return func
+
+    def _echo_project_banner(self, project):
+        self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)
