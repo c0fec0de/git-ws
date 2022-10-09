@@ -1,7 +1,7 @@
 [![pypi-version](https://badge.fury.io/py/anyrepo.svg)](https://badge.fury.io/py/anyrepo)
 [![pypi-downloads](https://img.shields.io/pypi/dm/anyrepo.svg?label=pypi%20downloads)](https://pypi.python.org/pypi/anyrepo)
 [![doc](https://readthedocs.org/projects/anyrepo/badge/?version=latest)](https://anyrepo.readthedocs.io/en/latest/?badge=latest)
-[![coverage](https://coveralls.io/repos/github/c0fec0de/anyrepo/badge.svg)](https://coveralls.io/github/c0fec0de/anyrepo)
+[![Coverage Status](https://coveralls.io/repos/github/c0fec0de/anyrepo/badge.svg?branch=main)](https://coveralls.io/github/c0fec0de/anyrepo?branch=main)
 [![python-versions](https://img.shields.io/pypi/pyversions/anyrepo.svg)](https://pypi.python.org/pypi/anyrepo)
 [![pylint](https://img.shields.io/badge/linter-pylint-%231674b1?style=flat)](https://www.pylint.org/)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
