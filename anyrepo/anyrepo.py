@@ -13,7 +13,7 @@ from ._util import no_echo, removesuffix, resolve_relative, run
 from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
-from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError
+from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError, WorkspaceNotEmptyError
 from .filters import Filter, default_filter
 from .git import Git, Status
 from .iters import ManifestIter, ProjectIter
@@ -68,42 +68,40 @@ class AnyRepo:
         return AnyRepo(workspace, manifest_spec, echo=echo)
 
     @staticmethod
-    def create(path: Path, project_path: Path, manifest_path: Path, groups: Groups = None, echo=None) -> "AnyRepo":
+    def create(path: Path, main_path: Path, manifest_path: Path, groups: Groups = None, echo=None) -> "AnyRepo":
         """
         Create :any:`AnyRepo` for workspace at `path`.
 
         Keyword Args:
             path:  Path within the workspace (Default is the current working directory).
-            project_path:  Main Project Path.
+            main_path:  Main Project Path.
             mainfest_path:  ManifestSpec File Path.
         """
-        manifest_path = project_path / manifest_path
+        manifest_path = main_path / manifest_path
         manifest_spec = ManifestSpec.load(manifest_path)
-        workspace = Workspace.init(
-            path, project_path, resolve_relative(manifest_path, base=project_path), groups=groups
-        )
+        workspace = Workspace.init(path, main_path, resolve_relative(manifest_path, base=main_path), groups=groups)
         return AnyRepo(workspace, manifest_spec, echo=echo)
 
     @staticmethod
     def init(
-        project_path: Path = None,
+        main_path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
         echo=None,
     ) -> "AnyRepo":
         """
-        Initialize Workspace for git clone at `project_path`.
+        Initialize Workspace for git clone at `main_path`.
 
-        :param project_path: Path within git clone. (Default is the current working directory).
+        :param main_path: Path within git clone. (Default is the current working directory).
         :param manifest_path: Path to the manifest file.
         """
         echo = echo or no_echo
-        project_path = Git.find_path(path=project_path)
-        name = project_path.name
+        main_path = Git.find_path(path=main_path)
+        name = main_path.name
         echo(f"===== {name} =====", fg=_COLOR_BANNER)
-        manifest_path = resolve_relative(project_path / manifest_path)
-        path = project_path.parent
-        return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
+        manifest_path = resolve_relative(main_path / manifest_path)
+        path = main_path.parent
+        return AnyRepo.create(path, main_path, manifest_path, groups, echo=echo)
 
     def deinit(self):
         """De-Initialize :any:`AnyRepo`."""
@@ -115,19 +113,22 @@ class AnyRepo:
         path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
+        force: bool = False,
         echo=None,
     ) -> "AnyRepo":
         """Clone git `url` and initialize Workspace."""
         echo = echo or no_echo
         path = path or Path.cwd()
+        if not force and any(path.iterdir()):
+            raise WorkspaceNotEmptyError(resolve_relative(path))
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
         echo(f"===== {name} =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        project_path = path / removesuffix(name, ".git")
-        git = Git(project_path)
+        main_path = path / removesuffix(name, ".git")
+        git = Git(main_path)
         git.clone(url)
-        return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
+        return AnyRepo.create(path, main_path, manifest_path, groups, echo=echo)
 
     def update(
         self,
@@ -235,10 +236,15 @@ class AnyRepo:
                     clone.git.checkout(revision=clone.project.revision, paths=cpaths)
         else:
             # Checkout all branches
-            for clone in self.clones():
-                self._echo_project_banner(clone.project)
-                if clone.project.revision:
-                    clone.git.checkout(revision=clone.project.revision)
+            for clone in self.clones(resolve_url=True):
+                git = clone.git
+                project = clone.project
+                self._echo_project_banner(project)
+                if not git.is_cloned():
+                    self.echo(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+                    git.clone(project.url, revision=project.revision)
+                if project.revision:
+                    git.checkout(revision=project.revision)
 
     def add(self, paths: Tuple[Path, ...]):
         """Add."""
@@ -254,10 +260,18 @@ class AnyRepo:
 
     def commit(self, msg: str, paths: Tuple[Path, ...]):
         """Commit."""
-        for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            if cpaths:
+        if paths:
+            # clone file specific commit
+            for clone, cpaths in map_paths(tuple(self.clones()), paths):
+                if cpaths:
+                    self._echo_project_banner(clone.project)
+                    clone.git.commit(msg, paths=cpaths)
+        else:
+            # commit changed clones
+            clones = [clone for clone in self.clones() if clone.git.has_index_changes()]
+            for clone in clones:
                 self._echo_project_banner(clone.project)
-                clone.git.commit(msg, paths=cpaths)
+                clone.git.commit(msg)
 
     def run_foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
         """Run `command` on each project."""

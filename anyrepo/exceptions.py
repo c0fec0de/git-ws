@@ -50,6 +50,14 @@ class OutsideWorkspaceError(RuntimeError):
         self.project_path = project_path
 
 
+class WorkspaceNotEmptyError(RuntimeError):
+    """Workspace Is Not Empty."""
+
+    def __init__(self, path):
+        super().__init__(f"Workspace {str(path)!r} is not an empty directory.")
+        self.path = path
+
+
 class ManifestError(RuntimeError):
     """The Manifest Is Invalid."""
 

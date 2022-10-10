@@ -5,7 +5,7 @@ from anyrepo import AnyRepo, Git
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, cli, format_output
+from .util import chdir, cli
 
 
 @fixture
@@ -39,9 +39,12 @@ def test_workflow(tmp_path, arepo):
     dep1 = workspace / "dep1"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
+    git1 = Git(dep1)
     git2 = Git(dep2)
     git4 = Git(dep4)
 
+    git1.set_config("user.email", "you@example.com")
+    git1.set_config("user.name", "you")
     git2.set_config("user.email", "you@example.com")
     git2.set_config("user.name", "you")
     git4.set_config("user.email", "you@example.com")
@@ -121,11 +124,49 @@ def test_workflow(tmp_path, arepo):
 
     assert cli(("reset", "dep1/foo.txt")) == [""]
 
+    (dep2 / "barbar.txt").touch()
+
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("commit", "-m", "test")) == [""]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "?? dep1/foo.txt",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("add", "dep1/foo.txt")) == [""]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "A  dep1/foo.txt",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("commit", "-m", "changes")) == ["===== dep1 =====", ""]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
         "===== dep4 (revision='main') =====",
         "",
     ]

@@ -32,5 +32,6 @@ def test_imports():
         Remote,
         UninitializedError,
         Workspace,
+        WorkspaceNotEmptyError,
         find_workspace,
     )

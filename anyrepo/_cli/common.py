@@ -6,7 +6,14 @@ from contextlib import contextmanager
 import click
 from pydantic import BaseModel
 
-from anyrepo import GitCloneMissingError, GitCloneNotCleanError, ManifestNotFoundError, NoGitError, UninitializedError
+from anyrepo import (
+    GitCloneMissingError,
+    GitCloneNotCleanError,
+    ManifestNotFoundError,
+    NoGitError,
+    UninitializedError,
+    WorkspaceNotEmptyError,
+)
 
 COLOR_INFO = "blue"
 
@@ -80,6 +87,9 @@ def exceptionhandling(context: Context):
     except GitCloneNotCleanError as exc:
         _print_traceback(context)
         raise Error(f"{exc!s}\n\nCommit/Push all your changes and branches or use '--force'\n") from None
+    except WorkspaceNotEmptyError as exc:
+        _print_traceback(context)
+        raise Error(f"{exc!s}\n\nChoose an empty directory or use '--force'\n") from None
     except Exception as exc:
         _print_traceback(context)
         raise Error(f"{exc!s}") from None

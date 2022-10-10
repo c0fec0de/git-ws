@@ -29,6 +29,7 @@ from .exceptions import (
     NoGitError,
     OutsideWorkspaceError,
     UninitializedError,
+    WorkspaceNotEmptyError,
 )
 from .filters import Filter
 from .git import Git

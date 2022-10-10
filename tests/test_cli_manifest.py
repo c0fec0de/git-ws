@@ -1,15 +1,13 @@
 """Command Line Interface."""
-from click.testing import CliRunner
 from pytest import fixture
 
 from anyrepo import AnyRepo
-from anyrepo._cli import main
 
 from .common import MANIFEST_DEFAULT
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, format_output, get_sha
+from .util import chdir, cli, get_sha
 
 
 @fixture
@@ -27,9 +25,7 @@ def arepo(tmp_path, repos):
 
 def test_validate(tmp_path, arepo):
     """Manifest Validate."""
-    result = CliRunner().invoke(main, ["manifest", "validate"])
-    assert format_output(result) == [""]
-    assert result.exit_code == 0
+    assert cli(["manifest", "validate"]) == [""]
 
     manifest_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
     assert manifest_path.write_text(
@@ -46,14 +42,12 @@ def test_validate(tmp_path, arepo):
             ]
         )
     )
-    result = CliRunner().invoke(main, ["manifest", "validate"])
-    assert format_output(result) == [
+    assert cli(["manifest", "validate"], exit_code=1) == [
         "Error: Manifest 'main/anyrepo.toml' is broken: 1 validation error for ManifestSpec",
         "dependencies -> 0 -> name",
         "  field required (type=value_error.missing)",
         "",
     ]
-    assert result.exit_code == 1
 
 
 def test_freeze(tmp_path, arepo):
@@ -83,18 +77,29 @@ def test_freeze(tmp_path, arepo):
     ]
 
     # STDOUT
-    result = CliRunner().invoke(main, ["manifest", "freeze", "-G", "+test"])
-    assert format_output(result) == [
+    assert cli(["manifest", "freeze", "-G", "+test"], exit_code=1) == [
         "Error: Git Clone 'dep3' is missing. Try:",
         "",
         "    anyrepo update",
         "",
         "",
     ]
-    assert result.exit_code == 1
-    CliRunner().invoke(main, ["update", "-G", "+test"])
-    result = CliRunner().invoke(main, ["manifest", "freeze", "-G", "+test"])
-    assert format_output(result) == lines + [
+
+    assert cli(["update", "-G", "+test"], tmp_path=tmp_path) == [
+        "Groups: '+test'",
+        "===== main =====",
+        "Pulling branch 'main'.",
+        "===== dep1 =====",
+        "Pulling branch 'main'.",
+        "===== dep2 (revision='1-feature') =====",
+        "Pulling branch '1-feature'.",
+        "===== dep4 (revision='main') =====",
+        "Pulling branch 'main'.",
+        "===== dep3 (groups='test') =====",
+        "Cloning 'TMP/repos/dep3'.",
+        "",
+    ]
+    assert cli(["manifest", "freeze", "-G", "+test"]) == lines + [
         "[[dependencies]]",
         'name = "dep3"',
         'url = "../dep3"',
@@ -104,19 +109,16 @@ def test_freeze(tmp_path, arepo):
         "",
         "",
     ]
-    assert result.exit_code == 0
 
     # FILE
     output_path = tmp_path / "manifest.toml"
-    result = CliRunner().invoke(main, ["manifest", "freeze", "--output", str(output_path)])
-    assert format_output(result) == [
+    assert cli(["manifest", "freeze", "--output", str(output_path)]) == [
         "",
     ]
-    assert result.exit_code == 0
+
     assert output_path.read_text().split("\n") == lines
 
-    result = CliRunner().invoke(main, ["update", "--manifest", str(output_path)])
-    assert format_output(result) == [
+    assert cli(["update", "--manifest", str(output_path)]) == [
         "===== main =====",
         "Pulling branch 'main'.",
         f"===== dep1 (revision={sha1!r}) =====",
@@ -130,15 +132,11 @@ def test_freeze(tmp_path, arepo):
         f"Checking out {sha4!r} (previously 'main').",
         "",
     ]
-    assert result.exit_code == 0
 
     # STDOUT again
-    result = CliRunner().invoke(main, ["manifest", "freeze"])
-    assert format_output(result) == lines + [""]
-    assert result.exit_code == 0
+    assert cli(["manifest", "freeze"]) == lines + [""]
 
-    result = CliRunner().invoke(main, ["update", "--manifest", str(output_path)])
-    assert format_output(result) == [
+    assert cli(["update", "--manifest", str(output_path)]) == [
         "===== main =====",
         "Pulling branch 'main'.",
         f"===== dep1 (revision={sha1!r}) =====",
@@ -149,7 +147,6 @@ def test_freeze(tmp_path, arepo):
         "Nothing to do.",
         "",
     ]
-    assert result.exit_code == 0
 
 
 def test_resolve(tmp_path, arepo):
@@ -175,44 +172,29 @@ def test_resolve(tmp_path, arepo):
     ]
 
     # STDOUT
-    result = CliRunner().invoke(main, ["manifest", "resolve"])
-    assert format_output(result) == lines + [""]
-    assert result.exit_code == 0
+    assert cli(["manifest", "resolve"]) == lines + [""]
 
     # FILE
     output_path = tmp_path / "manifest.toml"
-    result = CliRunner().invoke(main, ["manifest", "resolve", "--output", str(output_path)])
-    assert format_output(result) == [
+    assert cli(["manifest", "resolve", "--output", str(output_path)]) == [
         "",
     ]
-    assert result.exit_code == 0
     assert output_path.read_text().split("\n") == lines
 
 
 def test_path(tmp_path, arepo):
     """Manifest Path."""
-    result = CliRunner().invoke(main, ["manifest", "path"])
-    main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
-    assert format_output(result) == [
-        f"{main_path!s}",
-        "",
-    ]
-    assert result.exit_code == 0
+    assert cli(["manifest", "path"], tmp_path=tmp_path) == ["TMP/workspace/main/anyrepo.toml", ""]
 
 
 def test_paths(tmp_path, arepo):
     """Manifest Paths."""
-    result = CliRunner().invoke(main, ["manifest", "paths"])
-    main_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
-    dep1_path = tmp_path / "workspace" / "dep1" / "anyrepo.toml"
-    dep2_path = tmp_path / "workspace" / "dep2" / "anyrepo.toml"
-    assert format_output(result) == [
-        f"{main_path!s}",
-        f"{dep1_path!s}",
-        f"{dep2_path!s}",
+    assert cli(["manifest", "paths"], tmp_path=tmp_path) == [
+        "TMP/workspace/main/anyrepo.toml",
+        "TMP/workspace/dep1/anyrepo.toml",
+        "TMP/workspace/dep2/anyrepo.toml",
         "",
     ]
-    assert result.exit_code == 0
 
 
 def test_upgrade(tmp_path):
@@ -239,12 +221,10 @@ name = 'bar'
 
 """
     )
-    result = CliRunner().invoke(main, ["manifest", "upgrade", "-M", str(manifest_path)])
-    assert format_output(result) == [
+    assert cli(["manifest", "upgrade", "-M", str(manifest_path)]) == [
         f"Manifest '{manifest_path!s}' " "upgraded.",
         "",
     ]
-    assert result.exit_code == 0
     assert (
         manifest_path.read_text()
         == """version = "1.0"
@@ -426,3 +406,19 @@ name = "my entry"
 
 """
     )
+
+
+def test_upgrade_fail(tmp_path):
+    """Test Manifest Upgrade."""
+    manifest_path = tmp_path / "my.toml"
+    with chdir(tmp_path):
+        manifest_path.write_text(
+            """
+    [[entry]
+    name = "my entry"
+     """
+        )
+        assert cli(["manifest", "upgrade", "-M", str(manifest_path)], exit_code=1) == [
+            "Error: Manifest 'my.toml' is broken: Unexpected character: 'n' at line 3 col 4",
+            "",
+        ]

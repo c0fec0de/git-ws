@@ -1,15 +1,13 @@
 """Command Line Interface."""
 from shutil import rmtree
 
-from click.testing import CliRunner
 from pytest import fixture
 
 from anyrepo import AnyRepo
-from anyrepo._cli import main
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, format_logs, format_output
+from .util import chdir, cli, format_logs
 
 
 @fixture
@@ -52,15 +50,12 @@ def test_diff(tmp_path, arepo, caplog):
 
 def test_deinit(tmp_path, arepo, caplog):
     """Test deinit."""
-    result = CliRunner().invoke(main, ["deinit"])
-    assert format_output(result) == ["Workspace deinitialized at '.'.", ""]
+    assert cli(["deinit"]) == ["Workspace deinitialized at '.'.", ""]
 
-    assert result.exit_code == 0
     assert not (tmp_path / "workspace/.anyrepo").exists()
     assert (tmp_path / "workspace/main").exists()
 
-    result = CliRunner().invoke(main, ["deinit"])
-    assert format_output(result, tmp_path) == [
+    assert cli(["deinit"], exit_code=1) == [
         "Error: anyrepo has not been initialized yet. Try:",
         "",
         "    anyrepo init",
@@ -71,43 +66,36 @@ def test_deinit(tmp_path, arepo, caplog):
         "",
         "",
     ]
-    assert result.exit_code == 1
 
 
 def test_git(tmp_path, arepo):
     """Test git."""
-    result = CliRunner().invoke(main, ["git", "status"])
-    assert format_output(result) == [
+    assert cli(["git", "status"]) == [
         "===== main =====",
         "===== dep1 =====",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
     ]
-    assert result.exit_code == 0
 
-    result = CliRunner().invoke(main, ["git", "status", "-P", "dep2", "-P", "./dep4"])
-    assert format_output(result) == [
+    assert cli(["git", "status", "-P", "dep2", "-P", "./dep4"]) == [
         "===== SKIPPING main =====",
         "===== SKIPPING dep1 =====",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
     ]
-    assert result.exit_code == 0
 
 
 def test_foreach(tmp_path, arepo, caplog):
     """Test foreach."""
-    result = CliRunner().invoke(main, ["foreach", "git", "status"])
-    assert format_output(result) == [
+    assert cli(["foreach", "git", "status"]) == [
         "===== main =====",
         "===== dep1 =====",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
     ]
-    assert result.exit_code == 0
     assert format_logs(caplog, tmp_path) == [
         "INFO    anyrepo path=TMP/workspace",
         "INFO    anyrepo Loaded TMP/workspace Info(main_path=PosixPath('main')) "
@@ -155,8 +143,7 @@ def test_foreach(tmp_path, arepo, caplog):
 def test_foreach_missing(tmp_path, arepo, caplog):
     """Test foreach."""
     rmtree(tmp_path / "workspace" / "dep2")
-    result = CliRunner().invoke(main, ["foreach", "git", "status"])
-    assert format_output(result) == [
+    assert cli(["foreach", "git", "status"], exit_code=1) == [
         "===== main =====",
         "===== dep1 =====",
         "===== dep2 (revision='1-feature') =====",
@@ -166,26 +153,22 @@ def test_foreach_missing(tmp_path, arepo, caplog):
         "",
         "",
     ]
-    assert result.exit_code == 1
 
 
 def test_foreach_fail(tmp_path, arepo):
     """Test foreach failing."""
-    result = CliRunner().invoke(main, ["foreach", "--", "git", "status", "--invalidoption"])
-    assert format_output(result) == [
+    assert cli(["foreach", "--", "git", "status", "--invalidoption"], exit_code=1) == [
         "===== main =====",
         "Error: Command '('git', 'status', '--invalidoption')' returned non-zero exit status 129.",
         "",
     ]
-    assert result.exit_code == 1
 
 
 def test_outside(tmp_path, arepo):
     """Outside Workspace."""
 
     with chdir(tmp_path):
-        result = CliRunner().invoke(main, ["update"])
-        assert format_output(result) == [
+        assert cli(["update"], exit_code=1) == [
             "Error: anyrepo has not been initialized yet. Try:",
             "",
             "    anyrepo init",
@@ -196,16 +179,13 @@ def test_outside(tmp_path, arepo):
             "",
             "",
         ]
-        assert result.exit_code == 1
 
 
 def _test_foreach(tmp_path, arepo, caplog, *command):
-    result = CliRunner().invoke(main, command)
-    assert format_output(result) == [
+    assert cli(command) == [
         "===== main =====",
         "===== dep1 =====",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
     ]
-    assert result.exit_code == 0
