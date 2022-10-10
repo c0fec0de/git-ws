@@ -31,6 +31,7 @@ gen:
 	anyrepo checkout --help > static/cli.checkout.txt
 	anyrepo clone --help > static/cli.clone.txt
 	anyrepo commit --help > static/cli.commit.txt
+	anyrepo config --help > static/cli.config.txt
 	anyrepo deinit --help > static/cli.deinit.txt
 	anyrepo config --help > static/cli.config.txt
 	anyrepo fetch --help > static/cli.fetch.txt
