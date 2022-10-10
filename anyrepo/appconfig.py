@@ -8,7 +8,7 @@ config files.
 """
 
 from contextlib import contextmanager
-from enum import Enum, auto
+from enum import Enum
 from pathlib import Path
 from typing import Generator, Optional
 
@@ -38,28 +38,28 @@ class _EnvAppConfigData(AppConfigData, env_prefix="anyrepo_", case_sensitive=Fal
     """
 
 
-class AppConfigLocation(Enum):
+class AppConfigLocation(str, Enum):
     """
     The location where configuration options are stored.
 
     This enum encodes the different locations where the application stores information.
     """
 
-    SYSTEM = auto()
+    SYSTEM = "system"
     """
     System wide configuration.
 
     Use this to refer to configuration options for the entire system.
     """
 
-    USER = auto()
+    USER = "user"
     """
     User configuration.
 
     Use this to refer to configuration specific to the current user.
     """
 
-    WORKSPACE = auto()
+    WORKSPACE = "workspace"
     """
     Workspace configuration.
 
@@ -257,6 +257,7 @@ class AppConfig:
                 del doc[key]
 
         doc_path = self._get_config_file_path(location)
+        doc_path.parent.mkdir(parents=True, exist_ok=True)
         doc_path.write_text(doc.as_string(), encoding="utf-8")
 
         # Clear the cached merged config so we'll reload it on next access

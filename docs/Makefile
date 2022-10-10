@@ -32,6 +32,7 @@ gen:
 	anyrepo clone --help > static/cli.clone.txt
 	anyrepo commit --help > static/cli.commit.txt
 	anyrepo deinit --help > static/cli.deinit.txt
+	anyrepo config --help > static/cli.config.txt
 	anyrepo fetch --help > static/cli.fetch.txt
 	anyrepo foreach --help > static/cli.foreach.txt
 	anyrepo git --help > static/cli.git.txt
