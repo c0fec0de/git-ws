@@ -23,7 +23,7 @@ def manifest():
 @pass_context
 def resolve(context, manifest_path=None, groups=None, output=None):
     """
-    Print The Manifest With All Imports Resolved.
+    Print The Manifest With All Projects And All Their Dependencies.
 
     The output is a single manifest file with all dependencies and their dependencies.
     """
