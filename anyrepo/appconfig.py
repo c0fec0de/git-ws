@@ -7,8 +7,10 @@ across several configuration files. In addition, that class also allows to read 
 config files.
 """
 
+import os
 from contextlib import contextmanager
 from enum import Enum
+from os import environ
 from pathlib import Path
 from typing import Generator, Optional
 
@@ -19,7 +21,16 @@ from pydantic import ValidationError
 
 from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError, UninitializedError
 
-from .const import ANYREPO_PATH, APP_AUTHOR, APP_NAME, CONFIG_FILE_NAME
+from .const import (
+    ANYREPO_PATH,
+    APP_AUTHOR,
+    APP_NAME,
+    BLOCK_APP_CONFIG_FROM_ENV_ENV_NAME,
+    CONFIG_FILE_NAME,
+    SYSTEM_CONFIG_PATH_ENV_NAME,
+    USER_CONFIG_PATH_ENV_NAME,
+    WORKSPACE_CONFIG_PATH_ENV_NAME,
+)
 from .datamodel import AppConfigData
 from .workspacefinder import find_workspace
 
@@ -126,13 +137,25 @@ class AppConfig:
     ) -> None:
         self._use_config_from_env = use_config_from_env
         if system_config_dir is None:
-            system_config_dir = _SYSTEM_CONFIG_DIR
+            sysconf_dir_from_env = environ.get(SYSTEM_CONFIG_PATH_ENV_NAME)
+            if sysconf_dir_from_env is not None:
+                system_config_dir = sysconf_dir_from_env
+            else:
+                system_config_dir = _SYSTEM_CONFIG_DIR
         if user_config_dir is None:
-            user_config_dir = _USER_CONFIG_DIR
+            userconf_dir_from_env = environ.get(USER_CONFIG_PATH_ENV_NAME)
+            if userconf_dir_from_env is not None:
+                user_config_dir = userconf_dir_from_env
+            else:
+                user_config_dir = _USER_CONFIG_DIR
         if workspace_config_dir is None:
-            workspace_dir = find_workspace()
-            if workspace_dir:
-                workspace_config_dir = str(workspace_dir / ANYREPO_PATH)
+            workspaceconf_from_env = environ.get(WORKSPACE_CONFIG_PATH_ENV_NAME)
+            if workspaceconf_from_env is not None:
+                workspace_config_dir = workspaceconf_from_env
+            else:
+                workspace_dir = find_workspace()
+                if workspace_dir:
+                    workspace_config_dir = str(workspace_dir / ANYREPO_PATH)
         self._system_config_dir = system_config_dir
         self._user_config_dir = user_config_dir
         self._workspace_config_dir = workspace_config_dir
@@ -177,7 +200,7 @@ class AppConfig:
             merged_config_data.update(sys_config.dict(exclude_none=True))
             merged_config_data.update(user_config.dict(exclude_none=True))
             merged_config_data.update(workspace_config.dict(exclude_none=True))
-            if self._use_config_from_env:
+            if self._use_config_from_env and os.environ.get(BLOCK_APP_CONFIG_FROM_ENV_ENV_NAME) is None:
                 env_config = _EnvAppConfigData()
                 merged_config_data.update(env_config.dict(exclude_none=True))
             self._merged_config = AppConfigData(**merged_config_data)

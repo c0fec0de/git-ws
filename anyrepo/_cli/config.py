@@ -161,8 +161,7 @@ def delete(context, option, target):
         target = _select_default_location_if_none(target)
         config = AppConfig()
         with config.edit(target) as options:
-            if option in options.dict():
-                setattr(options, option, None)
+            setattr(options, option, None)
 
 
 @config.command(name="list")
@@ -205,10 +204,8 @@ def _list(context, target, format_):
                 else:
                     click.echo(key)
                 click.echo()
-        elif format_ == Format.JSON:
-            click.echo(json.dumps(data))
         else:
-            raise NotImplementedError()
+            click.echo(json.dumps(data))
 
 
 def _select_default_location_if_none(location: Optional[AppConfigLocation]) -> AppConfigLocation:
