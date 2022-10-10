@@ -3,10 +3,11 @@
 *.xml
 .coverage
 .tox
+.venv
+/.vscode
 /docs/api
 __pycache__
 build
-/.vscode
 dist/
 docs/_readthedocs/
 poetry.lock
