@@ -68,42 +68,40 @@ class AnyRepo:
         return AnyRepo(workspace, manifest_spec, echo=echo)
 
     @staticmethod
-    def create(path: Path, project_path: Path, manifest_path: Path, groups: Groups = None, echo=None) -> "AnyRepo":
+    def create(path: Path, main_path: Path, manifest_path: Path, groups: Groups = None, echo=None) -> "AnyRepo":
         """
         Create :any:`AnyRepo` for workspace at `path`.
 
         Keyword Args:
             path:  Path within the workspace (Default is the current working directory).
-            project_path:  Main Project Path.
+            main_path:  Main Project Path.
             mainfest_path:  ManifestSpec File Path.
         """
-        manifest_path = project_path / manifest_path
+        manifest_path = main_path / manifest_path
         manifest_spec = ManifestSpec.load(manifest_path)
-        workspace = Workspace.init(
-            path, project_path, resolve_relative(manifest_path, base=project_path), groups=groups
-        )
+        workspace = Workspace.init(path, main_path, resolve_relative(manifest_path, base=main_path), groups=groups)
         return AnyRepo(workspace, manifest_spec, echo=echo)
 
     @staticmethod
     def init(
-        project_path: Path = None,
+        main_path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
         echo=None,
     ) -> "AnyRepo":
         """
-        Initialize Workspace for git clone at `project_path`.
+        Initialize Workspace for git clone at `main_path`.
 
-        :param project_path: Path within git clone. (Default is the current working directory).
+        :param main_path: Path within git clone. (Default is the current working directory).
         :param manifest_path: Path to the manifest file.
         """
         echo = echo or no_echo
-        project_path = Git.find_path(path=project_path)
-        name = project_path.name
+        main_path = Git.find_path(path=main_path)
+        name = main_path.name
         echo(f"===== {name} =====", fg=_COLOR_BANNER)
-        manifest_path = resolve_relative(project_path / manifest_path)
-        path = project_path.parent
-        return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
+        manifest_path = resolve_relative(main_path / manifest_path)
+        path = main_path.parent
+        return AnyRepo.create(path, main_path, manifest_path, groups, echo=echo)
 
     def deinit(self):
         """De-Initialize :any:`AnyRepo`."""
@@ -124,10 +122,10 @@ class AnyRepo:
         name = Path(parsedurl.path).name
         echo(f"===== {name} =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        project_path = path / removesuffix(name, ".git")
-        git = Git(project_path)
+        main_path = path / removesuffix(name, ".git")
+        git = Git(main_path)
         git.clone(url)
-        return AnyRepo.create(path, project_path, manifest_path, groups, echo=echo)
+        return AnyRepo.create(path, main_path, manifest_path, groups, echo=echo)
 
     def update(
         self,
