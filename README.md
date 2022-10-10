@@ -113,13 +113,14 @@ anyrepo update --rebase
 | Command | Description |
 | --- | --- |
 | `anyrepo update` | Pull latest changes on main repository and all dependent repositories (clone them if needed) |
-| `anyrepo update --rebase` | Same as above, but fetch and rebase instead of pull|
+| `anyrepo update --rebase` | Same as above, but fetch and rebase instead of pull |
 | `anyrepo status` | Run `git status` on all repositories (displayed paths include the actual clone path) |
 | `anyrepo add FILES` | Run `git add FILE` on `FILES` in the corresponding repositories |
 | `anyrepo reset FILES` | Run `git reset FILE` on `FILES` in the corresponding repositories. Undo `git add` |
 | `anyrepo commit FILES -m MESSAGE` | Run `git commit FILE` on `FILES` in the corresponding repositories |
+| `anyrepo commit -m MESSAGE` | Run `git commit` repositories with changes |
 | `anyrepo checkout FILES` | Run `git checkout FILE` on `FILES` in the corresponding repositories |
-| `anyrepo checkout` | Checkout git revision specified as in the manifest(s) |
+| `anyrepo checkout` | Checkout git revision specified as in the manifest(s) (clone them if needed) |
 
 #### Run Commands on all repositories
 
