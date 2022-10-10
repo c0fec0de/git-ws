@@ -729,7 +729,9 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     The following values are defined:
     """
 
-    manifest_path: Optional[str]
+    manifest_path: Optional[str] = Field(
+        description="The path (relative to the project's root folder) to the manifest file."
+    )
     """
     The path of the manifest file within a repository.
 
@@ -738,7 +740,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     This option can be overridden by specifying the `ANYREPO_MANIFEST_PATH` environment variable.
     """
 
-    color_ui: Optional[bool]
+    color_ui: Optional[bool] = Field(description="If set to true, the output the tool generates will be colored.")
     """
     Defines if outputs by the tool shall be colored.
 
@@ -747,7 +749,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     This option can be overridden by specifying the `ANYREPO_COLOR_UI` environment variable.
     """
 
-    groups: Optional[str]
+    groups: Optional[str] = Field(description="The groups to operate on.")
     """
     The groups to operate on.
 

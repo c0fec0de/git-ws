@@ -84,6 +84,23 @@ class InvalidConfigurationLocationError(RuntimeError):
         self.location = location
 
 
+class InvalidConfigurationValueError(RuntimeError):
+    """An invalid configuration value has been passed to the application."""
+
+    def __init__(self, key: str, value):
+        super().__init__(f"Invalid value {value} has been passed to option {key}")
+        self.key = key
+        self.value = value
+
+
+class InvalidConfigurationOptionError(RuntimeError):
+    """An invalid configuration option has been passed to the applicaiton."""
+
+    def __init__(self, key):
+        super().__init__(f"Unknown configuration option {key}")
+        self.key = key
+
+
 class GitCloneMissingError(RuntimeError):
     """Git Clone Is Missing."""
 
