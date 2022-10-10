@@ -100,11 +100,18 @@ anyrepo update --rebase
 ```
 ## Cheat-Sheet
 
+#### Initialization
+
 | Command | Description |
 | --- | --- |
 | `anyrepo clone URL` | Clone git repository from `URL` as main repository and initialize AnyRepo workspace |
 | `anyrepo init` | Initialize AnyRepo workspace. Use existing git clone as main repository |
 | `anyrepo manifest create` | Create well documented, empty manifest |
+
+#### Basic
+
+| Command | Description |
+| --- | --- |
 | `anyrepo update` | Pull latest changes on main repository and all dependent repositories (clone them if needed) |
 | `anyrepo update --rebase` | Same as above, but fetch and rebase instead of pull|
 | `anyrepo status` | Run `git status` on all repositories (displayed paths include the actual clone path) |
@@ -113,6 +120,11 @@ anyrepo update --rebase
 | `anyrepo commit FILES -m MESSAGE` | Run `git commit FILE` on `FILES` in the corresponding repositories |
 | `anyrepo checkout FILES` | Run `git checkout FILE` on `FILES` in the corresponding repositories |
 | `anyrepo checkout` | Checkout git revision specified as in the manifest(s) |
+
+#### Run Commands on all repositories
+
+| Command | Description |
+| --- | --- |
 | `anyrepo push` | Run `git push` on all repositories |
 | `anyrepo fetch` | Run `git fetch` on all repositories |
 | `anyrepo rebase` | Run `git rebase` on all repositories |
@@ -120,6 +132,11 @@ anyrepo update --rebase
 | `anyrepo diff` | Run `git diff` on all repositories |
 | `anyrepo git CMD` | Run `git CMD` on all repositories |
 | `anyrepo foreach CMD` | Run `CMD` on all repositories |
+
+#### Other
+
+| Command | Description |
+| --- | --- |
 | `anyrepo manifest freeze` | Print The Resolved Manifest With SHAs For All Project Revisions |
 | `anyrepo manifest resolve` | Print The Manifest With All Imports Resolved |
 
