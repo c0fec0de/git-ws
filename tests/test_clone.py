@@ -47,6 +47,46 @@ def test_cli_clone(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
 
+def test_cli_clone_not_empty(tmp_path, repos):
+    """Cloning via CLI not empty."""
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    with chdir(workspace):
+        (workspace / "file.txt").touch()
+        assert cli(["clone", str(repos / "main")], exit_code=1) == [
+            "Error: Workspace '.' is not an empty directory.",
+            "",
+            "Choose an empty directory or use '--force'",
+            "",
+            "",
+        ]
+
+        check(workspace, "main", exists=False)
+        check(workspace, "dep1", exists=False)
+        check(workspace, "dep2", exists=False)
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4", exists=False)
+        check(workspace, "dep5", exists=False)
+
+        assert cli(["clone", str(repos / "main"), "--force"], tmp_path=tmp_path) == [
+            "===== main =====",
+            "Cloning 'TMP/repos/main'.",
+            "Workspace initialized at '.'. Please continue with:",
+            "",
+            "    anyrepo update",
+            "",
+            "",
+        ]
+
+        check(workspace, "main")
+        check(workspace, "dep1", exists=False)
+        check(workspace, "dep2", exists=False)
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4", exists=False)
+        check(workspace, "dep5", exists=False)
+
+
 def test_cli_clone_update(tmp_path, repos):
     """Cloning via CLI."""
     workspace = tmp_path / "workspace"

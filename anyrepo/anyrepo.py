@@ -13,7 +13,7 @@ from ._util import no_echo, removesuffix, resolve_relative, run
 from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
-from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError
+from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError, WorkspaceNotEmptyError
 from .filters import Filter, default_filter
 from .git import Git, Status
 from .iters import ManifestIter, ProjectIter
@@ -113,11 +113,14 @@ class AnyRepo:
         path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
+        force: bool = False,
         echo=None,
     ) -> "AnyRepo":
         """Clone git `url` and initialize Workspace."""
         echo = echo or no_echo
         path = path or Path.cwd()
+        if not force and any(path.iterdir()):
+            raise WorkspaceNotEmptyError(resolve_relative(path))
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
         echo(f"===== {name} =====", fg=_COLOR_BANNER)

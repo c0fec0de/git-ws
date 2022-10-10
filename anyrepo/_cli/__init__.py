@@ -76,13 +76,14 @@ def deinit(context):
 @manifest_option(initial=True)
 @groups_option(initial=True)
 @update_option()
+@force_option()
 @pass_context
-def clone(context, url, manifest_path=None, groups=None, update: bool = False):
+def clone(context, url, manifest_path=None, groups=None, update: bool = False, force: bool = False):
     """
     Create a git clone, initialize AnyRepo workspace and create all dependent git clones.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.clone(url, manifest_path=manifest_path, groups=groups, echo=context.echo)
+        arepo = AnyRepo.clone(url, manifest_path=manifest_path, groups=groups, force=force, echo=context.echo)
         if update:
             arepo.update(skip_main=True)
         else:
