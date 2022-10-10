@@ -25,7 +25,7 @@ api:
 .PHONY: api
 
 gen:
-	rm -f static/manifest.toml
+	rm -f static/anyrepo.toml
 	anyrepo --help > static/cli.txt
 	anyrepo add --help > static/cli.add.txt
 	anyrepo checkout --help > static/cli.checkout.txt
