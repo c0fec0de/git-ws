@@ -39,7 +39,7 @@ gen:
 	anyrepo init --help > static/cli.init.txt
 	anyrepo manifest --help > static/cli.manifest.txt
 	anyrepo manifest create --help > static/cli.manifest.create.txt
-	anyrepo manifest create -M static/manifest.toml
+	anyrepo manifest create -M static/anyrepo.toml
 	anyrepo manifest upgrade --help > static/cli.manifest.upgrade.txt
 	anyrepo pull --help > static/cli.pull.txt
 	anyrepo push --help > static/cli.push.txt
