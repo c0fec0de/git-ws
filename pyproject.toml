@@ -114,4 +114,5 @@ commands =
     poetry install --without=dev --without=doc
     poetry run python -c 'import anyrepo'
     poetry run anyrepo --version
+    poetry run python -m anyrepo --version
 """
