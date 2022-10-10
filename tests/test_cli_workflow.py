@@ -5,7 +5,7 @@ from anyrepo import AnyRepo, Git
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, cli, format_output
+from .util import chdir, cli
 
 
 @fixture
@@ -39,9 +39,12 @@ def test_workflow(tmp_path, arepo):
     dep1 = workspace / "dep1"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
+    git1 = Git(dep1)
     git2 = Git(dep2)
     git4 = Git(dep4)
 
+    git1.set_config("user.email", "you@example.com")
+    git1.set_config("user.name", "you")
     git2.set_config("user.email", "you@example.com")
     git2.set_config("user.name", "you")
     git4.set_config("user.email", "you@example.com")
