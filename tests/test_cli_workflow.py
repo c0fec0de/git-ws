@@ -121,11 +121,49 @@ def test_workflow(tmp_path, arepo):
 
     assert cli(("reset", "dep1/foo.txt")) == [""]
 
+    (dep2 / "barbar.txt").touch()
+
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("commit", "-m", "test")) == [""]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "?? dep1/foo.txt",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("add", "dep1/foo.txt")) == [""]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "A  dep1/foo.txt",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("commit", "-m", "changes")) == ["===== dep1 =====", ""]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
         "===== dep4 (revision='main') =====",
         "",
     ]

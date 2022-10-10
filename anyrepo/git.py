@@ -1,6 +1,7 @@
 """Git Utilities."""
 
 import re
+from enum import Enum
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple, Union
 
@@ -11,6 +12,31 @@ from .exceptions import NoGitError
 _RE_STATUS = re.compile(r"\A(?P<index>.)(?P<work>.)\s((?P<orig_path>.+) -> )?(?P<path>.+)\Z")
 
 
+class State(Enum):
+    """
+    Actual State
+
+    >>> State(" ")
+    <State.UNMODIFIED: ' '>
+    >>> State("A")
+    <State.ADDED: 'A'>
+    """
+
+    UNTRACKED = "?"
+    IGNORED = "!"
+    UNMODIFIED = " "
+    MODIFIED = "M"
+    TYPE_CHANGED = "T"
+    ADDED = "A"
+    DELETED = "D"
+    RENAMED = "R"
+    COPIED = "C"
+    UPDATED_UNMERGED = "U"
+
+    def __str__(self):
+        return self.value
+
+
 class Status(BaseModel):
 
     """
@@ -18,25 +44,25 @@ class Status(BaseModel):
 
     >>> status = Status.from_str("?? file.txt")
     >>> status
-    Status(index='?', work='?', path=PosixPath('file.txt'))
+    Status(index=<State.UNTRACKED: '?'>, work=<State.UNTRACKED: '?'>, path=PosixPath('file.txt'))
     >>> str(status)
     '?? file.txt'
     >>> str(status.with_path(Path("base")))
     '?? base/file.txt'
 
-    >>> status = Status.from_str("?? src.txt -> dest.txt")
+    >>> status = Status.from_str("R  src -> dest")
     >>> status
-    Status(index='?', work='?', path=PosixPath('dest.txt'), orig_path=PosixPath('src.txt'))
+    Status(index=<State.RENAMED: 'R'>, work=<State.UNMODIFIED: ' '>, path=PosixPath('dest'), orig_path=PosixPath('src'))
     >>> str(status)
-    '?? src.txt -> dest.txt'
+    'R  src -> dest'
     >>> str(status.with_path(Path("base")))
-    '?? base/src.txt -> base/dest.txt'
+    'R  base/src -> base/dest'
     """
 
-    index: str
+    index: State
     """Status of the Index."""
 
-    work: str
+    work: State
     """Status of Workiing Tree."""
 
     path: Path
@@ -121,11 +147,12 @@ class Git:
 
     def clone(self, url, revision=None):
         """Clone."""
-        args = ["git", "clone"]
         if revision:
-            args += ["--branch", revision]
-        args += ["--", str(url), str(self.path)]
-        run(args)
+            # We do not checkout, to be faster during switch later on
+            run(("git", "clone", "--no-checkout", "--", str(url), str(self.path)))
+            self._run(("checkout", revision))
+        else:
+            run(("git", "clone", "--", str(url), str(self.path)))
 
     def get_tag(self) -> Optional[str]:
         """Get Actual Tag."""
@@ -203,6 +230,10 @@ class Git:
         for line in self._run2str(("status", "--porcelain=v1")).split("\n"):
             if line:
                 yield Status.from_str(line)
+
+    def has_index_changes(self) -> bool:
+        """Let you know if index has changes."""
+        return any(status.index not in (State.UNMODIFIED, State.IGNORED, State.UNTRACKED) for status in self.status())
 
     def is_clean(self):
         """Clone is clean and does not contain any changes."""

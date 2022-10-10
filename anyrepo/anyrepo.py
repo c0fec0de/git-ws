@@ -235,10 +235,15 @@ class AnyRepo:
                     clone.git.checkout(revision=clone.project.revision, paths=cpaths)
         else:
             # Checkout all branches
-            for clone in self.clones():
-                self._echo_project_banner(clone.project)
-                if clone.project.revision:
-                    clone.git.checkout(revision=clone.project.revision)
+            for clone in self.clones(resolve_url=True):
+                git = clone.git
+                project = clone.project
+                self._echo_project_banner(project)
+                if not git.is_cloned():
+                    self.echo(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+                    git.clone(project.url, revision=project.revision)
+                if project.revision:
+                    git.checkout(revision=project.revision)
 
     def add(self, paths: Tuple[Path, ...]):
         """Add."""
@@ -254,10 +259,18 @@ class AnyRepo:
 
     def commit(self, msg: str, paths: Tuple[Path, ...]):
         """Commit."""
-        for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            if cpaths:
+        if paths:
+            # clone file specific commit
+            for clone, cpaths in map_paths(tuple(self.clones()), paths):
+                if cpaths:
+                    self._echo_project_banner(clone.project)
+                    clone.git.commit(msg, paths=cpaths)
+        else:
+            # commit changed clones
+            clones = [clone for clone in self.clones() if clone.git.has_index_changes()]
+            for clone in clones:
                 self._echo_project_banner(clone.project)
-                clone.git.commit(msg, paths=cpaths)
+                clone.git.commit(msg)
 
     def run_foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
         """Run `command` on each project."""

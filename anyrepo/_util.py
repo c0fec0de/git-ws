@@ -56,13 +56,9 @@ def get_repr(obj=None, args=None, kwargs=None):
     for arg in args or []:
         parts.append(f"{arg!r}")
     for item in kwargs or []:
-        try:
-            name, value = item
+        name, value, default = item
+        if value != default:
             parts.append(f"{name}={value!r}")
-        except ValueError:
-            name, value, default = item
-            if value != default:
-                parts.append(f"{name}={value!r}")
     joined = ", ".join(parts)
     if obj:
         return f"{obj.__class__.__qualname__}({joined})"

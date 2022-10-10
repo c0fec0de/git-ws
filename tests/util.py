@@ -59,8 +59,8 @@ def replace_tmp_path(text, tmp_path):
     return regex.sub(repl, text)
 
 
-def cli(command, exit_code=0, output=None):
+def cli(command, exit_code=0, tmp_path=None):
     """Invoke CLI."""
     result = CliRunner().invoke(main, command)
     assert result.exit_code == exit_code, result.exit_code
-    return format_output(result)
+    return format_output(result, tmp_path=tmp_path)

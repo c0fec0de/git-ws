@@ -7,7 +7,7 @@ from anyrepo._cli import main
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir
+from .util import chdir, cli
 
 
 def check(workspace, name, content=None, exists=True):
@@ -39,12 +39,12 @@ def test_cli_clone(tmp_path, repos):
         ]
         assert result.exit_code == 0
 
-    check(workspace, "main")
-    check(workspace, "dep1", exists=False)
-    check(workspace, "dep2", exists=False)
-    check(workspace, "dep3", exists=False)
-    check(workspace, "dep4", exists=False)
-    check(workspace, "dep5", exists=False)
+        check(workspace, "main")
+        check(workspace, "dep1", exists=False)
+        check(workspace, "dep2", exists=False)
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4", exists=False)
+        check(workspace, "dep5", exists=False)
 
 
 def test_cli_clone_update(tmp_path, repos):
@@ -73,6 +73,49 @@ def test_cli_clone_update(tmp_path, repos):
     check(workspace, "dep3", exists=False)
     check(workspace, "dep4")
     check(workspace, "dep5", exists=False)
+
+
+def test_cli_clone_checkout(tmp_path, repos):
+    """Cloning via CLI and checkout."""
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    with chdir(workspace):
+        assert cli(["clone", str(repos / "main")]) == [
+            "===== main =====",
+            f"Cloning '{tmp_path}/repos/main'.",
+            "Workspace initialized at '.'. Please continue with:",
+            "",
+            "    anyrepo update",
+            "",
+            "",
+        ]
+
+        check(workspace, "main")
+        check(workspace, "dep1", exists=False)
+        check(workspace, "dep2", exists=False)
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4", exists=False)
+        check(workspace, "dep5", exists=False)
+
+    with chdir(workspace / "main"):
+        assert cli(["checkout"], tmp_path=tmp_path) == [
+            "===== main =====",
+            "===== dep1 =====",
+            "Cloning 'TMP/repos/dep1'.",
+            "===== dep2 (revision='1-feature') =====",
+            "Cloning 'TMP/repos/dep2'.",
+            "===== dep4 (revision='main') =====",
+            "Cloning 'TMP/repos/dep4'.",
+            "",
+        ]
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
 
 
 def test_cli_clone_groups(tmp_path, repos):
