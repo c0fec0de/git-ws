@@ -10,6 +10,7 @@ from anyrepo._util import resolve_relative
 from anyrepo.const import MANIFEST_PATH_DEFAULT
 
 from .common import COLOR_INFO, Context, Error, exceptionhandling, get_loglevel, pass_context
+from .config import config
 from .info import info
 from .manifest import manifest
 from .options import force_option, groups_option, manifest_option, paths_argument, projects_option, update_option
@@ -307,5 +308,6 @@ def foreach(context, command, projects=None, manifest_path=None, groups=None):
         arepo.run_foreach(command, project_paths=projects, groups=groups)
 
 
-main.add_command(manifest)
+main.add_command(config)
 main.add_command(info)
+main.add_command(manifest)
