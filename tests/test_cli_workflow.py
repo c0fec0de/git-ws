@@ -11,6 +11,8 @@ from .util import chdir, cli
 @fixture
 def arepo(tmp_path, repos):
     """Initialized :any:`AnyRepo` on `repos`."""
+    # pylint: disable=unused-argument
+
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
@@ -23,6 +25,8 @@ def arepo(tmp_path, repos):
 
 def test_status(tmp_path, arepo):
     """Test status."""
+    # pylint: disable=unused-argument
+
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
@@ -35,6 +39,7 @@ def test_status(tmp_path, arepo):
 
 def test_workflow(tmp_path, arepo):
     """Test Full Workflow."""
+    # pylint: disable=unused-argument
 
     workspace = tmp_path / "workspace"
     dep1 = workspace / "dep1"
@@ -99,6 +104,23 @@ def test_workflow(tmp_path, arepo):
     ]
 
     assert cli(("add", "dep2/bb.txt", "dep1/foo.txt")) == [""]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
+        "A  dep1/foo.txt",
+        "===== dep2 (revision='1-feature') =====",
+        "A  dep2/bb.txt",
+        "===== dep4 (revision='main') =====",
+        "A  dep4/foo.txt",
+        "",
+    ]
+
+    assert cli(("commit", "dep2/bb.txt", "dep4/foo.txt"), exit_code=1) == [
+        "Error: Please provide a commit message.",
+        "",
+    ]
 
     assert cli(("status",)) == [
         "===== main =====",
@@ -184,6 +206,7 @@ def test_workflow(tmp_path, arepo):
 
 def test_checkout_file(tmp_path, arepo):
     """Checkout files."""
+    # pylint: disable=unused-argument
 
     workspace = tmp_path / "workspace"
     dep2 = workspace / "dep2"
@@ -250,6 +273,7 @@ def test_checkout_file(tmp_path, arepo):
 
 def test_checkout(tmp_path, arepo):
     """Checkout files."""
+    # pylint: disable=unused-argument
 
     workspace = tmp_path / "workspace"
     dep2 = workspace / "dep2"

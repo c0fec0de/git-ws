@@ -23,6 +23,7 @@ def run(cmd, cwd=None, capture_output=False, check=True):
         raise error
 
 
+# pylint: disable=unused-argument
 def no_echo(text: str, **kwargs):
     """Just suppress `text`."""
 

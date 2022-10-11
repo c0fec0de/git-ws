@@ -23,16 +23,19 @@ def arepo(tmp_path, repos):
 
 def test_main_path(tmp_path, arepo):
     """Main Path."""
+    # pylint: disable=unused-argument
     assert cli(["info", "main-path"], tmp_path=tmp_path) == ["TMP/workspace/main", ""]
 
 
 def test_workspace_path(tmp_path, arepo):
     """Workspace Path."""
+    # pylint: disable=unused-argument
     assert cli(["info", "workspace-path"], tmp_path=tmp_path) == ["TMP/workspace", ""]
 
 
 def test_project_paths(tmp_path, arepo):
     """Project Paths."""
+    # pylint: disable=unused-argument
     assert cli(["info", "project-paths"], tmp_path=tmp_path) == [
         "TMP/workspace/main",
         "TMP/workspace/dep1",

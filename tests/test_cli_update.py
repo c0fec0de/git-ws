@@ -24,6 +24,7 @@ def arepo(tmp_path, repos):
 
 def test_update(tmp_path, repos, arepo):
     """Test update."""
+    # pylint: disable=unused-argument
 
     # Modify dep4
     path = repos / "dep4"
@@ -97,6 +98,7 @@ def test_update(tmp_path, repos, arepo):
 
 def test_update_rebase(tmp_path, repos, arepo):
     """Test update --rebase."""
+    # pylint: disable=unused-argument
 
     # Modify dep4
     path = repos / "dep4"

@@ -50,6 +50,7 @@ def test_diff(tmp_path, arepo, caplog):
 
 def test_deinit(tmp_path, arepo):
     """Test deinit."""
+    # pylint: disable=unused-argument
     assert cli(["deinit"]) == ["Workspace deinitialized at '.'.", ""]
 
     assert not (tmp_path / "workspace/.anyrepo").exists()
@@ -70,6 +71,7 @@ def test_deinit(tmp_path, arepo):
 
 def test_git(tmp_path, arepo):
     """Test git."""
+    # pylint: disable=unused-argument
     assert cli(["git", "status"]) == [
         "===== main =====",
         "===== dep1 =====",
@@ -90,6 +92,7 @@ def test_git(tmp_path, arepo):
 
 def test_foreach(tmp_path, arepo, caplog):
     """Test foreach."""
+    # pylint: disable=unused-argument
     assert cli(["foreach", "git", "status"]) == [
         "===== main =====",
         "===== dep1 =====",
@@ -138,6 +141,7 @@ def test_foreach(tmp_path, arepo, caplog):
 
 def test_foreach_missing(tmp_path, arepo, caplog):
     """Test foreach."""
+    # pylint: disable=unused-argument
     rmtree(tmp_path / "workspace" / "dep2")
     assert cli(["foreach", "git", "status"], exit_code=1) == [
         "===== main =====",
@@ -154,6 +158,7 @@ def test_foreach_missing(tmp_path, arepo, caplog):
 
 def test_foreach_fail(tmp_path, arepo):
     """Test foreach failing."""
+    # pylint: disable=unused-argument
     assert cli(["foreach", "--", "git", "status", "--invalidoption"], exit_code=1) == [
         "===== main =====",
         "Error: Command '('git', 'status', '--invalidoption')' returned non-zero exit status 129.",
@@ -163,7 +168,7 @@ def test_foreach_fail(tmp_path, arepo):
 
 def test_outside(tmp_path, arepo):
     """Outside Workspace."""
-
+    # pylint: disable=unused-argument
     with chdir(tmp_path):
         assert cli(["update"], exit_code=1) == [
             "Error: anyrepo has not been initialized yet. Try:",
@@ -179,6 +184,7 @@ def test_outside(tmp_path, arepo):
 
 
 def _test_foreach(tmp_path, arepo, caplog, *command):
+    # pylint: disable=unused-argument
     assert cli(command) == [
         "===== main =====",
         "===== dep1 =====",
@@ -191,6 +197,7 @@ def _test_foreach(tmp_path, arepo, caplog, *command):
 
 def test_git_no_color(tmp_path, arepo, caplog):
     """Test git."""
+    # pylint: disable=unused-argument
     assert cli(["config", "set", "color_ui", "False"]) == [""]
     assert cli(["git", "status"]) == [
         "===== main =====",

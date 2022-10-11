@@ -23,6 +23,8 @@ def arepo(tmp_path, repos):
 
 def test_validate(tmp_path, arepo):
     """Manifest Validate."""
+    # pylint: disable=unused-argument
+
     assert cli(["manifest", "validate"]) == [""]
 
     manifest_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
@@ -314,6 +316,8 @@ def test_freeze(tmp_path, arepo):
 
 def test_resolve(tmp_path, arepo):
     """Manifest Resolve."""
+    # pylint: disable=unused-argument
+
     lines = [
         'version = "1.0"',
         "##",
@@ -511,11 +515,13 @@ def test_resolve(tmp_path, arepo):
 
 def test_path(tmp_path, arepo):
     """Manifest Path."""
+    # pylint: disable=unused-argument
     assert cli(["manifest", "path"], tmp_path=tmp_path) == ["TMP/workspace/main/anyrepo.toml", ""]
 
 
 def test_paths(tmp_path, arepo):
     """Manifest Paths."""
+    # pylint: disable=unused-argument
     assert cli(["manifest", "paths"], tmp_path=tmp_path) == [
         "TMP/workspace/main/anyrepo.toml",
         "TMP/workspace/dep1/anyrepo.toml",

@@ -82,7 +82,6 @@ disable = [
     'duplicate-code',
     'redefined-outer-name',
     'too-many-arguments',
-    'unused-argument',
 ]
 
 [tool.tox]

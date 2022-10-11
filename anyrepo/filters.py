@@ -6,6 +6,7 @@ from ._basemodel import BaseModel
 
 def default_filter(item: Any) -> bool:
     """Default Filter - always returning True."""
+    # pylint: disable=unused-argument
     return True
 
 

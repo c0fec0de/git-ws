@@ -61,6 +61,7 @@ format_option = click.option(
 """Select the output format to use."""
 
 
+# pylint: disable=unused-argument
 @click.group()
 def config(ctx=None, verbose=0):
     """Read and modify configuration values."""

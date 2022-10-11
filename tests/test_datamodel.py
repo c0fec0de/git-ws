@@ -559,7 +559,7 @@ revision = "main"
     ]
 
 
-def test_manifest_spec_from_other_data(tmp_path):
+def test_manifest_spec_from_other_data():
     """Determine ManifestSpec from Other Data."""
     data = {
         "defaults": {

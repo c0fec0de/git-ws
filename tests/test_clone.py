@@ -284,6 +284,12 @@ def test_clone_groups(tmp_path, repos):
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
             Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
         ]
+        assert list(arepo.projects(filter_=lambda project: not project.is_main)) == [
+            Project(name="dep1", path="dep1", url="../dep1"),
+            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+            Project(name="dep4", path="dep4", url="../dep4", revision="main"),
+            Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
+        ]
         assert list(arepo.manifests()) == [
             Manifest(
                 dependencies=(
@@ -315,7 +321,7 @@ def test_clone_groups(tmp_path, repos):
         ]
 
         assert list(arepo.projects(manifest_path="missing.toml")) == [Project(name="main", path="main", is_main=True)]
-        assert list(arepo.manifests(manifest_path="missing.toml")) == []
+        assert not list(arepo.manifests(manifest_path="missing.toml"))
 
 
 def test_clone_other(tmp_path, repos):
