@@ -48,7 +48,7 @@ def test_diff(tmp_path, arepo, caplog):
     _test_foreach(tmp_path, arepo, caplog, "diff")
 
 
-def test_deinit(tmp_path, arepo, caplog):
+def test_deinit(tmp_path, arepo):
     """Test deinit."""
     assert cli(["deinit"]) == ["Workspace deinitialized at '.'.", ""]
 
@@ -188,4 +188,58 @@ def _test_foreach(tmp_path, arepo, caplog, *command):
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
+    ]
+
+
+def test_git_no_color(tmp_path, arepo, caplog):
+    """Test git."""
+    assert cli(["config", "set", "color_ui", "False"]) == [""]
+    assert cli(["git", "status"]) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+    assert format_logs(caplog, tmp_path) == [
+        "INFO    anyrepo path=TMP/workspace",
+        "INFO    anyrepo Loaded TMP/workspace Info(main_path=PosixPath('main')) "
+        "AppConfigData(manifest_path='anyrepo.toml', color_ui=False, groups=None)",
+        "INFO    anyrepo run(['git', 'describe', '--exact-match', '--tags'], "
+        "cwd='main') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
+        "anything.\\n'",
+        "INFO    anyrepo run(['git', 'branch', '--show-current'], cwd='main') OK stdout=b'main\\n' stderr=b''",
+        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='main') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
+        "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
+        "url='../dep1'), ProjectSpec(name='dep2', url='../dep2', "
+        "revision='1-feature')))",
+        "DEBUG   anyrepo Project(name='dep1', path='dep1', url='../dep1')",
+        "INFO    anyrepo run(['git', 'describe', '--exact-match', '--tags'], "
+        "cwd='dep1') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
+        "anything.\\n'",
+        "INFO    anyrepo run(['git', 'branch', '--show-current'], cwd='dep1') OK stdout=b'main\\n' stderr=b''",
+        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None",
+        "DEBUG   anyrepo Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
+        "INFO    anyrepo run(['git', 'describe', '--exact-match', '--tags'], "
+        "cwd='dep2') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
+        "anything.\\n'",
+        "INFO    anyrepo run(['git', 'branch', '--show-current'], cwd='dep2') OK stdout=b'1-feature\\n' stderr=b''",
+        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep2') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(('git', 'status'), cwd='dep2') OK stdout=None stderr=None",
+        "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep4', url='../dep4', revision='main'),))",
+        "DEBUG   anyrepo Project(name='dep4', path='dep4', url='../dep4', revision='main')",
+        "INFO    anyrepo run(['git', 'describe', '--exact-match', '--tags'], "
+        "cwd='dep4') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
+        "anything.\\n'",
+        "INFO    anyrepo run(['git', 'branch', '--show-current'], cwd='dep4') OK stdout=b'main\\n' stderr=b''",
+        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep4') OK stdout=b'\\n' stderr=b''",
+        "INFO    anyrepo run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None",
+        "DEBUG   anyrepo ManifestSpec(groups=(Group(name='test'),), "
+        "dependencies=(ProjectSpec(name='dep3', url='../dep3', groups=('test',)), "
+        "ProjectSpec(name='dep4', url='../dep4', revision='main')))",
+        "DEBUG   anyrepo FILTERED OUT Project(name='dep3', path='dep3', "
+        "url='../dep3', groups=(Group(name='test'),))",
+        "DEBUG   anyrepo DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')",
     ]

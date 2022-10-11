@@ -1,8 +1,7 @@
 """Clone Testing."""
 from click.testing import CliRunner
-from pytest import raises
 
-from anyrepo import AnyRepo, GitCloneNotCleanError, Group, Manifest, Project
+from anyrepo import AnyRepo, Group, Manifest, Project
 from anyrepo._cli import main
 
 # pylint: disable=unused-import
@@ -27,8 +26,7 @@ def test_cli_clone(tmp_path, repos):
     workspace.mkdir()
 
     with chdir(workspace):
-        result = CliRunner().invoke(main, ["clone", str(repos / "main")])
-        assert result.output.split("\n") == [
+        assert cli(["clone", str(repos / "main")]) == [
             "===== main =====",
             f"Cloning '{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
@@ -37,7 +35,6 @@ def test_cli_clone(tmp_path, repos):
             "",
             "",
         ]
-        assert result.exit_code == 0
 
         check(workspace, "main")
         check(workspace, "dep1", exists=False)
@@ -93,8 +90,7 @@ def test_cli_clone_update(tmp_path, repos):
     workspace.mkdir()
 
     with chdir(workspace):
-        result = CliRunner().invoke(main, ["clone", str(repos / "main"), "--update"])
-        assert result.output.split("\n") == [
+        assert cli(["clone", str(repos / "main"), "--update"]) == [
             "===== main =====",
             f"Cloning '{tmp_path}/repos/main'.",
             "===== dep1 =====",
@@ -105,7 +101,6 @@ def test_cli_clone_update(tmp_path, repos):
             f"Cloning '{tmp_path}/repos/dep4'.",
             "",
         ]
-        assert result.exit_code == 0
 
     check(workspace, "main")
     check(workspace, "dep1")
@@ -164,8 +159,7 @@ def test_cli_clone_groups(tmp_path, repos):
     workspace.mkdir()
 
     with chdir(workspace):
-        result = CliRunner().invoke(main, ["clone", str(repos / "main"), "-G", "+test"])
-        assert result.output.split("\n") == [
+        assert cli(["clone", str(repos / "main"), "-G", "+test"]) == [
             "===== main =====",
             "Cloning " f"'{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
@@ -174,7 +168,6 @@ def test_cli_clone_groups(tmp_path, repos):
             "",
             "",
         ]
-        assert result.exit_code == 0
 
         check(workspace, "main")
         check(workspace, "dep1", exists=False)
@@ -183,8 +176,7 @@ def test_cli_clone_groups(tmp_path, repos):
         check(workspace, "dep4", exists=False)
         check(workspace, "dep5", exists=False)
 
-        result = CliRunner().invoke(main, ["update"])
-        assert result.output.split("\n") == [
+        assert cli(["update"]) == [
             "Groups: '+test'",
             "===== main =====",
             "Pulling branch 'main'.",
@@ -198,7 +190,6 @@ def test_cli_clone_groups(tmp_path, repos):
             f"Cloning '{tmp_path}/repos/dep3'.",
             "",
         ]
-        assert result.exit_code == 0
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -357,7 +348,22 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep4")
         check(workspace, "dep5", exists=False)
 
-        arepo.update()
+        assert cli(("update",)) == [
+            "===== main =====",
+            "Pulling branch 'main'.",
+            "===== dep1 =====",
+            "Pulling branch 'main'.",
+            "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
+            "Pulling branch 'main'.",
+            "===== dep4 (revision='4-feature') =====",
+            "Fetching.",
+            "Checking out '4-feature' (previously 'main').",
+            "Merging branch '4-feature'.",
+            "",
+        ]
+
+        # Disable color here, to test normal error output
+        assert cli(("config", "set", "color_ui", "False")) == [""]
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -368,9 +374,23 @@ def test_clone_other(tmp_path, repos):
 
         (workspace / "dep5").touch()
 
-        with raises(GitCloneNotCleanError) as exc:
-            arepo.update(prune=True)
-        assert str(exc.value) == "Git Clone 'dep2' contains changes."
+        assert cli(("update", "--prune"), exit_code=1) == [
+            "===== main =====",
+            "Pulling branch 'main'.",
+            "===== dep1 =====",
+            "Pulling branch 'main'.",
+            "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
+            "Pulling branch 'main'.",
+            "===== dep4 (revision='4-feature') =====",
+            "Pulling branch '4-feature'.",
+            "===== dep2 (OBSOLETE) =====",
+            "Removing 'dep2'.",
+            "Error: Git Clone 'dep2' contains changes.",
+            "",
+            "Commit/Push all your changes and branches or use '--force'",
+            "",
+            "",
+        ]
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -379,7 +399,19 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
 
-        arepo.update(prune=True, force=True)
+        assert cli(("update", "--prune", "--force")) == [
+            "===== main =====",
+            "Pulling branch 'main'.",
+            "===== dep1 =====",
+            "Pulling branch 'main'.",
+            "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
+            "Pulling branch 'main'.",
+            "===== dep4 (revision='4-feature') =====",
+            "Pulling branch '4-feature'.",
+            "===== dep2 (OBSOLETE) =====",
+            "Removing 'dep2'.",
+            "",
+        ]
 
         check(workspace, "main")
         check(workspace, "dep1")

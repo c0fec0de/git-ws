@@ -206,13 +206,14 @@ class AnyRepo:
     def _prune(self, workspace: Workspace, used: List[Path], force: bool = False):
         for obsolete_path in workspace.iter_obsoletes(used):
             name = resolve_relative(obsolete_path, workspace.path)
+            rel_path = resolve_relative(obsolete_path)
             self.echo(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
-            self.echo(f"Removing {str(obsolete_path)!r}.", fg=_COLOR_ACTION)
+            self.echo(f"Removing {str(rel_path)!r}.", fg=_COLOR_ACTION)
             git = Git(obsolete_path)
             if force or not git.is_cloned() or git.is_clean():
                 shutil.rmtree(obsolete_path, ignore_errors=True)
             else:
-                raise GitCloneNotCleanError(resolve_relative(obsolete_path))
+                raise GitCloneNotCleanError(resolve_relative(rel_path))
 
     def status(
         self,
