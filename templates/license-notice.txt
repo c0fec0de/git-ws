@@ -1,4 +1,4 @@
-# Copyright 2022 c0fec0de
+# Copyright 20xx xxx
 #
 # This file is part of Git Workspace.
 #
@@ -13,4 +13,3 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
-
