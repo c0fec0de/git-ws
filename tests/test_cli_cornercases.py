@@ -94,9 +94,11 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
         "url='../dep1'), ProjectSpec(name='dep2', url='../dep2')))",
         "DEBUG   anyrepo Project(name='dep1', path='dep1', url='TMP/repos/dep1')",
+        "WARNING anyrepo Clone dep1 has an empty revision!",
         "INFO    anyrepo run(('git', 'clone', '--', 'TMP/repos/dep1', 'dep1'), "
         "cwd='None') OK stdout=None stderr=None",
         "DEBUG   anyrepo Project(name='dep2', path='dep2', url='TMP/repos/dep2')",
+        "WARNING anyrepo Clone dep2 has an empty revision!",
         "INFO    anyrepo run(('git', 'clone', '--', 'TMP/repos/dep2', 'dep2'), "
         "cwd='None') OK stdout=None stderr=None",
         "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\\n' stderr=b''",

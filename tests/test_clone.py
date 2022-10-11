@@ -1,8 +1,5 @@
 """Clone Testing."""
-from click.testing import CliRunner
-
 from anyrepo import AnyRepo, Group, Manifest, Project
-from anyrepo._cli import main
 
 # pylint: disable=unused-import
 from .fixtures import repos
@@ -94,6 +91,7 @@ def test_cli_clone_update(tmp_path, repos):
             "===== main =====",
             f"Cloning '{tmp_path}/repos/main'.",
             "===== dep1 =====",
+            "anyrepo WARNING Clone dep1 has an empty revision!",
             f"Cloning '{tmp_path}/repos/dep1'.",
             "===== dep2 (revision='1-feature') =====",
             f"Cloning '{tmp_path}/repos/dep2'.",
@@ -181,12 +179,13 @@ def test_cli_clone_groups(tmp_path, repos):
             "===== main =====",
             "Pulling branch 'main'.",
             "===== dep1 =====",
+            "anyrepo WARNING Clone dep1 has an empty revision!",
             f"Cloning '{tmp_path}/repos/dep1'.",
             "===== dep2 (revision='1-feature') =====",
             f"Cloning '{tmp_path}/repos/dep2'.",
             "===== dep4 (revision='main') =====",
             f"Cloning '{tmp_path}/repos/dep4'.",
-            "===== dep3 (groups='test') =====",
+            "===== dep3 (revision='main', groups='test') =====",
             f"Cloning '{tmp_path}/repos/dep3'.",
             "",
         ]
@@ -222,7 +221,7 @@ def test_clone(tmp_path, repos):
         assert arepo == rrepo
 
         assert list(arepo.projects()) == [
-            Project(name="main", path="main"),
+            Project(name="main", path="main", is_main=True),
             Project(name="dep1", path="dep1", url="../dep1"),
             Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
@@ -233,23 +232,23 @@ def test_clone(tmp_path, repos):
                     Project(name="dep1", path="dep1", url="../dep1"),
                     Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
                 ),
-                path=str(workspace / "main/anyrepo.toml"),
+                path=str(tmp_path / "workspace/main/anyrepo.toml"),
             ),
             Manifest(
                 dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
-                path=str(workspace / "dep1/anyrepo.toml"),
+                path=str(tmp_path / "workspace/dep1/anyrepo.toml"),
             ),
             Manifest(
                 groups=(Group(name="test"),),
                 dependencies=(
-                    Project(name="dep3", path="dep3", url="../dep3", groups=(Group(name="test"),)),
+                    Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
                     Project(name="dep4", path="dep4", url="../dep4", revision="main"),
                 ),
-                path=str(workspace / "dep2/anyrepo.toml"),
+                path=str(tmp_path / "workspace/dep2/anyrepo.toml"),
             ),
         ]
         assert list(str(item) for item in arepo.clones()) == [
-            "Clone(Project(name='main', path='main'), Git(PosixPath('main')))",
+            "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('dep1')))",
             "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), Git(PosixPath('dep2')))",
             "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('dep4')))",
@@ -279,11 +278,11 @@ def test_clone_groups(tmp_path, repos):
         assert arepo == rrepo
 
         assert list(arepo.projects()) == [
-            Project(name="main", path="main"),
+            Project(name="main", path="main", is_main=True),
             Project(name="dep1", path="dep1", url="../dep1"),
             Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
-            Project(name="dep3", path="dep3", url="../dep3", groups=(Group(name="test"),)),
+            Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
         ]
         assert list(arepo.manifests()) == [
             Manifest(
@@ -291,29 +290,32 @@ def test_clone_groups(tmp_path, repos):
                     Project(name="dep1", path="dep1", url="../dep1"),
                     Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
                 ),
-                path=str(workspace / "main/anyrepo.toml"),
+                path=str(tmp_path / "workspace/main/anyrepo.toml"),
             ),
             Manifest(
                 dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
-                path=str(workspace / "dep1/anyrepo.toml"),
+                path=str(tmp_path / "workspace/dep1/anyrepo.toml"),
             ),
             Manifest(
                 groups=(Group(name="test"),),
                 dependencies=(
-                    Project(name="dep3", path="dep3", url="../dep3", groups=(Group(name="test"),)),
+                    Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
                     Project(name="dep4", path="dep4", url="../dep4", revision="main"),
                 ),
-                path=str(workspace / "dep2/anyrepo.toml"),
+                path=str(tmp_path / "workspace/dep2/anyrepo.toml"),
             ),
         ]
         assert list(str(item) for item in arepo.clones()) == [
-            "Clone(Project(name='main', path='main'), Git(PosixPath('main')))",
+            "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('dep1')))",
             "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), Git(PosixPath('dep2')))",
             "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('dep4')))",
-            "Clone(Project(name='dep3', path='dep3', url='../dep3', "
+            "Clone(Project(name='dep3', path='dep3', url='../dep3', revision='main', "
             "groups=(Group(name='test'),)), Git(PosixPath('dep3')))",
         ]
+
+        assert list(arepo.projects(manifest_path="missing.toml")) == [Project(name="main", path="main", is_main=True)]
+        assert list(arepo.manifests(manifest_path="missing.toml")) == []
 
 
 def test_clone_other(tmp_path, repos):
@@ -351,9 +353,9 @@ def test_clone_other(tmp_path, repos):
         assert cli(("update",)) == [
             "===== main =====",
             "Pulling branch 'main'.",
-            "===== dep1 =====",
+            "===== dep1 (revision='main') =====",
             "Pulling branch 'main'.",
-            "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
+            "===== dep6 (revision='main', path='sub/dep6', groups='+foo,+bar,+fast') =====",
             "Pulling branch 'main'.",
             "===== dep4 (revision='4-feature') =====",
             "Fetching.",
@@ -377,9 +379,9 @@ def test_clone_other(tmp_path, repos):
         assert cli(("update", "--prune"), exit_code=1) == [
             "===== main =====",
             "Pulling branch 'main'.",
-            "===== dep1 =====",
+            "===== dep1 (revision='main') =====",
             "Pulling branch 'main'.",
-            "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
+            "===== dep6 (revision='main', path='sub/dep6', groups='+foo,+bar,+fast') =====",
             "Pulling branch 'main'.",
             "===== dep4 (revision='4-feature') =====",
             "Pulling branch '4-feature'.",
@@ -402,9 +404,9 @@ def test_clone_other(tmp_path, repos):
         assert cli(("update", "--prune", "--force")) == [
             "===== main =====",
             "Pulling branch 'main'.",
-            "===== dep1 =====",
+            "===== dep1 (revision='main') =====",
             "Pulling branch 'main'.",
-            "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
+            "===== dep6 (revision='main', path='sub/dep6', groups='+foo,+bar,+fast') =====",
             "Pulling branch 'main'.",
             "===== dep4 (revision='4-feature') =====",
             "Pulling branch '4-feature'.",

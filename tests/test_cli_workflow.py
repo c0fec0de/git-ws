@@ -26,6 +26,7 @@ def test_status(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
@@ -58,6 +59,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/bb.txt",
@@ -70,6 +72,7 @@ def test_workflow(tmp_path, arepo):
         assert cli(("status",)) == [
             "===== main =====",
             "===== dep1 =====",
+            "anyrepo WARNING Clone dep1 has an empty revision!",
             "?? foo.txt",
             "===== dep2 (revision='1-feature') =====",
             "?? ../dep2/bb.txt",
@@ -86,6 +89,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/bb.txt",
@@ -99,6 +103,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "A  dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "A  dep2/bb.txt",
@@ -116,6 +121,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "A  dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
@@ -129,6 +135,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/barbar.txt",
@@ -141,6 +148,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/barbar.txt",
@@ -153,6 +161,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "A  dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/barbar.txt",
@@ -165,6 +174,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/barbar.txt",
         "===== dep4 (revision='main') =====",
@@ -185,6 +195,7 @@ def test_checkout_file(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         " M dep2/data.txt",
         "===== dep4 (revision='main') =====",
@@ -210,6 +221,7 @@ def test_checkout_file(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         " M dep2/data.txt",
         "===== dep4 (revision='main') =====",
@@ -228,6 +240,7 @@ def test_checkout_file(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         " M dep4/data.txt",
@@ -248,6 +261,7 @@ def test_checkout(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         " M dep2/data.txt",
         "===== dep4 (revision='main') =====",
@@ -266,6 +280,7 @@ def test_checkout(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         " M dep2/data.txt",
         "===== dep4 (revision='main') =====",

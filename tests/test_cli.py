@@ -73,6 +73,7 @@ def test_git(tmp_path, arepo):
     assert cli(["git", "status"]) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
@@ -92,6 +93,7 @@ def test_foreach(tmp_path, arepo, caplog):
     assert cli(["foreach", "git", "status"]) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
@@ -100,20 +102,13 @@ def test_foreach(tmp_path, arepo, caplog):
         "INFO    anyrepo path=TMP/workspace",
         "INFO    anyrepo Loaded TMP/workspace Info(main_path=PosixPath('main')) "
         "AppConfigData(manifest_path='anyrepo.toml', color_ui=True, groups=None)",
-        "INFO    anyrepo run(['git', 'describe', '--exact-match', '--tags'], "
-        "cwd='main') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
-        "anything.\\n'",
-        "INFO    anyrepo run(['git', 'branch', '--show-current'], cwd='main') OK stdout=b'main\\n' stderr=b''",
         "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='main') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
         "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
         "url='../dep1'), ProjectSpec(name='dep2', url='../dep2', "
         "revision='1-feature')))",
         "DEBUG   anyrepo Project(name='dep1', path='dep1', url='../dep1')",
-        "INFO    anyrepo run(['git', 'describe', '--exact-match', '--tags'], "
-        "cwd='dep1') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
-        "anything.\\n'",
-        "INFO    anyrepo run(['git', 'branch', '--show-current'], cwd='dep1') OK stdout=b'main\\n' stderr=b''",
+        "WARNING anyrepo Clone dep1 has an empty revision!",
         "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None",
         "DEBUG   anyrepo Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
@@ -132,10 +127,11 @@ def test_foreach(tmp_path, arepo, caplog):
         "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep4') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None",
         "DEBUG   anyrepo ManifestSpec(groups=(Group(name='test'),), "
-        "dependencies=(ProjectSpec(name='dep3', url='../dep3', groups=('test',)), "
-        "ProjectSpec(name='dep4', url='../dep4', revision='main')))",
+        "defaults=Defaults(revision='main'), dependencies=(ProjectSpec(name='dep3', "
+        "url='../dep3', groups=('test',)), ProjectSpec(name='dep4', url='../dep4', "
+        "revision='main')))",
         "DEBUG   anyrepo FILTERED OUT Project(name='dep3', path='dep3', "
-        "url='../dep3', groups=(Group(name='test'),))",
+        "url='../dep3', revision='main', groups=(Group(name='test'),))",
         "DEBUG   anyrepo DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')",
     ]
 
@@ -146,6 +142,7 @@ def test_foreach_missing(tmp_path, arepo, caplog):
     assert cli(["foreach", "git", "status"], exit_code=1) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         "Error: Git Clone 'dep2' is missing. Try:",
         "",
@@ -185,6 +182,7 @@ def _test_foreach(tmp_path, arepo, caplog, *command):
     assert cli(command) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
@@ -197,6 +195,7 @@ def test_git_no_color(tmp_path, arepo, caplog):
     assert cli(["git", "status"]) == [
         "===== main =====",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
@@ -205,20 +204,13 @@ def test_git_no_color(tmp_path, arepo, caplog):
         "INFO    anyrepo path=TMP/workspace",
         "INFO    anyrepo Loaded TMP/workspace Info(main_path=PosixPath('main')) "
         "AppConfigData(manifest_path='anyrepo.toml', color_ui=False, groups=None)",
-        "INFO    anyrepo run(['git', 'describe', '--exact-match', '--tags'], "
-        "cwd='main') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
-        "anything.\\n'",
-        "INFO    anyrepo run(['git', 'branch', '--show-current'], cwd='main') OK stdout=b'main\\n' stderr=b''",
         "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='main') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
         "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
         "url='../dep1'), ProjectSpec(name='dep2', url='../dep2', "
         "revision='1-feature')))",
         "DEBUG   anyrepo Project(name='dep1', path='dep1', url='../dep1')",
-        "INFO    anyrepo run(['git', 'describe', '--exact-match', '--tags'], "
-        "cwd='dep1') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
-        "anything.\\n'",
-        "INFO    anyrepo run(['git', 'branch', '--show-current'], cwd='dep1') OK stdout=b'main\\n' stderr=b''",
+        "WARNING anyrepo Clone dep1 has an empty revision!",
         "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None",
         "DEBUG   anyrepo Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
@@ -237,9 +229,10 @@ def test_git_no_color(tmp_path, arepo, caplog):
         "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep4') OK stdout=b'\\n' stderr=b''",
         "INFO    anyrepo run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None",
         "DEBUG   anyrepo ManifestSpec(groups=(Group(name='test'),), "
-        "dependencies=(ProjectSpec(name='dep3', url='../dep3', groups=('test',)), "
-        "ProjectSpec(name='dep4', url='../dep4', revision='main')))",
+        "defaults=Defaults(revision='main'), dependencies=(ProjectSpec(name='dep3', "
+        "url='../dep3', groups=('test',)), ProjectSpec(name='dep4', url='../dep4', "
+        "revision='main')))",
         "DEBUG   anyrepo FILTERED OUT Project(name='dep3', path='dep3', "
-        "url='../dep3', groups=(Group(name='test'),))",
+        "url='../dep3', revision='main', groups=(Group(name='test'),))",
         "DEBUG   anyrepo DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')",
     ]

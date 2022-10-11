@@ -113,6 +113,7 @@ class Project(BaseModel):
         revision: Revision
         manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. `anyrepo.toml` by default.
         groups: Dependency Groups.
+        is_main: Project is Main Project.
 
     The :any:`ProjectSpec` represents the User Interface. The options which can be specified in the manifest file.
     The :any:`Project` is the resolved version of :any:`ProjectSpec` with all calculated information needed by
@@ -139,6 +140,9 @@ class Project(BaseModel):
 
     groups: Tuple[Group, ...] = tuple()
     """Groups."""
+
+    is_main: bool = False
+    """Project is the main project."""
 
     @property
     def info(self):

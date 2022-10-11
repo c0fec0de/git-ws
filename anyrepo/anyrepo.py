@@ -143,15 +143,15 @@ class AnyRepo:
         """Create/Update all dependent projects."""
         workspace = self.workspace
         used: List[Path] = [workspace.info.main_path]
-        for clone in self.foreach(
+        for clone in self._foreach(
             project_paths=project_paths,
             manifest_path=manifest_path,
             groups=groups,
             skip_main=skip_main,
             resolve_url=True,
-            no_warn=True,
         ):
             used.append(Path(clone.project.path))
+            self._check_clone(clone, revdiff=False)
             self._update(clone, rebase)
         if prune:
             self._prune(workspace, used, force=force)
@@ -222,8 +222,9 @@ class AnyRepo:
         groups: Groups = None,
     ) -> Generator[Status, None, None]:
         """Iterate over Status."""
-        for clone in self.foreach(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
+        for clone in self._foreach(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
             path = clone.git.path
+            self._check_clone(clone)
             for status in clone.git.status():
                 yield status.with_path(path)
 
@@ -286,9 +287,25 @@ class AnyRepo:
         project_paths=None,
         manifest_path: Path = None,
         groups: Groups = None,
+        resolve_url: bool = False,
+    ) -> Generator[Clone, None, None]:
+        """User Level Clone Iteration."""
+        for clone in self._foreach(
+            project_paths=project_paths,
+            manifest_path=manifest_path,
+            groups=groups,
+            resolve_url=resolve_url,
+        ):
+            self._check_clone(clone)
+            yield clone
+
+    def _foreach(
+        self,
+        project_paths=None,
+        manifest_path: Path = None,
+        groups: Groups = None,
         skip_main: bool = False,
         resolve_url: bool = False,
-        no_warn: bool = False,
     ) -> Generator[Clone, None, None]:
         """User Level Clone Iteration."""
         project_paths_filter = self._create_project_paths_filter(project_paths)
@@ -298,18 +315,26 @@ class AnyRepo:
             self.echo(f"Groups: {groups!r}", bold=True)
         for clone in self.clones(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url):
             project = clone.project
-            projectrev = project.revision
-            try:
-                clonerev = clone.git.get_revision()
-            except FileNotFoundError:
-                clonerev = None
             if project_paths_filter(project):
-                self._echo_project_banner(clone.project)
-                if not no_warn and projectrev and clonerev and projectrev != clonerev:
-                    _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
+                self._echo_project_banner(project)
                 yield clone
             else:
                 self.echo(f"===== SKIPPING {project.info} =====", fg=_COLOR_SKIP)
+
+    @staticmethod
+    def _check_clone(clone, revdiff=True):
+        project = clone.project
+        projectrev = project.revision
+        if projectrev:
+            if revdiff:
+                try:
+                    clonerev = clone.git.get_revision()
+                except FileNotFoundError:
+                    clonerev = None
+                if clonerev and projectrev != clonerev:
+                    _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
+        elif not project.is_main:
+            _LOGGER.warning("Clone %s has an empty revision!", project.info)
 
     def clones(
         self,

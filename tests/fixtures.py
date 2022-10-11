@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from pytest import fixture
 
-from anyrepo.datamodel import Group, ManifestSpec, ProjectSpec
+from anyrepo.datamodel import Defaults, Group, ManifestSpec, ProjectSpec
 
 from .util import chdir, run
 
@@ -38,6 +38,7 @@ def repos(tmp_path):
 
     with chdir(repos_path / "main"):
         ManifestSpec(
+            defaults=Defaults(revision="main"),
             groups=[
                 Group(name="foo", optional=False),
                 Group(name="bar", optional=False),
@@ -57,12 +58,13 @@ def repos(tmp_path):
         ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),
-            ]
+            ],
         ).save(path / "anyrepo.toml")
 
     with git_repo(repos_path / "dep2", commit="initial") as path:
         (path / "data.txt").write_text("dep2")
         ManifestSpec(
+            defaults=Defaults(revision="main"),
             groups=[Group(name="test", optional=True)],
             dependencies=[
                 ProjectSpec(name="dep3", url="../dep3", groups=("test",)),

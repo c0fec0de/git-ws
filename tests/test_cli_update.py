@@ -1,14 +1,12 @@
 """Command Line Interface - Update Variants."""
-from click.testing import CliRunner
 from pytest import fixture
 
 from anyrepo import AnyRepo
-from anyrepo._cli import main
 from anyrepo.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, format_output, run
+from .util import chdir, cli, format_output, run
 
 
 @fixture
@@ -38,8 +36,7 @@ def test_update(tmp_path, repos, arepo):
     run(("git", "commit", "-m", "adapt dep"), check=True, cwd=path)
 
     # Update project
-    result = CliRunner().invoke(main, ["update", "-P", "dep2"])
-    assert format_output(result) == [
+    assert cli(["update", "-P", "dep2"]) == [
         "===== SKIPPING main =====",
         "===== SKIPPING dep1 =====",
         "===== dep2 (revision='1-feature') =====",
@@ -47,50 +44,48 @@ def test_update(tmp_path, repos, arepo):
         "===== SKIPPING dep4 (revision='main') =====",
         "",
     ]
-    assert result.exit_code == 0
 
     # Update
-    result = CliRunner().invoke(main, ["update"])
-    assert format_output(result, tmp_path) == [
+    assert cli(["update"], tmp_path=tmp_path) == [
         "===== main =====",
         "Pulling branch 'main'.",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "Pulling branch 'main'.",
         "===== dep2 (revision='1-feature') =====",
         "Pulling branch '1-feature'.",
         "===== dep4 (revision='main') =====",
         "Pulling branch 'main'.",
         "===== dep5 =====",
+        "anyrepo WARNING Clone dep5 has an empty revision!",
         "Cloning 'TMP/repos/dep5'.",
         "",
     ]
-    assert result.exit_code == 0
 
     # Update again
-    result = CliRunner().invoke(main, ["update"])
-    assert format_output(result) == [
+    assert cli(["update"]) == [
         "===== main =====",
         "Pulling branch 'main'.",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "Pulling branch 'main'.",
         "===== dep2 (revision='1-feature') =====",
         "Pulling branch '1-feature'.",
         "===== dep4 (revision='main') =====",
         "Pulling branch 'main'.",
         "===== dep5 =====",
+        "anyrepo WARNING Clone dep5 has an empty revision!",
         "Pulling branch 'main'.",
         "",
     ]
-    assert result.exit_code == 0
 
     # Update other.toml
-    result = CliRunner().invoke(main, ["update", "--manifest", "other.toml"])
-    assert format_output(result, tmp_path) == [
+    assert cli(["update", "--manifest", "other.toml"], tmp_path=tmp_path) == [
         "===== main =====",
         "Pulling branch 'main'.",
-        "===== dep1 =====",
+        "===== dep1 (revision='main') =====",
         "Pulling branch 'main'.",
-        "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
+        "===== dep6 (revision='main', path='sub/dep6', groups='+foo,+bar,+fast') =====",
         "Cloning 'TMP/repos/dep6'.",
         "===== dep4 (revision='4-feature') =====",
         "Fetching.",
@@ -98,7 +93,6 @@ def test_update(tmp_path, repos, arepo):
         "Merging branch '4-feature'.",
         "",
     ]
-    assert result.exit_code == 0
 
 
 def test_update_rebase(tmp_path, repos, arepo):
@@ -115,12 +109,12 @@ def test_update_rebase(tmp_path, repos, arepo):
     run(("git", "commit", "-m", "adapt dep"), check=True, cwd=path)
 
     # Rebase
-    result = CliRunner().invoke(main, ["update", "--rebase"])
-    assert format_output(result, tmp_path) == [
+    assert cli(["update", "--rebase"], tmp_path=tmp_path) == [
         "===== main =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep2 (revision='1-feature') =====",
@@ -130,17 +124,17 @@ def test_update_rebase(tmp_path, repos, arepo):
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep5 =====",
+        "anyrepo WARNING Clone dep5 has an empty revision!",
         "Cloning 'TMP/repos/dep5'.",
         "",
     ]
-    assert result.exit_code == 0
 
-    result = CliRunner().invoke(main, ["update", "--rebase"])
-    assert format_output(result) == [
+    assert cli(["update", "--rebase"]) == [
         "===== main =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep2 (revision='1-feature') =====",
@@ -150,21 +144,20 @@ def test_update_rebase(tmp_path, repos, arepo):
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep5 =====",
+        "anyrepo WARNING Clone dep5 has an empty revision!",
         "Fetching.",
         "Rebasing branch 'main'.",
         "",
     ]
-    assert result.exit_code == 0
 
-    result = CliRunner().invoke(main, ["update", "--manifest", "other.toml", "--rebase"])
-    assert format_output(result, tmp_path) == [
+    assert cli(["update", "--manifest", "other.toml", "--rebase"], tmp_path=tmp_path) == [
         "===== main =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep1 =====",
+        "===== dep1 (revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep6 (path='sub/dep6', groups='+foo,+bar,+fast') =====",
+        "===== dep6 (revision='main', path='sub/dep6', groups='+foo,+bar,+fast') =====",
         "Cloning 'TMP/repos/dep6'.",
         "===== dep4 (revision='4-feature') =====",
         "Fetching.",
@@ -172,4 +165,13 @@ def test_update_rebase(tmp_path, repos, arepo):
         "Rebasing branch '4-feature'.",
         "",
     ]
-    assert result.exit_code == 0
+
+    assert cli(["status"]) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "anyrepo WARNING Clone dep1 has an empty revision!",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "anyrepo WARNING Clone dep4 (revision='main') is on different revision: '4-feature'",
+        "",
+    ]

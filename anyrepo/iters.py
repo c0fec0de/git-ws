@@ -51,7 +51,10 @@ class ManifestIter:
         done: List[str] = self.__done
         filter_ = self.filter_
 
-        manifest_spec = ManifestSpec.load(manifest_path)
+        try:
+            manifest_spec = ManifestSpec.load(manifest_path)
+        except ManifestNotFoundError:
+            return
         manifest = Manifest.from_spec(manifest_spec, path=str(manifest_path))
         _LOGGER.debug("%r", manifest)
         yield manifest
@@ -127,7 +130,7 @@ class ProjectIter:
         info = workspace.info
         self.__done = [str(info.main_path)]
         if not self.skip_main:
-            project = Project(name=info.main_path.name, path=str(info.main_path))
+            project = Project(name=info.main_path.name, path=str(info.main_path), is_main=True)
             if self.filter_(project):
                 yield project
         try:
