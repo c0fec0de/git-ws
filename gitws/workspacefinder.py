@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import Optional
 
-from .const import ANYREPO_PATH
+from .const import GIT_WS_PATH
 
 
 def find_workspace(path: Optional[Path] = None) -> Optional[Path]:
@@ -12,13 +12,13 @@ def find_workspace(path: Optional[Path] = None) -> Optional[Path]:
     Keyword Args:
         path (Path): directory or file within the workspace. Current working directory by default.
 
-    The workspace root directory contains a sub directory `.anyrepo`.
+    The workspace root directory contains a sub directory `.gitws`.
     This one is searched upwards the given `path`.
     """
     spath = path or Path.cwd()
     while True:
-        anyrepopath = spath / ANYREPO_PATH
-        if anyrepopath.exists():
+        gitwspath = spath / GIT_WS_PATH
+        if gitwspath.exists():
             return spath
         if spath == spath.parent:
             break

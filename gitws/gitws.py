@@ -1,7 +1,7 @@
 """
 Multi Repository Management.
 
-The :any:`AnyRepo` class provides a simple facade to all inner `AnyRepo` functionality.
+The :any:`GitWS` class provides a simple facade to all inner `GitWS` functionality.
 """
 import logging
 import shutil
@@ -20,13 +20,13 @@ from .iters import ManifestIter, ProjectIter
 from .types import Groups, ProjectFilter
 from .workspace import Workspace
 
-_LOGGER = logging.getLogger("anyrepo")
+_LOGGER = logging.getLogger("git-ws")
 _COLOR_BANNER = "green"
 _COLOR_ACTION = "magenta"
 _COLOR_SKIP = "blue"
 
 
-class AnyRepo:
+class GitWS:
     """
     Multi Repository Management.
 
@@ -43,21 +43,21 @@ class AnyRepo:
         self.echo = echo or no_echo
 
     def __eq__(self, other):
-        if isinstance(other, AnyRepo):
+        if isinstance(other, GitWS):
             return (self.workspace, self.manifest_spec) == (other.workspace, other.manifest_spec)
         return NotImplemented
 
     @property
     def path(self) -> Path:
         """
-        AnyRepo Workspace Root Directory.
+        GitWS Workspace Root Directory.
         """
         return self.workspace.path
 
     @staticmethod
-    def from_path(path: Optional[Path] = None, manifest_path: Optional[Path] = None, echo=None) -> "AnyRepo":
+    def from_path(path: Optional[Path] = None, manifest_path: Optional[Path] = None, echo=None) -> "GitWS":
         """
-        Create :any:`AnyRepo` for workspace at `path`.
+        Create :any:`GitWS` for workspace at `path`.
 
         Keyword Args:
             path:  Path within the workspace (Default is the current working directory).
@@ -65,12 +65,12 @@ class AnyRepo:
         workspace = Workspace.from_path(path=path)
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
-        return AnyRepo(workspace, manifest_spec, echo=echo)
+        return GitWS(workspace, manifest_spec, echo=echo)
 
     @staticmethod
-    def create(path: Path, main_path: Path, manifest_path: Path, groups: Groups = None, echo=None) -> "AnyRepo":
+    def create(path: Path, main_path: Path, manifest_path: Path, groups: Groups = None, echo=None) -> "GitWS":
         """
-        Create :any:`AnyRepo` for workspace at `path`.
+        Create :any:`GitWS` for workspace at `path`.
 
         Keyword Args:
             path:  Path within the workspace (Default is the current working directory).
@@ -80,7 +80,7 @@ class AnyRepo:
         manifest_path = main_path / manifest_path
         manifest_spec = ManifestSpec.load(manifest_path)
         workspace = Workspace.init(path, main_path, resolve_relative(manifest_path, base=main_path), groups=groups)
-        return AnyRepo(workspace, manifest_spec, echo=echo)
+        return GitWS(workspace, manifest_spec, echo=echo)
 
     @staticmethod
     def init(
@@ -88,7 +88,7 @@ class AnyRepo:
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
         echo=None,
-    ) -> "AnyRepo":
+    ) -> "GitWS":
         """
         Initialize Workspace for git clone at `main_path`.
 
@@ -101,10 +101,10 @@ class AnyRepo:
         echo(f"===== {name} =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(main_path / manifest_path)
         path = main_path.parent
-        return AnyRepo.create(path, main_path, manifest_path, groups, echo=echo)
+        return GitWS.create(path, main_path, manifest_path, groups, echo=echo)
 
     def deinit(self):
-        """De-Initialize :any:`AnyRepo`."""
+        """De-Initialize :any:`GitWS`."""
         return self.workspace.deinit()
 
     @staticmethod
@@ -115,7 +115,7 @@ class AnyRepo:
         groups: Groups = None,
         force: bool = False,
         echo=None,
-    ) -> "AnyRepo":
+    ) -> "GitWS":
         """Clone git `url` and initialize Workspace."""
         echo = echo or no_echo
         path = path or Path.cwd()
@@ -128,7 +128,7 @@ class AnyRepo:
         main_path = path / removesuffix(name, ".git")
         git = Git(main_path)
         git.clone(url)
-        return AnyRepo.create(path, main_path, manifest_path, groups, echo=echo)
+        return GitWS.create(path, main_path, manifest_path, groups, echo=echo)
 
     def update(
         self,

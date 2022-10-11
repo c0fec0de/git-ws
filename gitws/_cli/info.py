@@ -2,7 +2,7 @@
 
 import click
 
-from anyrepo import AnyRepo
+from gitws import GitWS
 
 from .common import exceptionhandling, pass_context
 from .options import groups_option, manifest_option
@@ -11,7 +11,7 @@ from .options import groups_option, manifest_option
 @click.group()
 def info():
     """
-    AnyRepo Information.
+    Git Workspace Information.
     """
 
 
@@ -23,8 +23,8 @@ def workspace_path(context, manifest_path=None):
     Print Path to Workspace.
     """
     with exceptionhandling(context):
-        anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
-        context.echo(str(anyrepo.path))
+        gws = GitWS.from_path(manifest_path=manifest_path)
+        context.echo(str(gws.path))
 
 
 @info.command()
@@ -35,8 +35,8 @@ def main_path(context, manifest_path=None):
     Print Path to Main Git Clone.
     """
     with exceptionhandling(context):
-        anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
-        context.echo(str(anyrepo.workspace.main_path))
+        gws = GitWS.from_path(manifest_path=manifest_path)
+        context.echo(str(gws.workspace.main_path))
 
 
 @info.command()
@@ -48,7 +48,7 @@ def project_paths(context, manifest_path=None, groups=None):
     Print Paths to all git clones.
     """
     with exceptionhandling(context):
-        anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
-        for project in anyrepo.projects(filter_=anyrepo.create_groups_filter(groups)):
-            project_path = anyrepo.workspace.get_project_path(project)
+        gws = GitWS.from_path(manifest_path=manifest_path)
+        for project in gws.projects(filter_=gws.create_groups_filter(groups)):
+            project_path = gws.workspace.get_project_path(project)
             context.echo(project_path)

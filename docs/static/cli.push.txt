@@ -1,8 +1,8 @@
-Usage: anyrepo push [OPTIONS]
+Usage: git-ws push [OPTIONS]
 
   Run 'git push' on projects.
 
-  This command behaves identical to `anyrepo foreach -- git push`.
+  This command behaves identical to `git ws foreach -- git push`.
 
 Options:
   -P, --project DIRECTORY  Project path to operate on only. All by default.

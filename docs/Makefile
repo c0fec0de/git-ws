@@ -21,31 +21,31 @@ help:
 
 
 api:
-	sphinx-apidoc --output-dir api .. ../anyrepo/cli ../docs ../tests $(wildcard ../*.py) --separate --force --module-first --maxdepth 2
+	sphinx-apidoc --output-dir api .. ../gitws/cli ../docs ../tests $(wildcard ../*.py) --separate --force --module-first --maxdepth 2
 .PHONY: api
 
 gen:
-	rm -f static/anyrepo.toml
-	anyrepo --help > static/cli.txt
-	anyrepo add --help > static/cli.add.txt
-	anyrepo checkout --help > static/cli.checkout.txt
-	anyrepo clone --help > static/cli.clone.txt
-	anyrepo commit --help > static/cli.commit.txt
-	anyrepo config --help > static/cli.config.txt
-	anyrepo deinit --help > static/cli.deinit.txt
-	anyrepo config --help > static/cli.config.txt
-	anyrepo fetch --help > static/cli.fetch.txt
-	anyrepo foreach --help > static/cli.foreach.txt
-	anyrepo git --help > static/cli.git.txt
-	anyrepo info --help > static/cli.info.txt
-	anyrepo init --help > static/cli.init.txt
-	anyrepo manifest --help > static/cli.manifest.txt
-	anyrepo manifest create --help > static/cli.manifest.create.txt
-	anyrepo manifest create -M static/anyrepo.toml
-	anyrepo manifest upgrade --help > static/cli.manifest.upgrade.txt
-	anyrepo pull --help > static/cli.pull.txt
-	anyrepo push --help > static/cli.push.txt
-	anyrepo rebase --help > static/cli.rebase.txt
-	anyrepo reset --help > static/cli.reset.txt
-	anyrepo status --help > static/cli.status.txt
-	anyrepo update --help > static/cli.update.txt
+	rm -f static/git-ws.toml
+	git-ws --help > static/cli.txt
+	git-ws add --help > static/cli.add.txt
+	git-ws checkout --help > static/cli.checkout.txt
+	git-ws clone --help > static/cli.clone.txt
+	git-ws commit --help > static/cli.commit.txt
+	git-ws config --help > static/cli.config.txt
+	git-ws deinit --help > static/cli.deinit.txt
+	git-ws config --help > static/cli.config.txt
+	git-ws fetch --help > static/cli.fetch.txt
+	git-ws foreach --help > static/cli.foreach.txt
+	git-ws git --help > static/cli.git.txt
+	git-ws info --help > static/cli.info.txt
+	git-ws init --help > static/cli.init.txt
+	git-ws manifest --help > static/cli.manifest.txt
+	git-ws manifest create --help > static/cli.manifest.create.txt
+	git-ws manifest create -M static/git-ws.toml
+	git-ws manifest upgrade --help > static/cli.manifest.upgrade.txt
+	git-ws pull --help > static/cli.pull.txt
+	git-ws push --help > static/cli.push.txt
+	git-ws rebase --help > static/cli.rebase.txt
+	git-ws reset --help > static/cli.reset.txt
+	git-ws status --help > static/cli.status.txt
+	git-ws update --help > static/cli.update.txt

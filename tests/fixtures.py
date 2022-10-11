@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from pytest import fixture
 
-from anyrepo.datamodel import Defaults, Group, ManifestSpec, ProjectSpec
+from gitws.datamodel import Defaults, Group, ManifestSpec, ProjectSpec
 
 from .util import chdir, run
 
@@ -34,7 +34,7 @@ def repos(tmp_path):
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep2", url="../dep2", revision="1-feature"),
             ],
-        ).save(path / "anyrepo.toml")
+        ).save(path / "git-ws.toml")
 
     with chdir(repos_path / "main"):
         ManifestSpec(
@@ -59,7 +59,7 @@ def repos(tmp_path):
             dependencies=[
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),
             ],
-        ).save(path / "anyrepo.toml")
+        ).save(path / "git-ws.toml")
 
     with git_repo(repos_path / "dep2", commit="initial") as path:
         (path / "data.txt").write_text("dep2")
@@ -70,7 +70,7 @@ def repos(tmp_path):
                 ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),
             ],
-        ).save(path / "anyrepo.toml")
+        ).save(path / "git-ws.toml")
 
     with chdir(repos_path / "dep2"):
         run(("git", "checkout", "-b", "1-feature"), check=True)

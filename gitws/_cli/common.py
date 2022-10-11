@@ -6,7 +6,7 @@ from contextlib import contextmanager
 import click
 from pydantic import BaseModel
 
-from anyrepo import (
+from gitws import (
     GitCloneMissingError,
     GitCloneNotCleanError,
     ManifestNotFoundError,
@@ -63,7 +63,7 @@ def exceptionhandling(context: Context):
     """
     Click Exception Handling.
 
-    The AnyRepo implementation shall NOT depend on click (except the cli module).
+    The GitWS implementation shall NOT depend on click (except the cli module).
     Therefore we remap any internal errors to nice click errors.
 
     We provide useful command line hints, depending on exceptions.
@@ -72,7 +72,7 @@ def exceptionhandling(context: Context):
         yield
     except UninitializedError as exc:
         _print_traceback(context)
-        raise Error(f"{exc!s} Try:\n\n    anyrepo init\n\nor:\n\n    anyrepo clone\n") from None
+        raise Error(f"{exc!s} Try:\n\n    git ws init\n\nor:\n\n    git ws clone\n") from None
     except NoGitError as exc:
         _print_traceback(context)
         raise Error(
@@ -80,10 +80,10 @@ def exceptionhandling(context: Context):
         ) from None
     except ManifestNotFoundError as exc:
         _print_traceback(context)
-        raise Error(f"{exc!s} Try:\n\n    anyrepo manifest create --manifest='{exc.path!s}'\n") from None
+        raise Error(f"{exc!s} Try:\n\n    git ws manifest create --manifest='{exc.path!s}'\n") from None
     except GitCloneMissingError as exc:
         _print_traceback(context)
-        raise Error(f"{exc!s} Try:\n\n    anyrepo update\n") from None
+        raise Error(f"{exc!s} Try:\n\n    git ws update\n") from None
     except GitCloneNotCleanError as exc:
         _print_traceback(context)
         raise Error(f"{exc!s}\n\nCommit/Push all your changes and branches or use '--force'\n") from None

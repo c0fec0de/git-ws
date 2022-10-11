@@ -5,9 +5,9 @@ from pathlib import Path
 import click
 import coloredlogs  # type: ignore
 
-from anyrepo import AnyRepo, AppConfig
-from anyrepo._util import resolve_relative
-from anyrepo.const import MANIFEST_PATH_DEFAULT
+from gitws import AppConfig, GitWS
+from gitws._util import resolve_relative
+from gitws.const import MANIFEST_PATH_DEFAULT
 
 from .common import COLOR_INFO, Context, Error, exceptionhandling, get_loglevel, pass_context
 from .config import config
@@ -20,11 +20,11 @@ _LOGGING_FORMAT = "%(name)s %(levelname)s %(message)s"
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("-v", "--verbose", count=True)
-@click.version_option()
+@click.version_option(package_name="git-ws")
 @click.pass_context
 def main(ctx=None, verbose=0):
     """
-    Multi Repository Management Tool.
+    Git Workspace - Multi Repository Management Tool.
     """
     app_config = AppConfig()
     level = get_loglevel(verbose)
@@ -43,19 +43,19 @@ def main(ctx=None, verbose=0):
 @pass_context
 def init(context, manifest_path=None, groups=None, update: bool = False):
     """
-    Initialize AnyRepo workspace and create all dependent git clones.
+    Initialize Git Workspace and create all dependent git clones.
 
     The actual directory MUST be a valid git clone, which has been
     be either created by 'git init' or 'git clone'.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.init(manifest_path=manifest_path, groups=groups, echo=context.echo)
+        arepo = GitWS.init(manifest_path=manifest_path, groups=groups, echo=context.echo)
         click.secho(f"Workspace initialized at {str(resolve_relative(arepo.path))!r}.")
         if update:
             arepo.update(skip_main=True)
         else:
             click.secho(
-                "Please continue with:\n\n    anyrepo update\n",
+                "Please continue with:\n\n    git ws update\n",
                 fg=COLOR_INFO,
             )
 
@@ -64,10 +64,10 @@ def init(context, manifest_path=None, groups=None, update: bool = False):
 @pass_context
 def deinit(context):
     """
-    Deinitialize AnyRepo workspace.
+    Deinitialize Git Workspace.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo = GitWS.from_path(echo=context.echo)
         arepo.deinit()
         click.secho(f"Workspace deinitialized at {str(resolve_relative(arepo.path))!r}.")
 
@@ -81,16 +81,16 @@ def deinit(context):
 @pass_context
 def clone(context, url, manifest_path=None, groups=None, update: bool = False, force: bool = False):
     """
-    Create a git clone, initialize AnyRepo workspace and create all dependent git clones.
+    Create a git clone, initialize Git Workspace and create all dependent git clones.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.clone(url, manifest_path=manifest_path, groups=groups, force=force, echo=context.echo)
+        arepo = GitWS.clone(url, manifest_path=manifest_path, groups=groups, force=force, echo=context.echo)
         if update:
             arepo.update(skip_main=True)
         else:
             click.secho(
                 f"Workspace initialized at {str(resolve_relative(arepo.path))!r}. "
-                "Please continue with:\n\n    anyrepo update\n",
+                "Please continue with:\n\n    git ws update\n",
                 fg=COLOR_INFO,
             )
 
@@ -116,7 +116,7 @@ def update(
 ):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
+        arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.update(
             project_paths=projects,
             manifest_path=manifest_path,
@@ -138,10 +138,10 @@ def git(context, command, projects=None, manifest_path=None, groups=None):
     """
     Run git command on projects.
 
-    This command behaves identical to `anyrepo foreach -- git`.
+    This command behaves identical to `git ws foreach -- git`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
+        arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git",) + command, project_paths=projects, groups=groups)
 
 
@@ -154,10 +154,10 @@ def fetch(context, projects=None, manifest_path=None, groups=None):
     """
     Run 'git fetch' on projects.
 
-    This command behaves identical to `anyrepo foreach -- git fetch`.
+    This command behaves identical to `git ws foreach -- git fetch`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
+        arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "fetch"), project_paths=projects, groups=groups)
 
 
@@ -170,10 +170,10 @@ def pull(context, projects=None, manifest_path=None, groups=None):
     """
     Run 'git pull' on projects.
 
-    This command behaves identical to `anyrepo foreach -- git pull`.
+    This command behaves identical to `git ws foreach -- git pull`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
+        arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "pull"), project_paths=projects, groups=groups)
 
 
@@ -186,10 +186,10 @@ def push(context, projects=None, manifest_path=None, groups=None):
     """
     Run 'git push' on projects.
 
-    This command behaves identical to `anyrepo foreach -- git push`.
+    This command behaves identical to `git ws foreach -- git push`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
+        arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "push"), project_paths=projects, groups=groups)
 
 
@@ -202,10 +202,10 @@ def rebase(context, projects=None, manifest_path=None, groups=None):
     """
     Run 'git rebase' on projects.
 
-    This command behaves identical to `anyrepo foreach -- git rebase`.
+    This command behaves identical to `git ws foreach -- git rebase`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
+        arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "rebase"), project_paths=projects, groups=groups)
 
 
@@ -217,7 +217,7 @@ def status(context, projects=None):
     Run 'git status' (displayed paths include the actual clone path).
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo = GitWS.from_path(echo=context.echo)
         for status in arepo.status(project_paths=projects):
             context.echo(str(status))
 
@@ -232,7 +232,7 @@ def checkout(context, paths):
     Checkout all clones to their manifest revision, if no paths are given.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo = GitWS.from_path(echo=context.echo)
         arepo.checkout([Path(path) for path in paths])
 
 
@@ -244,7 +244,7 @@ def add(context, paths):
     Run 'git add' on paths and choose the right git clone automatically.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo = GitWS.from_path(echo=context.echo)
         arepo.add([Path(path) for path in paths])
 
 
@@ -256,7 +256,7 @@ def reset(context, paths):
     Run 'git reset' on paths and choose the right git clone automatically.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo = GitWS.from_path(echo=context.echo)
         arepo.reset([Path(path) for path in paths])
 
 
@@ -271,7 +271,7 @@ def commit(context, paths, message=None):
     with exceptionhandling(context):
         if not message:
             raise ValueError("Please provide a commit message.")
-        arepo = AnyRepo.from_path(echo=context.echo)
+        arepo = GitWS.from_path(echo=context.echo)
         arepo.commit(message, [Path(path) for path in paths])
 
 
@@ -284,10 +284,10 @@ def diff(context, projects=None, manifest_path=None, groups=None):
     """
     Run 'git diff' on projects.
 
-    This command behaves identical to `anyrepo foreach -- git diff`.
+    This command behaves identical to `git ws foreach -- git diff`.
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
+        arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(("git", "diff"), project_paths=projects, groups=groups)
 
 
@@ -301,11 +301,11 @@ def foreach(context, command, projects=None, manifest_path=None, groups=None):
     """
     Run 'command' on projects.
 
-    Please use '--' to separate anyrepo command line options from options forwarded to the `command`
-    (i.e. `anyrepo foreach -- ls -l`)
+    Please use '--' to separate 'git ws' command line options from options forwarded to the `command`
+    (i.e. `git ws foreach -- ls -l`)
     """
     with exceptionhandling(context):
-        arepo = AnyRepo.from_path(manifest_path=manifest_path, echo=context.echo)
+        arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
         arepo.run_foreach(command, project_paths=projects, groups=groups)
 
 

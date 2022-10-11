@@ -4,8 +4,7 @@
 def test_imports():
     """Test imports."""
     # pylint: disable=unused-import,too-many-locals,import-outside-toplevel
-    from anyrepo import (
-        AnyRepo,
+    from gitws import (
         AppConfig,
         AppConfigData,
         AppConfigLocation,
@@ -14,6 +13,7 @@ def test_imports():
         Filter,
         Git,
         GitCloneMissingError,
+        GitWS,
         Group,
         InitializedError,
         InvalidConfigurationFileError,

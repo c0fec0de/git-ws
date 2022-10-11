@@ -1,6 +1,6 @@
-Usage: anyrepo info [OPTIONS] COMMAND [ARGS]...
+Usage: git-ws info [OPTIONS] COMMAND [ARGS]...
 
-  AnyRepo Information.
+  Git Workspace Information.
 
 Options:
   -h, --help  Show this message and exit.

@@ -3,7 +3,7 @@ import re
 
 from pytest import fixture
 
-from anyrepo.git import Git
+from gitws.git import Git
 
 
 def is_sha(sha):

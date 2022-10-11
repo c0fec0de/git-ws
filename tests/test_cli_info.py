@@ -1,7 +1,7 @@
 """Command Line Interface."""
 from pytest import fixture
 
-from anyrepo import AnyRepo
+from gitws import GitWS
 
 # pylint: disable=unused-import
 from .fixtures import repos
@@ -10,12 +10,12 @@ from .util import chdir, cli
 
 @fixture
 def arepo(tmp_path, repos):
-    """Initialized :any:`AnyRepo` on `repos`."""
+    """Initialized :any:`GitWS` on `repos`."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
     with chdir(workspace):
-        arepo = AnyRepo.clone(str(repos / "main"))
+        arepo = GitWS.clone(str(repos / "main"))
         arepo.update()
 
         yield arepo

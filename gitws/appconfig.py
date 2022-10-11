@@ -19,14 +19,14 @@ import tomlkit.exceptions
 from appdirs import site_config_dir, user_config_dir
 from pydantic import ValidationError
 
-from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError, UninitializedError
+from gitws.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError, UninitializedError
 
 from .const import (
-    ANYREPO_PATH,
     APP_AUTHOR,
     APP_NAME,
     BLOCK_APP_CONFIG_FROM_ENV_ENV_NAME,
     CONFIG_FILE_NAME,
+    GIT_WS_PATH,
     SYSTEM_CONFIG_PATH_ENV_NAME,
     USER_CONFIG_PATH_ENV_NAME,
     WORKSPACE_CONFIG_PATH_ENV_NAME,
@@ -41,7 +41,7 @@ _USER_CONFIG_DIR = user_config_dir(APP_NAME, appauthor=APP_AUTHOR)
 """The default location where to look for user configuration files."""
 
 
-class _EnvAppConfigData(AppConfigData, env_prefix="anyrepo_", case_sensitive=False):
+class _EnvAppConfigData(AppConfigData, env_prefix="git_ws_", case_sensitive=False):
     """
     Configuration data read from the environment.
 
@@ -75,7 +75,7 @@ class AppConfigLocation(str, Enum):
     Workspace configuration.
 
     Use this to refer to configuration specific to the current workspace (if any). By default, the workspace
-    configuration is looked for in the :any:`ANYREPO_PATH` path within the workspace we are located in. The
+    configuration is looked for in the :any:`GIT_WS_PATH` path within the workspace we are located in. The
     workspace location is retrieved by using :any:`Workspace.find_path`.
     """
 
@@ -110,9 +110,9 @@ class AppConfig:
     system configuration file have the lowest priority, while the ones from the workspace have
     highest priority.
 
-    On top, the class will also evaluate environment variables named `ANYREPO_*` and allow overriding
+    On top, the class will also evaluate environment variables named `GIT_WS_*` and allow overriding
     configuration values that way. For example, the `manifest_path` option can be explicitly overridden by
-    setting the `ANYREPO_MANIFEST_PATH` environment variable.
+    setting the `GIT_WS_MANIFEST_PATH` environment variable.
 
     Keyword Args:
 
@@ -155,7 +155,7 @@ class AppConfig:
             else:
                 workspace_dir = find_workspace()
                 if workspace_dir:
-                    workspace_config_dir = str(workspace_dir / ANYREPO_PATH)
+                    workspace_config_dir = str(workspace_dir / GIT_WS_PATH)
         self._system_config_dir = system_config_dir
         self._user_config_dir = user_config_dir
         self._workspace_config_dir = workspace_config_dir

@@ -1,6 +1,6 @@
-Usage: anyrepo deinit [OPTIONS]
+Usage: git-ws deinit [OPTIONS]
 
-  Deinitialize AnyRepo workspace.
+  Deinitialize Git Workspace.
 
 Options:
   -h, --help  Show this message and exit.

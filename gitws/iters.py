@@ -10,7 +10,7 @@ from .git import Git
 from .types import ProjectFilter
 from .workspace import Workspace
 
-_LOGGER = logging.getLogger("anyrepo")
+_LOGGER = logging.getLogger("git-ws")
 _MANIFEST_DEFAULT = ManifestSpec()
 
 

@@ -1,4 +1,4 @@
-Usage: anyrepo manifest upgrade [OPTIONS]
+Usage: git-ws manifest upgrade [OPTIONS]
 
   Update Manifest To Latest Version.
 
@@ -6,5 +6,5 @@ Usage: anyrepo manifest upgrade [OPTIONS]
   latest documentation.
 
 Options:
-  -M, --manifest FILE  Manifest file. 'anyrepo.toml' by default.
+  -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
   -h, --help           Show this message and exit.

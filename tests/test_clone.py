@@ -1,5 +1,5 @@
 """Clone Testing."""
-from anyrepo import AnyRepo, Group, Manifest, Project
+from gitws import GitWS, Group, Manifest, Project
 
 # pylint: disable=unused-import
 from .fixtures import repos
@@ -28,7 +28,7 @@ def test_cli_clone(tmp_path, repos):
             f"Cloning '{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
-            "    anyrepo update",
+            "    git ws update",
             "",
             "",
         ]
@@ -68,7 +68,7 @@ def test_cli_clone_not_empty(tmp_path, repos):
             "Cloning 'TMP/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
-            "    anyrepo update",
+            "    git ws update",
             "",
             "",
         ]
@@ -91,7 +91,7 @@ def test_cli_clone_update(tmp_path, repos):
             "===== main =====",
             f"Cloning '{tmp_path}/repos/main'.",
             "===== dep1 =====",
-            "anyrepo WARNING Clone dep1 has an empty revision!",
+            "git-ws WARNING Clone dep1 has an empty revision!",
             f"Cloning '{tmp_path}/repos/dep1'.",
             "===== dep2 (revision='1-feature') =====",
             f"Cloning '{tmp_path}/repos/dep2'.",
@@ -119,7 +119,7 @@ def test_cli_clone_checkout(tmp_path, repos):
             f"Cloning '{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
-            "    anyrepo update",
+            "    git ws update",
             "",
             "",
         ]
@@ -162,7 +162,7 @@ def test_cli_clone_groups(tmp_path, repos):
             "Cloning " f"'{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
-            "    anyrepo update",
+            "    git ws update",
             "",
             "",
         ]
@@ -179,7 +179,7 @@ def test_cli_clone_groups(tmp_path, repos):
             "===== main =====",
             "Pulling branch 'main'.",
             "===== dep1 =====",
-            "anyrepo WARNING Clone dep1 has an empty revision!",
+            "git-ws WARNING Clone dep1 has an empty revision!",
             f"Cloning '{tmp_path}/repos/dep1'.",
             "===== dep2 (revision='1-feature') =====",
             f"Cloning '{tmp_path}/repos/dep2'.",
@@ -206,9 +206,9 @@ def test_clone(tmp_path, repos):
 
     with chdir(workspace):
         main_path = repos / "main"
-        arepo = AnyRepo.clone(str(main_path))
+        arepo = GitWS.clone(str(main_path))
         arepo.update()
-        assert arepo.get_manifest().path == str(workspace / "main" / "anyrepo.toml")
+        assert arepo.get_manifest().path == str(workspace / "main" / "git-ws.toml")
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -217,7 +217,7 @@ def test_clone(tmp_path, repos):
         check(workspace, "dep4")
         check(workspace, "dep5", exists=False)
 
-        rrepo = AnyRepo.from_path()
+        rrepo = GitWS.from_path()
         assert arepo == rrepo
 
         assert list(arepo.projects()) == [
@@ -232,11 +232,11 @@ def test_clone(tmp_path, repos):
                     Project(name="dep1", path="dep1", url="../dep1"),
                     Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
                 ),
-                path=str(tmp_path / "workspace/main/anyrepo.toml"),
+                path=str(tmp_path / "workspace/main/git-ws.toml"),
             ),
             Manifest(
                 dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
-                path=str(tmp_path / "workspace/dep1/anyrepo.toml"),
+                path=str(tmp_path / "workspace/dep1/git-ws.toml"),
             ),
             Manifest(
                 groups=(Group(name="test"),),
@@ -244,7 +244,7 @@ def test_clone(tmp_path, repos):
                     Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
                     Project(name="dep4", path="dep4", url="../dep4", revision="main"),
                 ),
-                path=str(tmp_path / "workspace/dep2/anyrepo.toml"),
+                path=str(tmp_path / "workspace/dep2/git-ws.toml"),
             ),
         ]
         assert list(str(item) for item in arepo.clones()) == [
@@ -263,9 +263,9 @@ def test_clone_groups(tmp_path, repos):
 
     with chdir(workspace):
         main_path = repos / "main"
-        arepo = AnyRepo.clone(str(main_path), groups="+test")
+        arepo = GitWS.clone(str(main_path), groups="+test")
         arepo.update()
-        assert arepo.get_manifest().path == str(workspace / "main" / "anyrepo.toml")
+        assert arepo.get_manifest().path == str(workspace / "main" / "git-ws.toml")
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -274,7 +274,7 @@ def test_clone_groups(tmp_path, repos):
         check(workspace, "dep4")
         check(workspace, "dep5", exists=False)
 
-        rrepo = AnyRepo.from_path()
+        rrepo = GitWS.from_path()
         assert arepo == rrepo
 
         assert list(arepo.projects()) == [
@@ -296,11 +296,11 @@ def test_clone_groups(tmp_path, repos):
                     Project(name="dep1", path="dep1", url="../dep1"),
                     Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
                 ),
-                path=str(tmp_path / "workspace/main/anyrepo.toml"),
+                path=str(tmp_path / "workspace/main/git-ws.toml"),
             ),
             Manifest(
                 dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
-                path=str(tmp_path / "workspace/dep1/anyrepo.toml"),
+                path=str(tmp_path / "workspace/dep1/git-ws.toml"),
             ),
             Manifest(
                 groups=(Group(name="test"),),
@@ -308,7 +308,7 @@ def test_clone_groups(tmp_path, repos):
                     Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
                     Project(name="dep4", path="dep4", url="../dep4", revision="main"),
                 ),
-                path=str(tmp_path / "workspace/dep2/anyrepo.toml"),
+                path=str(tmp_path / "workspace/dep2/git-ws.toml"),
             ),
         ]
         assert list(str(item) for item in arepo.clones()) == [
@@ -332,7 +332,7 @@ def test_clone_other(tmp_path, repos):
 
     with chdir(workspace):
         main_path = repos / "main"
-        arepo = AnyRepo.clone(str(main_path), manifest_path="other.toml")
+        arepo = GitWS.clone(str(main_path), manifest_path="other.toml")
         arepo.update()
         assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
 
@@ -343,10 +343,10 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
 
-        rrepo = AnyRepo.from_path()
+        rrepo = GitWS.from_path()
         assert arepo == rrepo
 
-        arepo.update(manifest_path="anyrepo.toml")
+        arepo.update(manifest_path="git-ws.toml")
         assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
 
         check(workspace, "main")

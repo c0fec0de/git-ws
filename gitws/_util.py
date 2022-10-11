@@ -7,8 +7,8 @@ from typing import Optional
 
 import tomlkit
 
-_LOGGER = logging.getLogger("anyrepo")
-# Dependencies to any anyrepo module are forbidden here!
+_LOGGER = logging.getLogger("git-ws")
+# Dependencies to any gitws module are forbidden here!
 
 
 def run(cmd, cwd=None, capture_output=False, check=True):

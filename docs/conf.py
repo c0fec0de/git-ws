@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "anyrepo"
+project = "git-ws"
 copyright = "2022, c0fec0de"
 author = "c0fec0de"
 

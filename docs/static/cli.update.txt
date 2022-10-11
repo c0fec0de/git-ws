@@ -1,4 +1,4 @@
-Usage: anyrepo update [OPTIONS]
+Usage: git-ws update [OPTIONS]
 
   Create/update all dependent git clones.
 

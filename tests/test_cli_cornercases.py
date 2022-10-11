@@ -1,8 +1,8 @@
 """Command Line Interface."""
 from pytest import fixture
 
-from anyrepo import AnyRepo
-from anyrepo.datamodel import ManifestSpec, ProjectSpec
+from gitws import GitWS
+from gitws.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import
 from .fixtures import git_repo
@@ -33,7 +33,7 @@ def repos_deptop(tmp_path):
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep2", url="../dep2"),
             ],
-        ).save(path / "anyrepo.toml")
+        ).save(path / "git-ws.toml")
 
     with git_repo(repos_path / "dep1", commit="initial") as path:
         (path / "data.txt").write_text("dep1")
@@ -42,7 +42,7 @@ def repos_deptop(tmp_path):
                 ProjectSpec(name="dep3", url="../dep3", revision="main"),
                 ProjectSpec(name="top", url="../top"),
             ]
-        ).save(path / "anyrepo.toml")
+        ).save(path / "git-ws.toml")
 
     with git_repo(repos_path / "dep2", commit="initial") as path:
         (path / "data.txt").write_text("dep2")
@@ -50,7 +50,7 @@ def repos_deptop(tmp_path):
             dependencies=[
                 ProjectSpec(name="dep3", url="../dep3", revision="main"),
             ],
-        ).save(path / "anyrepo.toml")
+        ).save(path / "git-ws.toml")
 
     with git_repo(repos_path / "dep3", commit="initial") as path:
         (path / "data.txt").write_text("dep3")
@@ -58,18 +58,18 @@ def repos_deptop(tmp_path):
             dependencies=[
                 ProjectSpec(name="top"),
             ],
-        ).save(path / "anyrepo.toml")
+        ).save(path / "git-ws.toml")
 
     yield repos_path
 
 
 def test_deptop(tmp_path, repos_deptop, caplog):
-    """Initialized :any:`AnyRepo` on `repos_deptop`."""
+    """Initialized :any:`GitWS` on `repos_deptop`."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
     with chdir(workspace):
-        arepo = AnyRepo.clone(str(repos_deptop / "top"))
+        arepo = GitWS.clone(str(repos_deptop / "top"))
 
         check(workspace, "top")
         check(workspace, "dep1", exists=False)
@@ -84,41 +84,41 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         check(workspace, "dep3")
 
     assert format_logs(caplog, tmp_path) == [
-        "INFO    anyrepo run(('git', 'clone', '--', 'TMP/repos/top', "
+        "INFO    git-ws run(('git', 'clone', '--', 'TMP/repos/top', "
         "'TMP/workspace/top'), cwd='None') OK stdout=None stderr=None",
-        "INFO    anyrepo Initialized TMP/workspace Info(main_path=PosixPath('top')) "
-        "AppConfigData(manifest_path='anyrepo.toml', color_ui=True, groups=None)",
-        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='top') OK stdout=b'\\n' stderr=b''",
-        "INFO    anyrepo run(['git', 'remote', 'get-url', 'origin'], cwd='top') OK "
+        "INFO    git-ws Initialized TMP/workspace Info(main_path=PosixPath('top')) "
+        "AppConfigData(manifest_path='git-ws.toml', color_ui=True, groups=None)",
+        "INFO    git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='top') OK stdout=b'\\n' stderr=b''",
+        "INFO    git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='top') OK "
         "stdout=b'TMP/repos/top\\n' stderr=b''",
-        "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
+        "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
         "url='../dep1'), ProjectSpec(name='dep2', url='../dep2')))",
-        "DEBUG   anyrepo Project(name='dep1', path='dep1', url='TMP/repos/dep1')",
-        "WARNING anyrepo Clone dep1 has an empty revision!",
-        "INFO    anyrepo run(('git', 'clone', '--', 'TMP/repos/dep1', 'dep1'), "
+        "DEBUG   git-ws Project(name='dep1', path='dep1', url='TMP/repos/dep1')",
+        "WARNING git-ws Clone dep1 has an empty revision!",
+        "INFO    git-ws run(('git', 'clone', '--', 'TMP/repos/dep1', 'dep1'), "
         "cwd='None') OK stdout=None stderr=None",
-        "DEBUG   anyrepo Project(name='dep2', path='dep2', url='TMP/repos/dep2')",
-        "WARNING anyrepo Clone dep2 has an empty revision!",
-        "INFO    anyrepo run(('git', 'clone', '--', 'TMP/repos/dep2', 'dep2'), "
+        "DEBUG   git-ws Project(name='dep2', path='dep2', url='TMP/repos/dep2')",
+        "WARNING git-ws Clone dep2 has an empty revision!",
+        "INFO    git-ws run(('git', 'clone', '--', 'TMP/repos/dep2', 'dep2'), "
         "cwd='None') OK stdout=None stderr=None",
-        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\\n' stderr=b''",
-        "INFO    anyrepo run(['git', 'remote', 'get-url', 'origin'], cwd='dep1') OK "
+        "INFO    git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\\n' stderr=b''",
+        "INFO    git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='dep1') OK "
         "stdout=b'TMP/repos/dep1\\n' stderr=b''",
-        "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep3', "
+        "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep3', "
         "url='../dep3', revision='main'), ProjectSpec(name='top', url='../top')))",
-        "DEBUG   anyrepo Project(name='dep3', path='dep3', url='TMP/repos/dep3', revision='main')",
-        "INFO    anyrepo run(('git', 'clone', '--no-checkout', '--', "
+        "DEBUG   git-ws Project(name='dep3', path='dep3', url='TMP/repos/dep3', revision='main')",
+        "INFO    git-ws run(('git', 'clone', '--no-checkout', '--', "
         "'TMP/repos/dep3', 'dep3'), cwd='None') OK stdout=None stderr=None",
-        "INFO    anyrepo run(['git', 'checkout', 'main'], cwd='dep3') OK stdout=None stderr=None",
-        "DEBUG   anyrepo DUPLICATE Project(name='top', path='top', url='TMP/repos/top')",
-        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep3') OK stdout=b'\\n' stderr=b''",
-        "INFO    anyrepo run(['git', 'remote', 'get-url', 'origin'], cwd='dep3') OK "
+        "INFO    git-ws run(['git', 'checkout', 'main'], cwd='dep3') OK stdout=None stderr=None",
+        "DEBUG   git-ws DUPLICATE Project(name='top', path='top', url='TMP/repos/top')",
+        "INFO    git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep3') OK stdout=b'\\n' stderr=b''",
+        "INFO    git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='dep3') OK "
         "stdout=b'TMP/repos/dep3\\n' stderr=b''",
-        "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='top'),))",
-        "DEBUG   anyrepo DUPLICATE Project(name='top', path='top', url='TMP/repos/top')",
-        "INFO    anyrepo run(['git', 'rev-parse', '--show-cdup'], cwd='dep2') OK stdout=b'\\n' stderr=b''",
-        "INFO    anyrepo run(['git', 'remote', 'get-url', 'origin'], cwd='dep2') OK "
+        "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='top'),))",
+        "DEBUG   git-ws DUPLICATE Project(name='top', path='top', url='TMP/repos/top')",
+        "INFO    git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep2') OK stdout=b'\\n' stderr=b''",
+        "INFO    git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='dep2') OK "
         "stdout=b'TMP/repos/dep2\\n' stderr=b''",
-        "DEBUG   anyrepo ManifestSpec(dependencies=(ProjectSpec(name='dep3', url='../dep3', revision='main'),))",
-        "DEBUG   anyrepo DUPLICATE Project(name='dep3', path='dep3', url='TMP/repos/dep3', revision='main')",
+        "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep3', url='../dep3', revision='main'),))",
+        "DEBUG   git-ws DUPLICATE Project(name='dep3', path='dep3', url='TMP/repos/dep3', revision='main')",
     ]

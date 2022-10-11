@@ -1,7 +1,7 @@
 """Manifest Testing."""
 from pytest import raises
 
-from anyrepo.datamodel import Defaults, Group, Manifest, ManifestSpec, Project, ProjectSpec, Remote
+from gitws.datamodel import Defaults, Group, Manifest, ManifestSpec, Project, ProjectSpec, Remote
 
 from .common import MANIFEST_DEFAULT
 
@@ -98,7 +98,7 @@ def test_manifest_spec_save(tmp_path):
     text = """\
 version = "1.0"
 ##
-## Welcome to AnyRepo's Manifest. It actually contains 4 parts:
+## Welcome to Git Workspace's Manifest. It actually contains 4 parts:
 ##
 ## * Remotes
 ## * Groups
@@ -180,7 +180,7 @@ name = "group2"
 ##             Revision used as default. Tag or Branch.
 ##
 ## NOTE: It is recommended to specify a default revision (i.e. 'main').
-##       If a dependency misses 'revision', AnyRepo will not take care about
+##       If a dependency misses 'revision', GitWS will not take care about
 ##       revision handling. This may lead to strange side-effects. You
 ##       have been warned.
 
@@ -213,14 +213,14 @@ name = "group2"
 ##        Absolute URL to the dependent repository.
 ## * revision: Optional. String.
 ##             Revision to be checked out.
-##             If this attribute is left blank, AnyRepo does NOT manage the
+##             If this attribute is left blank, GitWS does NOT manage the
 ##             dependency revision (see NOTE2 below)!
 ##             The 'revision' can also be specified in the 'defaults' section.
 ## * path: Optional. String. Default is '{name}'.
 ##         Project Filesystem Path. Relative to Workspace Root Directory.
 ##         The dependency 'name' is used as default for 'path'.
 ##         The 'path' MUST be unique within your manifest.
-## * manifest_path: Optional. String. Default: 'anyrepo.toml'.
+## * manifest_path: Optional. String. Default: 'git-ws.toml'.
 ##                   Path to manifest.
 ##                   Relative to 'path'.
 ##                   Avoid changing it! It is just additional effort.
@@ -237,7 +237,7 @@ name = "group2"
 ##
 ## NOTE2: It is recommended to specify a revision (i.e. 'main') either
 ##        explicitly or via the 'default' section.
-##        Without a 'revision' AnyRepo will not take care about revision
+##        Without a 'revision' GitWS will not take care about revision
 ##        handling. This may lead to strange side-effects.
 ##        You have been warned.
 ##
@@ -348,7 +348,7 @@ def test_manifest_spec_from_data(tmp_path):
         filepath.read_text()
         == """version = "1.0"
 ##
-## Welcome to AnyRepo's Manifest. It actually contains 4 parts:
+## Welcome to Git Workspace's Manifest. It actually contains 4 parts:
 ##
 ## * Remotes
 ## * Groups
@@ -435,7 +435,7 @@ name = "bar"
 ##             Revision used as default. Tag or Branch.
 ##
 ## NOTE: It is recommended to specify a default revision (i.e. 'main').
-##       If a dependency misses 'revision', AnyRepo will not take care about
+##       If a dependency misses 'revision', GitWS will not take care about
 ##       revision handling. This may lead to strange side-effects. You
 ##       have been warned.
 
@@ -471,14 +471,14 @@ revision = "v1.3"
 ##        Absolute URL to the dependent repository.
 ## * revision: Optional. String.
 ##             Revision to be checked out.
-##             If this attribute is left blank, AnyRepo does NOT manage the
+##             If this attribute is left blank, GitWS does NOT manage the
 ##             dependency revision (see NOTE2 below)!
 ##             The 'revision' can also be specified in the 'defaults' section.
 ## * path: Optional. String. Default is '{name}'.
 ##         Project Filesystem Path. Relative to Workspace Root Directory.
 ##         The dependency 'name' is used as default for 'path'.
 ##         The 'path' MUST be unique within your manifest.
-## * manifest_path: Optional. String. Default: 'anyrepo.toml'.
+## * manifest_path: Optional. String. Default: 'git-ws.toml'.
 ##                   Path to manifest.
 ##                   Relative to 'path'.
 ##                   Avoid changing it! It is just additional effort.
@@ -495,7 +495,7 @@ revision = "v1.3"
 ##
 ## NOTE2: It is recommended to specify a revision (i.e. 'main') either
 ##        explicitly or via the 'default' section.
-##        Without a 'revision' AnyRepo will not take care about revision
+##        Without a 'revision' GitWS will not take care about revision
 ##        handling. This may lead to strange side-effects.
 ##        You have been warned.
 ##

@@ -1,4 +1,4 @@
-Usage: anyrepo status [OPTIONS]
+Usage: git-ws status [OPTIONS]
 
   Run 'git status' (displayed paths include the actual clone path).
 

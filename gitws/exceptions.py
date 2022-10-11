@@ -4,17 +4,19 @@ from pathlib import Path
 
 
 class UninitializedError(RuntimeError):
-    """Anyrepo Workspace Has Not Been Initialized."""
+    """Git Workspace Has Not Been Initialized."""
 
     def __init__(self):
-        super().__init__("anyrepo has not been initialized yet.")
+        super().__init__("git workspace has not been initialized yet.")
 
 
 class InitializedError(RuntimeError):
-    """Anyrepo Workspace Has Already Been Initialized."""
+    """Git Workspace Has Already Been Initialized."""
 
     def __init__(self, path, main_path):
-        super().__init__(f"anyrepo has already been initialized at {str(path)!r} with main repo at {str(main_path)!r}.")
+        super().__init__(
+            f"git workspace has already been initialized at {str(path)!r} with main repo at {str(main_path)!r}."
+        )
         self.path = path
         self.main_path = main_path
 

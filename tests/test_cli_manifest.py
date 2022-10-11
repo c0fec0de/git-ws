@@ -1,7 +1,7 @@
 """Command Line Interface."""
 from pytest import fixture
 
-from anyrepo import AnyRepo
+from gitws import GitWS
 
 # pylint: disable=unused-import
 from .fixtures import repos
@@ -10,12 +10,12 @@ from .util import chdir, cli, get_sha
 
 @fixture
 def arepo(tmp_path, repos):
-    """Initialized :any:`AnyRepo` on `repos`."""
+    """Initialized :any:`GitWS` on `repos`."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
     with chdir(workspace):
-        arepo = AnyRepo.clone(str(repos / "main"))
+        arepo = GitWS.clone(str(repos / "main"))
         arepo.update()
 
         yield arepo
@@ -27,7 +27,7 @@ def test_validate(tmp_path, arepo):
 
     assert cli(["manifest", "validate"]) == [""]
 
-    manifest_path = tmp_path / "workspace" / "main" / "anyrepo.toml"
+    manifest_path = tmp_path / "workspace" / "main" / "git-ws.toml"
     assert manifest_path.write_text(
         "\n".join(
             [
@@ -43,7 +43,7 @@ def test_validate(tmp_path, arepo):
         )
     )
     assert cli(["manifest", "validate"], exit_code=1) == [
-        "Error: Manifest 'main/anyrepo.toml' is broken: 1 validation error for ManifestSpec",
+        "Error: Manifest 'main/git-ws.toml' is broken: 1 validation error for ManifestSpec",
         "dependencies -> 0 -> name",
         "  field required (type=value_error.missing)",
         "",
@@ -58,7 +58,7 @@ def test_freeze(tmp_path, arepo):
     lines = [
         'version = "1.0"',
         "##",
-        "## Welcome to AnyRepo's Manifest. It actually contains 4 parts:",
+        "## Welcome to Git Workspace's Manifest. It actually contains 4 parts:",
         "##",
         "## * Remotes",
         "## * Groups",
@@ -132,7 +132,7 @@ def test_freeze(tmp_path, arepo):
         "##             Revision used as default. Tag or Branch.",
         "##",
         "## NOTE: It is recommended to specify a default revision (i.e. 'main').",
-        "##       If a dependency misses 'revision', AnyRepo will not take care about",
+        "##       If a dependency misses 'revision', GitWS will not take care about",
         "##       revision handling. This may lead to strange side-effects. You",
         "##       have been warned.",
         "",
@@ -165,14 +165,14 @@ def test_freeze(tmp_path, arepo):
         "##        Absolute URL to the dependent repository.",
         "## * revision: Optional. String.",
         "##             Revision to be checked out.",
-        "##             If this attribute is left blank, AnyRepo does NOT manage the",
+        "##             If this attribute is left blank, GitWS does NOT manage the",
         "##             dependency revision (see NOTE2 below)!",
         "##             The 'revision' can also be specified in the 'defaults' section.",
         "## * path: Optional. String. Default is '{name}'.",
         "##         Project Filesystem Path. Relative to Workspace Root Directory.",
         "##         The dependency 'name' is used as default for 'path'.",
         "##         The 'path' MUST be unique within your manifest.",
-        "## * manifest_path: Optional. String. Default: 'anyrepo.toml'.",
+        "## * manifest_path: Optional. String. Default: 'git-ws.toml'.",
         "##                   Path to manifest.",
         "##                   Relative to 'path'.",
         "##                   Avoid changing it! It is just additional effort.",
@@ -189,7 +189,7 @@ def test_freeze(tmp_path, arepo):
         "##",
         "## NOTE2: It is recommended to specify a revision (i.e. 'main') either",
         "##        explicitly or via the 'default' section.",
-        "##        Without a 'revision' AnyRepo will not take care about revision",
+        "##        Without a 'revision' GitWS will not take care about revision",
         "##        handling. This may lead to strange side-effects.",
         "##        You have been warned.",
         "##",
@@ -244,7 +244,7 @@ def test_freeze(tmp_path, arepo):
     assert cli(["manifest", "freeze", "-G", "+test"], exit_code=1) == [
         "Error: Git Clone 'dep3' is missing. Try:",
         "",
-        "    anyrepo update",
+        "    git ws update",
         "",
         "",
     ]
@@ -254,7 +254,7 @@ def test_freeze(tmp_path, arepo):
         "===== main =====",
         "Pulling branch 'main'.",
         "===== dep1 =====",
-        "anyrepo WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has an empty revision!",
         "Pulling branch 'main'.",
         "===== dep2 (revision='1-feature') =====",
         "Pulling branch '1-feature'.",
@@ -321,7 +321,7 @@ def test_resolve(tmp_path, arepo):
     lines = [
         'version = "1.0"',
         "##",
-        "## Welcome to AnyRepo's Manifest. It actually contains 4 parts:",
+        "## Welcome to Git Workspace's Manifest. It actually contains 4 parts:",
         "##",
         "## * Remotes",
         "## * Groups",
@@ -395,7 +395,7 @@ def test_resolve(tmp_path, arepo):
         "##             Revision used as default. Tag or Branch.",
         "##",
         "## NOTE: It is recommended to specify a default revision (i.e. 'main').",
-        "##       If a dependency misses 'revision', AnyRepo will not take care about",
+        "##       If a dependency misses 'revision', GitWS will not take care about",
         "##       revision handling. This may lead to strange side-effects. You",
         "##       have been warned.",
         "",
@@ -428,14 +428,14 @@ def test_resolve(tmp_path, arepo):
         "##        Absolute URL to the dependent repository.",
         "## * revision: Optional. String.",
         "##             Revision to be checked out.",
-        "##             If this attribute is left blank, AnyRepo does NOT manage the",
+        "##             If this attribute is left blank, GitWS does NOT manage the",
         "##             dependency revision (see NOTE2 below)!",
         "##             The 'revision' can also be specified in the 'defaults' section.",
         "## * path: Optional. String. Default is '{name}'.",
         "##         Project Filesystem Path. Relative to Workspace Root Directory.",
         "##         The dependency 'name' is used as default for 'path'.",
         "##         The 'path' MUST be unique within your manifest.",
-        "## * manifest_path: Optional. String. Default: 'anyrepo.toml'.",
+        "## * manifest_path: Optional. String. Default: 'git-ws.toml'.",
         "##                   Path to manifest.",
         "##                   Relative to 'path'.",
         "##                   Avoid changing it! It is just additional effort.",
@@ -452,7 +452,7 @@ def test_resolve(tmp_path, arepo):
         "##",
         "## NOTE2: It is recommended to specify a revision (i.e. 'main') either",
         "##        explicitly or via the 'default' section.",
-        "##        Without a 'revision' AnyRepo will not take care about revision",
+        "##        Without a 'revision' GitWS will not take care about revision",
         "##        handling. This may lead to strange side-effects.",
         "##        You have been warned.",
         "##",
@@ -516,16 +516,16 @@ def test_resolve(tmp_path, arepo):
 def test_path(tmp_path, arepo):
     """Manifest Path."""
     # pylint: disable=unused-argument
-    assert cli(["manifest", "path"], tmp_path=tmp_path) == ["TMP/workspace/main/anyrepo.toml", ""]
+    assert cli(["manifest", "path"], tmp_path=tmp_path) == ["TMP/workspace/main/git-ws.toml", ""]
 
 
 def test_paths(tmp_path, arepo):
     """Manifest Paths."""
     # pylint: disable=unused-argument
     assert cli(["manifest", "paths"], tmp_path=tmp_path) == [
-        "TMP/workspace/main/anyrepo.toml",
-        "TMP/workspace/dep1/anyrepo.toml",
-        "TMP/workspace/dep2/anyrepo.toml",
+        "TMP/workspace/main/git-ws.toml",
+        "TMP/workspace/dep1/git-ws.toml",
+        "TMP/workspace/dep2/git-ws.toml",
         "",
     ]
 
@@ -562,7 +562,7 @@ name = 'bar'
         manifest_path.read_text()
         == """version = "1.0"
 ##
-## Welcome to AnyRepo's Manifest. It actually contains 4 parts:
+## Welcome to Git Workspace's Manifest. It actually contains 4 parts:
 ##
 ## * Remotes
 ## * Groups
@@ -640,7 +640,7 @@ url-base = "my-url"
 ##             Revision used as default. Tag or Branch.
 ##
 ## NOTE: It is recommended to specify a default revision (i.e. 'main').
-##       If a dependency misses 'revision', AnyRepo will not take care about
+##       If a dependency misses 'revision', GitWS will not take care about
 ##       revision handling. This may lead to strange side-effects. You
 ##       have been warned.
 
@@ -673,14 +673,14 @@ url-base = "my-url"
 ##        Absolute URL to the dependent repository.
 ## * revision: Optional. String.
 ##             Revision to be checked out.
-##             If this attribute is left blank, AnyRepo does NOT manage the
+##             If this attribute is left blank, GitWS does NOT manage the
 ##             dependency revision (see NOTE2 below)!
 ##             The 'revision' can also be specified in the 'defaults' section.
 ## * path: Optional. String. Default is '{name}'.
 ##         Project Filesystem Path. Relative to Workspace Root Directory.
 ##         The dependency 'name' is used as default for 'path'.
 ##         The 'path' MUST be unique within your manifest.
-## * manifest_path: Optional. String. Default: 'anyrepo.toml'.
+## * manifest_path: Optional. String. Default: 'git-ws.toml'.
 ##                   Path to manifest.
 ##                   Relative to 'path'.
 ##                   Avoid changing it! It is just additional effort.
@@ -697,7 +697,7 @@ url-base = "my-url"
 ##
 ## NOTE2: It is recommended to specify a revision (i.e. 'main') either
 ##        explicitly or via the 'default' section.
-##        Without a 'revision' AnyRepo will not take care about revision
+##        Without a 'revision' GitWS will not take care about revision
 ##        handling. This may lead to strange side-effects.
 ##        You have been warned.
 ##

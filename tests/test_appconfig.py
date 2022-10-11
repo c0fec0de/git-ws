@@ -7,9 +7,9 @@ from unittest import mock
 
 from pytest import raises
 
-import anyrepo.const
-from anyrepo.appconfig import AppConfig, AppConfigLocation
-from anyrepo.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError
+import gitws.const
+from gitws.appconfig import AppConfig, AppConfigLocation
+from gitws.exceptions import InvalidConfigurationFileError, InvalidConfigurationLocationError
 
 TEST_DATA_ROOT = Path(__file__).parent / "testdata" / "appconfig"
 
@@ -35,7 +35,7 @@ def test_defaults():
     """Test is sensible defaults are set."""
     config = _app_config_from("empty", use_config_from_env=False)
     assert config.options.color_ui
-    assert config.options.manifest_path == str(anyrepo.const.MANIFEST_PATH_DEFAULT)
+    assert config.options.manifest_path == str(gitws.const.MANIFEST_PATH_DEFAULT)
 
 
 def test_single_file_config():
@@ -79,7 +79,7 @@ def test_no_workspace_config():
     assert config.options.manifest_path == "user-foo-bar-baz-123.xyz"
 
 
-@mock.patch.dict(os.environ, {"ANYREPO_MANIFEST_PATH": "env-foo-bar-baz-123.xyz"})
+@mock.patch.dict(os.environ, {"GIT_WS_MANIFEST_PATH": "env-foo-bar-baz-123.xyz"})
 def test_config_from_env():
     """
     Test loading configuration values from the environment.
@@ -135,7 +135,7 @@ def test_write_config():
         )
         options = config.options
         assert options.color_ui
-        assert options.manifest_path == "anyrepo.toml"
+        assert options.manifest_path == "git-ws.toml"
 
         with config.edit(AppConfigLocation.SYSTEM) as sys_conf:
             sys_conf.color_ui = False
@@ -153,4 +153,4 @@ def test_write_config():
 
         options = config.options
         assert options.color_ui
-        assert options.manifest_path == "anyrepo.toml"
+        assert options.manifest_path == "git-ws.toml"

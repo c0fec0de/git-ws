@@ -1,9 +1,9 @@
-Usage: anyrepo foreach [OPTIONS] [COMMAND]...
+Usage: git-ws foreach [OPTIONS] [COMMAND]...
 
   Run 'command' on projects.
 
-  Please use '--' to separate anyrepo command line options from options
-  forwarded to the `command` (i.e. `anyrepo foreach -- ls -l`)
+  Please use '--' to separate 'git ws' command line options from options
+  forwarded to the `command` (i.e. `git ws foreach -- ls -l`)
 
 Options:
   -P, --project DIRECTORY  Project path to operate on only. All by default.

@@ -31,7 +31,7 @@ def manifest_option(initial=False):
 
 def update_option():
     """Update Option."""
-    return click.option("--update", "-U", is_flag=True, help="Run 'anyrepo update' too.")
+    return click.option("--update", "-U", is_flag=True, help="Run 'git ws update' too.")
 
 
 def force_option():

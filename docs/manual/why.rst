@@ -1,5 +1,5 @@
-Why We Started AnyRepo
-======================
+Why We Started Git Workspace
+============================
 
 Developing large projects can be a real challenge. There are lots of aspects that make the daily work on huge projects rather difficult. One - among many! - aspects is how to organize the structure of a project, i.e. how to break it down into smaller, better maintainable components and reuse them.
 
@@ -106,18 +106,18 @@ Lastly, we also revisited the option putting everything in one large repository 
 So, it seemed we had to get our hands dirty...
 
 
-The Birth of AnyRepo
---------------------
+The Birth of Git Workspace
+--------------------------
 
-After doing our homework and checking if we simply can use another existing tool, we came to the conclusion that we had to invest some development effort and bring up our own tool. `AnyRepo` was born!
+After doing our homework and checking if we simply can use another existing tool, we came to the conclusion that we had to invest some development effort and bring up our own tool. Git Workspace was born!
 
-If you carefully study the results of our research given above, you might find that we actually were pretty fond of `west`. So it comes to no surprise that AnyRepo is built in a similar way and even tries to be compatible with `west` as far as possible. In fact, the manifest files of `west` are to some degree compatible with AnyRepo and we try to behave similarly where possible. However, we also want to close the gap and implement the features we think are missing in `west`.
+If you carefully study the results of our research given above, you might find that we actually were pretty fond of `west`. So it comes to no surprise that Git Workspace is built in a similar way and even tries to be compatible with `west` as far as possible. In fact, the manifest files of `west` are to some degree compatible with Git Workspace and we try to behave similarly where possible. However, we also want to close the gap and implement the features we think are missing in `west`.
 
 
 Comparison Matrix
 -----------------
 
-So, long story short: Here is a matrix of features vs the different tools we evaluated plus AnyRepo itself.
+So, long story short: Here is a matrix of features vs the different tools we evaluated plus Git Workspace itself.
 
 .. list-table:: Comparison
     :widths: 1 1 1 1 1 1
@@ -128,7 +128,7 @@ So, long story short: Here is a matrix of features vs the different tools we eva
       - `repo`
       - `west`
       - Monorepo
-      - AnyRepo
+      - `git ws`
     * - Reusable Components
       - |:white_check_mark:|
       - |:white_check_mark:|
@@ -169,4 +169,4 @@ So, long story short: Here is a matrix of features vs the different tools we eva
 .. [#] `git submodules` tend to check out repositories at a fixed revision (which is their job). However, this means that each `git submodule update -\-recursive` would then cause the submodules to be switched to a *read-only* state, where the user then has to first switch back to a branch to continue editing. This is basically the same behavior that `west` implements.
 .. [#] `git submodules` can of course recurse - and via this, there is some *kind* of transitive dependencies. However, if there are two or more components that include the same transitive dependency, than that transitive dependency will be included several times in the workspace - and potentially checked out at different versions.
 
-Please note that we don't claim that AnyRepo is the best choice for everyone: As usual, when looking for a tool, do your homework and make up your mind about *your* requirements and check them against the various available tools. AnyRepo might just be right for you - but chances are that depending on your concrete workflow one of the other tools or approaches simply works better.
+Please note that we don't claim that Git Workspace is the best choice for everyone: As usual, when looking for a tool, do your homework and make up your mind about *your* requirements and check them against the various available tools. Git Workspace might just be right for you - but chances are that depending on your concrete workflow one of the other tools or approaches simply works better.

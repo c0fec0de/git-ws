@@ -1,8 +1,8 @@
-Usage: anyrepo pull [OPTIONS]
+Usage: git-ws pull [OPTIONS]
 
   Run 'git pull' on projects.
 
-  This command behaves identical to `anyrepo foreach -- git pull`.
+  This command behaves identical to `git ws foreach -- git pull`.
 
 Options:
   -P, --project DIRECTORY  Project path to operate on only. All by default.

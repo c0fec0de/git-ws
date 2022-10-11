@@ -1,12 +1,12 @@
 """
-Central :any:`AnyRepo` Datamodel.
+Central :any:`GitWS` Datamodel.
 
-* :any:`AppConfigData`: :any:`AnyRepo` Configuration.
+* :any:`AppConfigData`: :any:`GitWS` Configuration.
 * :any:`Defaults`: Default Values.
 * :any:`Group`: Dependency Group.
-* :any:`Manifest`: Manifest as needed by :any:`AnyRepo`.
+* :any:`Manifest`: Manifest as needed by :any:`GitWS`.
 * :any:`ManifestSpec`: Specification of the actual project.
-* :any:`Project`: A Single Dependency as needed by :any:`AnyRepo`.
+* :any:`Project`: A Single Dependency as needed by :any:`GitWS`.
 * :any:`ProjectSpec`: Dependency Specification from Manifest File.
 * :any:`Remote`: Remote Alias.
 """
@@ -111,13 +111,13 @@ class Project(BaseModel):
     Keyword Args:
         url: URL
         revision: Revision
-        manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. `anyrepo.toml` by default.
+        manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. `git-ws.toml` by default.
         groups: Dependency Groups.
         is_main: Project is Main Project.
 
     The :any:`ProjectSpec` represents the User Interface. The options which can be specified in the manifest file.
     The :any:`Project` is the resolved version of :any:`ProjectSpec` with all calculated information needed by
-    :any:`AnyRepo` to operate.
+    :any:`GitWS` to operate.
 
     :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
     :any:`ProjectSpec.from_project()` does the reverse.
@@ -229,7 +229,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         url: URL
         revision: Revision
         path: Project Filesystem Path. Relative to Workspace Root Directory.
-        manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. `anyrepo.toml` by default.
+        manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. `git-ws.toml` by default.
         groups: Dependency Groups.
 
     Some parameters are restricted:
@@ -240,7 +240,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
 
     The :any:`ProjectSpec` represents the User Interface. The options which can be specified in the manifest file.
     The :any:`Project` is the resolved version of :any:`ProjectSpec` with all calculated information needed by
-    :any:`AnyRepo` to operate.
+    :any:`GitWS` to operate.
 
     :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
     :any:`ProjectSpec.from_project()` does the reverse.
@@ -322,7 +322,7 @@ class Manifest(BaseModel, extra=Extra.allow):
 
     The :any:`ManifestSpec` represents the User Interface. The options which can be specified in the manifest file.
     The :any:`Manifest` is the resolved version of :any:`ManifestSpec` with all calculated information needed by
-    :any:`AnyRepo` to operate.
+    :any:`GitWS` to operate.
 
     :any:`Manifest.from_spec()` resolves a :any:`ManifestSpec` into a :any:`Manifest`.
     """
@@ -368,7 +368,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     The :any:`ManifestSpec` represents the User Interface. The options which can be specified in the manifest file.
     The :any:`Manifest` is the resolved version of :any:`ManifestSpec` with all calculated information needed by
-    :any:`AnyRepo` to operate.
+    :any:`GitWS` to operate.
 
     Keyword Args:
         version: Version String. Actually 1.0.
@@ -514,7 +514,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         add_info(
             doc,
             """
-Welcome to AnyRepo's Manifest. It actually contains 4 parts:
+Welcome to Git Workspace's Manifest. It actually contains 4 parts:
 
 * Remotes
 * Groups
@@ -606,7 +606,7 @@ The 'defaults' section specifies default values for dependencies.
             Revision used as default. Tag or Branch.
 
 NOTE: It is recommended to specify a default revision (i.e. 'main').
-      If a dependency misses 'revision', AnyRepo will not take care about
+      If a dependency misses 'revision', GitWS will not take care about
       revision handling. This may lead to strange side-effects. You
       have been warned.""",
         )
@@ -645,14 +645,14 @@ A dependency has the following attributes:
        Absolute URL to the dependent repository.
 * revision: Optional. String.
             Revision to be checked out.
-            If this attribute is left blank, AnyRepo does NOT manage the
+            If this attribute is left blank, GitWS does NOT manage the
             dependency revision (see NOTE2 below)!
             The 'revision' can also be specified in the 'defaults' section.
 * path: Optional. String. Default is '{name}'.
         Project Filesystem Path. Relative to Workspace Root Directory.
         The dependency 'name' is used as default for 'path'.
         The 'path' MUST be unique within your manifest.
-* manifest_path: Optional. String. Default: 'anyrepo.toml'.
+* manifest_path: Optional. String. Default: 'git-ws.toml'.
                   Path to manifest.
                   Relative to 'path'.
                   Avoid changing it! It is just additional effort.
@@ -669,7 +669,7 @@ NOTE1: 'sub-url' is '../{name}[.git]' by default. Meaning if the dependency
 
 NOTE2: It is recommended to specify a revision (i.e. 'main') either
        explicitly or via the 'default' section.
-       Without a 'revision' AnyRepo will not take care about revision
+       Without a 'revision' GitWS will not take care about revision
        handling. This may lead to strange side-effects.
        You have been warned.
 
@@ -691,7 +691,7 @@ A full flavored dependency using a 'remote':""",
                     sub_url="my.git",
                     revision="main",
                     path="mydir",
-                    manifest_path="anyrepo.toml",
+                    manifest_path="git-ws.toml",
                     groups=("group",),
                 )
             ]
@@ -707,7 +707,7 @@ A full flavored dependency using a 'remote':""",
                     url="https://github.com/myuser/my.git",
                     revision="main",
                     path="mydir",
-                    manifest_path="anyrepo.toml",
+                    manifest_path="git-ws.toml",
                     groups=("group",),
                 )
             ]
@@ -741,7 +741,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
 
     If this is not defined, the default is :any:`MANIFEST_PATH_DEFAULT`.
 
-    This option can be overridden by specifying the `ANYREPO_MANIFEST_PATH` environment variable.
+    This option can be overridden by specifying the `GIT_WS_MANIFEST_PATH` environment variable.
     """
 
     color_ui: Optional[bool] = Field(description="If set to true, the output the tool generates will be colored.")
@@ -750,7 +750,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
 
     If this is not defined, output will be colored by default.
 
-    This option can be overridden by specifying the `ANYREPO_COLOR_UI` environment variable.
+    This option can be overridden by specifying the `GIT_WS_COLOR_UI` environment variable.
     """
 
     groups: Optional[str] = Field(description="The groups to operate on.")
@@ -759,7 +759,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
 
     This is a filter for groups to operate on during workspace actions.
 
-    This option can be overridden by specifying the `ANYREPO_GROUPS` environment variable.
+    This option can be overridden by specifying the `GIT_WS_GROUPS` environment variable.
     """
 
     @staticmethod
@@ -769,7 +769,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
 
         >>> for item in AppConfigData.defaults().items(): print(item)
         ('color_ui', True)
-        ('manifest_path', 'anyrepo.toml')
+        ('manifest_path', 'git-ws.toml')
         """
         return {
             "color_ui": True,

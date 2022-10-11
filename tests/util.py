@@ -8,7 +8,7 @@ from subprocess import run  # noqa
 
 from click.testing import CliRunner
 
-from anyrepo._cli import main
+from gitws._cli import main
 
 
 @contextlib.contextmanager

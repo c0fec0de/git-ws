@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "anyrepo"
-version = "0.5.0"
-description = "Multi Repository Management Tool"
+name = "git-ws"
+version = "0.1.0"
+description = "Git Workspace - Multi Repository Management Tool"
 readme = "README.md"
 authors = [
     "c0fec0de <c0fec0de@gmail.com>",
@@ -12,14 +12,17 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+packages = [
+    { include = "gitws" },
+]
+
 [project.urls]
-"Homepage" = "https://github.com/c0fec0de/anyrepo"
-"Documentation" = "https://anyrepo.readthedocs.io/en/latest/"
-"Bug Tracker" = "https://github.com/c0fec0de/anyrepo/issues"
+"Homepage" = "https://github.com/c0fec0de/git-ws"
+"Documentation" = "https://git-ws.readthedocs.io/en/latest/"
+"Bug Tracker" = "https://github.com/c0fec0de/git-ws/issues"
 
 [tool.poetry.scripts]
-anyrepo = 'anyrepo._cli:main'
-git-workspace = 'anyrepo._cli:main'
+git-ws = 'gitws._cli:main'
 
 [tool.poetry.dependencies]
 python = '^3.7'
@@ -104,15 +107,15 @@ commands =
     poetry run coverage report
     poetry run coverage html
     poetry run coverage xml
-    poetry run pylint anyrepo tests
-    poetry run mypy anyrepo
+    poetry run pylint gitws tests
+    poetry run mypy gitws
     poetry run make html -C docs
 
 [testenv:py-min]
 allowlist_externals = *
 commands =
     poetry install --without=dev --without=doc
-    poetry run python -c 'import anyrepo'
-    poetry run anyrepo --version
-    poetry run python -m anyrepo --version
+    poetry run python -c 'import gitws'
+    poetry run git-ws --version
+    poetry run python -m gitws --version
 """

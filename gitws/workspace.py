@@ -14,13 +14,13 @@ import tomlkit
 from ._basemodel import BaseModel
 from ._util import resolve_relative
 from .appconfig import AppConfig, AppConfigData, AppConfigLocation
-from .const import ANYREPO_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
+from .const import GIT_WS_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 from .datamodel import Project
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError
 from .types import Groups
 from .workspacefinder import find_workspace
 
-_LOGGER = logging.getLogger("anyrepo")
+_LOGGER = logging.getLogger("git-ws")
 
 
 class Info(BaseModel):
@@ -42,12 +42,12 @@ class Info(BaseModel):
     @staticmethod
     def load(path: Path) -> "Info":
         """
-        Load Workspace Information from AnyRepo root directory at `path`.
+        Load Workspace Information from GitWS root directory at `path`.
 
-        The workspace information is stored at `{path}/.anyrepo/info.toml`.
+        The workspace information is stored at `{path}/.gitws/info.toml`.
 
         Args:
-            path (Path): Path to AnyRepo root directory.
+            path (Path): Path to GitWS root directory.
         """
         infopath = path / INFO_PATH
         doc = tomlkit.parse(infopath.read_text())
@@ -57,12 +57,12 @@ class Info(BaseModel):
 
     def save(self, path: Path):
         """
-        Save Workspace Information at AnyRepo root directory at `path`.
+        Save Workspace Information at GitWS root directory at `path`.
 
-        The workspace information is stored at `{path}/.anyrepo/info.toml`.
+        The workspace information is stored at `{path}/.gitws/info.toml`.
 
         Args:
-            path (Path): Path to AnyRepo root directory.
+            path (Path): Path to GitWS root directory.
         """
         infopath = path / INFO_PATH
         infopath.parent.mkdir(parents=True, exist_ok=True)
@@ -70,7 +70,7 @@ class Info(BaseModel):
             doc = tomlkit.parse(infopath.read_text())
         except FileNotFoundError:
             doc = tomlkit.document()
-            doc.add(tomlkit.comment("AnyRepo System File. DO NOT EDIT."))
+            doc.add(tomlkit.comment("Git Workspace System File. DO NOT EDIT."))
             doc.add(tomlkit.nl())
             doc.add("main_path", "")  # type: ignore
         doc["main_path"] = str(self.main_path)
@@ -93,7 +93,7 @@ class Workspace:
     def __init__(self, path: Path, info: Info):
         self.path = path
         self.info = info
-        self.app_config = AppConfig(workspace_config_dir=str(path / ANYREPO_PATH))
+        self.app_config = AppConfig(workspace_config_dir=str(path / GIT_WS_PATH))
 
     def __eq__(self, other):
         if isinstance(other, Workspace):
@@ -111,7 +111,7 @@ class Workspace:
         Raises:
             UninitializedError: If directory of file is not within a workspace.
 
-        The workspace root directory contains a sub directory `.anyrepo`.
+        The workspace root directory contains a sub directory `.gitws`.
         This one is searched upwards the given `path`.
         """
         path = find_workspace(path=path)
@@ -130,7 +130,7 @@ class Workspace:
         Raises:
             UninitializedError: If directory of file is not within a workspace.
 
-        The workspace root directory contains a sub directory `.anyrepo`.
+        The workspace root directory contains a sub directory `.gitws`.
         This one is searched upwards the given `path`.
         """
         path = Workspace.find_path(path=path)
@@ -184,9 +184,9 @@ class Workspace:
         """
         Deinitialize.
 
-        Remove `ANYREPO_PATH` directory.
+        Remove `GIT_WS_PATH` directory.
         """
-        shutil.rmtree(self.path / ANYREPO_PATH)
+        shutil.rmtree(self.path / GIT_WS_PATH)
 
     @property
     def main_path(self) -> Path:
@@ -225,7 +225,7 @@ class Workspace:
 
     def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
         """Yield obsolete paths except `used` ones."""
-        usemap: Dict[str, Any] = {ANYREPO_PATH.name: {}}
+        usemap: Dict[str, Any] = {GIT_WS_PATH.name: {}}
         for path in used:
             pathmap = usemap
             for part in path.parts:

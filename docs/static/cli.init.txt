@@ -1,13 +1,13 @@
-Usage: anyrepo init [OPTIONS]
+Usage: git-ws init [OPTIONS]
 
-  Initialize AnyRepo workspace and create all dependent git clones.
+  Initialize Git Workspace and create all dependent git clones.
 
   The actual directory MUST be a valid git clone, which has been be either
   created by 'git init' or 'git clone'.
 
 Options:
-  -M, --manifest FILE  Manifest file. 'anyrepo.toml' by default.
+  -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
   -G, --groups TEXT    Group Filtering. TODO: more details. The setting
                        becomes default for all successive runs.
-  -U, --update         Run 'anyrepo update' too.
+  -U, --update         Run 'git ws update' too.
   -h, --help           Show this message and exit.

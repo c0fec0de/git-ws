@@ -6,10 +6,10 @@ from typing import Optional
 
 import click
 
-from anyrepo.appconfig import AppConfig, AppConfigLocation
-from anyrepo.datamodel import AppConfigData
-from anyrepo.exceptions import InvalidConfigurationOptionError, InvalidConfigurationValueError, UninitializedError
-from anyrepo.workspace import Workspace
+from gitws.appconfig import AppConfig, AppConfigLocation
+from gitws.datamodel import AppConfigData
+from gitws.exceptions import InvalidConfigurationOptionError, InvalidConfigurationValueError, UninitializedError
+from gitws.workspace import Workspace
 
 from .common import exceptionhandling, pass_context
 
@@ -84,12 +84,12 @@ def get(context, option, target, format_):
 
     The computed configuration value is created by
     merging the system, user and workspace configuration files in that order.
-    On top, environment variables of the form ANYREPO_XXX (where XXX is the
+    On top, environment variables of the form GIT_WS_XXX (where XXX is the
     name of an option) can be used to override settings from the configuration
     files.
 
     Note that option also can be a user specific option from one of the
-    configuration files that is not otherwise consumed by AnyRepo itself.
+    configuration files that is not otherwise consumed by GitWS itself.
     """
     with exceptionhandling(context):
         config = AppConfig()
@@ -181,7 +181,7 @@ def _list(context, target, format_):
 
     The computed  configuration is created by
     merging the system, user and workspace configuration files in that order.
-    On top, environment variables of the form ANYREPO_XXX (where XXX is the
+    On top, environment variables of the form GIT_WS_XXX (where XXX is the
     name of an option) can be used to override settings from the configuration
     files.
 

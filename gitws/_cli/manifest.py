@@ -3,7 +3,7 @@ from pathlib import Path
 
 import click
 
-from anyrepo import AnyRepo, ManifestSpec
+from gitws import GitWS, ManifestSpec
 
 from .common import COLOR_INFO, exceptionhandling, pass_context
 from .options import groups_option, manifest_option, output_option
@@ -28,8 +28,8 @@ def resolve(context, manifest_path=None, groups=None, output=None):
     The output is a single manifest file with all dependencies and their dependencies.
     """
     with exceptionhandling(context):
-        anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
-        manifest = anyrepo.get_manifest_spec(groups=groups, resolve=True)
+        gws = GitWS.from_path(manifest_path=manifest_path)
+        manifest = gws.get_manifest_spec(groups=groups, resolve=True)
         if output:
             manifest.save(Path(output))
         else:
@@ -49,8 +49,8 @@ def freeze(context, manifest_path=None, groups=None, output=None):
     Revisions are replaced by the actual SHAs.
     """
     with exceptionhandling(context):
-        anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
-        manifest = anyrepo.get_manifest_spec(groups=groups, freeze=True, resolve=True)
+        gws = GitWS.from_path(manifest_path=manifest_path)
+        manifest = gws.get_manifest_spec(groups=groups, freeze=True, resolve=True)
         if output:
             manifest.save(Path(output))
         else:
@@ -65,7 +65,7 @@ def validate(context, manifest_path=None):
     Validate The Current Manifest, Exiting With An Error On Issues.
     """
     with exceptionhandling(context):
-        AnyRepo.from_path(manifest_path=manifest_path)
+        GitWS.from_path(manifest_path=manifest_path)
 
 
 @manifest.command()
@@ -76,8 +76,8 @@ def path(context, manifest_path=None):
     Print Path to Main Manifest File.
     """
     with exceptionhandling(context):
-        anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
-        manifest = next(anyrepo.manifests())
+        gws = GitWS.from_path(manifest_path=manifest_path)
+        manifest = next(gws.manifests())
         context.echo(str(manifest.path))
 
 
@@ -89,8 +89,8 @@ def paths(context, manifest_path=None):
     Print Paths to ALL Manifest Files.
     """
     with exceptionhandling(context):
-        anyrepo = AnyRepo.from_path(manifest_path=manifest_path)
-        for manifest in anyrepo.manifests():
+        gws = GitWS.from_path(manifest_path=manifest_path)
+        for manifest in gws.manifests():
             context.echo(str(manifest.path))
 
 
@@ -100,7 +100,7 @@ def paths(context, manifest_path=None):
 def create(context, manifest_path):
     """Create Manifest."""
     with exceptionhandling(context):
-        path = AnyRepo.create_manifest(Path(manifest_path))
+        path = GitWS.create_manifest(Path(manifest_path))
         click.secho(f"Manifest {str(path)!r} created.", fg=COLOR_INFO)
 
 

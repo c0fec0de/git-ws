@@ -1,8 +1,8 @@
-Usage: anyrepo fetch [OPTIONS]
+Usage: git-ws fetch [OPTIONS]
 
   Run 'git fetch' on projects.
 
-  This command behaves identical to `anyrepo foreach -- git fetch`.
+  This command behaves identical to `git ws foreach -- git fetch`.
 
 Options:
   -P, --project DIRECTORY  Project path to operate on only. All by default.

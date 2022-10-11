@@ -9,8 +9,8 @@ from unittest import mock
 from click.testing import CliRunner
 from pytest import mark
 
-from anyrepo._cli import main
-from anyrepo.const import (
+from gitws._cli import main
+from gitws.const import (
     BLOCK_APP_CONFIG_FROM_ENV_ENV_NAME,
     MANIFEST_PATH_DEFAULT,
     SYSTEM_CONFIG_PATH_ENV_NAME,
