@@ -138,8 +138,16 @@ anyrepo update --rebase
 
 | Command | Description |
 | --- | --- |
-| `anyrepo manifest freeze` | Print The Resolved Manifest With SHAs For All Project Revisions |
-| `anyrepo manifest resolve` | Print The Manifest With All Imports Resolved |
+| `anyrepo manifest freeze`   | Print The Resolved Manifest With SHAs For All Project Revisions. |
+| `anyrepo manifest path`     | Print Path to Main Manifest File. |
+| `anyrepo manifest paths`    | Print Paths to ALL Manifest Files. |
+| `anyrepo manifest resolve`  | Print The Manifest With All Projects And All Their Dependencies. |
+| `anyrepo manifest upgrade`  | Update Manifest To Latest Version. |
+| `anyrepo manifest validate` | Validate The Current Manifest, Exiting With An Error On Issues. |
+| `anyrepo info main-path`      | Print Path to Main Git Clone. |
+| `anyrepo info project-paths`  | Print Paths to all git clones. |
+| `anyrepo info workspace-path` | Print Path to Workspace. |
+
 
 ## 🐍 Python API
 
