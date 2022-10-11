@@ -38,21 +38,25 @@ class State(Enum):
 
 
 class Status(BaseModel):
+    """Status."""
+
+
+class FileStatus(Status):
 
     """
-    Git Status Line.
+    Git File Status Line.
 
-    >>> status = Status.from_str("?? file.txt")
+    >>> status = FileStatus.from_str("?? file.txt")
     >>> status
-    Status(index=<State.UNTRACKED: '?'>, work=<State.UNTRACKED: '?'>, path=PosixPath('file.txt'))
+    FileStatus(index=<State.UNTRACKED: '?'>, work=<State.UNTRACKED: '?'>, path=PosixPath('file.txt'))
     >>> str(status)
     '?? file.txt'
     >>> str(status.with_path(Path("base")))
     '?? base/file.txt'
 
-    >>> status = Status.from_str("R  src -> dest")
+    >>> status = FileStatus.from_str("R  src -> dest")
     >>> status
-    Status(index=<State.RENAMED: 'R'>, work=<State.UNMODIFIED: ' '>, path=PosixPath('dest'), orig_path=PosixPath('src'))
+    FileStatus(index=<State.RENAMED: 'R'>, work=<State.UNMODIFIED: ' '>, path=PosixPath('dest'), orig_path=...
     >>> str(status)
     'R  src -> dest'
     >>> str(status.with_path(Path("base")))
@@ -77,17 +81,47 @@ class Status(BaseModel):
         return f"{self.index}{self.work} {self.path!s}"
 
     @staticmethod
-    def from_str(line) -> "Status":
+    def from_str(line) -> "FileStatus":
         """Create v1 porcelain output."""
         mat = _RE_STATUS.match(line)
         assert mat, f"Invalid pattern {line}"
-        return Status(**mat.groupdict())
+        return FileStatus(**mat.groupdict())
 
-    def with_path(self, path: Path) -> "Status":
-        """Return :any:`Status` with `path`."""
+    def with_path(self, path: Path) -> "FileStatus":
+        """Return :any:`FileStatus` with `path`."""
         if self.orig_path:
             return self.update(path=path / self.path, orig_path=path / self.orig_path)
         return self.update(path=path / self.path)
+
+    def has_index_changes(self):
+        """Has Index Changes."""
+        return self.index not in (State.UNMODIFIED, State.IGNORED, State.UNTRACKED)
+
+
+class BranchStatus(Status):
+
+    """Branch Status."""
+
+    info: str
+    """Info."""
+
+    def __str__(self):
+        return self.info
+
+    @staticmethod
+    def from_str(line) -> "BranchStatus":
+        """Create v1 porcelain output."""
+        return BranchStatus(info=line)
+
+    def with_path(self, path: Path) -> "BranchStatus":
+        """Return :any:`BranchStatus` with `path`."""
+        # pylint: disable=unused-argument
+        return self
+
+    def has_index_changes(self):
+        """Has Index Changes."""
+        # pylint: disable=no-self-use
+        return None
 
 
 class Git:
@@ -225,15 +259,21 @@ class Git:
             args += ["-m", msg]
         self._run(args)
 
-    def status(self) -> Generator[Status, None, None]:
+    def status(self, branch=False) -> Generator[Status, None, None]:
         """Git Status."""
-        for line in self._run2str(("status", "--porcelain=v1")).split("\n"):
+        if branch:
+            lines = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
+            yield BranchStatus.from_str(lines[0])
+            lines = lines[1:]
+        else:
+            lines = self._run2str(("status", "--porcelain=v1")).split("\n")
+        for line in lines:
             if line:
-                yield Status.from_str(line)
+                yield FileStatus.from_str(line)
 
     def has_index_changes(self) -> bool:
         """Let you know if index has changes."""
-        return any(status.index not in (State.UNMODIFIED, State.IGNORED, State.UNTRACKED) for status in self.status())
+        return any(status.has_index_changes() for status in self.status())
 
     def is_clean(self):
         """Clone is clean and does not contain any changes."""

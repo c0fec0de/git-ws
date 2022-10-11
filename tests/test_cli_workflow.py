@@ -36,6 +36,19 @@ def test_status(tmp_path, arepo):
         "",
     ]
 
+    assert cli(("status", "--branch")) == [
+        "===== main =====",
+        "## main...origin/main",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has an empty revision!",
+        "## main...origin/main",
+        "===== dep2 (revision='1-feature') =====",
+        "## 1-feature...origin/1-feature",
+        "===== dep4 (revision='main') =====",
+        "## main...origin/main",
+        "",
+    ]
+
 
 def test_workflow(tmp_path, arepo):
     """Test Full Workflow."""
@@ -140,13 +153,17 @@ def test_workflow(tmp_path, arepo):
         "",
     ]
 
-    assert cli(("status",)) == [
+    assert cli(("status", "--branch")) == [
         "===== main =====",
+        "## main...origin/main",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has an empty revision!",
+        "## main...origin/main",
         "A  dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
+        "## 1-feature...origin/1-feature [ahead 1]",
         "===== dep4 (revision='main') =====",
+        "## main...origin/main [ahead 1]",
         "",
     ]
 
