@@ -108,8 +108,8 @@ git ws update --rebase
 
 | Command | Description |
 | --- | --- |
-| `git ws clone URL` | Clone git repository from `URL` as main repository and initialize Git Workspace workspace |
-| `git ws init` | Initialize Git Workspace workspace. Use existing git clone as main repository |
+| `git ws clone URL` | Clone git repository from `URL` as main repository and initialize Git Workspace |
+| `git ws init` | Initialize Git Workspace. Use current git clone as main repository |
 | `git ws manifest create` | Create well documented, empty manifest |
 
 #### Basic
@@ -173,7 +173,7 @@ Unfortunately, none of the tools we tested really satisfied us. But hey, as we a
 And that's what we did - Git Workspace is a our tool for managing a large workspace consisting of several smaller `git` projects. Here is how it compares to the other tools we evaluated:
 
 
-|                           | `git submodules` | `repo` | `west` | *Monorepos* | it ws |
+|                           | `git submodules` | `repo` | `west` | *Monorepos* | `git ws` |
 | ------------------------- | ---------------- | ------ | ------ | ----------- | --------- |
 | Reusable Components       | ✅               | ✅     | ✅     | ➖          | ✅        |
 | Ease of Use               | ➖               | ✅     | ✅     | ✅          | ✅        |
