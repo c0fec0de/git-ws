@@ -104,7 +104,23 @@ def test_cli_git_path(tmp_path):
             "",
             "",
         ]
-        assert cli(["update"]) == []
+
+    assert (
+        (tmp_path / ".git-ws" / "info.toml").read_text()
+        == """\
+# Git Workspace System File. DO NOT EDIT.
+
+main_path = "main"
+"""
+    )
+    assert (
+        (tmp_path / ".git-ws" / "config.toml").read_text()
+        == """\
+manifest_path = "git-ws.toml"
+"""
+    )
+
+    assert cli(["checkout"]) == []
 
 
 def test_cli_init_exists(tmp_path):

@@ -255,14 +255,14 @@ class GitWS:
             for status in clone.git.status(branch=branch):
                 yield status.with_path(path)
 
-    def checkout(self, paths: Tuple[Path, ...]):
+    def checkout(self, paths: Tuple[Path, ...], force: bool = False):
         """Checkout."""
         if paths:
             # Checkout specific files only
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
                 self._echo_project_banner(clone.project)
                 if cpaths:
-                    clone.git.checkout(revision=clone.project.revision, paths=cpaths)
+                    clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
         else:
             # Checkout all branches
             for clone in self.clones(resolve_url=True):
@@ -273,7 +273,7 @@ class GitWS:
                     self.echo(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
                     git.clone(project.url, revision=project.revision)
                 if project.revision:
-                    git.checkout(revision=project.revision)
+                    git.checkout(revision=project.revision, force=force)
                 self._check_clone(clone)
 
     def add(self, paths: Tuple[Path, ...]):

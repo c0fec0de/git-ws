@@ -36,6 +36,7 @@ from .options import (
     path_option,
     paths_argument,
     process_path,
+    process_paths,
     projects_option,
     update_option,
 )
@@ -257,8 +258,9 @@ def status(context, projects=None, branch: bool = False):
 
 @main.command()
 @paths_argument()
+@force_option()
 @pass_context
-def checkout(context, paths):
+def checkout(context, paths, force: bool = False):
     """
     Run 'git checkout' on paths and choose the right git clone and manifest revision automatically.
 
@@ -266,7 +268,7 @@ def checkout(context, paths):
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.checkout([Path(path) for path in paths])
+        arepo.checkout(process_paths(paths), force=force)
 
 
 @main.command()
@@ -278,7 +280,7 @@ def add(context, paths):
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.add([Path(path) for path in paths])
+        arepo.add(process_paths(paths))
 
 
 @main.command()
@@ -290,7 +292,7 @@ def reset(context, paths):
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.reset([Path(path) for path in paths])
+        arepo.reset(process_paths(paths))
 
 
 @main.command()
@@ -305,7 +307,7 @@ def commit(context, paths, message=None):
         if not message:
             raise ValueError("Please provide a commit message.")
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.commit(message, [Path(path) for path in paths])
+        arepo.commit(message, process_paths(paths))
 
 
 @main.command()

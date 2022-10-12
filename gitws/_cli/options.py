@@ -16,7 +16,7 @@
 
 """Common Command Line Options."""
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 import click
 
@@ -98,6 +98,11 @@ def process_path(value) -> Optional[Path]:
             raise click.UsageError("more than one PATH specified")
         return Path(value[0])
     return None
+
+
+def process_paths(paths) -> Tuple[Path, ...]:
+    """Process `paths_argument`."""
+    return tuple(Path(path) for path in paths)
 
 
 def paths_argument():
