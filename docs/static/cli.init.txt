@@ -10,4 +10,5 @@ Options:
   -G, --groups TEXT    Group Filtering. TODO: more details. The setting
                        becomes default for all successive runs.
   -U, --update         Run 'git ws update' too.
+  -f, --force          Enfore operation.
   -h, --help           Show this message and exit.

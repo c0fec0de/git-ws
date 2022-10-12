@@ -156,6 +156,14 @@ class Workspace:
         return workspace
 
     @staticmethod
+    def is_init(path) -> Optional[Info]:
+        """Return :any:`Info` if workspace is already initialized."""
+        infopath = path / INFO_PATH
+        if infopath.exists():
+            return Info.load(path)
+        return None
+
+    @staticmethod
     def init(
         path: Path, main_path: Path, manifest_path: Path = MANIFEST_PATH_DEFAULT, groups: Groups = None
     ) -> "Workspace":
@@ -172,9 +180,8 @@ class Workspace:
         Raises:
             OutsideWorkspaceError: `main_path` is not within `path`.
         """
-        infopath = path / INFO_PATH
-        if infopath.exists():
-            info = Info.load(path)
+        info = Workspace.is_init(path)
+        if info:
             raise InitializedError(path, info.main_path)
 
         # Normalize

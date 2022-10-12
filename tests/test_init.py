@@ -15,15 +15,13 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Initialization Tests."""
-from click.testing import CliRunner
 from pytest import raises
 
 from gitws import GitWS, InitializedError, ManifestExistError
-from gitws._cli import main
 from gitws.const import CONFIG_PATH, INFO_PATH
 
 from .common import MANIFEST_DEFAULT
-from .util import chdir, format_output, run
+from .util import chdir, cli, run
 
 
 def test_cli_nogit(tmp_path):
@@ -31,19 +29,17 @@ def test_cli_nogit(tmp_path):
     main_path = tmp_path / "main"
     main_path.mkdir(parents=True)
     with chdir(main_path):
-        result = CliRunner().invoke(main, ["init"])
-    assert format_output(result) == [
-        "Error: git clone has not been found or initialized yet. Change to your existing git clone or try:",
-        "",
-        "    git init",
-        "",
-        "or:",
-        "",
-        "    git clone",
-        "",
-        "",
-    ]
-    assert result.exit_code == 1
+        assert cli(["init"], exit_code=1) == [
+            "Error: git clone has not been found or initialized yet. Change to your existing git clone or try:",
+            "",
+            "    git init",
+            "",
+            "or:",
+            "",
+            "    git clone",
+            "",
+            "",
+        ]
 
 
 def test_cli_git(tmp_path):
@@ -54,9 +50,7 @@ def test_cli_git(tmp_path):
         run(("git", "init"), check=True)
         assert (main_path / ".git").exists()
 
-        result = CliRunner().invoke(main, ["init"])
-        assert result.exit_code == 1
-        assert format_output(result) == [
+        assert cli(["init"], exit_code=1) == [
             "===== main =====",
             "Error: Manifest has not been found at 'git-ws.toml'. Try:",
             "",
@@ -65,15 +59,12 @@ def test_cli_git(tmp_path):
             "",
         ]
 
-        result = CliRunner().invoke(main, ["manifest", "create"])
-        assert format_output(result) == ["Manifest 'git-ws.toml' created.", ""]
-        assert result.exit_code == 0
+        assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
 
         manifest_path = main_path / "git-ws.toml"
         assert manifest_path.read_text() == MANIFEST_DEFAULT
 
-        result = CliRunner().invoke(main, ["init"])
-        assert format_output(result, tmp_path) == [
+        assert cli(["init"]) == [
             "===== main =====",
             "Workspace initialized at '..'.",
             "Please continue with:",
@@ -82,15 +73,42 @@ def test_cli_git(tmp_path):
             "",
             "",
         ]
-        assert result.exit_code == 0
 
-        result = CliRunner().invoke(main, ["init"])
-        assert format_output(result, tmp_path) == [
-            "===== main =====",
+        assert cli(["init"], tmp_path=tmp_path, exit_code=1) == [
             "Error: git workspace has already been initialized at 'TMP' with main repo at 'main'.",
             "",
         ]
-        assert result.exit_code == 1
+
+
+def test_cli_init_exists(tmp_path):
+    """Init with GIT repo."""
+    main_path = tmp_path / "main"
+    main_path.mkdir(parents=True)
+    with chdir(main_path):
+        run(("git", "init"), check=True)
+        assert (main_path / ".git").exists()
+        assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
+
+        (tmp_path / "something").touch()
+
+        assert cli(["init"], tmp_path=tmp_path, exit_code=1) == [
+            "Error: Workspace '..' is not an empty directory.",
+            "",
+            "Choose an empty directory or use '--force'",
+            "",
+            "",
+        ]
+
+        assert not (tmp_path / ".git-ws").exists()
+        assert cli(["init", "--force"], tmp_path=tmp_path) == [
+            "===== main =====",
+            "Workspace initialized at '..'.",
+            "Please continue with:",
+            "",
+            "    git ws update",
+            "",
+            "",
+        ]
 
 
 def test_cli_git_update(tmp_path):
@@ -101,20 +119,16 @@ def test_cli_git_update(tmp_path):
         run(("git", "init"), check=True)
         assert (main_path / ".git").exists()
 
-        result = CliRunner().invoke(main, ["manifest", "create"])
-        assert format_output(result) == ["Manifest 'git-ws.toml' created.", ""]
-        assert result.exit_code == 0
+        assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
 
         manifest_path = main_path / "git-ws.toml"
         assert manifest_path.read_text() == MANIFEST_DEFAULT
 
-        result = CliRunner().invoke(main, ["init", "--update"])
-        assert format_output(result, tmp_path) == [
+        assert cli(["init", "--update"], tmp_path=tmp_path) == [
             "===== main =====",
             "Workspace initialized at '..'.",
             "",
         ]
-        assert result.exit_code == 0
 
 
 def test_git(tmp_path):

@@ -30,7 +30,13 @@ from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
 from .deptree import Node, get_deptree
-from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError, WorkspaceNotEmptyError
+from .exceptions import (
+    GitCloneMissingError,
+    GitCloneNotCleanError,
+    InitializedError,
+    ManifestExistError,
+    WorkspaceNotEmptyError,
+)
 from .filters import Filter, default_filter
 from .git import Git, Status
 from .iters import ManifestIter, ProjectIter
@@ -104,6 +110,7 @@ class GitWS:
         main_path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
+        force: bool = False,
         echo=None,
     ) -> "GitWS":
         """
@@ -114,10 +121,15 @@ class GitWS:
         """
         echo = echo or no_echo
         main_path = Git.find_path(path=main_path)
+        path = main_path.parent
+        info = Workspace.is_init(path)
+        if info:
+            raise InitializedError(path, info.main_path)
+        if not force and any(item != main_path for item in path.iterdir()):
+            raise WorkspaceNotEmptyError(resolve_relative(path))
         name = main_path.name
         echo(f"===== {name} =====", fg=_COLOR_BANNER)
         manifest_path = resolve_relative(main_path / manifest_path)
-        path = main_path.parent
         return GitWS.create(path, main_path, manifest_path, groups, echo=echo)
 
     def deinit(self):

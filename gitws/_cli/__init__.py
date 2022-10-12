@@ -56,8 +56,9 @@ def main(ctx=None, verbose=0):
 @manifest_option(initial=True)
 @groups_option(initial=True)
 @update_option()
+@force_option()
 @pass_context
-def init(context, manifest_path=None, groups=None, update: bool = False):
+def init(context, manifest_path=None, groups=None, update: bool = False, force: bool = False):
     """
     Initialize Git Workspace and create all dependent git clones.
 
@@ -65,7 +66,7 @@ def init(context, manifest_path=None, groups=None, update: bool = False):
     be either created by 'git init' or 'git clone'.
     """
     with exceptionhandling(context):
-        arepo = GitWS.init(manifest_path=manifest_path, groups=groups, echo=context.echo)
+        arepo = GitWS.init(manifest_path=manifest_path, groups=groups, force=force, echo=context.echo)
         click.secho(f"Workspace initialized at {str(resolve_relative(arepo.path))!r}.")
         if update:
             arepo.update(skip_main=True)
