@@ -87,7 +87,7 @@ class ManifestIter:
                 continue
 
             _LOGGER.debug("%r", dep_project)
-            dep_project_path = self.workspace.path / dep_project.path
+            dep_project_path = self.workspace.get_project_path(dep_project)
 
             # Recursive
             dep_manifest_path = dep_project_path / dep_project.manifest_path
@@ -177,7 +177,7 @@ class ProjectIter:
                 continue
             done.append(dep_project.path)
 
-            dep_project_path = self.workspace.path / dep_project.path
+            dep_project_path = self.workspace.get_project_path(dep_project)
             if not filter_(dep_project):
                 _LOGGER.debug("FILTERED OUT %r", dep_project)
                 continue
