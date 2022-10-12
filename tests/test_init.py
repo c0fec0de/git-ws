@@ -105,6 +105,8 @@ def test_cli_git_path(tmp_path):
             "",
         ]
 
+        assert cli(["checkout"]) == ["===== main =====", ""]
+
     assert (
         (tmp_path / ".git-ws" / "info.toml").read_text()
         == """\
@@ -119,8 +121,6 @@ main_path = "main"
 manifest_path = "git-ws.toml"
 """
     )
-
-    assert cli(["checkout"]) == []
 
 
 def test_cli_init_exists(tmp_path):

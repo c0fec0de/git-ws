@@ -67,10 +67,10 @@ def test_dep_tree(tmp_path, arepo):
     assert cli(["info", "dep-tree"], tmp_path=tmp_path) == [
         "main",
         "├── dep1",
-        "│   └── dep4",
-        "└── dep2",
-        "    ├── dep3",
-        "    └── dep4",
+        "│   └── dep4 (revision='main')",
+        "└── dep2 (revision='1-feature')",
+        "    ├── dep3 (revision='main', groups='test')",
+        "    └── dep4 (revision='main')",
         "",
     ]
 
@@ -87,10 +87,10 @@ def test_dep_tree_dot(tmp_path, arepo):
         '    "dep3";',
         '    "dep4";',
         '    "main" -> "dep1";',
-        '    "main" -> "dep2";',
-        '    "dep1" -> "dep4";',
-        '    "dep2" -> "dep3";',
-        '    "dep2" -> "dep4";',
+        '    "main" -> "dep2" [label="1-feature"];',
+        '    "dep1" -> "dep4" [label="main"];',
+        '    "dep2" -> "dep3" [label="main"];',
+        '    "dep2" -> "dep4" [label="main"];',
         "}",
         "",
     ]
