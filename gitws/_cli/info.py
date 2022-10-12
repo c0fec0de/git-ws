@@ -17,6 +17,8 @@
 """Info Commands."""
 
 import click
+from anytree import ContStyle, RenderTree
+from anytree.exporter import DotExporter
 
 from gitws import GitWS
 
@@ -68,3 +70,26 @@ def project_paths(context, manifest_path=None, groups=None):
         for project in gws.projects(filter_=gws.create_groups_filter(groups)):
             project_path = gws.workspace.get_project_path(project)
             context.echo(project_path)
+
+
+@info.command()
+@manifest_option()
+@click.option("--dot", "-d", "dot", is_flag=True, help="Export DOT Format to be forwarded to graphviz.")
+@pass_context
+def dep_tree(context, manifest_path=None, dot: bool = False):
+    """
+    Print Dependency Tree.
+
+    The standard output on '--dot' can be directly forwarded to `graphviz`'s tool `dot`.
+    Example:
+
+    $ git ws info dep-tree --dot | dot -Tpng > dep-tree.png
+    """
+
+    with exceptionhandling(context):
+        gws = GitWS.from_path(manifest_path=manifest_path)
+        deptree = gws.get_deptree()
+        if dot:
+            context.echo("\n".join(DotExporter(deptree)))
+        else:
+            context.echo(RenderTree(deptree, style=ContStyle()).by_attr("name"))

@@ -32,10 +32,10 @@ def run(cmd, cwd=None, capture_output=False, check=True):
     cwdrel = resolve_relative(cwd) if cwd else None
     try:
         result = subprocess.run(cmd, capture_output=capture_output, check=check, cwd=cwd)
-        _LOGGER.info("run(%r, cwd='%s') OK stdout=%r stderr=%r", cmd, cwdrel, result.stdout, result.stderr)
+        _LOGGER.debug("run(%r, cwd='%s') OK stdout=%r stderr=%r", cmd, cwdrel, result.stdout, result.stderr)
         return result
     except subprocess.CalledProcessError as error:
-        _LOGGER.info("run(%r, cwd='%s') FAILED stdout=%r stderr=%r", cmd, cwdrel, error.stdout, error.stderr)
+        _LOGGER.debug("run(%r, cwd='%s') FAILED stdout=%r stderr=%r", cmd, cwdrel, error.stdout, error.stderr)
         raise error
 
 

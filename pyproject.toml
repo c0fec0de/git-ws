@@ -26,6 +26,7 @@ git-ws = 'gitws._cli:main'
 
 [tool.poetry.dependencies]
 python = '^3.7'
+anytree = "*"
 appdirs = "^1.4.4"
 click = '^8.0.0'
 coloredlogs = '^15.0.1'
@@ -87,6 +88,9 @@ disable = [
     'redefined-outer-name',
     'too-many-arguments',
 ]
+
+[tool.mypy]
+ignore_missing_imports = true
 
 [tool.tox]
 legacy_tox_ini = """

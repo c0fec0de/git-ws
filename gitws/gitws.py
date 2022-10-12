@@ -29,6 +29,7 @@ from ._util import no_echo, removesuffix, resolve_relative, run
 from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
+from .deptree import Node, get_deptree
 from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError, WorkspaceNotEmptyError
 from .filters import Filter, default_filter
 from .git import Git, Status
@@ -264,6 +265,7 @@ class GitWS:
                     git.clone(project.url, revision=project.revision)
                 if project.revision:
                     git.checkout(revision=project.revision)
+                self._check_clone(clone)
 
     def add(self, paths: Tuple[Path, ...]):
         """Add."""
@@ -351,7 +353,7 @@ class GitWS:
                 if clonerev and projectrev != clonerev:
                     _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
         elif not project.is_main:
-            _LOGGER.warning("Clone %s has an empty revision!", project.info)
+            _LOGGER.warning("Clone %s has no revision!", project.info)
 
     def clones(
         self,
@@ -429,6 +431,11 @@ class GitWS:
         manifest_path = self.workspace.get_manifest_path()
         manifest_spec = self.get_manifest_spec(freeze=freeze, resolve=resolve)
         return Manifest.from_spec(manifest_spec, path=str(manifest_path))
+
+    def get_deptree(self) -> Node:
+        """Get Dependency Tree."""
+        manifest = self.get_manifest()
+        return get_deptree(self.workspace, manifest)
 
     def _create_project_paths_filter(self, project_paths):
         workspace_path = self.workspace.path
