@@ -59,3 +59,38 @@ def test_project_paths(tmp_path, arepo):
         "TMP/workspace/dep4",
         "",
     ]
+
+
+def test_dep_tree(tmp_path, arepo):
+    """Dependency Trees."""
+    # pylint: disable=unused-argument
+    assert cli(["info", "dep-tree"], tmp_path=tmp_path) == [
+        "main",
+        "├── dep1",
+        "│   └── dep4",
+        "└── dep2",
+        "    ├── dep3",
+        "    └── dep4",
+        "",
+    ]
+
+
+def test_dep_tree_dot(tmp_path, arepo):
+    """Dependency Trees - dot."""
+    # pylint: disable=unused-argument
+    assert cli(["info", "dep-tree", "--dot"], tmp_path=tmp_path) == [
+        "digraph tree {",
+        '    "main";',
+        '    "dep1";',
+        '    "dep4";',
+        '    "dep2";',
+        '    "dep3";',
+        '    "dep4";',
+        '    "main" -> "dep1";',
+        '    "main" -> "dep2";',
+        '    "dep1" -> "dep4";',
+        '    "dep2" -> "dep3";',
+        '    "dep2" -> "dep4";',
+        "}",
+        "",
+    ]

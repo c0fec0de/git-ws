@@ -29,6 +29,7 @@ from ._util import no_echo, removesuffix, resolve_relative, run
 from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
+from .deptree import Node, get_deptree
 from .exceptions import GitCloneMissingError, GitCloneNotCleanError, ManifestExistError, WorkspaceNotEmptyError
 from .filters import Filter, default_filter
 from .git import Git, Status
@@ -429,6 +430,11 @@ class GitWS:
         manifest_path = self.workspace.get_manifest_path()
         manifest_spec = self.get_manifest_spec(freeze=freeze, resolve=resolve)
         return Manifest.from_spec(manifest_spec, path=str(manifest_path))
+
+    def get_deptree(self) -> Node:
+        """Get Dependency Tree."""
+        manifest = self.get_manifest()
+        return get_deptree(self.workspace, manifest)
 
     def _create_project_paths_filter(self, project_paths):
         workspace_path = self.workspace.path
