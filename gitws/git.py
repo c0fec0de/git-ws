@@ -56,6 +56,14 @@ class State(Enum):
 class Status(BaseModel):
     """Status."""
 
+    def with_path(self, path: Path) -> "Status":
+        """Return :any:`Status` with `path`."""
+        raise NotImplementedError()
+
+    def has_index_changes(self) -> bool:
+        """Has Index Changes."""
+        raise NotImplementedError()
+
 
 class FileStatus(Status):
 
@@ -109,7 +117,7 @@ class FileStatus(Status):
             return self.update(path=path / self.path, orig_path=path / self.orig_path)
         return self.update(path=path / self.path)
 
-    def has_index_changes(self):
+    def has_index_changes(self) -> bool:
         """Has Index Changes."""
         return self.index not in (State.UNMODIFIED, State.IGNORED, State.UNTRACKED)
 
