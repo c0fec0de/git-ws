@@ -265,6 +265,7 @@ class GitWS:
                     git.clone(project.url, revision=project.revision)
                 if project.revision:
                     git.checkout(revision=project.revision)
+                self._check_clone(clone)
 
     def add(self, paths: Tuple[Path, ...]):
         """Add."""
@@ -352,7 +353,7 @@ class GitWS:
                 if clonerev and projectrev != clonerev:
                     _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
         elif not project.is_main:
-            _LOGGER.warning("Clone %s has an empty revision!", project.info)
+            _LOGGER.warning("Clone %s has no revision!", project.info)
 
     def clones(
         self,

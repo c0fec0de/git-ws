@@ -46,7 +46,7 @@ def test_status(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
@@ -56,7 +56,7 @@ def test_status(tmp_path, arepo):
         "===== main =====",
         "## main...origin/main",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "## main...origin/main",
         "===== dep2 (revision='1-feature') =====",
         "## 1-feature...origin/1-feature",
@@ -93,7 +93,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/bb.txt",
@@ -106,7 +106,7 @@ def test_workflow(tmp_path, arepo):
         assert cli(("status",)) == [
             "===== main =====",
             "===== dep1 =====",
-            "git-ws WARNING Clone dep1 has an empty revision!",
+            "git-ws WARNING Clone dep1 has no revision!",
             "?? foo.txt",
             "===== dep2 (revision='1-feature') =====",
             "?? ../dep2/bb.txt",
@@ -123,7 +123,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/bb.txt",
@@ -137,7 +137,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "A  dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "A  dep2/bb.txt",
@@ -154,7 +154,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "A  dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "A  dep2/bb.txt",
@@ -173,7 +173,7 @@ def test_workflow(tmp_path, arepo):
         "===== main =====",
         "## main...origin/main",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "## main...origin/main",
         "A  dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
@@ -190,7 +190,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/barbar.txt",
@@ -203,7 +203,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "?? dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/barbar.txt",
@@ -216,7 +216,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "A  dep1/foo.txt",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/barbar.txt",
@@ -229,7 +229,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
         "?? dep2/barbar.txt",
         "===== dep4 (revision='main') =====",
@@ -251,7 +251,7 @@ def test_checkout_file(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
         " M dep2/data.txt",
         "===== dep4 (revision='main') =====",
@@ -277,7 +277,7 @@ def test_checkout_file(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
         " M dep2/data.txt",
         "===== dep4 (revision='main') =====",
@@ -296,7 +296,7 @@ def test_checkout_file(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         " M dep4/data.txt",
@@ -318,7 +318,7 @@ def test_checkout(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
         " M dep2/data.txt",
         "===== dep4 (revision='main') =====",
@@ -329,6 +329,7 @@ def test_checkout(tmp_path, arepo):
     assert cli(("checkout")) == [
         "===== main =====",
         "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
         "",
@@ -337,7 +338,7 @@ def test_checkout(tmp_path, arepo):
     assert cli(("status",)) == [
         "===== main =====",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
         " M dep2/data.txt",
         "===== dep4 (revision='main') =====",

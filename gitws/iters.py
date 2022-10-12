@@ -19,6 +19,7 @@ import logging
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
+from ._util import resolve_relative
 from .datamodel import Manifest, ManifestSpec, Project
 from .exceptions import ManifestNotFoundError
 from .filters import default_filter
@@ -162,8 +163,7 @@ class ProjectIter:
         filter_ = self.filter_
         done: List[str] = self.__done
         if self.resolve_url and manifest_spec.dependencies:
-            git = Git(project_path)
-            assert git.is_cloned()
+            git = Git(resolve_relative(project_path))
             refurl = git.get_url()
 
         _LOGGER.debug("%r", manifest_spec)

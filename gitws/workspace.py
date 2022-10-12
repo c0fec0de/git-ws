@@ -150,10 +150,9 @@ class Workspace:
         This one is searched upwards the given `path`.
         """
         path = Workspace.find_path(path=path)
-        _LOGGER.info("path=%s", path)
         info = Info.load(path)
         workspace = Workspace(path, info)
-        _LOGGER.info("Loaded %s %r %r", path, info, workspace.config)
+        _LOGGER.info("Workspace path=%s main=%s %r", path, info.main_path, workspace.config)
         return workspace
 
     @staticmethod

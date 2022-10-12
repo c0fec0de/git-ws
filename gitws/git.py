@@ -16,6 +16,7 @@
 
 """Git Utilities."""
 
+import logging
 import re
 from enum import Enum
 from pathlib import Path
@@ -26,6 +27,7 @@ from ._util import get_repr, run
 from .exceptions import NoGitError
 
 _RE_STATUS = re.compile(r"\A(?P<index>.)(?P<work>.)\s((?P<orig_path>.+) -> )?(?P<path>.+)\Z")
+_LOGGER = logging.getLogger("git-ws")
 
 
 class State(Enum):
@@ -193,10 +195,13 @@ class Git:
         if not self.path.exists() or not self.path.is_dir():
             return False
         result = self._run(("rev-parse", "--show-cdup"), capture_output=True, check=False)
-        return not result.stderr and not result.stdout.strip()
+        cloned = not result.stderr and not result.stdout.strip()
+        _LOGGER.info("Git(%r).is_cloned() = %r", str(self.path), cloned)
+        return cloned
 
     def init(self, branch="main"):
         """Initialize Git Clone."""
+        _LOGGER.info("Git(%r).init(branch=%r)", str(self.path), branch)
         self._run(("init", "-b", branch))
 
     def set_config(self, name, value):
@@ -205,6 +210,7 @@ class Git:
 
     def clone(self, url, revision=None):
         """Clone."""
+        _LOGGER.info("Git(%r).clone(%r, revision=%r)", str(self.path), url, revision)
         if revision:
             # We do not checkout, to be faster during switch later on
             run(("git", "clone", "--no-checkout", "--", str(url), str(self.path)))
@@ -214,15 +220,21 @@ class Git:
 
     def get_tag(self) -> Optional[str]:
         """Get Actual Tag."""
-        return self._run2str(("describe", "--exact-match", "--tags"), check=False) or None
+        tag = self._run2str(("describe", "--exact-match", "--tags"), check=False) or None
+        _LOGGER.info("Git(%r).get_tag() = %r", str(self.path), tag)
+        return tag
 
     def get_branch(self) -> Optional[str]:
         """Get Actual Branch."""
-        return self._run2str(("branch", "--show-current")) or None
+        branch = self._run2str(("branch", "--show-current")) or None
+        _LOGGER.info("Git(%r).get_branch() = %r", str(self.path), branch)
+        return branch
 
-    def get_sha(self, revision="HEAD") -> Optional[str]:
+    def get_sha(self) -> Optional[str]:
         """Get SHA."""
-        return self._run2str(("rev-parse", revision)) or None
+        sha = self._run2str(("rev-parse", "HEAD")) or None
+        _LOGGER.info("Git(%r).get_sha() = %r", str(self.path), sha)
+        return sha
 
     def get_revision(self) -> Optional[str]:
         """
@@ -239,7 +251,9 @@ class Git:
 
     def get_url(self) -> Optional[str]:
         """Get Actual URL of 'origin'."""
-        return self._run2str(("remote", "get-url", "origin"), check=False) or None
+        url = self._run2str(("remote", "get-url", "origin"), check=False) or None
+        _LOGGER.info("Git(%r).get_url() = %r", str(self.path), url)
+        return url
 
     def checkout(self, revision: Optional[str] = None, paths: Optional[Tuple[Path, ...]] = None):
         """Checkout Revision."""
@@ -247,37 +261,46 @@ class Git:
             self._run(("checkout", revision), paths=paths)
         else:
             self._run(("checkout",), paths=paths)
+        _LOGGER.info("Git(%r).checkout(revision=%r, paths=%r)", str(self.path), revision, paths)
 
     def fetch(self):
         """Fetch."""
+        _LOGGER.info("Git(%r).fetch()", str(self.path))
         self._run(("fetch",))
 
     def merge(self):
         """Merge."""
+        _LOGGER.info("Git(%r).merge()", str(self.path))
         self._run(("merge",))
 
     def pull(self):
         """Pull."""
+        _LOGGER.info("Git(%r).pull()", str(self.path))
         self._run(("pull",))
 
     def rebase(self):
         """Rebase."""
+        _LOGGER.info("Git(%r).rebase()", str(self.path))
         self._run(("rebase",))
 
     def add(self, paths: Tuple[Path, ...]):
         """Add."""
+        _LOGGER.info("Git(%r).add(%r)", str(self.path), paths)
         self._run(("add",), paths=paths)
 
     def reset(self, paths: Tuple[Path, ...]):
         """Reset."""
+        _LOGGER.info("Git(%r).reset(%r)", str(self.path), paths)
         self._run(("reset",), paths=paths)
 
     def commit(self, msg, paths: Optional[Tuple[Path, ...]] = None):
         """Commit."""
+        _LOGGER.info("Git(%r).commit(%r, paths=%r)", str(self.path), msg, paths)
         self._run(("commit", "-m", msg), paths=paths)
 
     def tag(self, name, msg=None):
         """Create Tag."""
+        _LOGGER.info("Git(%r).tag(%r, msg=%r)", str(self.path), name, msg)
         args = ["tag", name]
         if msg:
             args += ["-m", msg]
@@ -285,6 +308,7 @@ class Git:
 
     def status(self, branch=False) -> Generator[Status, None, None]:
         """Git Status."""
+        _LOGGER.info("Git(%r).status(branch=%r)", str(self.path), branch)
         if branch:
             lines = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
             yield BranchStatus.from_str(lines[0])
@@ -301,6 +325,7 @@ class Git:
 
     def is_clean(self):
         """Clone is clean and does not contain any changes."""
+        _LOGGER.info("Git(%r).is_clean()", str(self.path))
         status = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
         if "..." in status[0]:
             return False

@@ -270,7 +270,7 @@ def test_freeze(tmp_path, arepo):
         "===== main =====",
         "Pulling branch 'main'.",
         "===== dep1 =====",
-        "git-ws WARNING Clone dep1 has an empty revision!",
+        "git-ws WARNING Clone dep1 has no revision!",
         "Pulling branch 'main'.",
         "===== dep2 (revision='1-feature') =====",
         "Pulling branch '1-feature'.",
