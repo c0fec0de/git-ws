@@ -5,4 +5,5 @@ Usage: git-ws status [OPTIONS]
 Options:
   -P, --project DIRECTORY  Project path to operate on only. All by default.
                            This option can be specified multiple times.
+  -b, --branch             show branch information
   -h, --help               Show this message and exit.
