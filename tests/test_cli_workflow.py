@@ -345,3 +345,21 @@ def test_checkout(tmp_path, arepo):
         " M dep4/data.txt",
         "",
     ]
+
+    assert cli(("checkout", "--force")) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("status",)) == [
+        "===== main =====",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]

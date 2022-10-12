@@ -6,4 +6,5 @@ Usage: git-ws checkout [OPTIONS] [PATHS]...
   Checkout all clones to their manifest revision, if no paths are given.
 
 Options:
-  -h, --help  Show this message and exit.
+  -f, --force  Enfore operation.
+  -h, --help   Show this message and exit.

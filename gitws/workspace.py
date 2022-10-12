@@ -32,7 +32,7 @@ from ._util import resolve_relative
 from .appconfig import AppConfig, AppConfigData, AppConfigLocation
 from .const import GIT_WS_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 from .datamodel import Project
-from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError
+from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError, WorkspaceNotEmptyError
 from .types import Groups
 from .workspacefinder import find_workspace
 
@@ -156,6 +156,20 @@ class Workspace:
         return workspace
 
     @staticmethod
+    def is_init(path: Path) -> Optional[Info]:
+        """Return :any:`Info` if workspace is already initialized."""
+        infopath = path / INFO_PATH
+        if infopath.exists():
+            return Info.load(path)
+        return None
+
+    @staticmethod
+    def check_empty(path: Path, main_path: Path):
+        """Check if Workspace at `path` with `main_path` is empty."""
+        if any(item != main_path for item in path.iterdir()):
+            raise WorkspaceNotEmptyError(resolve_relative(path))
+
+    @staticmethod
     def init(
         path: Path, main_path: Path, manifest_path: Path = MANIFEST_PATH_DEFAULT, groups: Groups = None
     ) -> "Workspace":
@@ -172,23 +186,20 @@ class Workspace:
         Raises:
             OutsideWorkspaceError: `main_path` is not within `path`.
         """
-        infopath = path / INFO_PATH
-        if infopath.exists():
-            info = Info.load(path)
+        info = Workspace.is_init(path)
+        if info:
             raise InitializedError(path, info.main_path)
 
         # Normalize
-        main_path = main_path.resolve()
-        manifest_path = resolve_relative(main_path / manifest_path, base=main_path)
         try:
-            main_path = main_path.relative_to(path)
+            main_path = (path / main_path).resolve().relative_to(path.resolve())
         except ValueError:
             raise OutsideWorkspaceError(path, main_path) from None
 
         # Initialize Info
         info = Info(main_path=main_path)
         info.save(path)
-        workspace = Workspace(path, info)
+        workspace = Workspace(path.resolve(), info)
         with workspace.app_config.edit(AppConfigLocation.WORKSPACE) as config:
             config.manifest_path = str(manifest_path)
             config.groups = groups

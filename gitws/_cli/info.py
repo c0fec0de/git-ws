@@ -90,6 +90,17 @@ def dep_tree(context, manifest_path=None, dot: bool = False):
         gws = GitWS.from_path(manifest_path=manifest_path)
         deptree = gws.get_deptree()
         if dot:
-            context.echo("\n".join(DotExporter(deptree)))
+
+            def nodenamefunc(node):
+                return node.project.path
+
+            def edgeattrfunc(node, child):
+                # pylint:disable=unused-argument
+                if child.project.revision:
+                    return f'label="{child.project.revision}"'
+                return None
+
+            context.echo("\n".join(DotExporter(deptree, nodenamefunc=nodenamefunc, edgeattrfunc=edgeattrfunc)))
         else:
-            context.echo(RenderTree(deptree, style=ContStyle()).by_attr("name"))
+            for pre, _, node in RenderTree(deptree, style=ContStyle()):
+                context.echo(f"{pre}{node.project.info}")

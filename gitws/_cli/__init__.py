@@ -29,7 +29,17 @@ from .common import COLOR_INFO, Context, Error, exceptionhandling, get_loglevel,
 from .config import config
 from .info import info
 from .manifest import manifest
-from .options import force_option, groups_option, manifest_option, paths_argument, projects_option, update_option
+from .options import (
+    force_option,
+    groups_option,
+    manifest_option,
+    path_option,
+    paths_argument,
+    process_path,
+    process_paths,
+    projects_option,
+    update_option,
+)
 
 _LOGGING_FORMAT = "%(name)s %(levelname)s %(message)s"
 
@@ -53,19 +63,22 @@ def main(ctx=None, verbose=0):
 
 
 @main.command()
+@path_option()
 @manifest_option(initial=True)
 @groups_option(initial=True)
 @update_option()
+@force_option()
 @pass_context
-def init(context, manifest_path=None, groups=None, update: bool = False):
+def init(context, path=None, manifest_path=None, groups=None, update: bool = False, force: bool = False):
     """
-    Initialize Git Workspace and create all dependent git clones.
+    Initialize Git Workspace.
 
     The actual directory MUST be a valid git clone, which has been
     be either created by 'git init' or 'git clone'.
     """
     with exceptionhandling(context):
-        arepo = GitWS.init(manifest_path=manifest_path, groups=groups, echo=context.echo)
+        path = process_path(path)
+        arepo = GitWS.init(main_path=path, manifest_path=manifest_path, groups=groups, force=force, echo=context.echo)
         click.secho(f"Workspace initialized at {str(resolve_relative(arepo.path))!r}.")
         if update:
             arepo.update(skip_main=True)
@@ -90,17 +103,21 @@ def deinit(context):
 
 @main.command()
 @click.argument("url")
+@path_option()
 @manifest_option(initial=True)
 @groups_option(initial=True)
 @update_option()
 @force_option()
 @pass_context
-def clone(context, url, manifest_path=None, groups=None, update: bool = False, force: bool = False):
+def clone(context, url, path=None, manifest_path=None, groups=None, update: bool = False, force: bool = False):
     """
-    Create a git clone, initialize Git Workspace and create all dependent git clones.
+    Create a git clone and initialize Git Workspace.
     """
     with exceptionhandling(context):
-        arepo = GitWS.clone(url, manifest_path=manifest_path, groups=groups, force=force, echo=context.echo)
+        path = process_path(path)
+        arepo = GitWS.clone(
+            url, main_path=path, manifest_path=manifest_path, groups=groups, force=force, echo=context.echo
+        )
         if update:
             arepo.update(skip_main=True)
         else:
@@ -241,8 +258,9 @@ def status(context, projects=None, branch: bool = False):
 
 @main.command()
 @paths_argument()
+@force_option()
 @pass_context
-def checkout(context, paths):
+def checkout(context, paths, force: bool = False):
     """
     Run 'git checkout' on paths and choose the right git clone and manifest revision automatically.
 
@@ -250,7 +268,7 @@ def checkout(context, paths):
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.checkout([Path(path) for path in paths])
+        arepo.checkout(process_paths(paths), force=force)
 
 
 @main.command()
@@ -262,7 +280,7 @@ def add(context, paths):
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.add([Path(path) for path in paths])
+        arepo.add(process_paths(paths))
 
 
 @main.command()
@@ -274,7 +292,7 @@ def reset(context, paths):
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.reset([Path(path) for path in paths])
+        arepo.reset(process_paths(paths))
 
 
 @main.command()
@@ -289,7 +307,7 @@ def commit(context, paths, message=None):
         if not message:
             raise ValueError("Please provide a commit message.")
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.commit(message, [Path(path) for path in paths])
+        arepo.commit(message, process_paths(paths))
 
 
 @main.command()

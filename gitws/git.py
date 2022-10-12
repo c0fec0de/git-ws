@@ -255,13 +255,15 @@ class Git:
         _LOGGER.info("Git(%r).get_url() = %r", str(self.path), url)
         return url
 
-    def checkout(self, revision: Optional[str] = None, paths: Optional[Tuple[Path, ...]] = None):
+    def checkout(self, revision: Optional[str] = None, paths: Optional[Tuple[Path, ...]] = None, force: bool = False):
         """Checkout Revision."""
+        args = ["checkout"]
         if revision:
-            self._run(("checkout", revision), paths=paths)
-        else:
-            self._run(("checkout",), paths=paths)
-        _LOGGER.info("Git(%r).checkout(revision=%r, paths=%r)", str(self.path), revision, paths)
+            args.append(revision)
+        if force:
+            args.append("--force")
+        self._run(args, paths=paths)
+        _LOGGER.info("Git(%r).checkout(revision=%r, paths=%r, force=%r)", str(self.path), revision, paths, force)
 
     def fetch(self):
         """Fetch."""

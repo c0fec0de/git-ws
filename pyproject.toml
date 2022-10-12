@@ -76,6 +76,7 @@ line_length = 120
 [tool.coverage.report]
 exclude_lines = [
     'return NotImplemented',
+    'raise NotImplementedError()',
     'pragma: no cover'
 ]
 

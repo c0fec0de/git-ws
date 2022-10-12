@@ -15,6 +15,9 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Common Command Line Options."""
+from pathlib import Path
+from typing import Optional, Tuple
+
 import click
 
 from ..const import MANIFEST_PATH_DEFAULT
@@ -81,6 +84,25 @@ def output_option():
         type=click.Path(dir_okay=False),
         help="Write Manifest to file instead of STDOUT.",
     )
+
+
+def path_option():
+    """Path."""
+    return click.argument("path", nargs=-1, type=click.UNPROCESSED)
+
+
+def process_path(value) -> Optional[Path]:
+    """Process `path_option`."""
+    if value:
+        if len(value) > 1:
+            raise click.UsageError("more than one PATH specified")
+        return Path(value[0])
+    return None
+
+
+def process_paths(paths) -> Tuple[Path, ...]:
+    """Process `paths_argument`."""
+    return tuple(Path(path) for path in paths)
 
 
 def paths_argument():
