@@ -30,13 +30,7 @@ from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT
 from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
 from .deptree import Node, get_deptree
-from .exceptions import (
-    GitCloneMissingError,
-    GitCloneNotCleanError,
-    InitializedError,
-    ManifestExistError,
-    WorkspaceNotEmptyError,
-)
+from .exceptions import GitCloneMissingError, GitCloneNotCleanError, InitializedError, ManifestExistError
 from .filters import Filter, default_filter
 from .git import Git, Status
 from .iters import ManifestIter, ProjectIter
@@ -100,9 +94,11 @@ class GitWS:
             main_path:  Main Project Path.
             mainfest_path:  ManifestSpec File Path.
         """
-        manifest_path = main_path / manifest_path
-        manifest_spec = ManifestSpec.load(manifest_path)
-        workspace = Workspace.init(path, main_path, resolve_relative(manifest_path, base=main_path), groups=groups)
+        _LOGGER.debug("GitWS.create(%r, %r, %r, groups=%r)", str(path), str(main_path), str(manifest_path), groups)
+        main_path = resolve_relative(main_path, base=path)
+        manifest_path = resolve_relative(manifest_path, base=main_path)
+        manifest_spec = ManifestSpec.load(path / main_path / manifest_path)
+        workspace = Workspace.init(path, main_path, manifest_path, groups=groups)
         return GitWS(workspace, manifest_spec, echo=echo)
 
     @staticmethod
@@ -125,11 +121,10 @@ class GitWS:
         info = Workspace.is_init(path)
         if info:
             raise InitializedError(path, info.main_path)
-        if not force and any(item != main_path for item in path.iterdir()):
-            raise WorkspaceNotEmptyError(resolve_relative(path))
+        if not force:
+            Workspace.check_empty(path, main_path)
         name = main_path.name
         echo(f"===== {name} =====", fg=_COLOR_BANNER)
-        manifest_path = resolve_relative(main_path / manifest_path)
         return GitWS.create(path, main_path, manifest_path, groups, echo=echo)
 
     def deinit(self):
@@ -139,7 +134,7 @@ class GitWS:
     @staticmethod
     def clone(
         url: str,
-        path: Path = None,
+        main_path: Path = None,
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
         force: bool = False,
@@ -147,17 +142,19 @@ class GitWS:
     ) -> "GitWS":
         """Clone git `url` and initialize Workspace."""
         echo = echo or no_echo
-        path = path or Path.cwd()
-        if not force and any(path.iterdir()):
-            raise WorkspaceNotEmptyError(resolve_relative(path))
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
-        echo(f"===== {name} =====", fg=_COLOR_BANNER)
+        if main_path is None:
+            main_path = Path.cwd() / removesuffix(name, ".git")
+        main_path_rel: Path = resolve_relative(main_path)
+        path = main_path_rel.parent
+        if not force:
+            Workspace.check_empty(path, main_path_rel)
+        echo(f"===== {main_path_rel.name} =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        main_path = path / removesuffix(name, ".git")
-        git = Git(main_path)
+        git = Git(main_path_rel)
         git.clone(url)
-        return GitWS.create(path, main_path, manifest_path, groups, echo=echo)
+        return GitWS.create(path, main_path_rel, manifest_path, groups, echo=echo)
 
     def update(
         self,
@@ -452,8 +449,8 @@ class GitWS:
     def _create_project_paths_filter(self, project_paths):
         workspace_path = self.workspace.path
         if project_paths:
-            project_paths = [resolve_relative(workspace_path / path, base=workspace_path) for path in project_paths]
-            return lambda project: resolve_relative(workspace_path / project.path, base=workspace_path) in project_paths
+            project_paths = [resolve_relative(path, base=workspace_path) for path in project_paths]
+            return lambda project: resolve_relative(project.path, base=workspace_path) in project_paths
         return default_filter
 
     def create_groups_filter(self, groups=None):

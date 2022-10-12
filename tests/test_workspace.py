@@ -19,7 +19,7 @@ from pathlib import Path
 
 from pytest import raises
 
-from gitws import OutsideWorkspaceError, UninitializedError
+from gitws import InitializedError, OutsideWorkspaceError, UninitializedError
 from gitws.const import CONFIG_PATH, INFO_PATH
 from gitws.workspace import Info, Workspace
 
@@ -63,6 +63,9 @@ def test_init(tmp_path):
             'manifest_path = "resolved.toml"',
             "",
         ]
+
+        with raises(InitializedError):
+            Workspace.init(tmp_path, main_path, manifest_path=Path("resolved.toml"))
 
 
 def test_outside(tmp_path):

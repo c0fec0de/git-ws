@@ -1,6 +1,6 @@
-Usage: git-ws init [OPTIONS]
+Usage: git-ws init [OPTIONS] [PATH]...
 
-  Initialize Git Workspace and create all dependent git clones.
+  Initialize Git Workspace.
 
   The actual directory MUST be a valid git clone, which has been be either
   created by 'git init' or 'git clone'.

@@ -49,6 +49,7 @@ def test_cli_git(tmp_path):
     with chdir(main_path):
         run(("git", "init"), check=True)
         assert (main_path / ".git").exists()
+        assert not (tmp_path / ".git-ws").exists()
 
         assert cli(["init"], exit_code=1) == [
             "===== main =====",
@@ -58,6 +59,8 @@ def test_cli_git(tmp_path):
             "",
             "",
         ]
+
+        assert not (tmp_path / ".git-ws").exists()
 
         assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
 
@@ -78,6 +81,30 @@ def test_cli_git(tmp_path):
             "Error: git workspace has already been initialized at 'TMP' with main repo at 'main'.",
             "",
         ]
+
+
+def test_cli_git_path(tmp_path):
+    """Init with GIT repo."""
+    main_path = tmp_path / "main"
+    main_path.mkdir(parents=True)
+    with chdir(main_path):
+        run(("git", "init"), check=True)
+        assert (main_path / ".git").exists()
+        assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
+
+    with chdir(tmp_path):
+        assert cli(["init", "main", "add"], exit_code=1) == ["Error: more than one PATH specified", ""]
+
+        assert cli(["init", "main"]) == [
+            "===== main =====",
+            "Workspace initialized at '.'.",
+            "Please continue with:",
+            "",
+            "    git ws update",
+            "",
+            "",
+        ]
+        assert cli(["update"]) == []
 
 
 def test_cli_init_exists(tmp_path):
@@ -165,4 +192,5 @@ def test_git(tmp_path):
             GitWS.init()
 
         rrepo = GitWS.from_path()
+        assert rrepo.path == tmp_path
         assert arepo == rrepo

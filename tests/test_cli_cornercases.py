@@ -100,10 +100,10 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         check(workspace, "dep3")
 
     assert format_logs(caplog, tmp_path) == [
-        "INFO    git-ws Git('TMP/workspace/top').clone('TMP/repos/top', revision=None)",
-        "DEBUG   git-ws run(('git', 'clone', '--', 'TMP/repos/top', "
-        "'TMP/workspace/top'), cwd='None') OK stdout=None stderr=None",
-        "INFO    git-ws Initialized TMP/workspace Info(main_path=PosixPath('top')) "
+        "INFO    git-ws Git('top').clone('TMP/repos/top', revision=None)",
+        "DEBUG   git-ws run(('git', 'clone', '--', 'TMP/repos/top', 'top'), cwd='None') OK stdout=None stderr=None",
+        "DEBUG   git-ws GitWS.create('.', 'top', 'git-ws.toml', groups=None)",
+        "INFO    git-ws Initialized . Info(main_path=PosixPath('top')) "
         "AppConfigData(manifest_path='git-ws.toml', color_ui=True, groups=None)",
         "DEBUG   git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='top') OK "
         "stdout=b'TMP/repos/top\\n' stderr=b''",

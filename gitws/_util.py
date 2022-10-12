@@ -51,20 +51,17 @@ def resolve_relative(path: Path, base: Optional[Path] = None):
     :param path (Path): Path
     :param base (Path): Base Path. Current Working Directory by default.
     """
-    if not base:
-        base = Path.cwd()
-    path = base / path
-    path = path.resolve()
+    base = (base or Path.cwd()).resolve()
+    path = (base / path).resolve()
     try:
         return path.relative_to(base)
     except ValueError:
         # Try to determine a relative path, which is save
-        abspath = path.resolve()
         relpath = Path(os.path.relpath(path, start=base))
-        resolvedpath = (base / relpath).resolve()
-        if abspath == (resolvedpath):
+        abspath = (base / relpath).resolve()
+        if path == abspath:
             return relpath
-        return abspath
+        return path
 
 
 def get_repr(obj=None, args=None, kwargs=None):

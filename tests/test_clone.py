@@ -57,6 +57,51 @@ def test_cli_clone(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
 
+def test_cli_clone_path(tmp_path, repos):
+    """Cloning via CLI."""
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+
+    with chdir(workspace):
+        assert cli(["clone", str(repos / "main"), "main2"]) == [
+            "===== main2 =====",
+            f"Cloning '{tmp_path}/repos/main'.",
+            "Workspace initialized at '.'. Please continue with:",
+            "",
+            "    git ws update",
+            "",
+            "",
+        ]
+
+        check(workspace, "main", exists=False)
+        check(workspace, "main2", content="main")
+        check(workspace, "dep1", exists=False)
+        check(workspace, "dep2", exists=False)
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4", exists=False)
+        check(workspace, "dep5", exists=False)
+
+        assert cli(["checkout"], tmp_path=tmp_path) == [
+            "===== main2 =====",
+            "===== dep1 =====",
+            "Cloning 'TMP/repos/dep1'.",
+            "git-ws WARNING Clone dep1 has no revision!",
+            "===== dep2 (revision='1-feature') =====",
+            "Cloning 'TMP/repos/dep2'.",
+            "===== dep4 (revision='main') =====",
+            "Cloning 'TMP/repos/dep4'.",
+            "",
+        ]
+
+        check(workspace, "main", exists=False)
+        check(workspace, "main2", content="main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
+
+
 def test_cli_clone_not_empty(tmp_path, repos):
     """Cloning via CLI not empty."""
     workspace = tmp_path / "workspace"
@@ -224,6 +269,7 @@ def test_clone(tmp_path, repos):
     with chdir(workspace):
         main_path = repos / "main"
         arepo = GitWS.clone(str(main_path))
+        assert arepo.path == workspace
         arepo.update()
         assert arepo.get_manifest().path == str(workspace / "main" / "git-ws.toml")
 
@@ -350,6 +396,7 @@ def test_clone_other(tmp_path, repos):
     with chdir(workspace):
         main_path = repos / "main"
         arepo = GitWS.clone(str(main_path), manifest_path="other.toml")
+        assert arepo.path == workspace
         arepo.update()
         assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
 
