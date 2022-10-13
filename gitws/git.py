@@ -299,6 +299,21 @@ class Git:
         _LOGGER.info("Git(%r).add(%r)", str(self.path), paths)
         self._run(("add",), paths=paths)
 
+    # pylint: disable=invalid-name
+    def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
+        """rm."""
+        _LOGGER.info(
+            "Git(%r).rm(%r, cached=%r, force=%r, recursive=%r)", str(self.path), paths, cached, force, recursive
+        )
+        args = ["rm"]
+        if cached:
+            args.append("--cached")
+        if force:
+            args.append("--force")
+        if recursive:
+            args.append("-r")
+        self._run(args, paths=paths)
+
     def reset(self, paths: Tuple[Path, ...]):
         """Reset."""
         _LOGGER.info("Git(%r).reset(%r)", str(self.path), paths)

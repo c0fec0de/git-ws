@@ -285,6 +285,22 @@ def add(context, paths):
         arepo.add(process_paths(paths))
 
 
+# pylint: disable=invalid-name
+@main.command()
+@paths_argument()
+@force_option()
+@click.option("--cached", "cached", is_flag=True, help="only remove from index")
+@click.option("-r", "recursive", is_flag=True, help="allow recursive removal")
+@pass_context
+def rm(context, paths, force=False, cached=False, recursive=False):
+    """
+    Run 'git rm' on paths and choose the right git clone automatically.
+    """
+    with exceptionhandling(context):
+        arepo = GitWS.from_path(echo=context.echo)
+        arepo.rm(process_paths(paths), force=force, cached=cached, recursive=recursive)
+
+
 @main.command()
 @paths_argument()
 @pass_context

@@ -263,6 +263,36 @@ def test_workflow(tmp_path, arepo):
 
     assert cli(("commit", "-m", "files", "--all")) == [""]
 
+    assert cli(("status",)) == [
+        "===== main (MAIN) =====",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("rm", "dep2/barbar.txt", "dep4/foo.txt"), exit_code=1) == [
+        "Error: Command '['git', 'rm', '--', 'barbar.txt']' returned non-zero exit status 128.",
+        "",
+    ]
+
+    assert cli(("rm", "dep4/foo.txt")) == [""]
+
+    assert cli(("status",)) == [
+        "===== main (MAIN) =====",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        "D  dep4/foo.txt",
+        "",
+    ]
+
+    assert cli(("rm", "dep1/foo.txt", "--force", "--cached", "-r")) == [""]
+
 
 def test_checkout_file(tmp_path, arepo):
     """Checkout files."""

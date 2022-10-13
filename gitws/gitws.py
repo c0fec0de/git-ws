@@ -279,9 +279,20 @@ class GitWS:
 
     def add(self, paths: Tuple[Path, ...]):
         """Add."""
+        if not paths:
+            raise ValueError("Nothing specified, nothing added.")
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             if cpaths:
                 clone.git.add(cpaths)
+
+    # pylint: disable=invalid-name
+    def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
+        """rm."""
+        if not paths:
+            raise ValueError("Nothing specified, nothing removed.")
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            if cpaths:
+                clone.git.rm(cpaths, cached=cached, force=force, recursive=recursive)
 
     def reset(self, paths: Tuple[Path, ...]):
         """Reset."""
