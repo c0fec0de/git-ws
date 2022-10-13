@@ -75,6 +75,12 @@ Initial clone/init filter settings by default.
     return click.option("--groups", "-G", "groups", help=help_)
 
 
+def reverse_option():
+    """Reverse Option."""
+    help_ = "Operate in Reverse Order. Start with last dependency instead of main repository."
+    return click.option("--reverse", "-R", "reverse", is_flag=True, help=help_)
+
+
 def output_option():
     """Manifest Output Option."""
     return click.option(

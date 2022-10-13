@@ -22,7 +22,7 @@ Commands:
   init      Initialize Git Workspace.
   manifest  Manifest Information.
   pull      Run 'git pull' on projects.
-  push      Run 'git push' on projects.
+  push      Run 'git push' on projects (in reverse order).
   rebase    Run 'git rebase' on projects.
   reset     Run 'git reset' on paths and choose the right git clone...
   status    Run 'git status' (displayed paths include the actual clone...

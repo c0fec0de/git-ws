@@ -303,9 +303,13 @@ class GitWS:
                 self._echo_project_banner(clone.project)
                 clone.git.commit(msg)
 
-    def run_foreach(self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None):
+    def run_foreach(
+        self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None, reverse: bool = False
+    ):
         """Run `command` on each project."""
-        for clone in self.foreach(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
+        for clone in self.foreach(
+            project_paths=project_paths, manifest_path=manifest_path, groups=groups, reverse=reverse
+        ):
             if not clone.git.is_cloned():
                 raise GitCloneMissingError(clone.git.path)
             run(command, cwd=clone.git.path)
@@ -316,6 +320,7 @@ class GitWS:
         manifest_path: Path = None,
         groups: Groups = None,
         resolve_url: bool = False,
+        reverse: bool = False,
     ) -> Generator[Clone, None, None]:
         """User Level Clone Iteration."""
         for clone in self._foreach(
@@ -323,6 +328,7 @@ class GitWS:
             manifest_path=manifest_path,
             groups=groups,
             resolve_url=resolve_url,
+            reverse=reverse,
         ):
             self._check_clone(clone)
             yield clone
@@ -334,14 +340,16 @@ class GitWS:
         groups: Groups = None,
         skip_main: bool = False,
         resolve_url: bool = False,
+        reverse: bool = False,
     ) -> Generator[Clone, None, None]:
         """User Level Clone Iteration."""
         project_paths_filter = self._create_project_paths_filter(project_paths)
         groups = self.workspace.get_groups(groups=groups)
         filter_ = self.create_groups_filter(groups=groups)
+        clones = self.clones(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url, reverse=reverse)
         if groups:
             self.echo(f"Groups: {groups!r}", bold=True)
-        for clone in self.clones(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url):
+        for clone in clones:
             project = clone.project
             if project_paths_filter(project):
                 self._echo_project_banner(project)
@@ -370,10 +378,14 @@ class GitWS:
         filter_: ProjectFilter = None,
         skip_main: bool = False,
         resolve_url: bool = False,
+        reverse: bool = False,
     ) -> Generator[Clone, None, None]:
         """Iterate over Clones."""
         workspace = self.workspace
-        for project in self.projects(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url):
+        projects = self.projects(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url)
+        if reverse:
+            projects = reversed(tuple(projects))  # type: ignore
+        for project in projects:
             clone = Clone.from_project(workspace, project)
             yield clone
 

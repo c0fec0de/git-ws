@@ -11,4 +11,6 @@ Options:
                            default.
   -G, --groups TEXT        Group Filtering. TODO: more details. Initial
                            clone/init filter settings by default.
+  -R, --reverse            Operate in Reverse Order. Start with last
+                           dependency instead of main repository.
   -h, --help               Show this message and exit.

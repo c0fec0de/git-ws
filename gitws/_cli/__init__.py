@@ -38,6 +38,7 @@ from .options import (
     process_path,
     process_paths,
     projects_option,
+    reverse_option,
     update_option,
 )
 
@@ -165,9 +166,10 @@ def update(
 @projects_option()
 @manifest_option()
 @groups_option()
+@reverse_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 @pass_context
-def git(context, command, projects=None, manifest_path=None, groups=None):
+def git(context, command, projects=None, manifest_path=None, groups=None, reverse=False):
     """
     Run git command on projects.
 
@@ -175,7 +177,7 @@ def git(context, command, projects=None, manifest_path=None, groups=None):
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
-        arepo.run_foreach(("git",) + command, project_paths=projects, groups=groups)
+        arepo.run_foreach(("git",) + command, project_paths=projects, groups=groups, reverse=reverse)
 
 
 @main.command()
@@ -217,13 +219,13 @@ def pull(context, projects=None, manifest_path=None, groups=None):
 @pass_context
 def push(context, projects=None, manifest_path=None, groups=None):
     """
-    Run 'git push' on projects.
+    Run 'git push' on projects (in reverse order).
 
-    This command behaves identical to `git ws foreach -- git push`.
+    This command behaves identical to `git ws foreach --reverse -- git push`.
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
-        arepo.run_foreach(("git", "push"), project_paths=projects, groups=groups)
+        arepo.run_foreach(("git", "push"), project_paths=projects, groups=groups, reverse=True)
 
 
 @main.command()
@@ -330,9 +332,10 @@ def diff(context, projects=None, manifest_path=None, groups=None):
 @projects_option()
 @manifest_option()
 @groups_option()
+@reverse_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 @pass_context
-def foreach(context, command, projects=None, manifest_path=None, groups=None):
+def foreach(context, command, projects=None, manifest_path=None, groups=None, reverse=False):
     """
     Run 'command' on projects.
 
@@ -341,7 +344,7 @@ def foreach(context, command, projects=None, manifest_path=None, groups=None):
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
-        arepo.run_foreach(command, project_paths=projects, groups=groups)
+        arepo.run_foreach(command, project_paths=projects, groups=groups, reverse=reverse)
 
 
 main.add_command(config)

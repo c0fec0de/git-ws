@@ -39,29 +39,37 @@ def arepo(tmp_path, repos):
         yield arepo
 
 
-def test_pull(tmp_path, arepo, caplog):
+def test_pull(tmp_path, arepo):
     """Test pull."""
-    _test_foreach(tmp_path, arepo, caplog, "pull")
+    _test_foreach(tmp_path, arepo, "pull")
 
 
-def test_push(tmp_path, arepo, caplog):
+def test_push(tmp_path, arepo):
     """Test push."""
-    _test_foreach(tmp_path, arepo, caplog, "push")
+    # pylint: disable=unused-argument
+    assert cli(("push",)) == [
+        "===== dep4 (revision='main') =====",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== main =====",
+        "",
+    ]
 
 
-def test_fetch(tmp_path, arepo, caplog):
+def test_fetch(tmp_path, arepo):
     """Test fetch."""
-    _test_foreach(tmp_path, arepo, caplog, "fetch")
+    _test_foreach(tmp_path, arepo, "fetch")
 
 
-def test_rebase(tmp_path, arepo, caplog):
+def test_rebase(tmp_path, arepo):
     """Test rebase."""
-    _test_foreach(tmp_path, arepo, caplog, "rebase")
+    _test_foreach(tmp_path, arepo, "rebase")
 
 
-def test_diff(tmp_path, arepo, caplog):
+def test_diff(tmp_path, arepo):
     """Test diff."""
-    _test_foreach(tmp_path, arepo, caplog, "diff")
+    _test_foreach(tmp_path, arepo, "diff")
 
 
 def test_deinit(tmp_path, arepo):
@@ -206,7 +214,7 @@ def test_outside(tmp_path, arepo):
         ]
 
 
-def _test_foreach(tmp_path, arepo, caplog, *command):
+def _test_foreach(tmp_path, arepo, *command):
     # pylint: disable=unused-argument
     assert cli(command) == [
         "===== main =====",
