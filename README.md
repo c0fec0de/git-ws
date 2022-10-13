@@ -182,6 +182,7 @@ And that's what we did - Git Workspace is a our tool for managing a large worksp
 | Freezing Configurations   | ✅               | ✅     | ✅     | ✅          | ✅        |
 | Transitive Dependencies   | ➖               | ➖     | ✅     | ➖          | ✅        |
 | Relative Dependency Paths | ✅               | ✅     | ➖     | ➖          | ✅        |
+| Branches as dependencies  | ➖               | ✅     | ✅     | ➖          | ✅        |
 
 👉 Please note that our view on the various features might be biased. As we did, always look at all the options available to you before deciding for one tool or the other. While the other tools in comparison did not model what we needed for our workflow, they might just be what you are looking for.
 
