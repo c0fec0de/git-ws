@@ -65,12 +65,12 @@ class Status(BaseModel):
     def has_work_changes(self) -> Optional[bool]:
         """Has Work Changes."""
         # pylint: disable=no-self-use
-        return None
+        return None  # pragma: no cover
 
     def has_index_changes(self) -> Optional[bool]:
         """Has Index Changes."""
         # pylint: disable=no-self-use
-        return None
+        return None  # pragma: no cover
 
     def has_changes(self) -> Optional[bool]:
         """Has Changes."""
