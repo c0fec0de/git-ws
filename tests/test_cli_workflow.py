@@ -236,6 +236,33 @@ def test_workflow(tmp_path, arepo):
         "",
     ]
 
+    (dep4 / "foo.txt").write_text("content")
+
+    assert cli(("status",)) == [
+        "===== main (MAIN) =====",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        " M dep4/foo.txt",
+        "",
+    ]
+
+    assert cli(("commit", "-m", "files", "--all")) == ["===== dep4 (revision='main') =====", ""]
+
+    assert cli(("status",)) == [
+        "===== main (MAIN) =====",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 (revision='1-feature') =====",
+        "?? dep2/barbar.txt",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+
+    assert cli(("commit", "-m", "files", "--all")) == [""]
+
 
 def test_checkout_file(tmp_path, arepo):
     """Checkout files."""

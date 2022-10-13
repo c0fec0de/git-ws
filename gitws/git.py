@@ -62,9 +62,19 @@ class Status(BaseModel):
         """Return :any:`Status` with `path`."""
         raise NotImplementedError()
 
-    def has_index_changes(self) -> bool:
+    def has_work_changes(self) -> Optional[bool]:
+        """Has Work Changes."""
+        # pylint: disable=no-self-use
+        return None
+
+    def has_index_changes(self) -> Optional[bool]:
         """Has Index Changes."""
-        raise NotImplementedError()
+        # pylint: disable=no-self-use
+        return None
+
+    def has_changes(self) -> Optional[bool]:
+        """Has Changes."""
+        return self.has_index_changes() or self.has_work_changes()
 
 
 class FileStatus(Status):
@@ -119,6 +129,10 @@ class FileStatus(Status):
             return self.update(path=path / self.path, orig_path=path / self.orig_path)
         return self.update(path=path / self.path)
 
+    def has_work_changes(self) -> bool:
+        """Has Work Changes."""
+        return self.work not in (State.UNMODIFIED, State.IGNORED, State.UNTRACKED)
+
     def has_index_changes(self) -> bool:
         """Has Index Changes."""
         return self.index not in (State.UNMODIFIED, State.IGNORED, State.UNTRACKED)
@@ -143,11 +157,6 @@ class BranchStatus(Status):
         """Return :any:`BranchStatus` with `path`."""
         # pylint: disable=unused-argument
         return self
-
-    def has_index_changes(self):
-        """Has Index Changes."""
-        # pylint: disable=no-self-use
-        return None
 
 
 class Git:
@@ -295,10 +304,13 @@ class Git:
         _LOGGER.info("Git(%r).reset(%r)", str(self.path), paths)
         self._run(("reset",), paths=paths)
 
-    def commit(self, msg, paths: Optional[Tuple[Path, ...]] = None):
+    def commit(self, msg, paths: Optional[Tuple[Path, ...]] = None, all_: bool = False):
         """Commit."""
-        _LOGGER.info("Git(%r).commit(%r, paths=%r)", str(self.path), msg, paths)
-        self._run(("commit", "-m", msg), paths=paths)
+        _LOGGER.info("Git(%r).commit(%r, paths=%r, all_=%r)", str(self.path), msg, paths, all_)
+        args = ["commit", "-m", msg]
+        if all_:
+            args.append("--all")
+        self._run(args, paths=paths)
 
     def tag(self, name, msg=None):
         """Create Tag."""
@@ -324,6 +336,14 @@ class Git:
     def has_index_changes(self) -> bool:
         """Let you know if index has changes."""
         return any(status.has_index_changes() for status in self.status())
+
+    def has_work_changes(self) -> bool:
+        """Let you know if work has changes."""
+        return any(status.has_work_changes() for status in self.status())
+
+    def has_changes(self) -> bool:
+        """Let you know if work has changes."""
+        return any(status.has_changes() for status in self.status())
 
     def is_clean(self):
         """Clone is clean and does not contain any changes."""

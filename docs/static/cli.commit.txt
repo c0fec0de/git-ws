@@ -4,4 +4,5 @@ Usage: git-ws commit [OPTIONS] [PATHS]...
 
 Options:
   -m, --message TEXT  commit message
+  -a, --all           commit all changed files
   -h, --help          Show this message and exit.

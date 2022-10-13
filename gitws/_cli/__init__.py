@@ -299,9 +299,10 @@ def reset(context, paths):
 
 @main.command()
 @click.option("--message", "-m", help="commit message")
+@click.option("--all", "-a", "all_", is_flag=True, help="commit all changed files")
 @paths_argument()
 @pass_context
-def commit(context, paths, message=None):
+def commit(context, paths, message=None, all_=False):
     """
     Run 'git commit' on paths and choose the right git clone automatically.
     """
@@ -309,7 +310,7 @@ def commit(context, paths, message=None):
         if not message:
             raise ValueError("Please provide a commit message.")
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.commit(message, process_paths(paths))
+        arepo.commit(message, process_paths(paths), all_=all_)
 
 
 @main.command()

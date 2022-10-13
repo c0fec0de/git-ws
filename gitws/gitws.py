@@ -289,20 +289,23 @@ class GitWS:
             if cpaths:
                 clone.git.reset(cpaths)
 
-    def commit(self, msg: str, paths: Tuple[Path, ...]):
+    def commit(self, msg: str, paths: Tuple[Path, ...], all_: bool = False):
         """Commit."""
         if paths:
             # clone file specific commit
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
                 if cpaths:
                     self._echo_project_banner(clone.project)
-                    clone.git.commit(msg, paths=cpaths)
+                    clone.git.commit(msg, paths=cpaths, all_=all_)
         else:
             # commit changed clones
-            clones = [clone for clone in self.clones() if clone.git.has_index_changes()]
+            if all_:
+                clones = [clone for clone in self.clones() if clone.git.has_changes()]
+            else:
+                clones = [clone for clone in self.clones() if clone.git.has_index_changes()]
             for clone in clones:
                 self._echo_project_banner(clone.project)
-                clone.git.commit(msg)
+                clone.git.commit(msg, all_=all_)
 
     def run_foreach(
         self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None, reverse: bool = False
