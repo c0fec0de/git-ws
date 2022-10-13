@@ -18,10 +18,10 @@
 
 import click
 from anytree import ContStyle, RenderTree
-from anytree.exporter import DotExporter
 
 from gitws import GitWS
 
+from ..deptree import DepDotExporter
 from .common import exceptionhandling, pass_context
 from .options import groups_option, manifest_option
 
@@ -90,17 +90,8 @@ def dep_tree(context, manifest_path=None, dot: bool = False):
         gws = GitWS.from_path(manifest_path=manifest_path)
         deptree = gws.get_deptree()
         if dot:
-
-            def nodenamefunc(node):
-                return node.project.path
-
-            def edgeattrfunc(node, child):
-                # pylint:disable=unused-argument
-                if child.project.revision:
-                    return f'label="{child.project.revision}"'
-                return None
-
-            context.echo("\n".join(DotExporter(deptree, nodenamefunc=nodenamefunc, edgeattrfunc=edgeattrfunc)))
+            context.echo("\n".join(DepDotExporter(deptree)))
         else:
             for pre, _, node in RenderTree(deptree, style=ContStyle()):
-                context.echo(f"{pre}{node.project.info}")
+                info = " [PRIMARY]" if node.is_primary else ""
+                context.echo(f"{pre}{node.project.info}{info}")

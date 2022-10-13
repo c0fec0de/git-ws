@@ -38,6 +38,7 @@ gen:
 	git-ws foreach --help > static/cli.foreach.txt
 	git-ws git --help > static/cli.git.txt
 	git-ws info --help > static/cli.info.txt
+	git-ws info dep-tree --help > static/cli.info.dep-tree.txt
 	git-ws init --help > static/cli.init.txt
 	git-ws manifest --help > static/cli.manifest.txt
 	git-ws manifest create --help > static/cli.manifest.create.txt

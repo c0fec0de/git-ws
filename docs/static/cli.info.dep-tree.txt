@@ -1,0 +1,13 @@
+Usage: git-ws info dep-tree [OPTIONS]
+
+  Print Dependency Tree.
+
+  The standard output on '--dot' can be directly forwarded to `graphviz`'s
+  tool `dot`. Example:
+
+  $ git ws info dep-tree --dot | dot -Tpng > dep-tree.png
+
+Options:
+  -M, --manifest FILE  Manifest file. Initial clone/init settings by default.
+  -d, --dot            Export DOT Format to be forwarded to graphviz.
+  -h, --help           Show this message and exit.
