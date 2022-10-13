@@ -95,8 +95,9 @@ class GitWS:
             mainfest_path:  ManifestSpec File Path.
         """
         _LOGGER.debug("GitWS.create(%r, %r, %r, groups=%r)", str(path), str(main_path), str(manifest_path), groups)
-        main_path = resolve_relative(main_path, base=path)
+        # We need to resolve in inverted order, otherwise the manifest_path is broken
         manifest_path = resolve_relative(manifest_path, base=main_path)
+        main_path = resolve_relative(main_path, base=path)
         manifest_spec = ManifestSpec.load(path / main_path / manifest_path)
         workspace = Workspace.init(path, main_path, manifest_path, groups=groups)
         return GitWS(workspace, manifest_spec, echo=echo)

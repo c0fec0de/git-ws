@@ -83,6 +83,32 @@ def test_cli_git(tmp_path):
         ]
 
 
+def test_cli_abs_manifest(tmp_path):
+    """Init with GIT repo."""
+    main_path = tmp_path / "main"
+    main_path.mkdir(parents=True)
+    with chdir(main_path):
+        run(("git", "init"), check=True)
+        assert (main_path / ".git").exists()
+        assert not (tmp_path / ".git-ws").exists()
+        assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
+
+        assert cli(["init", "-M", str(main_path / "git-ws.toml")]) == [
+            "===== main (MAIN) =====",
+            "Workspace initialized at '..'.",
+            "Please continue with:",
+            "",
+            "    git ws update",
+            "",
+            "",
+        ]
+
+        assert cli(["init"], tmp_path=tmp_path, exit_code=1) == [
+            "Error: git workspace has already been initialized at 'TMP' with main repo at 'main'.",
+            "",
+        ]
+
+
 def test_cli_git_path(tmp_path):
     """Init with GIT repo."""
     main_path = tmp_path / "main"
