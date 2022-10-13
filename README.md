@@ -153,7 +153,7 @@ git ws update --rebase
 | `git ws info project-paths`  | Print Paths to all git clones. |
 | `git ws info workspace-path` | Print Path to Workspace. |
 | `git ws info dep-tree` | Print Dependency Tree. |
-| `git ws info dep-tree --dot | dot -Tpng > dep-tree.png` | Draw Dependency Diagramm (needs [graphviz](https://graphviz.org)) |
+| `git ws info dep-tree --dot \| dot -Tpng > dep-tree.png` | Draw Dependency Diagramm (needs [graphviz](https://graphviz.org)) |
 
 
 ## 🐍 Python API
