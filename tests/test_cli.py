@@ -52,7 +52,7 @@ def test_push(tmp_path, arepo):
         "===== dep2 (revision='1-feature') =====",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "===== main =====",
+        "===== main (MAIN) =====",
         "",
     ]
 
@@ -97,7 +97,7 @@ def test_git(tmp_path, arepo):
     """Test git."""
     # pylint: disable=unused-argument
     assert cli(["git", "status"]) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
@@ -106,7 +106,7 @@ def test_git(tmp_path, arepo):
     ]
 
     assert cli(["git", "status", "-P", "dep2", "-P", "./dep4"]) == [
-        "===== SKIPPING main =====",
+        "===== SKIPPING main (MAIN) =====",
         "===== SKIPPING dep1 =====",
         "===== dep2 (revision='1-feature') =====",
         "===== dep4 (revision='main') =====",
@@ -118,7 +118,7 @@ def test_foreach(tmp_path, arepo, caplog):
     """Test foreach."""
     # pylint: disable=unused-argument
     assert cli(["foreach", "git", "status"]) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
@@ -175,7 +175,7 @@ def test_foreach_missing(tmp_path, arepo, caplog):
     # pylint: disable=unused-argument
     rmtree(tmp_path / "workspace" / "dep2")
     assert cli(["foreach", "git", "status"], exit_code=1) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
@@ -191,7 +191,7 @@ def test_foreach_fail(tmp_path, arepo):
     """Test foreach failing."""
     # pylint: disable=unused-argument
     assert cli(["foreach", "--", "git", "status", "--invalidoption"], exit_code=1) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Error: Command '('git', 'status', '--invalidoption')' returned non-zero exit status 129.",
         "",
     ]
@@ -217,7 +217,7 @@ def test_outside(tmp_path, arepo):
 def _test_foreach(tmp_path, arepo, *command):
     # pylint: disable=unused-argument
     assert cli(command) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",
@@ -231,7 +231,7 @@ def test_git_no_color(tmp_path, arepo, caplog):
     # pylint: disable=unused-argument
     assert cli(["config", "set", "color_ui", "False"]) == [""]
     assert cli(["git", "status"]) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",

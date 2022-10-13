@@ -124,7 +124,7 @@ class GitWS:
         if not force:
             Workspace.check_empty(path, main_path)
         name = main_path.name
-        echo(f"===== {name} =====", fg=_COLOR_BANNER)
+        echo(f"===== {name} (MAIN) =====", fg=_COLOR_BANNER)
         return GitWS.create(path, main_path, manifest_path, groups, echo=echo)
 
     def deinit(self):
@@ -150,7 +150,7 @@ class GitWS:
         path = main_path_rel.parent
         if not force:
             Workspace.check_empty(path, main_path_rel)
-        echo(f"===== {main_path_rel.name} =====", fg=_COLOR_BANNER)
+        echo(f"===== {main_path_rel.name} (MAIN) =====", fg=_COLOR_BANNER)
         echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
         git = Git(main_path_rel)
         git.clone(url)

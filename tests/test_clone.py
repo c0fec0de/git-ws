@@ -40,7 +40,7 @@ def test_cli_clone(tmp_path, repos):
 
     with chdir(workspace):
         assert cli(["clone", str(repos / "main")]) == [
-            "===== main =====",
+            "===== main (MAIN) =====",
             f"Cloning '{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
@@ -64,7 +64,7 @@ def test_cli_clone_path(tmp_path, repos):
 
     with chdir(workspace):
         assert cli(["clone", str(repos / "main"), "main2"]) == [
-            "===== main2 =====",
+            "===== main2 (MAIN) =====",
             f"Cloning '{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
@@ -82,7 +82,7 @@ def test_cli_clone_path(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         assert cli(["checkout"], tmp_path=tmp_path) == [
-            "===== main2 =====",
+            "===== main2 (MAIN) =====",
             "===== dep1 =====",
             "Cloning 'TMP/repos/dep1'.",
             "git-ws WARNING Clone dep1 has no revision!",
@@ -125,7 +125,7 @@ def test_cli_clone_not_empty(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         assert cli(["clone", str(repos / "main"), "--force"], tmp_path=tmp_path) == [
-            "===== main =====",
+            "===== main (MAIN) =====",
             "Cloning 'TMP/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
@@ -149,7 +149,7 @@ def test_cli_clone_update(tmp_path, repos):
 
     with chdir(workspace):
         assert cli(["clone", str(repos / "main"), "--update"]) == [
-            "===== main =====",
+            "===== main (MAIN) =====",
             f"Cloning '{tmp_path}/repos/main'.",
             "===== dep1 =====",
             "git-ws WARNING Clone dep1 has no revision!",
@@ -176,7 +176,7 @@ def test_cli_clone_checkout(tmp_path, repos):
 
     with chdir(workspace):
         assert cli(["clone", str(repos / "main")]) == [
-            "===== main =====",
+            "===== main (MAIN) =====",
             f"Cloning '{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
@@ -194,7 +194,7 @@ def test_cli_clone_checkout(tmp_path, repos):
 
     with chdir(workspace / "main"):
         assert cli(["checkout"], tmp_path=tmp_path) == [
-            "===== main =====",
+            "===== main (MAIN) =====",
             "===== dep1 =====",
             "Cloning 'TMP/repos/dep1'.",
             "git-ws WARNING Clone dep1 has no revision!",
@@ -220,7 +220,7 @@ def test_cli_clone_groups(tmp_path, repos):
 
     with chdir(workspace):
         assert cli(["clone", str(repos / "main"), "-G", "+test"]) == [
-            "===== main =====",
+            "===== main (MAIN) =====",
             "Cloning " f"'{tmp_path}/repos/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
@@ -238,7 +238,7 @@ def test_cli_clone_groups(tmp_path, repos):
 
         assert cli(["update"]) == [
             "Groups: '+test'",
-            "===== main =====",
+            "===== main (MAIN) =====",
             "Pulling branch 'main'.",
             "===== dep1 =====",
             "git-ws WARNING Clone dep1 has no revision!",
@@ -425,7 +425,7 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         assert cli(("update",)) == [
-            "===== main =====",
+            "===== main (MAIN) =====",
             "Pulling branch 'main'.",
             "===== dep1 (revision='main') =====",
             "Pulling branch 'main'.",
@@ -451,7 +451,7 @@ def test_clone_other(tmp_path, repos):
         (workspace / "dep5").touch()
 
         assert cli(("update", "--prune"), exit_code=1) == [
-            "===== main =====",
+            "===== main (MAIN) =====",
             "Pulling branch 'main'.",
             "===== dep1 (revision='main') =====",
             "Pulling branch 'main'.",
@@ -476,7 +476,7 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         assert cli(("update", "--prune", "--force")) == [
-            "===== main =====",
+            "===== main (MAIN) =====",
             "Pulling branch 'main'.",
             "===== dep1 (revision='main') =====",
             "Pulling branch 'main'.",

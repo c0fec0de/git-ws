@@ -267,7 +267,7 @@ def test_freeze(tmp_path, arepo):
 
     assert cli(["update", "-G", "+test"], tmp_path=tmp_path) == [
         "Groups: '+test'",
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Pulling branch 'main'.",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -300,7 +300,7 @@ def test_freeze(tmp_path, arepo):
     assert output_path.read_text().split("\n") == lines
 
     assert cli(["update", "--manifest", str(output_path)]) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Pulling branch 'main'.",
         f"===== dep1 (revision={sha1!r}) =====",
         "Fetching.",
@@ -318,7 +318,7 @@ def test_freeze(tmp_path, arepo):
     assert cli(["manifest", "freeze"]) == lines + [""]
 
     assert cli(["update", "--manifest", str(output_path)]) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Pulling branch 'main'.",
         f"===== dep1 (revision={sha1!r}) =====",
         "Nothing to do.",

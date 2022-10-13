@@ -54,7 +54,7 @@ def test_update(tmp_path, repos, arepo):
 
     # Update project
     assert cli(["update", "-P", "dep2"]) == [
-        "===== SKIPPING main =====",
+        "===== SKIPPING main (MAIN) =====",
         "===== SKIPPING dep1 =====",
         "===== dep2 (revision='1-feature') =====",
         "Pulling branch '1-feature'.",
@@ -64,7 +64,7 @@ def test_update(tmp_path, repos, arepo):
 
     # Update
     assert cli(["update"], tmp_path=tmp_path) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Pulling branch 'main'.",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -81,7 +81,7 @@ def test_update(tmp_path, repos, arepo):
 
     # Update again
     assert cli(["update"]) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Pulling branch 'main'.",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -98,7 +98,7 @@ def test_update(tmp_path, repos, arepo):
 
     # Update other.toml
     assert cli(["update", "--manifest", "other.toml"], tmp_path=tmp_path) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Pulling branch 'main'.",
         "===== dep1 (revision='main') =====",
         "Pulling branch 'main'.",
@@ -128,7 +128,7 @@ def test_update_rebase(tmp_path, repos, arepo):
 
     # Rebase
     assert cli(["update", "--rebase"], tmp_path=tmp_path) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep1 =====",
@@ -148,7 +148,7 @@ def test_update_rebase(tmp_path, repos, arepo):
     ]
 
     assert cli(["update", "--rebase"]) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep1 =====",
@@ -169,7 +169,7 @@ def test_update_rebase(tmp_path, repos, arepo):
     ]
 
     assert cli(["update", "--manifest", "other.toml", "--rebase"], tmp_path=tmp_path) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep1 (revision='main') =====",
@@ -185,7 +185,7 @@ def test_update_rebase(tmp_path, repos, arepo):
     ]
 
     assert cli(["status"]) == [
-        "===== main =====",
+        "===== main (MAIN) =====",
         "===== dep1 =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 (revision='1-feature') =====",

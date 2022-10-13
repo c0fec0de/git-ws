@@ -181,6 +181,8 @@ class Project(BaseModel):
                 ("groups", ",".join(group.info for group in self.groups), ""),
             )
         )
+        if self.is_main:
+            options = f"MAIN {options}" if options else "MAIN"
         if options:
             return f"{self.name} ({options})"
         return self.name
