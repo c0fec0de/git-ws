@@ -131,7 +131,7 @@ git ws update --rebase
 
 | Command | Description |
 | --- | --- |
-| `git ws push` | Run `git push` on all repositories |
+| `git ws push` | Run `git push` on all repositories (in reverse order) |
 | `git ws fetch` | Run `git fetch` on all repositories |
 | `git ws rebase` | Run `git rebase` on all repositories |
 | `git ws pull` | Run `git pull` on all repositories |
