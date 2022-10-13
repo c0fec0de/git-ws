@@ -1,6 +1,7 @@
 """Dependency Tree."""
 
-from typing import List
+import logging
+from typing import List, Tuple
 
 from anytree import NodeMixin
 from anytree.exporter import DotExporter
@@ -8,6 +9,8 @@ from anytree.exporter import DotExporter
 from .datamodel import Manifest, ManifestSpec, Project
 from .exceptions import ManifestNotFoundError
 from .workspace import Workspace
+
+_LOGGER = logging.getLogger("git-ws")
 
 
 class Node(NodeMixin):
@@ -24,14 +27,20 @@ class Node(NodeMixin):
 def get_deptree(workspace: Workspace, manifest: Manifest) -> Node:
     """Calculate Dependency Tree."""
     main = str(workspace.info.main_path)
-    main_node = Node(Project(name=main, path=main))
+    main_node = Node(Project(name=main, path=main), is_primary=True)
     primaries: List[str] = []
-    _build(primaries, workspace, main_node, manifest)
+    edges: List[Tuple[str, str]] = []
+    _build(primaries, edges, workspace, main_node, manifest)
     return main_node
 
 
-def _build(primaries: List, workspace: Workspace, node: Node, manifest: Manifest):
+def _build(primaries: List, edges: List, workspace: Workspace, node: Node, manifest: Manifest):
+    _LOGGER.debug("get_deptree(primaries=%r, path=%r)", primaries, node.project.path)
     for project in manifest.dependencies:
+        edge = (node.project.path, project.path)
+        if edge in edges:
+            continue
+        edges.append(edge)
         is_primary = project.path not in primaries
         if is_primary:
             primaries.append(project.path)
@@ -42,7 +51,8 @@ def _build(primaries: List, workspace: Workspace, node: Node, manifest: Manifest
         except ManifestNotFoundError:
             continue
         manifest = Manifest.from_spec(manifest_spec)
-        _build(primaries, workspace, project_node, manifest)
+        if is_primary:
+            _build(primaries, edges, workspace, project_node, manifest)
 
 
 class DepDotExporter(DotExporter):

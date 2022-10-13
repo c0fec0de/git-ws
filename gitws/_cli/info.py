@@ -93,5 +93,5 @@ def dep_tree(context, manifest_path=None, dot: bool = False):
             context.echo("\n".join(DepDotExporter(deptree)))
         else:
             for pre, _, node in RenderTree(deptree, style=ContStyle()):
-                info = " [PRIMARY]" if node.is_primary else ""
+                info = "" if node.is_primary else "*"
                 context.echo(f"{pre}{node.project.info}{info}")

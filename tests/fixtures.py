@@ -97,6 +97,11 @@ def repos(tmp_path):
 
     with git_repo(repos_path / "dep3", commit="initial") as path:
         (path / "data.txt").write_text("dep3")
+        ManifestSpec(
+            dependencies=[
+                ProjectSpec(name="dep2", url="../dep2"),
+            ],
+        ).save(path / "git-ws.toml")
 
     run(("git", "tag", "v1.0"), check=True, cwd=repos_path / "dep3")
 

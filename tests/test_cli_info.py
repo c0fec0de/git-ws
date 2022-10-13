@@ -66,11 +66,11 @@ def test_dep_tree(tmp_path, arepo):
     # pylint: disable=unused-argument
     assert cli(["info", "dep-tree"], tmp_path=tmp_path) == [
         "main",
-        "├── dep1 [PRIMARY]",
-        "│   └── dep4 (revision='main') [PRIMARY]",
-        "└── dep2 (revision='1-feature') [PRIMARY]",
-        "    ├── dep3 (revision='main', groups='test') [PRIMARY]",
-        "    └── dep4 (revision='main')",
+        "├── dep1",
+        "│   └── dep4 (revision='main')",
+        "└── dep2 (revision='1-feature')",
+        "    ├── dep3 (revision='main', groups='test')",
+        "    └── dep4 (revision='main')*",
         "",
     ]
 

@@ -373,6 +373,10 @@ def test_clone_groups(tmp_path, repos):
                 ),
                 path=str(tmp_path / "workspace/dep2/git-ws.toml"),
             ),
+            Manifest(
+                dependencies=(Project(name="dep2", path="dep2", url="../dep2"),),
+                path=str(tmp_path / "workspace/dep3/git-ws.toml"),
+            ),
         ]
         assert list(str(item) for item in arepo.clones()) == [
             "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main')))",
