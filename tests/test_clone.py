@@ -449,6 +449,7 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         (workspace / "dep5").touch()
+        (workspace / "dep2" / "file.txt").touch()
 
         assert cli(("update", "--prune"), exit_code=1) == [
             "===== main (MAIN) =====",

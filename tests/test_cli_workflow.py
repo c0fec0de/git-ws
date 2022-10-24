@@ -498,3 +498,69 @@ def test_add(tmp_path, arepo):
         "M  dep4/data.txt",
         "",
     ]
+
+
+def test_diff(tmp_path, arepo):
+    """diff."""
+    # pylint: disable=unused-argument
+
+    workspace = tmp_path / "workspace"
+    dep2 = workspace / "dep2"
+    dep4 = workspace / "dep4"
+
+    (dep2 / "data.txt").write_text("My Text")
+    (dep4 / "data.txt").write_text("Other Text")
+
+    assert cli(("diff",)) == [
+        "===== main (MAIN) =====",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 (revision='1-feature') =====",
+        "===== dep4 (revision='main') =====",
+        "",
+    ]
+    assert cli(("diff", "dep2")) == [
+        "===== dep2 (revision='1-feature') =====",
+        "",
+    ]
+
+    assert cli(("diff", "--stat")) == [
+        "===== main (MAIN) =====",
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 (revision='1-feature') =====",
+        " dep2/data.txt | 2 +-",
+        "===== dep4 (revision='main') =====",
+        " dep4/data.txt | 2 +-",
+        "",
+    ]
+    assert cli(("diff", "dep2", "--stat")) == [
+        "===== dep2 (revision='1-feature') =====",
+        " dep2/data.txt | 2 +-",
+        "",
+    ]
+
+    with chdir(dep2):
+        assert cli(("diff",)) == [
+            "===== main (MAIN) =====",
+            "===== dep1 =====",
+            "git-ws WARNING Clone dep1 has no revision!",
+            "===== dep2 (revision='1-feature') =====",
+            "===== dep4 (revision='main') =====",
+            "",
+        ]
+        assert cli(("diff", "--stat")) == [
+            "===== main (MAIN) =====",
+            "===== dep1 =====",
+            "git-ws WARNING Clone dep1 has no revision!",
+            "===== dep2 (revision='1-feature') =====",
+            " data.txt | 2 +-",
+            "===== dep4 (revision='main') =====",
+            " ../dep4/data.txt | 2 +-",
+            "",
+        ]
+        assert cli(("diff", ".", "--stat")) == [
+            "===== dep2 (revision='1-feature') =====",
+            " data.txt | 2 +-",
+            "",
+        ]

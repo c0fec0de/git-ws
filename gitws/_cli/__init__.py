@@ -248,7 +248,7 @@ def rebase(context, projects=None, manifest_path=None, groups=None):
 @paths_argument()
 @click.option("--branch", "-b", is_flag=True, help="show branch information")
 @pass_context
-def status(context, paths, branch: bool = False):
+def status(context, paths=None, branch: bool = False):
     """
     Run 'git status' (displayed paths include the actual clone path).
     """
@@ -260,9 +260,26 @@ def status(context, paths, branch: bool = False):
 
 @main.command()
 @paths_argument()
+@click.option("--stat", "stat", is_flag=True, help="show diffstat instead of patch.")
+@pass_context
+def diff(context, paths=None, stat=False):
+    """
+    Run 'git diff' on paths (displayed paths include the actual clone path).
+    """
+    with exceptionhandling(context):
+        arepo = GitWS.from_path(echo=context.echo)
+        if stat:
+            for diffstat in arepo.diffstat(paths=process_paths(paths)):
+                context.echo(str(diffstat))
+        else:
+            arepo.diff(paths=process_paths(paths))
+
+
+@main.command()
+@paths_argument()
 @force_option()
 @pass_context
-def checkout(context, paths, force: bool = False):
+def checkout(context, paths=None, force: bool = False):
     """
     Run 'git checkout' on paths and choose the right git clone and manifest revision automatically.
 
@@ -278,7 +295,7 @@ def checkout(context, paths, force: bool = False):
 @pass_context
 @click.option("--force", "-f", "force", is_flag=True, help="allow adding otherwise ignored files")
 @click.option("--all", "-A", "all_", is_flag=True, help="add changes from all tracked and untracked files")
-def add(context, paths, force=False, all_=False):
+def add(context, paths=None, force=False, all_=False):
     """
     Run 'git add' on paths and choose the right git clone automatically.
     """
@@ -294,7 +311,7 @@ def add(context, paths, force=False, all_=False):
 @click.option("--cached", "cached", is_flag=True, help="only remove from index")
 @click.option("-r", "recursive", is_flag=True, help="allow recursive removal")
 @pass_context
-def rm(context, paths, force=False, cached=False, recursive=False):
+def rm(context, paths=None, force=False, cached=False, recursive=False):
     """
     Run 'git rm' on paths and choose the right git clone automatically.
     """
@@ -306,7 +323,7 @@ def rm(context, paths, force=False, cached=False, recursive=False):
 @main.command()
 @paths_argument()
 @pass_context
-def reset(context, paths):
+def reset(context, paths=None):
     """
     Run 'git reset' on paths and choose the right git clone automatically.
     """
@@ -320,7 +337,7 @@ def reset(context, paths):
 @click.option("--all", "-a", "all_", is_flag=True, help="commit all changed files")
 @paths_argument()
 @pass_context
-def commit(context, paths, message=None, all_=False):
+def commit(context, paths=None, message=None, all_=False):
     """
     Run 'git commit' on paths and choose the right git clone automatically.
     """
@@ -329,22 +346,6 @@ def commit(context, paths, message=None, all_=False):
             raise ValueError("Please provide a commit message.")
         arepo = GitWS.from_path(echo=context.echo)
         arepo.commit(message, process_paths(paths), all_=all_)
-
-
-@main.command()
-@projects_option()
-@manifest_option()
-@groups_option()
-@pass_context
-def diff(context, projects=None, manifest_path=None, groups=None):
-    """
-    Run 'git diff' on projects.
-
-    This command behaves identical to `git ws foreach -- git diff`.
-    """
-    with exceptionhandling(context):
-        arepo = GitWS.from_path(manifest_path=manifest_path, echo=context.echo)
-        arepo.run_foreach(("git", "diff"), project_paths=projects, groups=groups)
 
 
 @main.command()

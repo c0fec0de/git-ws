@@ -250,10 +250,26 @@ class GitWS:
         """Iterate over Status."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             self._echo_project_banner(clone.project)
-            path = clone.git.path
             self._check_clone(clone)
+            path = clone.git.path
             for status in clone.git.status(paths=cpaths, branch=branch):
                 yield status.with_path(path)
+
+    def diff(self, paths: Optional[Tuple[Path, ...]] = None):
+        """Diff."""
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            self._echo_project_banner(clone.project)
+            self._check_clone(clone)
+            clone.git.diff(paths=cpaths, prefix=Path(clone.project.path))
+
+    def diffstat(self, paths: Optional[Tuple[Path, ...]] = None):
+        """Diff."""
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            self._echo_project_banner(clone.project)
+            self._check_clone(clone)
+            path = clone.git.path
+            for diffstat in clone.git.diffstat(paths=cpaths):
+                yield diffstat.with_path(path)
 
     def checkout(self, paths: Tuple[Path, ...], force: bool = False):
         """Checkout."""

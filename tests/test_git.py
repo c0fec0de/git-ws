@@ -21,6 +21,9 @@ from pytest import fixture
 
 from gitws.git import Git
 
+# pylint: disable=unused-import
+from .fixtures import repos
+
 
 def is_sha(sha):
     """Return if result is a SHA."""
@@ -54,32 +57,20 @@ def test_git_revisions(git):
     # on branch, sha0
     path = git.path
 
-    assert git.is_clean()
-
     (path / "data.txt").touch()
-
-    assert not git.is_clean()
 
     git.add(("data.txt",))
 
-    assert not git.is_clean()
-
     git.commit("initial")
-
-    assert git.is_clean()
 
     sha0 = git.get_sha()
     git.tag("mytag")
-
-    assert git.is_clean()
 
     # create sha1
     (path / "other.txt").touch()
     git.add(("other.txt",))
     git.commit("other")
     sha1 = git.get_sha()
-
-    assert git.is_clean()
 
     assert git.get_branch() == "main"
     assert git.get_tag() is None
@@ -162,3 +153,80 @@ def test_git_status(git):
     (path / "other.txt").unlink()
 
     assert [str(item) for item in git.status()] == []
+
+
+def test_git_has_changes(tmp_path, repos):
+    """Git Has Changes."""
+
+    main = tmp_path / "main"
+    git = Git(main)
+    git.clone(str(repos / "main"))
+
+    path = git.path
+
+    assert not git.has_work_changes()
+    assert not git.has_index_changes()
+    assert not git.has_changes()
+    assert git.is_clean()
+
+    (path / "new.txt").touch()
+
+    assert not git.has_work_changes()
+    assert not git.has_index_changes()
+    assert not git.has_changes()
+    assert not git.is_clean()
+
+    git.add(("new.txt",))
+
+    assert not git.has_work_changes()
+    assert git.has_index_changes()
+    assert git.has_changes()
+    assert not git.is_clean()
+
+    (path / "new.txt").unlink()
+
+    assert git.has_work_changes()
+    assert git.has_index_changes()
+    assert git.has_changes()
+    assert not git.is_clean()
+
+    git.commit("initial")
+
+    assert git.has_work_changes()
+    assert not git.has_index_changes()
+    assert git.has_changes()
+    assert not git.is_clean()
+
+    (path / "new.txt").touch()
+
+    assert not git.has_work_changes()
+    assert not git.has_index_changes()
+    assert not git.has_changes()
+    assert not git.is_clean()
+
+
+def test_git_no_local(git):
+    """Git Has Changes."""
+    path = git.path
+
+    assert git.is_clean()
+
+    (path / "new.txt").touch()
+
+    assert not git.is_clean()
+
+    git.add(("new.txt",))
+
+    assert not git.is_clean()
+
+    (path / "new.txt").unlink()
+
+    assert not git.is_clean()
+
+    git.commit("initial")
+
+    assert not git.is_clean()
+
+    (path / "new.txt").touch()
+
+    assert not git.is_clean()

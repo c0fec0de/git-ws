@@ -15,8 +15,8 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Git Utilities."""
-
 import logging
+import os
 import re
 from enum import Enum
 from pathlib import Path
@@ -27,6 +27,7 @@ from ._util import get_repr, run
 from .exceptions import NoGitError
 
 _RE_STATUS = re.compile(r"\A(?P<index>.)(?P<work>.)\s((?P<orig_path>.+) -> )?(?P<path>.+)\Z")
+_RE_DIFFSTAT = re.compile(r"\A\s(?P<path>.+)\s\|\s(?P<stat>.+)\Z")
 _LOGGER = logging.getLogger("git-ws")
 
 
@@ -150,13 +151,40 @@ class BranchStatus(Status):
 
     @staticmethod
     def from_str(line) -> "BranchStatus":
-        """Create v1 porcelain output."""
+        """Create from v1 porcelain output."""
         return BranchStatus(info=line)
 
     def with_path(self, path: Path) -> "BranchStatus":
         """Return :any:`BranchStatus` with `path`."""
         # pylint: disable=unused-argument
         return self
+
+
+class DiffStat(BaseModel):
+
+    """
+    Diff Status.
+    """
+
+    path: Path
+    """Path."""
+
+    stat: str
+    """Diff Status."""
+
+    def __str__(self):
+        return f" {self.path} | {self.stat}"
+
+    @staticmethod
+    def from_str(line) -> "DiffStat":
+        """Create from `diff --stat` output."""
+        mat = _RE_DIFFSTAT.match(line)
+        assert mat, f"Invalid pattern {line}"
+        return DiffStat(**mat.groupdict())
+
+    def with_path(self, path: Path) -> "DiffStat":
+        """Return :any:`DiffStat` with `path`."""
+        return self.update(path=path / self.path)
 
 
 class Git:
@@ -340,7 +368,7 @@ class Git:
             args += ["-m", msg]
         self._run(args)
 
-    def status(self, paths: Optional[Tuple[Path, ...]] = None, branch=False) -> Generator[Status, None, None]:
+    def status(self, paths: Optional[Tuple[Path, ...]] = None, branch: bool = False) -> Generator[Status, None, None]:
         """Git Status."""
         _LOGGER.info("Git(%r).status(paths=%r, branch=%r)", str(self.path), paths, branch)
         if branch:
@@ -352,6 +380,26 @@ class Git:
         for line in lines:
             if line:
                 yield FileStatus.from_str(line)
+
+    def diff(self, paths: Optional[Tuple[Path, ...]] = None, prefix: Path = None):
+        """Git Diff."""
+        _LOGGER.info("Git(%r).diff(paths=%r, prefix=%r)", str(self.path), paths, prefix)
+        if prefix:
+            sep = os.path.sep
+            src = f"a{sep}{prefix}{sep}"
+            dst = f"b{sep}{prefix}{sep}"
+            self._run(("diff", "--src-prefix", src, "--dst-prefix", dst))
+        else:
+            self._run(("diff",))
+
+    def diffstat(self, paths: Optional[Tuple[Path, ...]] = None) -> Generator[DiffStat, None, None]:
+        """Git Diff Status."""
+        _LOGGER.info("Git(%r).diffstat(paths=%r)", str(self.path), paths)
+        lines = self._run2str(("diff", "--stat"), paths=paths).split("\n")
+        if lines:
+            # skip last line for now
+            for line in lines[:-1]:
+                yield DiffStat.from_str(line)
 
     def has_index_changes(self) -> bool:
         """Let you know if index has changes."""
@@ -369,9 +417,13 @@ class Git:
         """Clone is clean and does not contain any changes."""
         _LOGGER.info("Git(%r).is_clean()", str(self.path))
         status = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
-        if "..." in status[0]:
+        if len(status) > 1:
             return False
-        if status[1:]:
+        if status[0].startswith("## No commits yet on "):
+            return True
+        if "..." not in status[0]:
+            return False
+        if "[ahead " in status[0]:
             return False
         return True
 
