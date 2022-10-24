@@ -64,6 +64,9 @@ def map_paths(clones: Tuple[Clone, ...], paths: Optional[Tuple[Path, ...]]) -> G
     Map `paths` to `clones`.
 
     Associate the given `paths` to the corresponding `clones`.
+
+    If `paths` is not empty, the corresponding clone and paths pairs are yielded.
+    If `paths` is empty, just all clones with an empty paths tuple are yielded.
     """
     if paths:
         clonepaths: Tuple[Tuple[Clone, List[Path]], ...] = tuple((clone, []) for clone in clones)
@@ -94,7 +97,8 @@ def map_paths(clones: Tuple[Clone, ...], paths: Optional[Tuple[Path, ...]]) -> G
 
         # Return
         for clone, cpaths in clonepaths:
-            yield clone, tuple(cpaths)
+            if cpaths:
+                yield clone, tuple(cpaths)
     else:
         nopaths: Tuple[Path, ...] = tuple()
         for clone in clones:

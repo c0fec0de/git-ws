@@ -261,8 +261,7 @@ class GitWS:
             # Checkout specific files only
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
                 self._echo_project_banner(clone.project)
-                if cpaths:
-                    clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
+                clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
         else:
             # Checkout all branches
             for clone in self.clones(resolve_url=True):
@@ -280,8 +279,7 @@ class GitWS:
         """Add."""
         if paths:
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
-                if cpaths:
-                    clone.git.add(cpaths, force=force)
+                clone.git.add(cpaths, force=force)
         else:
             if all_:
                 for clone in self.clones():
@@ -295,23 +293,20 @@ class GitWS:
         if not paths:
             raise ValueError("Nothing specified, nothing removed.")
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            if cpaths:
-                clone.git.rm(cpaths, cached=cached, force=force, recursive=recursive)
+            clone.git.rm(cpaths, cached=cached, force=force, recursive=recursive)
 
     def reset(self, paths: Tuple[Path, ...]):
         """Reset."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            if cpaths:
-                clone.git.reset(cpaths)
+            clone.git.reset(cpaths)
 
     def commit(self, msg: str, paths: Tuple[Path, ...], all_: bool = False):
         """Commit."""
         if paths:
             # clone file specific commit
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
-                if cpaths:
-                    self._echo_project_banner(clone.project)
-                    clone.git.commit(msg, paths=cpaths, all_=all_)
+                self._echo_project_banner(clone.project)
+                clone.git.commit(msg, paths=cpaths, all_=all_)
         else:
             # commit changed clones
             if all_:
