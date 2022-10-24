@@ -276,13 +276,15 @@ def checkout(context, paths, force: bool = False):
 @main.command()
 @paths_argument()
 @pass_context
-def add(context, paths):
+@click.option("--force", "-f", "force", is_flag=True, help="allow adding otherwise ignored files")
+@click.option("--all", "-A", "all_", is_flag=True, help="add changes from all tracked and untracked files")
+def add(context, paths, force=False, all_=False):
     """
     Run 'git add' on paths and choose the right git clone automatically.
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(echo=context.echo)
-        arepo.add(process_paths(paths))
+        arepo.add(process_paths(paths), force=force, all_=all_)
 
 
 # pylint: disable=invalid-name

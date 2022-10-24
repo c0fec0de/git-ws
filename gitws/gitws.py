@@ -277,13 +277,18 @@ class GitWS:
                     git.checkout(revision=project.revision, force=force)
                 self._check_clone(clone)
 
-    def add(self, paths: Tuple[Path, ...]):
+    def add(self, paths: Tuple[Path, ...], force: bool = False, all_: bool = False):
         """Add."""
-        if not paths:
-            raise ValueError("Nothing specified, nothing added.")
-        for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            if cpaths:
-                clone.git.add(cpaths)
+        if paths:
+            for clone, cpaths in map_paths(tuple(self.clones()), paths):
+                if cpaths:
+                    clone.git.add(cpaths, force=force)
+        else:
+            if all_:
+                for clone in self.clones():
+                    clone.git.add(all_=True, force=force)
+            else:
+                raise ValueError("Nothing specified, nothing added.")
 
     # pylint: disable=invalid-name
     def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):

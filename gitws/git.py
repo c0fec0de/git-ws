@@ -294,10 +294,15 @@ class Git:
         _LOGGER.info("Git(%r).rebase()", str(self.path))
         self._run(("rebase",))
 
-    def add(self, paths: Tuple[Path, ...]):
+    def add(self, paths: Optional[Tuple[Path, ...]] = None, force: bool = False, all_: bool = False):
         """Add."""
-        _LOGGER.info("Git(%r).add(%r)", str(self.path), paths)
-        self._run(("add",), paths=paths)
+        _LOGGER.info("Git(%r).add(%r, force=%r, all_=%r)", str(self.path), paths, force, all_)
+        args = ["add"]
+        if force:
+            args.append("--force")
+        if all_:
+            args.append("--all")
+        self._run(args, paths=paths)
 
     # pylint: disable=invalid-name
     def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
