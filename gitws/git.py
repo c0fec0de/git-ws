@@ -340,15 +340,15 @@ class Git:
             args += ["-m", msg]
         self._run(args)
 
-    def status(self, branch=False) -> Generator[Status, None, None]:
+    def status(self, paths: Optional[Tuple[Path, ...]] = None, branch=False) -> Generator[Status, None, None]:
         """Git Status."""
-        _LOGGER.info("Git(%r).status(branch=%r)", str(self.path), branch)
+        _LOGGER.info("Git(%r).status(paths=%r, branch=%r)", str(self.path), paths, branch)
         if branch:
-            lines = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
+            lines = self._run2str(("status", "--porcelain=v1", "--branch"), paths=paths).split("\n")
             yield BranchStatus.from_str(lines[0])
             lines = lines[1:]
         else:
-            lines = self._run2str(("status", "--porcelain=v1")).split("\n")
+            lines = self._run2str(("status", "--porcelain=v1"), paths=paths).split("\n")
         for line in lines:
             if line:
                 yield FileStatus.from_str(line)
@@ -383,8 +383,10 @@ class Git:
             cmd.extend([str(path) for path in paths])
         return run(cmd, cwd=self.path, **kwargs)
 
-    def _run2str(self, args: Union[List[str], Tuple[str, ...]], check=True) -> str:
-        result = self._run(args, check=check, capture_output=True)
+    def _run2str(
+        self, args: Union[List[str], Tuple[str, ...]], paths: Optional[Tuple[Path, ...]] = None, check=True
+    ) -> str:
+        result = self._run(args, paths=paths, check=check, capture_output=True)
         if result.stderr.strip():
             return ""
         return result.stdout.decode("utf-8").rstrip()

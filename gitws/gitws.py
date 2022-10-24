@@ -244,16 +244,15 @@ class GitWS:
 
     def status(
         self,
-        project_paths=None,
-        manifest_path: Path = None,
-        groups: Groups = None,
+        paths: Optional[Tuple[Path, ...]] = None,
         branch: bool = False,
     ) -> Generator[Status, None, None]:
         """Iterate over Status."""
-        for clone in self._foreach(project_paths=project_paths, manifest_path=manifest_path, groups=groups):
+        for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            self._echo_project_banner(clone.project)
             path = clone.git.path
             self._check_clone(clone)
-            for status in clone.git.status(branch=branch):
+            for status in clone.git.status(paths=cpaths, branch=branch):
                 yield status.with_path(path)
 
     def checkout(self, paths: Tuple[Path, ...], force: bool = False):

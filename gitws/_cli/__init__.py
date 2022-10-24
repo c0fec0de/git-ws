@@ -245,16 +245,16 @@ def rebase(context, projects=None, manifest_path=None, groups=None):
 
 
 @main.command()
-@projects_option()
+@paths_argument()
 @click.option("--branch", "-b", is_flag=True, help="show branch information")
 @pass_context
-def status(context, projects=None, branch: bool = False):
+def status(context, paths, branch: bool = False):
     """
     Run 'git status' (displayed paths include the actual clone path).
     """
     with exceptionhandling(context):
         arepo = GitWS.from_path(echo=context.echo)
-        for status in arepo.status(project_paths=projects, branch=branch):
+        for status in arepo.status(paths=process_paths(paths), branch=branch):
             context.echo(str(status))
 
 
