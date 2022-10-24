@@ -32,7 +32,7 @@ from .workspace import Workspace
 class Clone:
 
     """
-    Clone.
+    Clone - A Pair Of Project And Git Interface.
 
     Args:
         project: Project
@@ -60,7 +60,11 @@ ClonePaths = Tuple[Clone, Tuple[Path, ...]]
 
 
 def map_paths(clones: Tuple[Clone, ...], paths: Tuple[Path, ...]) -> Generator[ClonePaths, None, None]:
-    """Map `paths` to `clones`."""
+    """
+    Map `paths` to `clones`.
+
+    Associate the given `paths` to the corresponding `clones`.
+    """
     clonepaths: Tuple[Tuple[Clone, List[Path]], ...] = tuple((clone, []) for clone in clones)
     # We operate on the absolute paths, but keep track of the specified ones.
     origpaths: List[Path] = list(paths)
