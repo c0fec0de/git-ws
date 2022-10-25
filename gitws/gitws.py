@@ -237,7 +237,7 @@ class GitWS:
             self.echo(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
             self.echo(f"Removing {str(rel_path)!r}.", fg=_COLOR_ACTION)
             git = Git(obsolete_path)
-            if force or not git.is_cloned() or git.is_clean():
+            if force or not git.is_cloned() or git.is_empty():
                 shutil.rmtree(obsolete_path, ignore_errors=True)
             else:
                 raise GitCloneNotCleanError(resolve_relative(rel_path))

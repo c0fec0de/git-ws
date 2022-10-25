@@ -413,11 +413,13 @@ class Git:
         """Let you know if work has changes."""
         return any(status.has_changes() for status in self.status())
 
-    def is_clean(self):
-        """Clone is clean and does not contain any changes."""
-        _LOGGER.info("Git(%r).is_clean()", str(self.path))
+    def is_empty(self):
+        """Clone does not contain any changes (untracked, staged, committed)."""
+        _LOGGER.info("Git(%r).is_empty()", str(self.path))
         status = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
         if len(status) > 1:
+            return False
+        if self._run2str(("stash", "list")):
             return False
         if status[0].startswith("## No commits yet on "):
             return True

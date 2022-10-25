@@ -167,66 +167,66 @@ def test_git_has_changes(tmp_path, repos):
     assert not git.has_work_changes()
     assert not git.has_index_changes()
     assert not git.has_changes()
-    assert git.is_clean()
+    assert git.is_empty()
 
     (path / "new.txt").touch()
 
     assert not git.has_work_changes()
     assert not git.has_index_changes()
     assert not git.has_changes()
-    assert not git.is_clean()
+    assert not git.is_empty()
 
     git.add(("new.txt",))
 
     assert not git.has_work_changes()
     assert git.has_index_changes()
     assert git.has_changes()
-    assert not git.is_clean()
+    assert not git.is_empty()
 
     (path / "new.txt").unlink()
 
     assert git.has_work_changes()
     assert git.has_index_changes()
     assert git.has_changes()
-    assert not git.is_clean()
+    assert not git.is_empty()
 
     git.commit("initial")
 
     assert git.has_work_changes()
     assert not git.has_index_changes()
     assert git.has_changes()
-    assert not git.is_clean()
+    assert not git.is_empty()
 
     (path / "new.txt").touch()
 
     assert not git.has_work_changes()
     assert not git.has_index_changes()
     assert not git.has_changes()
-    assert not git.is_clean()
+    assert not git.is_empty()
 
 
-def test_git_no_local(git):
+def test_git_empty(git):
     """Git Has Changes."""
     path = git.path
 
-    assert git.is_clean()
+    assert git.is_empty()
 
     (path / "new.txt").touch()
 
-    assert not git.is_clean()
+    assert not git.is_empty()
 
     git.add(("new.txt",))
 
-    assert not git.is_clean()
+    assert not git.is_empty()
 
     (path / "new.txt").unlink()
 
-    assert not git.is_clean()
+    assert not git.is_empty()
 
     git.commit("initial")
 
-    assert not git.is_clean()
+    assert not git.is_empty()
 
     (path / "new.txt").touch()
 
-    assert not git.is_clean()
+    assert not git.is_empty()
