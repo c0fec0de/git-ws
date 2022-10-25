@@ -42,7 +42,7 @@ def workspace_path(context, manifest_path=None):
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path)
-        context.echo(str(gws.path))
+        click.echo(str(gws.path))
 
 
 @info.command()
@@ -54,7 +54,7 @@ def main_path(context, manifest_path=None):
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path)
-        context.echo(str(gws.workspace.main_path))
+        click.echo(str(gws.workspace.main_path))
 
 
 @info.command()
@@ -69,7 +69,7 @@ def project_paths(context, manifest_path=None, groups=None):
         gws = GitWS.from_path(manifest_path=manifest_path)
         for project in gws.projects(filter_=gws.create_groups_filter(groups)):
             project_path = gws.workspace.get_project_path(project)
-            context.echo(project_path)
+            click.echo(project_path)
 
 
 @info.command()
@@ -90,8 +90,8 @@ def dep_tree(context, manifest_path=None, dot: bool = False):
         gws = GitWS.from_path(manifest_path=manifest_path)
         deptree = gws.get_deptree()
         if dot:
-            context.echo("\n".join(DepDotExporter(deptree)))
+            click.echo("\n".join(DepDotExporter(deptree)))
         else:
             for pre, _, node in RenderTree(deptree, style=ContStyle()):
                 info = "" if node.is_primary else "*"
-                context.echo(f"{pre}{node.project.info}{info}")
+                click.echo(f"{pre}{node.project.info}{info}")

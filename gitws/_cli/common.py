@@ -53,11 +53,17 @@ class Context(BaseModel):
     verbose: int
     color: bool
 
-    def echo(self, *args, **kwargs):
+    def secho(self, message, **kwargs):
         """Print with color support similar to :any:`click.secho()."""
         if self.color:
-            return click.secho(*args, **kwargs)
-        return click.echo(*args)
+            return click.secho(message, **kwargs)
+        return click.echo(message)
+
+    def style(self, text, **kwargs):
+        """Format `text`."""
+        if self.color:
+            return click.style(text, **kwargs)
+        return text
 
 
 pass_context = click.make_pass_decorator(Context)
@@ -115,4 +121,4 @@ def _print_traceback(context: Context):
     if context.verbose > 1:  # pragma: no cover
         # pylint: disable=no-value-for-parameter
         lines = "".join(traceback.format_exc())
-        context.echo(lines, fg="red", err=True)
+        context.secho(lines, fg="red", err=True)

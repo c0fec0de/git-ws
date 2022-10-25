@@ -49,7 +49,7 @@ def resolve(context, manifest_path=None, groups=None, output=None):
         if output:
             manifest.save(Path(output))
         else:
-            context.echo(manifest.dump())
+            click.echo(manifest.dump())
 
 
 @manifest.command()
@@ -70,7 +70,7 @@ def freeze(context, manifest_path=None, groups=None, output=None):
         if output:
             manifest.save(Path(output))
         else:
-            context.echo(manifest.dump())
+            click.echo(manifest.dump())
 
 
 @manifest.command()
@@ -94,7 +94,7 @@ def path(context, manifest_path=None):
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path)
         manifest = next(gws.manifests())
-        context.echo(str(manifest.path))
+        click.echo(str(manifest.path))
 
 
 @manifest.command()
@@ -107,7 +107,7 @@ def paths(context, manifest_path=None):
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path)
         for manifest in gws.manifests():
-            context.echo(str(manifest.path))
+            click.echo(str(manifest.path))
 
 
 @manifest.command()

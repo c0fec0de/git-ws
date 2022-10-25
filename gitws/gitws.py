@@ -54,10 +54,10 @@ class GitWS:
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, workspace: Workspace, manifest_spec: ManifestSpec, echo=None):
+    def __init__(self, workspace: Workspace, manifest_spec: ManifestSpec, secho=None):
         self.workspace = workspace
         self.manifest_spec = manifest_spec
-        self.echo = echo or no_echo
+        self.secho = secho or no_echo
 
     def __eq__(self, other):
         if isinstance(other, GitWS):
@@ -72,7 +72,7 @@ class GitWS:
         return self.workspace.path
 
     @staticmethod
-    def from_path(path: Optional[Path] = None, manifest_path: Optional[Path] = None, echo=None) -> "GitWS":
+    def from_path(path: Optional[Path] = None, manifest_path: Optional[Path] = None, secho=None) -> "GitWS":
         """
         Create :any:`GitWS` for workspace at `path`.
 
@@ -82,10 +82,10 @@ class GitWS:
         workspace = Workspace.from_path(path=path)
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
-        return GitWS(workspace, manifest_spec, echo=echo)
+        return GitWS(workspace, manifest_spec, secho=secho)
 
     @staticmethod
-    def create(path: Path, main_path: Path, manifest_path: Path, groups: Groups = None, echo=None) -> "GitWS":
+    def create(path: Path, main_path: Path, manifest_path: Path, groups: Groups = None, secho=None) -> "GitWS":
         """
         Create :any:`GitWS` for workspace at `path`.
 
@@ -100,7 +100,7 @@ class GitWS:
         main_path = resolve_relative(main_path, base=path)
         manifest_spec = ManifestSpec.load(path / main_path / manifest_path)
         workspace = Workspace.init(path, main_path, manifest_path, groups=groups)
-        return GitWS(workspace, manifest_spec, echo=echo)
+        return GitWS(workspace, manifest_spec, secho=secho)
 
     @staticmethod
     def init(
@@ -108,7 +108,7 @@ class GitWS:
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
         force: bool = False,
-        echo=None,
+        secho=None,
     ) -> "GitWS":
         """
         Initialize Workspace for git clone at `main_path`.
@@ -116,7 +116,7 @@ class GitWS:
         :param main_path: Path within git clone. (Default is the current working directory).
         :param manifest_path: Path to the manifest file.
         """
-        echo = echo or no_echo
+        secho = secho or no_echo
         main_path = Git.find_path(path=main_path)
         path = main_path.parent
         info = Workspace.is_init(path)
@@ -125,8 +125,8 @@ class GitWS:
         if not force:
             Workspace.check_empty(path, main_path)
         name = main_path.name
-        echo(f"===== {name} (MAIN) =====", fg=_COLOR_BANNER)
-        return GitWS.create(path, main_path, manifest_path, groups, echo=echo)
+        secho(f"===== {name} (MAIN) =====", fg=_COLOR_BANNER)
+        return GitWS.create(path, main_path, manifest_path, groups, secho=secho)
 
     def deinit(self):
         """De-Initialize :any:`GitWS`."""
@@ -139,10 +139,10 @@ class GitWS:
         manifest_path: Path = MANIFEST_PATH_DEFAULT,
         groups: Groups = None,
         force: bool = False,
-        echo=None,
+        secho=None,
     ) -> "GitWS":
         """Clone git `url` and initialize Workspace."""
-        echo = echo or no_echo
+        secho = secho or no_echo
         parsedurl = urllib.parse.urlparse(url)
         name = Path(parsedurl.path).name
         if main_path is None:
@@ -151,11 +151,11 @@ class GitWS:
         path = main_path_rel.parent
         if not force:
             Workspace.check_empty(path, main_path_rel)
-        echo(f"===== {main_path_rel.name} (MAIN) =====", fg=_COLOR_BANNER)
-        echo(f"Cloning {url!r}.", fg=_COLOR_ACTION)
+        secho(f"===== {main_path_rel.name} (MAIN) =====", fg=_COLOR_BANNER)
+        secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
         git = Git(main_path_rel)
         git.clone(url)
-        return GitWS.create(path, main_path_rel, manifest_path, groups, echo=echo)
+        return GitWS.create(path, main_path_rel, manifest_path, groups, secho=secho)
 
     def update(
         self,
@@ -188,7 +188,7 @@ class GitWS:
         project = clone.project
         git = clone.git
         if not git.is_cloned():
-            self.echo(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+            self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
             git.clone(project.url, revision=project.revision)
             return
 
@@ -198,7 +198,7 @@ class GitWS:
         sha = git.get_sha()
 
         if project.revision in (sha, tag) and not branch:
-            self.echo("Nothing to do.", fg=_COLOR_ACTION)
+            self.secho("Nothing to do.", fg=_COLOR_ACTION)
             return
 
         revision = tag or branch or sha
@@ -206,10 +206,10 @@ class GitWS:
         # Checkout
         fetched = False
         if project.revision and revision != project.revision:
-            self.echo("Fetching.", fg=_COLOR_ACTION)
+            self.secho("Fetching.", fg=_COLOR_ACTION)
             git.fetch()
             fetched = True
-            self.echo(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
+            self.secho(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
             git.checkout(project.revision)
             branch = git.get_branch()
             revision = tag or branch or sha
@@ -218,24 +218,24 @@ class GitWS:
         if branch:
             if rebase:
                 if not fetched:
-                    self.echo("Fetching.", fg=_COLOR_ACTION)
+                    self.secho("Fetching.", fg=_COLOR_ACTION)
                     git.fetch()
-                self.echo(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
+                self.secho(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
                 git.rebase()
             else:
                 if not fetched:
-                    self.echo(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
+                    self.secho(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
                     git.pull()
                 else:
-                    self.echo(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
+                    self.secho(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
                     git.merge()
 
     def _prune(self, workspace: Workspace, used: List[Path], force: bool = False):
         for obsolete_path in workspace.iter_obsoletes(used):
             name = resolve_relative(obsolete_path, workspace.path)
             rel_path = resolve_relative(obsolete_path)
-            self.echo(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
-            self.echo(f"Removing {str(rel_path)!r}.", fg=_COLOR_ACTION)
+            self.secho(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
+            self.secho(f"Removing {str(rel_path)!r}.", fg=_COLOR_ACTION)
             git = Git(obsolete_path)
             if force or not git.is_cloned() or git.is_empty():
                 shutil.rmtree(obsolete_path, ignore_errors=True)
@@ -249,7 +249,7 @@ class GitWS:
     ) -> Generator[Status, None, None]:
         """Iterate over Status."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+            self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
             self._check_clone_revision(clone)
             path = clone.git.path
             for status in clone.git.status(paths=cpaths, branch=branch):
@@ -258,14 +258,14 @@ class GitWS:
     def diff(self, paths: Optional[Tuple[Path, ...]] = None):
         """Diff."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+            self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
             self._check_clone_revision(clone)
             clone.git.diff(paths=cpaths, prefix=Path(clone.project.path))
 
     def diffstat(self, paths: Optional[Tuple[Path, ...]] = None):
         """Diff."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+            self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
             self._check_clone_revision(clone)
             path = clone.git.path
             for diffstat in clone.git.diffstat(paths=cpaths):
@@ -276,17 +276,17 @@ class GitWS:
         if paths:
             # Checkout specific files only
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
-                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 self._check_clone_revision(clone)
                 clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
         else:
             # Checkout all branches
             for clone in self.clones(resolve_url=True):
-                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 git = clone.git
                 project = clone.project
                 if not git.is_cloned():
-                    self.echo(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+                    self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
                     git.clone(project.url, revision=project.revision)
                 if project.revision:
                     git.checkout(revision=project.revision, force=force)
@@ -322,7 +322,7 @@ class GitWS:
         if paths:
             # clone file specific commit
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
-                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 self._check_clone_revision(clone)
                 clone.git.commit(msg, paths=cpaths, all_=all_)
         else:
@@ -332,7 +332,7 @@ class GitWS:
             else:
                 clones = [clone for clone in self.clones() if clone.git.has_index_changes()]
             for clone in clones:
-                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 self._check_clone_revision(clone)
                 clone.git.commit(msg, all_=all_)
 
@@ -381,14 +381,14 @@ class GitWS:
         filter_ = self.create_groups_filter(groups=groups)
         clones = self.clones(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url, reverse=reverse)
         if groups:
-            self.echo(f"Groups: {groups!r}", bold=True)
+            self.secho(f"Groups: {groups!r}", bold=True)
         for clone in clones:
             project = clone.project
             if project_paths_filter(project):
-                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 yield clone
             else:
-                self.echo(f"===== SKIPPING {clone.info} =====", fg=_COLOR_SKIP)
+                self.secho(f"===== SKIPPING {clone.info} =====", fg=_COLOR_SKIP)
 
     @staticmethod
     def _check_clone_revision(clone, diff=True):
