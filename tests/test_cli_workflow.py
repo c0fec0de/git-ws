@@ -269,7 +269,11 @@ def test_workflow(tmp_path, gws):
         "",
     ]
 
-    assert cli(("commit", "-m", "changes")) == ["===== dep1 =====", ""]
+    assert cli(("commit", "-m", "changes")) == [
+        "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "",
+    ]
 
     assert cli(("status",)) == [
         "===== main (MAIN) =====",
@@ -365,12 +369,14 @@ def test_checkout_file(tmp_path, gws):
 
     assert cli(("checkout", "dep1/missing.txt"), exit_code=1) == [
         "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
         "Error: Command '['git', 'checkout', '--', 'missing.txt']' returned non-zero exit status 1.",
         "",
     ]
 
     assert cli(("checkout", "dep1/data.txt")) == [
         "===== dep1 =====",
+        "git-ws WARNING Clone dep1 has no revision!",
         "",
     ]
 

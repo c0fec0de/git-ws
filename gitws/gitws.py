@@ -178,7 +178,7 @@ class GitWS:
             resolve_url=True,
         ):
             used.append(Path(clone.project.path))
-            self._check_clone(clone, revdiff=False)
+            self._check_clone_revision(clone, diff=False)
             self._update(clone, rebase)
         if prune:
             self._prune(workspace, used, force=force)
@@ -250,7 +250,7 @@ class GitWS:
         """Iterate over Status."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             self._echo_project_banner(clone.project)
-            self._check_clone(clone)
+            self._check_clone_revision(clone)
             path = clone.git.path
             for status in clone.git.status(paths=cpaths, branch=branch):
                 yield status.with_path(path)
@@ -259,14 +259,14 @@ class GitWS:
         """Diff."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             self._echo_project_banner(clone.project)
-            self._check_clone(clone)
+            self._check_clone_revision(clone)
             clone.git.diff(paths=cpaths, prefix=Path(clone.project.path))
 
     def diffstat(self, paths: Optional[Tuple[Path, ...]] = None):
         """Diff."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             self._echo_project_banner(clone.project)
-            self._check_clone(clone)
+            self._check_clone_revision(clone)
             path = clone.git.path
             for diffstat in clone.git.diffstat(paths=cpaths):
                 yield diffstat.with_path(path)
@@ -277,6 +277,7 @@ class GitWS:
             # Checkout specific files only
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
                 self._echo_project_banner(clone.project)
+                self._check_clone_revision(clone)
                 clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
         else:
             # Checkout all branches
@@ -289,7 +290,7 @@ class GitWS:
                     git.clone(project.url, revision=project.revision)
                 if project.revision:
                     git.checkout(revision=project.revision, force=force)
-                self._check_clone(clone)
+                self._check_clone_revision(clone)
 
     def add(self, paths: Tuple[Path, ...], force: bool = False, all_: bool = False):
         """Add."""
@@ -322,6 +323,7 @@ class GitWS:
             # clone file specific commit
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
                 self._echo_project_banner(clone.project)
+                self._check_clone_revision(clone)
                 clone.git.commit(msg, paths=cpaths, all_=all_)
         else:
             # commit changed clones
@@ -331,6 +333,7 @@ class GitWS:
                 clones = [clone for clone in self.clones() if clone.git.has_index_changes()]
             for clone in clones:
                 self._echo_project_banner(clone.project)
+                self._check_clone_revision(clone)
                 clone.git.commit(msg, all_=all_)
 
     def run_foreach(
@@ -360,7 +363,7 @@ class GitWS:
             resolve_url=resolve_url,
             reverse=reverse,
         ):
-            self._check_clone(clone)
+            self._check_clone_revision(clone)
             yield clone
 
     def _foreach(
@@ -388,11 +391,11 @@ class GitWS:
                 self.echo(f"===== SKIPPING {project.info} =====", fg=_COLOR_SKIP)
 
     @staticmethod
-    def _check_clone(clone, revdiff=True):
+    def _check_clone_revision(clone, diff=True):
         project = clone.project
         projectrev = project.revision
         if projectrev:
-            if revdiff:
+            if diff:
                 try:
                     clonerev = clone.git.get_revision()
                 except FileNotFoundError:
