@@ -161,6 +161,8 @@ def test_git_has_changes(tmp_path, repos):
     main = tmp_path / "main"
     git = Git(main)
     git.clone(str(repos / "main"))
+    git.set_config("user.email", "you@example.com")
+    git.set_config("user.name", "you")
 
     path = git.path
 
