@@ -25,19 +25,19 @@ from .util import chdir, cli, get_sha
 
 
 @fixture
-def arepo(tmp_path, repos):
+def gws(tmp_path, repos):
     """Initialized :any:`GitWS` on `repos`."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
     with chdir(workspace):
-        arepo = GitWS.clone(str(repos / "main"))
-        arepo.update()
+        gws = GitWS.clone(str(repos / "main"))
+        gws.update()
 
-        yield arepo
+        yield gws
 
 
-def test_validate(tmp_path, arepo):
+def test_validate(tmp_path, gws):
     """Manifest Validate."""
     # pylint: disable=unused-argument
 
@@ -66,11 +66,11 @@ def test_validate(tmp_path, arepo):
     ]
 
 
-def test_freeze(tmp_path, arepo):
+def test_freeze(tmp_path, gws):
     """Manifest Freeze."""
-    sha1 = get_sha(arepo.path / "dep1")
-    sha2 = get_sha(arepo.path / "dep2")
-    sha4 = get_sha(arepo.path / "dep4")
+    sha1 = get_sha(gws.path / "dep1")
+    sha2 = get_sha(gws.path / "dep2")
+    sha4 = get_sha(gws.path / "dep4")
     lines = [
         'version = "1.0"',
         "##",
@@ -330,7 +330,7 @@ def test_freeze(tmp_path, arepo):
     ]
 
 
-def test_resolve(tmp_path, arepo):
+def test_resolve(tmp_path, gws):
     """Manifest Resolve."""
     # pylint: disable=unused-argument
 
@@ -529,13 +529,13 @@ def test_resolve(tmp_path, arepo):
     assert output_path.read_text().split("\n") == lines
 
 
-def test_path(tmp_path, arepo):
+def test_path(tmp_path, gws):
     """Manifest Path."""
     # pylint: disable=unused-argument
     assert cli(["manifest", "path"], tmp_path=tmp_path) == ["TMP/workspace/main/git-ws.toml", ""]
 
 
-def test_paths(tmp_path, arepo):
+def test_paths(tmp_path, gws):
     """Manifest Paths."""
     # pylint: disable=unused-argument
     assert cli(["manifest", "paths"], tmp_path=tmp_path) == [

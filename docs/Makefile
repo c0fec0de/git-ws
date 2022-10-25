@@ -32,8 +32,8 @@ gen:
 	git-ws clone --help > static/cli.clone.txt
 	git-ws commit --help > static/cli.commit.txt
 	git-ws config --help > static/cli.config.txt
-	git-ws deinit --help > static/cli.deinit.txt
 	git-ws config --help > static/cli.config.txt
+	git-ws deinit --help > static/cli.deinit.txt
 	git-ws fetch --help > static/cli.fetch.txt
 	git-ws foreach --help > static/cli.foreach.txt
 	git-ws git --help > static/cli.git.txt
@@ -48,5 +48,6 @@ gen:
 	git-ws push --help > static/cli.push.txt
 	git-ws rebase --help > static/cli.rebase.txt
 	git-ws reset --help > static/cli.reset.txt
+	git-ws rm --help > static/cli.rm.txt
 	git-ws status --help > static/cli.status.txt
 	git-ws update --help > static/cli.update.txt

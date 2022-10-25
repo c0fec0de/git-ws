@@ -21,7 +21,7 @@ A :any:`Clone` is just the assembly of a :any:`Project` and its corresponding gi
 """
 
 from pathlib import Path
-from typing import Generator, List, Tuple
+from typing import Generator, List, Optional, Tuple
 
 from ._util import get_repr
 from .datamodel import Project
@@ -32,7 +32,7 @@ from .workspace import Workspace
 class Clone:
 
     """
-    Clone.
+    Clone - A Pair Of Project And Git Interface.
 
     Args:
         project: Project
@@ -59,34 +59,47 @@ class Clone:
 ClonePaths = Tuple[Clone, Tuple[Path, ...]]
 
 
-def map_paths(clones: Tuple[Clone, ...], paths: Tuple[Path, ...]) -> Generator[ClonePaths, None, None]:
-    """Map `paths` to `clones`."""
-    clonepaths: Tuple[Tuple[Clone, List[Path]], ...] = tuple((clone, []) for clone in clones)
-    # We operate on the absolute paths, but keep track of the specified ones.
-    origpaths: List[Path] = list(paths)
-    abspaths: List[Path] = [path.resolve() for path in paths]
-    # Start path matching at the clones with the deepest folder
-    clonepathssorted = sorted(clonepaths, key=lambda item: item[0].git.path.resolve().parts, reverse=True)
-    # Matching
-    for item in clonepathssorted:
-        clone: Clone = item[0]
-        cpaths: List[Path] = item[1]
-        clonepath = clone.git.path.resolve()
-        for path in tuple(abspaths):
-            try:
-                relpath = path.relative_to(clonepath)
-            except ValueError:
-                continue
-            # pop file from list
-            idx = abspaths.index(path)
-            origpaths.pop(idx)
-            abspaths.pop(idx)
-            cpaths.append(relpath)
+def map_paths(clones: Tuple[Clone, ...], paths: Optional[Tuple[Path, ...]]) -> Generator[ClonePaths, None, None]:
+    """
+    Map `paths` to `clones`.
 
-    # Report non-matching
-    for path in origpaths:
-        raise ValueError(f"{str(path)!r} cannot be associated with any clone.")
+    Associate the given `paths` to the corresponding `clones`.
 
-    # Return
-    for clone, cpaths in clonepaths:
-        yield clone, tuple(cpaths)
+    If `paths` is not empty, the corresponding clone and paths pairs are yielded.
+    If `paths` is empty, just all clones with an empty paths tuple are yielded.
+    """
+    if paths:
+        clonepaths: Tuple[Tuple[Clone, List[Path]], ...] = tuple((clone, []) for clone in clones)
+        # We operate on the absolute paths, but keep track of the specified ones.
+        origpaths: List[Path] = list(paths)
+        abspaths: List[Path] = [path.resolve() for path in paths]
+        # Start path matching at the clones with the deepest folder
+        clonepathssorted = sorted(clonepaths, key=lambda item: item[0].git.path.resolve().parts, reverse=True)
+        # Matching
+        for item in clonepathssorted:
+            clone: Clone = item[0]
+            cpaths: List[Path] = item[1]
+            clonepath = clone.git.path.resolve()
+            for path in tuple(abspaths):
+                try:
+                    relpath = path.relative_to(clonepath)
+                except ValueError:
+                    continue
+                # pop file from list
+                idx = abspaths.index(path)
+                origpaths.pop(idx)
+                abspaths.pop(idx)
+                cpaths.append(relpath)
+
+        # Report non-matching
+        for path in origpaths:
+            raise ValueError(f"{str(path)!r} cannot be associated with any clone.")
+
+        # Return
+        for clone, cpaths in clonepaths:
+            if cpaths:
+                yield clone, tuple(cpaths)
+    else:
+        nopaths: Tuple[Path, ...] = tuple()
+        for clone in clones:
+            yield clone, nopaths

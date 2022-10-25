@@ -27,24 +27,24 @@ from .util import chdir, cli, format_logs
 
 
 @fixture
-def arepo(tmp_path, repos):
+def gws(tmp_path, repos):
     """Initialized :any:`GitWS` on `repos`."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
     with chdir(workspace):
-        arepo = GitWS.clone(str(repos / "main"))
-        arepo.update(skip_main=True)
+        gws = GitWS.clone(str(repos / "main"))
+        gws.update(skip_main=True)
 
-        yield arepo
+        yield gws
 
 
-def test_pull(tmp_path, arepo):
+def test_pull(tmp_path, gws):
     """Test pull."""
-    _test_foreach(tmp_path, arepo, "pull")
+    _test_foreach(tmp_path, gws, "pull")
 
 
-def test_push(tmp_path, arepo):
+def test_push(tmp_path, gws):
     """Test push."""
     # pylint: disable=unused-argument
     assert cli(("push",)) == [
@@ -57,22 +57,22 @@ def test_push(tmp_path, arepo):
     ]
 
 
-def test_fetch(tmp_path, arepo):
+def test_fetch(tmp_path, gws):
     """Test fetch."""
-    _test_foreach(tmp_path, arepo, "fetch")
+    _test_foreach(tmp_path, gws, "fetch")
 
 
-def test_rebase(tmp_path, arepo):
+def test_rebase(tmp_path, gws):
     """Test rebase."""
-    _test_foreach(tmp_path, arepo, "rebase")
+    _test_foreach(tmp_path, gws, "rebase")
 
 
-def test_diff(tmp_path, arepo):
+def test_diff(tmp_path, gws):
     """Test diff."""
-    _test_foreach(tmp_path, arepo, "diff")
+    _test_foreach(tmp_path, gws, "diff")
 
 
-def test_deinit(tmp_path, arepo):
+def test_deinit(tmp_path, gws):
     """Test deinit."""
     # pylint: disable=unused-argument
     assert cli(["deinit"]) == ["Workspace deinitialized at '.'.", ""]
@@ -93,7 +93,7 @@ def test_deinit(tmp_path, arepo):
     ]
 
 
-def test_git(tmp_path, arepo):
+def test_git(tmp_path, gws):
     """Test git."""
     # pylint: disable=unused-argument
     assert cli(["git", "status"]) == [
@@ -114,7 +114,7 @@ def test_git(tmp_path, arepo):
     ]
 
 
-def test_foreach(tmp_path, arepo, caplog):
+def test_foreach(tmp_path, gws, caplog):
     """Test foreach."""
     # pylint: disable=unused-argument
     assert cli(["foreach", "git", "status"]) == [
@@ -170,7 +170,7 @@ def test_foreach(tmp_path, arepo, caplog):
     ]
 
 
-def test_foreach_missing(tmp_path, arepo, caplog):
+def test_foreach_missing(tmp_path, gws, caplog):
     """Test foreach."""
     # pylint: disable=unused-argument
     rmtree(tmp_path / "workspace" / "dep2")
@@ -187,7 +187,7 @@ def test_foreach_missing(tmp_path, arepo, caplog):
     ]
 
 
-def test_foreach_fail(tmp_path, arepo):
+def test_foreach_fail(tmp_path, gws):
     """Test foreach failing."""
     # pylint: disable=unused-argument
     assert cli(["foreach", "--", "git", "status", "--invalidoption"], exit_code=1) == [
@@ -197,7 +197,7 @@ def test_foreach_fail(tmp_path, arepo):
     ]
 
 
-def test_outside(tmp_path, arepo):
+def test_outside(tmp_path, gws):
     """Outside Workspace."""
     # pylint: disable=unused-argument
     with chdir(tmp_path):
@@ -214,7 +214,7 @@ def test_outside(tmp_path, arepo):
         ]
 
 
-def _test_foreach(tmp_path, arepo, *command):
+def _test_foreach(tmp_path, gws, *command):
     # pylint: disable=unused-argument
     assert cli(command) == [
         "===== main (MAIN) =====",
@@ -226,7 +226,7 @@ def _test_foreach(tmp_path, arepo, *command):
     ]
 
 
-def test_git_no_color(tmp_path, arepo, caplog):
+def test_git_no_color(tmp_path, gws, caplog):
     """Test git."""
     # pylint: disable=unused-argument
     assert cli(["config", "set", "color_ui", "False"]) == [""]

@@ -268,10 +268,10 @@ def test_clone(tmp_path, repos):
 
     with chdir(workspace):
         main_path = repos / "main"
-        arepo = GitWS.clone(str(main_path))
-        assert arepo.path == workspace
-        arepo.update()
-        assert arepo.get_manifest().path == str(workspace / "main" / "git-ws.toml")
+        gws = GitWS.clone(str(main_path))
+        assert gws.path == workspace
+        gws.update()
+        assert gws.get_manifest().path == str(workspace / "main" / "git-ws.toml")
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -281,15 +281,15 @@ def test_clone(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         rrepo = GitWS.from_path()
-        assert arepo == rrepo
+        assert gws == rrepo
 
-        assert list(arepo.projects()) == [
+        assert list(gws.projects()) == [
             Project(name="main", path="main", is_main=True),
             Project(name="dep1", path="dep1", url="../dep1"),
             Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
         ]
-        assert list(arepo.manifests()) == [
+        assert list(gws.manifests()) == [
             Manifest(
                 dependencies=(
                     Project(name="dep1", path="dep1", url="../dep1"),
@@ -310,7 +310,7 @@ def test_clone(tmp_path, repos):
                 path=str(tmp_path / "workspace/dep2/git-ws.toml"),
             ),
         ]
-        assert list(str(item) for item in arepo.clones()) == [
+        assert list(str(item) for item in gws.clones()) == [
             "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('dep1')))",
             "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), Git(PosixPath('dep2')))",
@@ -326,9 +326,9 @@ def test_clone_groups(tmp_path, repos):
 
     with chdir(workspace):
         main_path = repos / "main"
-        arepo = GitWS.clone(str(main_path), groups="+test")
-        arepo.update()
-        assert arepo.get_manifest().path == str(workspace / "main" / "git-ws.toml")
+        gws = GitWS.clone(str(main_path), groups="+test")
+        gws.update()
+        assert gws.get_manifest().path == str(workspace / "main" / "git-ws.toml")
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -338,22 +338,22 @@ def test_clone_groups(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         rrepo = GitWS.from_path()
-        assert arepo == rrepo
+        assert gws == rrepo
 
-        assert list(arepo.projects()) == [
+        assert list(gws.projects()) == [
             Project(name="main", path="main", is_main=True),
             Project(name="dep1", path="dep1", url="../dep1"),
             Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
             Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
         ]
-        assert list(arepo.projects(filter_=lambda project: not project.is_main)) == [
+        assert list(gws.projects(filter_=lambda project: not project.is_main)) == [
             Project(name="dep1", path="dep1", url="../dep1"),
             Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
             Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
         ]
-        assert list(arepo.manifests()) == [
+        assert list(gws.manifests()) == [
             Manifest(
                 dependencies=(
                     Project(name="dep1", path="dep1", url="../dep1"),
@@ -378,7 +378,7 @@ def test_clone_groups(tmp_path, repos):
                 path=str(tmp_path / "workspace/dep3/git-ws.toml"),
             ),
         ]
-        assert list(str(item) for item in arepo.clones()) == [
+        assert list(str(item) for item in gws.clones()) == [
             "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('dep1')))",
             "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), Git(PosixPath('dep2')))",
@@ -387,8 +387,8 @@ def test_clone_groups(tmp_path, repos):
             "groups=(Group(name='test'),)), Git(PosixPath('dep3')))",
         ]
 
-        assert list(arepo.projects(manifest_path="missing.toml")) == [Project(name="main", path="main", is_main=True)]
-        assert not list(arepo.manifests(manifest_path="missing.toml"))
+        assert list(gws.projects(manifest_path="missing.toml")) == [Project(name="main", path="main", is_main=True)]
+        assert not list(gws.manifests(manifest_path="missing.toml"))
 
 
 def test_clone_other(tmp_path, repos):
@@ -399,10 +399,10 @@ def test_clone_other(tmp_path, repos):
 
     with chdir(workspace):
         main_path = repos / "main"
-        arepo = GitWS.clone(str(main_path), manifest_path="other.toml")
-        assert arepo.path == workspace
-        arepo.update()
-        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
+        gws = GitWS.clone(str(main_path), manifest_path="other.toml")
+        assert gws.path == workspace
+        gws.update()
+        assert gws.get_manifest().path == str(workspace / "main" / "other.toml")
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -412,10 +412,10 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         rrepo = GitWS.from_path()
-        assert arepo == rrepo
+        assert gws == rrepo
 
-        arepo.update(manifest_path="git-ws.toml")
-        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
+        gws.update(manifest_path="git-ws.toml")
+        assert gws.get_manifest().path == str(workspace / "main" / "other.toml")
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -449,6 +449,7 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         (workspace / "dep5").touch()
+        (workspace / "dep2" / "file.txt").touch()
 
         assert cli(("update", "--prune"), exit_code=1) == [
             "===== main (MAIN) =====",
@@ -496,4 +497,4 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
 
-        assert arepo.get_manifest().path == str(workspace / "main" / "other.toml")
+        assert gws.get_manifest().path == str(workspace / "main" / "other.toml")

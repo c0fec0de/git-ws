@@ -78,5 +78,6 @@ def replace_tmp_path(text, tmp_path):
 def cli(command, exit_code=0, tmp_path=None):
     """Invoke CLI."""
     result = CliRunner().invoke(main, command)
-    assert result.exit_code == exit_code, result.exit_code
-    return format_output(result, tmp_path=tmp_path)
+    output = format_output(result, tmp_path=tmp_path)
+    assert result.exit_code == exit_code, (result.exit_code, output)
+    return output

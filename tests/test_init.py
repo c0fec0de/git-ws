@@ -214,17 +214,17 @@ def test_git(tmp_path):
         with raises(ManifestExistError):
             GitWS.create_manifest()
 
-        arepo = GitWS.init()
+        gws = GitWS.init()
 
-        assert arepo.path == tmp_path
-        info_file = arepo.path / INFO_PATH
+        assert gws.path == tmp_path
+        info_file = gws.path / INFO_PATH
         assert info_file.read_text().split("\n") == [
             "# Git Workspace System File. DO NOT EDIT.",
             "",
             'main_path = "main"',
             "",
         ]
-        config_file = arepo.path / CONFIG_PATH
+        config_file = gws.path / CONFIG_PATH
         assert config_file.read_text().split("\n") == [
             'manifest_path = "git-ws.toml"',
             "",
@@ -235,4 +235,4 @@ def test_git(tmp_path):
 
         rrepo = GitWS.from_path()
         assert rrepo.path == tmp_path
-        assert arepo == rrepo
+        assert gws == rrepo
