@@ -142,13 +142,13 @@ def test_workflow(tmp_path, gws):
 
     with chdir(dep1):
         assert cli(("status",)) == [
-            "===== main (MAIN) =====",
-            "===== dep1 =====",
+            "===== ../main (MAIN) =====",
+            "===== . ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
             "?? foo.txt",
-            "===== dep2 (revision='1-feature') =====",
+            "===== ../dep2 ('dep2', revision='1-feature') =====",
             "?? ../dep2/bb.txt",
-            "===== dep4 (revision='main') =====",
+            "===== ../dep4 ('dep4', revision='main') =====",
             "A  ../dep4/foo.txt",
             "",
         ]
@@ -548,25 +548,25 @@ def test_diff(tmp_path, gws):
 
     with chdir(dep2):
         assert cli(("diff",)) == [
-            "===== main (MAIN) =====",
-            "===== dep1 =====",
+            "===== ../main (MAIN) =====",
+            "===== ../dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
-            "===== dep2 (revision='1-feature') =====",
-            "===== dep4 (revision='main') =====",
+            "===== . ('dep2', revision='1-feature') =====",
+            "===== ../dep4 ('dep4', revision='main') =====",
             "",
         ]
         assert cli(("diff", "--stat")) == [
-            "===== main (MAIN) =====",
-            "===== dep1 =====",
+            "===== ../main (MAIN) =====",
+            "===== ../dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
-            "===== dep2 (revision='1-feature') =====",
+            "===== . ('dep2', revision='1-feature') =====",
             " data.txt | 2 +-",
-            "===== dep4 (revision='main') =====",
+            "===== ../dep4 ('dep4', revision='main') =====",
             " ../dep4/data.txt | 2 +-",
             "",
         ]
         assert cli(("diff", ".", "--stat")) == [
-            "===== dep2 (revision='1-feature') =====",
+            "===== . ('dep2', revision='1-feature') =====",
             " data.txt | 2 +-",
             "",
         ]

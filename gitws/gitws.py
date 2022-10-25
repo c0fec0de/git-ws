@@ -249,7 +249,7 @@ class GitWS:
     ) -> Generator[Status, None, None]:
         """Iterate over Status."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self._echo_project_banner(clone.project)
+            self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
             self._check_clone_revision(clone)
             path = clone.git.path
             for status in clone.git.status(paths=cpaths, branch=branch):
@@ -258,14 +258,14 @@ class GitWS:
     def diff(self, paths: Optional[Tuple[Path, ...]] = None):
         """Diff."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self._echo_project_banner(clone.project)
+            self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
             self._check_clone_revision(clone)
             clone.git.diff(paths=cpaths, prefix=Path(clone.project.path))
 
     def diffstat(self, paths: Optional[Tuple[Path, ...]] = None):
         """Diff."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self._echo_project_banner(clone.project)
+            self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
             self._check_clone_revision(clone)
             path = clone.git.path
             for diffstat in clone.git.diffstat(paths=cpaths):
@@ -276,15 +276,15 @@ class GitWS:
         if paths:
             # Checkout specific files only
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
-                self._echo_project_banner(clone.project)
+                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 self._check_clone_revision(clone)
                 clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
         else:
             # Checkout all branches
             for clone in self.clones(resolve_url=True):
+                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 git = clone.git
                 project = clone.project
-                self._echo_project_banner(project)
                 if not git.is_cloned():
                     self.echo(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
                     git.clone(project.url, revision=project.revision)
@@ -322,7 +322,7 @@ class GitWS:
         if paths:
             # clone file specific commit
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
-                self._echo_project_banner(clone.project)
+                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 self._check_clone_revision(clone)
                 clone.git.commit(msg, paths=cpaths, all_=all_)
         else:
@@ -332,7 +332,7 @@ class GitWS:
             else:
                 clones = [clone for clone in self.clones() if clone.git.has_index_changes()]
             for clone in clones:
-                self._echo_project_banner(clone.project)
+                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 self._check_clone_revision(clone)
                 clone.git.commit(msg, all_=all_)
 
@@ -385,10 +385,10 @@ class GitWS:
         for clone in clones:
             project = clone.project
             if project_paths_filter(project):
-                self._echo_project_banner(project)
+                self.echo(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 yield clone
             else:
-                self.echo(f"===== SKIPPING {project.info} =====", fg=_COLOR_SKIP)
+                self.echo(f"===== SKIPPING {clone.info} =====", fg=_COLOR_SKIP)
 
     @staticmethod
     def _check_clone_revision(clone, diff=True):
@@ -511,6 +511,3 @@ class GitWS:
             return filter_(groups, disabled=disabled)
 
         return func
-
-    def _echo_project_banner(self, project):
-        self.echo(f"===== {project.info} =====", fg=_COLOR_BANNER)

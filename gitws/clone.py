@@ -55,6 +55,28 @@ class Clone:
     def __repr__(self):
         return get_repr(self, (self.project, self.git))
 
+    @property
+    def info(self):
+        """
+        `repr`-like info string but more condensed.
+        """
+        project = self.project
+        path = str(self.git.path)
+        if project.is_main:
+            options = "MAIN"
+        else:
+            args = (project.name,) if project.name != path else tuple()
+            options = get_repr(
+                args=args,
+                kwargs=(
+                    ("revision", project.revision, None),
+                    ("groups", ",".join(group.info for group in project.groups), ""),
+                ),
+            )
+        if options:
+            return f"{path} ({options})"
+        return path
+
 
 ClonePaths = Tuple[Clone, Tuple[Path, ...]]
 
