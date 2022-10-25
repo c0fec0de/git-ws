@@ -85,14 +85,14 @@ def test_deptop(tmp_path, repos_deptop, caplog):
     workspace.mkdir()
 
     with chdir(workspace):
-        arepo = GitWS.clone(str(repos_deptop / "top"))
+        gws = GitWS.clone(str(repos_deptop / "top"))
 
         check(workspace, "top")
         check(workspace, "dep1", exists=False)
         check(workspace, "dep2", exists=False)
         check(workspace, "dep3", exists=False)
 
-        arepo.update(skip_main=True)
+        gws.update(skip_main=True)
 
         check(workspace, "top")
         check(workspace, "dep1")

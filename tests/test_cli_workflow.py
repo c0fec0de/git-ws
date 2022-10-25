@@ -25,7 +25,7 @@ from .util import chdir, cli
 
 
 @fixture
-def arepo(tmp_path, repos):
+def gws(tmp_path, repos):
     """Initialized :any:`GitWS` on `repos`."""
     # pylint: disable=unused-argument
 
@@ -33,13 +33,13 @@ def arepo(tmp_path, repos):
     workspace.mkdir()
 
     with chdir(workspace):
-        arepo = GitWS.clone(str(repos / "main"))
-        arepo.update(skip_main=True)
+        gws = GitWS.clone(str(repos / "main"))
+        gws.update(skip_main=True)
 
-        yield arepo
+        yield gws
 
 
-def test_status(tmp_path, arepo):
+def test_status(tmp_path, gws):
     """Test status."""
     # pylint: disable=unused-argument
 
@@ -104,7 +104,7 @@ def test_status(tmp_path, arepo):
     ]
 
 
-def test_workflow(tmp_path, arepo):
+def test_workflow(tmp_path, gws):
     """Test Full Workflow."""
     # pylint: disable=unused-argument
 
@@ -341,7 +341,7 @@ def test_workflow(tmp_path, arepo):
     assert cli(("rm", "dep1/foo.txt", "--force", "--cached", "-r")) == [""]
 
 
-def test_checkout_file(tmp_path, arepo):
+def test_checkout_file(tmp_path, gws):
     """Checkout files."""
     # pylint: disable=unused-argument
 
@@ -401,7 +401,7 @@ def test_checkout_file(tmp_path, arepo):
     ]
 
 
-def test_checkout(tmp_path, arepo):
+def test_checkout(tmp_path, gws):
     """Checkout files."""
     # pylint: disable=unused-argument
 
@@ -462,7 +462,7 @@ def test_checkout(tmp_path, arepo):
     ]
 
 
-def test_add(tmp_path, arepo):
+def test_add(tmp_path, gws):
     """Add."""
     # pylint: disable=unused-argument
 
@@ -500,7 +500,7 @@ def test_add(tmp_path, arepo):
     ]
 
 
-def test_diff(tmp_path, arepo):
+def test_diff(tmp_path, gws):
     """diff."""
     # pylint: disable=unused-argument
 

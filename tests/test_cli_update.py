@@ -26,19 +26,19 @@ from .util import chdir, cli, format_output, run
 
 
 @fixture
-def arepo(tmp_path, repos):
+def gws(tmp_path, repos):
     """Initialized :any:`GitWS` on `repos`."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
 
     with chdir(workspace):
-        arepo = GitWS.clone(str(repos / "main"))
-        arepo.update(skip_main=True)
+        gws = GitWS.clone(str(repos / "main"))
+        gws.update(skip_main=True)
 
-        yield arepo
+        yield gws
 
 
-def test_update(tmp_path, repos, arepo):
+def test_update(tmp_path, repos, gws):
     """Test update."""
     # pylint: disable=unused-argument
 
@@ -112,7 +112,7 @@ def test_update(tmp_path, repos, arepo):
     ]
 
 
-def test_update_rebase(tmp_path, repos, arepo):
+def test_update_rebase(tmp_path, repos, gws):
     """Test update --rebase."""
     # pylint: disable=unused-argument
 
