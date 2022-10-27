@@ -1,0 +1,7 @@
+Usage: git-ws diff [OPTIONS] [PATHS]...
+
+  Run 'git diff' on paths (displayed paths include the actual clone path).
+
+Options:
+  --stat      show diffstat instead of patch.
+  -h, --help  Show this message and exit.

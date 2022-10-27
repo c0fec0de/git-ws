@@ -1,0 +1,22 @@
+Usage: git-ws config list [OPTIONS]
+
+  List all configuration options.
+
+  This prints all configuration options. If selected, only the options from a
+  specific configuration file will be shown. Otherwise, the computed list of
+  configuration values is shown.
+
+  The computed  configuration is created by merging the system, user and
+  workspace configuration files in that order. On top, environment variables
+  of the form GIT_WS_XXX (where XXX is the name of an option) can be used to
+  override settings from the configuration files.
+
+  Note that the listing might contain extra arguments if specified in one of
+  the configuration files.
+
+Options:
+  -f, --format [text|json]  The format to use for showing values.
+  --system                  Operate on system wide configuration.
+  --user                    Operate on user configuration.
+  --workspace               Operate on workspace specific configuration.
+  -h, --help                Show this message and exit.

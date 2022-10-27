@@ -3,9 +3,10 @@ name = "git-ws"
 version = "0.5.1"
 description = "Git Workspace - Multi Repository Management Tool"
 readme = "README.md"
+license = "LGPL-3.0-or-later"
 authors = [
     "c0fec0de <c0fec0de@gmail.com>",
-    "Martin Höhe <martin@rpdev.net>",
+    "Martin Höher <martin@rpdev.net>",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

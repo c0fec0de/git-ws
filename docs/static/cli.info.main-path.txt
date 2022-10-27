@@ -1,0 +1,7 @@
+Usage: git-ws info main-path [OPTIONS]
+
+  Print Path to Main Git Clone.
+
+Options:
+  -M, --manifest FILE  Manifest file. Initial clone/init settings by default.
+  -h, --help           Show this message and exit.

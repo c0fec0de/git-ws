@@ -1,0 +1,7 @@
+Usage: git-ws manifest validate [OPTIONS]
+
+  Validate The Current Manifest, Exiting With An Error On Issues.
+
+Options:
+  -M, --manifest FILE  Manifest file. Initial clone/init settings by default.
+  -h, --help           Show this message and exit.
