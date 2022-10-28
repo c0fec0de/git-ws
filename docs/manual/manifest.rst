@@ -1,4 +1,4 @@
-.. _manifest:
+.. _manifest_manual:
 
 Manifest
 ========

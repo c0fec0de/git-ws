@@ -634,7 +634,7 @@ Create a new manifest.
 .. include:: ../static/cli.manifest.create.txt
     :code: bash
 
-This command generates a new manifest file. The generated file comes with a lot of built-in documentation, hence, editing the file should be quite easy. Refer to :ref:`manifest` to learn more about the general structure of the manifest file.
+This command generates a new manifest file. The generated file comes with a lot of built-in documentation, hence, editing the file should be quite easy. Refer to :ref:`manifest_manual` to learn more about the general structure of the manifest file.
 
 .. code-block:: bash
 
