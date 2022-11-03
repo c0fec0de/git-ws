@@ -260,8 +260,8 @@ def status(context, paths=None, branch: bool = False):
             if isinstance(status, FileStatus):
                 fgidx = "red" if status.work in (State.IGNORED, State.UNTRACKED) else "green"
                 parts = (
-                    context.style(text[0], fg="red"),
-                    context.style(text[1], fg=fgidx),
+                    context.style(text[0], fg=fgidx),
+                    context.style(text[1], fg='red'),
                     text[2:],
                 )
                 click.echo("".join(parts))
