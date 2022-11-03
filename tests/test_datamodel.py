@@ -17,7 +17,7 @@
 """Manifest Testing."""
 from pytest import raises
 
-from gitws.datamodel import Defaults, Group, Manifest, ManifestSpec, Project, ProjectSpec, Remote
+from gitws import Defaults, Groups, GroupSelect, GroupSelects, Manifest, ManifestSpec, Project, ProjectSpec, Remote
 
 from .common import MANIFEST_DEFAULT
 
@@ -42,33 +42,82 @@ def test_defaults():
     defaults = Defaults()
     assert defaults.remote is None
     assert defaults.revision is None
+    assert defaults.groups == tuple()
+    assert defaults.with_groups == tuple()
 
     defaults = Defaults(remote="remote")
     assert defaults.remote == "remote"
     assert defaults.revision is None
+    assert defaults.groups == tuple()
+    assert defaults.with_groups == tuple()
 
     defaults = Defaults(revision="Revision")
     assert defaults.remote is None
     assert defaults.revision == "Revision"
+    assert defaults.groups == tuple()
+    assert defaults.with_groups == tuple()
+
+    defaults = Defaults(groups=("test", "doc"))
+    assert defaults.remote is None
+    assert defaults.revision is None
+    assert defaults.groups == ("test", "doc")
+    assert defaults.with_groups == tuple()
+
+    defaults = Defaults(with_groups=("test", "doc"))
+    assert defaults.remote is None
+    assert defaults.revision is None
+    assert defaults.groups == tuple()
+    assert defaults.with_groups == ("test", "doc")
 
     # Immutable
     with raises(TypeError):
         defaults.remote = "other"
 
+    with raises(ValueError):
+        Defaults(groups=("-foo"))
 
-def test_project_group():
-    """Group."""
-    group = Group(name="name")
-    assert group.name == "name"
-    assert group.optional
+    with raises(ValueError):
+        Defaults(with_groups=("-foo"))
 
-    group = Group(name="name", optional=False)
-    assert group.name == "name"
-    assert not group.optional
+
+def test_group_select():
+    """Group Select."""
+    group_select = GroupSelect(group="foo", select=True, path="path")
+    assert group_select.group == "foo"
+    assert group_select.select
+    assert group_select.path == "path"
+    assert str(group_select) == "+foo@path"
 
     # Immutable
     with raises(TypeError):
-        group.name = "other"
+        group_select.group = "blub"
+
+
+def test_group_selects():
+    """Group Selects."""
+    group_selects = GroupSelects.from_group_filters(("-test", "+doc", "+feature@path"))
+    assert [str(group_select) for group_select in group_selects] == ["-test", "+doc", "+feature@path"]
+
+
+def test_project():
+    """Test ProjectSpec."""
+    project = Project(name="name", path="path")
+    assert project.name == "name"
+    assert project.url is None
+    assert project.revision is None
+    assert project.manifest_path == "git-ws.toml"
+    assert project.groups == Groups()
+    assert project.with_groups == Groups()
+
+    # Immutable
+    with raises(TypeError):
+        project.name = "other"
+
+    with raises(ValueError):
+        Project(name="name", path="path", groups=("-foo",))
+
+    # with raises(ValueError):
+    Project(name="name", path="path", with_groups=("-foo",))
 
 
 def test_project_spec():
@@ -79,6 +128,10 @@ def test_project_spec():
     assert project_spec.sub_url is None
     assert project_spec.url is None
     assert project_spec.revision is None
+    assert project_spec.path is None
+    assert project_spec.manifest_path == "git-ws.toml"
+    assert project_spec.groups == Groups()
+    assert project_spec.with_groups == Groups()
 
     with raises(ValueError):
         ProjectSpec(name="name", remote="remote", url="url")
@@ -91,179 +144,139 @@ def test_project_spec():
     with raises(TypeError):
         project_spec.name = "other"
 
+    with raises(ValueError):
+        ProjectSpec(name="name", groups=("-foo"))
 
-def test_manifest_spec(tmp_path):
+    with raises(ValueError):
+        ProjectSpec(name="name", with_groups=("-foo"))
+
+
+def test_manifest():
+    """Test Manifest."""
+    manifest = Manifest()
+    assert not manifest.group_filters
+    assert not manifest.dependencies
+
+    # Immutable
+    with raises(TypeError):
+        manifest.defaults = Defaults()
+
+    with raises(ValueError):
+        Manifest(group_filters=("test",))
+
+
+def test_manifest_spec():
     """Test ManifestSpec."""
     manifest_spec = ManifestSpec()
-    assert manifest_spec.defaults == Defaults()
+    assert manifest_spec.version == "1.0"
     assert not manifest_spec.remotes
+    assert not manifest_spec.group_filters
+    assert manifest_spec.defaults == Defaults()
     assert not manifest_spec.dependencies
 
-    filepath = tmp_path / "manifest.toml"
-    manifest_spec.save(filepath)
-    assert filepath.read_text() == MANIFEST_DEFAULT
+    # Immutable
+    with raises(TypeError):
+        manifest_spec.defaults = Defaults()
+
+    with raises(ValueError):
+        ManifestSpec(group_filters=("test",))
 
 
 def test_manifest_spec_save(tmp_path):
     """Manifest Saving."""
+    filepath = tmp_path / "manifest.toml"
+    ManifestSpec().save(filepath)
+    assert filepath.read_text() == MANIFEST_DEFAULT
+
     manifest_spec = ManifestSpec(
-        remotes=[Remote(name="name")],
-        groups=(Group(name="group", optional=False), Group(name="group2")),
+        version="1.1",
+        remotes=[Remote(name="remote")],
+        group_filters=("+test",),
+        defaults=Defaults(remote="remote"),
         dependencies=(ProjectSpec(name="dep"),),
     )
-    text = """\
-version = "1.0"
+    filepath = tmp_path / "manifest.toml"
+    manifest_spec.save(filepath)
+    manifest = """\
+version = "1.1"
 ##
-## Welcome to Git Workspace's Manifest. It actually contains 4 parts:
+## Git Workspace's Manifest. Please see the documentation at:
 ##
-## * Remotes
-## * Groups
-## * Defaults
-## * Dependencies
+## https://git-ws.readthedocs.io/en/latest/manual/manifest.html
 ##
-## =========
-##  Remotes
-## =========
+
+
+# group-filters = ["+test", "-doc", "+feature@path"]
+group-filters = ["+test"]
+
+
+# [[remotes]]
+# name = "myremote"
+# url-base = "https://github.com/myuser"
+
+
+[defaults]
+remote = "remote"
+
+
+[[remotes]]
+name = "remote"
+
+[[dependencies]]
+name = "dep"
+"""
+    assert filepath.read_text() == manifest
+
+    filepath = tmp_path / "empty.toml"
+    filepath.touch()
+    manifest_spec.save(filepath)
+    empty = """\
+version = "1.1"
+group-filters = ["+test"]
+
+[[remotes]]
+name = "remote"
+
+[defaults]
+remote = "remote"
+
+[[dependencies]]
+name = "dep"
+"""
+    assert filepath.read_text() == empty
+
+    filepath = tmp_path / "update.toml"
+    filepath.touch()
+    manifest_spec.save(filepath, update=False)
+    update = """\
+version = "1.1"
 ##
-## Remotes just refer to a directory with repositories.
+## Git Workspace's Manifest. Please see the documentation at:
 ##
-## We support relative paths for dependencies. So, if your dependencies are next
-## to your repository, you might NOT need any remote.
-## In other terms: You only need remotes if your dependencies are located on
-## OTHER servers than your server with this manifest.
+## https://git-ws.readthedocs.io/en/latest/manual/manifest.html
 ##
-## Remotes have two attributes:
-## * name: Required. String.
-##         Name of the remote. Any valid string. Must be unique within your
-##         manifest.
-## * url-base: Required. String.
-##             URL Prefix. The project 'name' or 'sub-url' will be appended
-##             later-on.
-##
+
+
+# group-filters = ["+test", "-doc", "+feature@path"]
+group-filters = ["+test"]
+
+
 # [[remotes]]
 # name = "myremote"
 # url-base = "https://github.com/myuser"
 [[remotes]]
-name = "name"
+name = "remote"
 
-
-## =========
-##  Groups
-## =========
-##
-## Groups structure dependencies.
-##
-## Groups are optional by default.
-## If a dependency belongs to a group, it becomes optional likewise.
-## Groups can be later on selected/deselected by '+group' or '-group'.
-## An optional group can be selected by '+group',
-## a non-optional group can be deselected by '-group'.
-## Deselection has higher priority than selection.
-##
-## Dependencies can refer to non-existing groups. You do NOT need to specify
-## all used groups.
-##
-## Groups have two attributes:
-## * name: Required. String.
-##         Name of the group. Any valid string. Must be unique within your
-##         manifest.
-## * optional: Optional. Bool. Default is True.
-##             Specifies if the group is optional. Meaning it must be selected
-##             explicitly. Otherwise the dependency is not added by default.
-##
-## The following lines set a group as non-optional.
-# [[groups]]
-# name = "test"
-# optional = false
-[[groups]]
-name = "group"
-optional = false
-
-[[groups]]
-name = "group2"
-
-
-## ==========
-##  Defaults
-## ==========
-##
-## The 'defaults' section specifies default values for dependencies.
-##
-## * remote: Optional. String.
-##           Remote used as default.
-##           The 'remote' MUST be defined in the 'remotes' section above!
-## * revision: Optional. String.
-##             Revision used as default. Tag or Branch.
-##
-## NOTE: It is recommended to specify a default revision (i.e. 'main').
-##       If a dependency misses 'revision', GitWS will not take care about
-##       revision handling. This may lead to strange side-effects. You
-##       have been warned.
 
 [defaults]
+remote = "remote"
+
 # remote = "myserver"
 # revision = "main"
+# groups = ["+test"]
+# with_groups = ["doc"]
 
 
-## ==============
-##  Dependencies
-## ==============
-##
-## The 'dependencies' section specifies all your git clones you need for your
-## project to operate.
-##
-## A dependency has the following attributes:
-## * name: Required. String.
-##         Just name your dependency. It is recommended to choose a
-##         unique name, but not a must.
-## * remote: Optional. String. Restricted (see RESTRICTIONS below).
-##           Remote Alias.
-##           The 'remote' MUST be defined in the 'remotes' section above!
-##           The 'remote' can also be specified in the 'defaults' section.
-## * sub-url: Optional. String. Default: '../{name}[.git]' (see NOTE1 below).
-##            Relative URL to 'url-base' of your specified 'remote'
-##            OR
-##            Relative URL to the URL of the repository containing this
-##            manifest.
-## * url: Optional. String. Restricted (see RESTRICTIONS below).
-##        Absolute URL to the dependent repository.
-## * revision: Optional. String.
-##             Revision to be checked out.
-##             If this attribute is left blank, GitWS does NOT manage the
-##             dependency revision (see NOTE2 below)!
-##             The 'revision' can also be specified in the 'defaults' section.
-## * path: Optional. String. Default is '{name}'.
-##         Project Filesystem Path. Relative to Workspace Root Directory.
-##         The dependency 'name' is used as default for 'path'.
-##         The 'path' MUST be unique within your manifest.
-## * manifest_path: Optional. String. Default: 'git-ws.toml'.
-##                   Path to manifest.
-##                   Relative to 'path'.
-##                   Avoid changing it! It is just additional effort.
-## * groups: Optional. List of Strings.
-##           Dependency Groups.
-##           Dependencies can be categorized into groups.
-##           Groups are optional by default. See 'groups' section above.
-##
-## NOTE1: 'sub-url' is '../{name}[.git]' by default. Meaning if the dependency
-##        is next to your repository containing this manifest, the dependency
-##        is automatically found.
-##        The '.git' suffix is appended if the repository containing this
-##        manifest uses a '.git' suffix.
-##
-## NOTE2: It is recommended to specify a revision (i.e. 'main') either
-##        explicitly or via the 'default' section.
-##        Without a 'revision' GitWS will not take care about revision
-##        handling. This may lead to strange side-effects.
-##        You have been warned.
-##
-## RESTRICTIONS:
-##
-## * `remote` and `url` are mutually exclusive.
-## * `url` and `sub-url` are likewise mutually exclusive
-## * `sub-url` requires a `remote`.
-##
-##
 ## A full flavored dependency using a 'remote':
 # [[dependencies]]
 # name = "myname"
@@ -287,41 +300,7 @@ name = "group2"
 [[dependencies]]
 name = "dep"
 """
-    filepath = tmp_path / "manifest.toml"
-    manifest_spec.save(filepath)
-    assert filepath.read_text() == text
-
-    # empty one
-    filepath = tmp_path / "empty.toml"
-    filepath.touch()
-    manifest_spec.save(filepath)
-    assert (
-        filepath.read_text()
-        == """\
-[[remotes]]
-name = "name"
-
-[[groups]]
-name = "group"
-optional = false
-
-[[groups]]
-name = "group2"
-
-[[dependencies]]
-name = "dep"
-"""
-    )
-
-    # empty one
-    filepath = tmp_path / "empty.toml"
-    filepath.touch()
-    manifest_spec.save(filepath, update=False)
-    assert filepath.read_text() == text
-
-    # Immutable
-    with raises(TypeError):
-        manifest_spec.defaults = Defaults()
+    assert filepath.read_text() == update
 
 
 def test_manifest_spec_from_data(tmp_path):
@@ -335,10 +314,7 @@ def test_manifest_spec_from_data(tmp_path):
             {"name": "remote2", "url-base": "https://git.example.com/base2"},
             {"name": "remote1", "url-base": "https://git.example.com/base1"},
         ],
-        "groups": [
-            {"name": "foo", "optional": False},
-            {"name": "bar"},
-        ],
+        "group-filters": ["+foo", "-bar"],
         "dependencies": [
             {"name": "dep1", "remote": "remote1", "groups": ["test", "foo"]},
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
@@ -351,7 +327,7 @@ def test_manifest_spec_from_data(tmp_path):
         Remote(name="remote2", url_base="https://git.example.com/base2"),
         Remote(name="remote1", url_base="https://git.example.com/base1"),
     )
-    assert manifest_spec.groups == (Group(name="foo", optional=False), Group(name="bar"))
+    assert manifest_spec.group_filters == ("+foo", "-bar")
     assert manifest_spec.dependencies == (
         ProjectSpec(name="dep1", remote="remote1", groups=("test", "foo")),
         ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
@@ -360,219 +336,7 @@ def test_manifest_spec_from_data(tmp_path):
 
     filepath = tmp_path / "manifest.toml"
     manifest_spec.save(filepath)
-    assert (
-        filepath.read_text()
-        == """version = "1.0"
-##
-## Welcome to Git Workspace's Manifest. It actually contains 4 parts:
-##
-## * Remotes
-## * Groups
-## * Defaults
-## * Dependencies
-##
-## =========
-##  Remotes
-## =========
-##
-## Remotes just refer to a directory with repositories.
-##
-## We support relative paths for dependencies. So, if your dependencies are next
-## to your repository, you might NOT need any remote.
-## In other terms: You only need remotes if your dependencies are located on
-## OTHER servers than your server with this manifest.
-##
-## Remotes have two attributes:
-## * name: Required. String.
-##         Name of the remote. Any valid string. Must be unique within your
-##         manifest.
-## * url-base: Required. String.
-##             URL Prefix. The project 'name' or 'sub-url' will be appended
-##             later-on.
-##
-# [[remotes]]
-# name = "myremote"
-# url-base = "https://github.com/myuser"
-[[remotes]]
-name = "remote2"
-url-base = "https://git.example.com/base2"
-
-[[remotes]]
-name = "remote1"
-url-base = "https://git.example.com/base1"
-
-
-## =========
-##  Groups
-## =========
-##
-## Groups structure dependencies.
-##
-## Groups are optional by default.
-## If a dependency belongs to a group, it becomes optional likewise.
-## Groups can be later on selected/deselected by '+group' or '-group'.
-## An optional group can be selected by '+group',
-## a non-optional group can be deselected by '-group'.
-## Deselection has higher priority than selection.
-##
-## Dependencies can refer to non-existing groups. You do NOT need to specify
-## all used groups.
-##
-## Groups have two attributes:
-## * name: Required. String.
-##         Name of the group. Any valid string. Must be unique within your
-##         manifest.
-## * optional: Optional. Bool. Default is True.
-##             Specifies if the group is optional. Meaning it must be selected
-##             explicitly. Otherwise the dependency is not added by default.
-##
-## The following lines set a group as non-optional.
-# [[groups]]
-# name = "test"
-# optional = false
-[[groups]]
-name = "foo"
-optional = false
-
-[[groups]]
-name = "bar"
-
-
-## ==========
-##  Defaults
-## ==========
-##
-## The 'defaults' section specifies default values for dependencies.
-##
-## * remote: Optional. String.
-##           Remote used as default.
-##           The 'remote' MUST be defined in the 'remotes' section above!
-## * revision: Optional. String.
-##             Revision used as default. Tag or Branch.
-##
-## NOTE: It is recommended to specify a default revision (i.e. 'main').
-##       If a dependency misses 'revision', GitWS will not take care about
-##       revision handling. This may lead to strange side-effects. You
-##       have been warned.
-
-[defaults]
-remote = "remote1"
-revision = "v1.3"
-
-# remote = "myserver"
-# revision = "main"
-
-
-## ==============
-##  Dependencies
-## ==============
-##
-## The 'dependencies' section specifies all your git clones you need for your
-## project to operate.
-##
-## A dependency has the following attributes:
-## * name: Required. String.
-##         Just name your dependency. It is recommended to choose a
-##         unique name, but not a must.
-## * remote: Optional. String. Restricted (see RESTRICTIONS below).
-##           Remote Alias.
-##           The 'remote' MUST be defined in the 'remotes' section above!
-##           The 'remote' can also be specified in the 'defaults' section.
-## * sub-url: Optional. String. Default: '../{name}[.git]' (see NOTE1 below).
-##            Relative URL to 'url-base' of your specified 'remote'
-##            OR
-##            Relative URL to the URL of the repository containing this
-##            manifest.
-## * url: Optional. String. Restricted (see RESTRICTIONS below).
-##        Absolute URL to the dependent repository.
-## * revision: Optional. String.
-##             Revision to be checked out.
-##             If this attribute is left blank, GitWS does NOT manage the
-##             dependency revision (see NOTE2 below)!
-##             The 'revision' can also be specified in the 'defaults' section.
-## * path: Optional. String. Default is '{name}'.
-##         Project Filesystem Path. Relative to Workspace Root Directory.
-##         The dependency 'name' is used as default for 'path'.
-##         The 'path' MUST be unique within your manifest.
-## * manifest_path: Optional. String. Default: 'git-ws.toml'.
-##                   Path to manifest.
-##                   Relative to 'path'.
-##                   Avoid changing it! It is just additional effort.
-## * groups: Optional. List of Strings.
-##           Dependency Groups.
-##           Dependencies can be categorized into groups.
-##           Groups are optional by default. See 'groups' section above.
-##
-## NOTE1: 'sub-url' is '../{name}[.git]' by default. Meaning if the dependency
-##        is next to your repository containing this manifest, the dependency
-##        is automatically found.
-##        The '.git' suffix is appended if the repository containing this
-##        manifest uses a '.git' suffix.
-##
-## NOTE2: It is recommended to specify a revision (i.e. 'main') either
-##        explicitly or via the 'default' section.
-##        Without a 'revision' GitWS will not take care about revision
-##        handling. This may lead to strange side-effects.
-##        You have been warned.
-##
-## RESTRICTIONS:
-##
-## * `remote` and `url` are mutually exclusive.
-## * `url` and `sub-url` are likewise mutually exclusive
-## * `sub-url` requires a `remote`.
-##
-##
-## A full flavored dependency using a 'remote':
-# [[dependencies]]
-# name = "myname"
-# remote = "remote"
-# sub-url = "my.git"
-# revision = "main"
-# path = "mydir"
-# groups = ["group"]
-
-## A full flavored dependency using a 'url':
-# [[dependencies]]
-# name = "myname"
-# url = "https://github.com/myuser/my.git"
-# revision = "main"
-# path = "mydir"
-# groups = ["group"]
-
-## A minimal dependency:
-# [[dependencies]]
-# name = "my"
-[[dependencies]]
-name = "dep1"
-remote = "remote1"
-groups = ["test", "foo"]
-
-[[dependencies]]
-name = "dep2"
-url = "https://git.example.com/base3/dep2.git"
-path = "dep2dir"
-
-[[dependencies]]
-name = "dep3"
-remote = "remote1"
-sub-url = "sub.git"
-revision = "main"
-"""
-    )
     assert ManifestSpec.load(filepath) == manifest_spec
-
-    rdependencies = [Project.from_spec(manifest_spec, project) for project in manifest_spec.dependencies]
-    assert rdependencies == [
-        Project(
-            name="dep1",
-            url="https://git.example.com/base1/dep1",
-            revision="v1.3",
-            path="dep1",
-            groups=(Group(name="test"), Group(name="foo", optional=False)),
-        ),
-        Project(name="dep2", url="https://git.example.com/base3/dep2.git", revision="v1.3", path="dep2dir"),
-        Project(name="dep3", url="https://git.example.com/base1/sub.git", revision="main", path="dep3"),
-    ]
 
 
 def test_manifest_spec_from_other_data():
@@ -587,10 +351,11 @@ def test_manifest_spec_from_other_data():
             {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main"},
         ],
     }
-    manifest = ManifestSpec(**data)
-    assert manifest.defaults == Defaults(remote="remote1")
-    assert not manifest.remotes
-    assert manifest.dependencies == (
+    manifest_spec = ManifestSpec(**data)
+    assert manifest_spec.version == "1.0"
+    assert not manifest_spec.remotes
+    assert manifest_spec.defaults == Defaults(remote="remote1")
+    assert manifest_spec.dependencies == (
         ProjectSpec(name="dep1", remote="remote1"),
         ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
         ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
@@ -615,26 +380,23 @@ def test_manifest_spec_missing_remote():
     assert str(exc.value) == "Unknown remote remote1 for project foo"
 
 
-def test_manifest():
+def test_manifest_from_spec():
     """Test Manifest."""
     data = {
         "remotes": [
             {
                 "name": "remote1",
-                "url-base": "url1",
+                "url-base": "file:///repos/url1",
             },
             {
                 "name": "remote2",
-                "url-base": "url2",
+                "url-base": "file:///repos/url2",
             },
         ],
         "defaults": {
             "remote": "remote1",
         },
-        "groups": [
-            {"name": "doc", "optional": True},
-            {"name": "bar"},
-        ],
+        "group-filters": ["-doc", "-bar"],
         "dependencies": [
             {"name": "dep1", "remote": "remote2", "groups": ["test", "doc"]},
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
@@ -642,13 +404,13 @@ def test_manifest():
         ],
     }
     manifest_spec = ManifestSpec(**data)
+
     manifest = Manifest.from_spec(manifest_spec)
+    assert manifest.group_filters == ("-doc", "-bar")
     assert manifest.dependencies == (
-        Project(
-            name="dep1", path="dep1", url="url2/dep1", groups=(Group(name="test"), Group(name="doc", optional=True))
-        ),
+        Project(name="dep1", path="dep1", url="file:///repos/url2/dep1", groups=("test", "doc")),
         Project(name="dep2", path="dep2dir", url="https://git.example.com/base3/dep2.git"),
-        Project(name="dep3", path="dep3", url="url1/sub.git", revision="main", groups=(Group(name="test"),)),
+        Project(name="dep3", path="dep3", url="file:///repos/url1/sub.git", revision="main", groups=("test",)),
     )
     assert manifest.path is None
 
@@ -662,49 +424,49 @@ def test_default_url():
         ],
     }
     manifest_spec = ManifestSpec(**data)
+    assert manifest_spec.version == "1.0"
     assert not manifest_spec.remotes
-    assert not manifest_spec.groups
+    assert not manifest_spec.group_filters
+    assert manifest_spec.defaults == Defaults()
     assert manifest_spec.dependencies == (
         ProjectSpec(name="dep1"),
         ProjectSpec(name="dep2"),
     )
 
     manifest = Manifest.from_spec(manifest_spec)
-    assert not manifest.groups
+    assert not manifest.group_filters
     assert manifest.dependencies == (
         Project(name="dep1", path="dep1", url="../dep1"),
         Project(name="dep2", path="dep2", url="../dep2"),
     )
+    assert manifest.path is None
 
-    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main")
-    assert not manifest.groups
+    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main", path="foo")
+    assert not manifest.group_filters
     assert manifest.dependencies == (
         Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1"),
         Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2"),
     )
+    assert manifest.path == "foo"
 
     manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.git")
-    assert not manifest.groups
+    assert not manifest.group_filters
     assert manifest.dependencies == (
         Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1.git"),
         Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2.git"),
     )
+    assert manifest.path is None
 
     manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.suffix")
-    assert not manifest.groups
+    assert not manifest.group_filters
     assert manifest.dependencies == (
         Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1.suffix"),
         Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2.suffix"),
     )
+    assert manifest.path is None
 
 
 def test_remotes_unique():
     """Remote names must be unique."""
     with raises(ValueError):
         ManifestSpec(remotes=(Remote(name="foo", url_base="url"), Remote(name="foo", url_base="url")))
-
-
-def test_groups_unique():
-    """Group names must be unique."""
-    with raises(ValueError):
-        ManifestSpec(groups=(Group(name="foo"), Group(name="foo")))

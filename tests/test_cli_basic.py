@@ -29,13 +29,13 @@ from .util import chdir, cli, format_logs
 @fixture
 def gws(tmp_path, repos):
     """Initialized :any:`GitWS` on `repos`."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
+    workspace = tmp_path / "main"
 
-    with chdir(workspace):
+    with chdir(tmp_path):
         gws = GitWS.clone(str(repos / "main"))
         gws.update(skip_main=True)
 
+    with chdir(workspace):
         yield gws
 
 
@@ -77,8 +77,8 @@ def test_deinit(tmp_path, gws):
     # pylint: disable=unused-argument
     assert cli(["deinit"]) == ["Workspace deinitialized at '.'.", ""]
 
-    assert not (tmp_path / "workspace/.gitws").exists()
-    assert (tmp_path / "workspace/main").exists()
+    assert not (tmp_path / "main/.gitws").exists()
+    assert (tmp_path / "main/main").exists()
 
     assert cli(["deinit"], exit_code=1) == [
         "Error: git workspace has not been initialized yet. Try:",
@@ -126,46 +126,48 @@ def test_foreach(tmp_path, gws, caplog):
         "",
     ]
     assert format_logs(caplog, tmp_path) == [
-        "INFO    git-ws Workspace path=TMP/workspace main=main "
-        "AppConfigData(manifest_path='git-ws.toml', color_ui=True, groups=None)",
+        "INFO    git-ws Workspace path=TMP/main main=main",
+        "INFO    git-ws AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None)",
         "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='main') OK stdout=b'\\n' stderr=b''",
         "INFO    git-ws Git('main').is_cloned() = True",
         "DEBUG   git-ws run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
-        "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
-        "url='../dep1'), ProjectSpec(name='dep2', url='../dep2', "
-        "revision='1-feature')))",
+        "DEBUG   git-ws ManifestSpec(group_filters=('-test',), "
+        "dependencies=(ProjectSpec(name='dep1', url='../dep1'), "
+        "ProjectSpec(name='dep2', url='../dep2', revision='1-feature'), "
+        "ProjectSpec(name='dep3', url='../dep3', groups=('test',))))",
         "DEBUG   git-ws Project(name='dep1', path='dep1', url='../dep1')",
-        "WARNING git-ws Clone dep1 has no revision!",
         "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\\n' stderr=b''",
         "INFO    git-ws Git('dep1').is_cloned() = True",
+        "WARNING git-ws Clone dep1 has no revision!",
         "DEBUG   git-ws run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None",
         "DEBUG   git-ws Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
+        "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep2') OK stdout=b'\\n' stderr=b''",
+        "INFO    git-ws Git('dep2').is_cloned() = True",
         "DEBUG   git-ws run(['git', 'describe', '--exact-match', '--tags'], "
         "cwd='dep2') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
         "anything.\\n'",
         "INFO    git-ws Git('dep2').get_tag() = None",
         "DEBUG   git-ws run(['git', 'branch', '--show-current'], cwd='dep2') OK stdout=b'1-feature\\n' stderr=b''",
         "INFO    git-ws Git('dep2').get_branch() = '1-feature'",
-        "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep2') OK stdout=b'\\n' stderr=b''",
-        "INFO    git-ws Git('dep2').is_cloned() = True",
         "DEBUG   git-ws run(('git', 'status'), cwd='dep2') OK stdout=None stderr=None",
+        "DEBUG   git-ws FILTERED OUT Project(name='dep3', path='dep3', url='../dep3', groups=('test',))",
         "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep4', url='../dep4', revision='main'),))",
         "DEBUG   git-ws Project(name='dep4', path='dep4', url='../dep4', revision='main')",
+        "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep4') OK stdout=b'\\n' stderr=b''",
+        "INFO    git-ws Git('dep4').is_cloned() = True",
         "DEBUG   git-ws run(['git', 'describe', '--exact-match', '--tags'], "
         "cwd='dep4') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
         "anything.\\n'",
         "INFO    git-ws Git('dep4').get_tag() = None",
         "DEBUG   git-ws run(['git', 'branch', '--show-current'], cwd='dep4') OK stdout=b'main\\n' stderr=b''",
         "INFO    git-ws Git('dep4').get_branch() = 'main'",
-        "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep4') OK stdout=b'\\n' stderr=b''",
-        "INFO    git-ws Git('dep4').is_cloned() = True",
         "DEBUG   git-ws run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None",
-        "DEBUG   git-ws ManifestSpec(groups=(Group(name='test'),), "
+        "DEBUG   git-ws ManifestSpec(group_filters=('-test',), "
         "defaults=Defaults(revision='main'), dependencies=(ProjectSpec(name='dep3', "
         "url='../dep3', groups=('test',)), ProjectSpec(name='dep4', url='../dep4', "
         "revision='main')))",
-        "DEBUG   git-ws FILTERED OUT Project(name='dep3', path='dep3', url='../dep3', "
-        "revision='main', groups=(Group(name='test'),))",
+        "DEBUG   git-ws DUPLICATE Project(name='dep3', path='dep3', url='../dep3', "
+        "revision='main', groups=('test',))",
         "DEBUG   git-ws DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')",
     ]
 
@@ -173,7 +175,7 @@ def test_foreach(tmp_path, gws, caplog):
 def test_foreach_missing(tmp_path, gws, caplog):
     """Test foreach."""
     # pylint: disable=unused-argument
-    rmtree(tmp_path / "workspace" / "dep2")
+    rmtree(tmp_path / "main" / "dep2")
     assert cli(["foreach", "git", "status"], exit_code=1) == [
         "===== main (MAIN) =====",
         "===== dep1 =====",
@@ -239,45 +241,47 @@ def test_git_no_color(tmp_path, gws, caplog):
         "",
     ]
     assert format_logs(caplog, tmp_path) == [
-        "INFO    git-ws Workspace path=TMP/workspace main=main "
-        "AppConfigData(manifest_path='git-ws.toml', color_ui=False, groups=None)",
+        "INFO    git-ws Workspace path=TMP/main main=main",
+        "INFO    git-ws AppConfigData(manifest_path='git-ws.toml', color_ui=False, group_filters=None)",
         "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='main') OK stdout=b'\\n' stderr=b''",
         "INFO    git-ws Git('main').is_cloned() = True",
         "DEBUG   git-ws run(('git', 'status'), cwd='main') OK stdout=None stderr=None",
-        "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
-        "url='../dep1'), ProjectSpec(name='dep2', url='../dep2', "
-        "revision='1-feature')))",
+        "DEBUG   git-ws ManifestSpec(group_filters=('-test',), "
+        "dependencies=(ProjectSpec(name='dep1', url='../dep1'), "
+        "ProjectSpec(name='dep2', url='../dep2', revision='1-feature'), "
+        "ProjectSpec(name='dep3', url='../dep3', groups=('test',))))",
         "DEBUG   git-ws Project(name='dep1', path='dep1', url='../dep1')",
-        "WARNING git-ws Clone dep1 has no revision!",
         "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\\n' stderr=b''",
         "INFO    git-ws Git('dep1').is_cloned() = True",
+        "WARNING git-ws Clone dep1 has no revision!",
         "DEBUG   git-ws run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None",
         "DEBUG   git-ws Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')",
+        "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep2') OK stdout=b'\\n' stderr=b''",
+        "INFO    git-ws Git('dep2').is_cloned() = True",
         "DEBUG   git-ws run(['git', 'describe', '--exact-match', '--tags'], "
         "cwd='dep2') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
         "anything.\\n'",
         "INFO    git-ws Git('dep2').get_tag() = None",
         "DEBUG   git-ws run(['git', 'branch', '--show-current'], cwd='dep2') OK stdout=b'1-feature\\n' stderr=b''",
         "INFO    git-ws Git('dep2').get_branch() = '1-feature'",
-        "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep2') OK stdout=b'\\n' stderr=b''",
-        "INFO    git-ws Git('dep2').is_cloned() = True",
         "DEBUG   git-ws run(('git', 'status'), cwd='dep2') OK stdout=None stderr=None",
+        "DEBUG   git-ws FILTERED OUT Project(name='dep3', path='dep3', url='../dep3', groups=('test',))",
         "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep4', url='../dep4', revision='main'),))",
         "DEBUG   git-ws Project(name='dep4', path='dep4', url='../dep4', revision='main')",
+        "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep4') OK stdout=b'\\n' stderr=b''",
+        "INFO    git-ws Git('dep4').is_cloned() = True",
         "DEBUG   git-ws run(['git', 'describe', '--exact-match', '--tags'], "
         "cwd='dep4') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
         "anything.\\n'",
         "INFO    git-ws Git('dep4').get_tag() = None",
         "DEBUG   git-ws run(['git', 'branch', '--show-current'], cwd='dep4') OK stdout=b'main\\n' stderr=b''",
         "INFO    git-ws Git('dep4').get_branch() = 'main'",
-        "DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep4') OK stdout=b'\\n' stderr=b''",
-        "INFO    git-ws Git('dep4').is_cloned() = True",
         "DEBUG   git-ws run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None",
-        "DEBUG   git-ws ManifestSpec(groups=(Group(name='test'),), "
+        "DEBUG   git-ws ManifestSpec(group_filters=('-test',), "
         "defaults=Defaults(revision='main'), dependencies=(ProjectSpec(name='dep3', "
         "url='../dep3', groups=('test',)), ProjectSpec(name='dep4', url='../dep4', "
         "revision='main')))",
-        "DEBUG   git-ws FILTERED OUT Project(name='dep3', path='dep3', url='../dep3', "
-        "revision='main', groups=(Group(name='test'),))",
+        "DEBUG   git-ws DUPLICATE Project(name='dep3', path='dep3', url='../dep3', "
+        "revision='main', groups=('test',))",
         "DEBUG   git-ws DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')",
     ]

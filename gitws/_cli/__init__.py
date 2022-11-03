@@ -32,7 +32,7 @@ from .info import info
 from .manifest import manifest
 from .options import (
     force_option,
-    groups_option,
+    group_filters_option,
     manifest_option,
     path_option,
     paths_argument,
@@ -67,11 +67,11 @@ def main(ctx=None, verbose=0):
 @main.command()
 @path_option()
 @manifest_option(initial=True)
-@groups_option(initial=True)
+@group_filters_option(initial=True)
 @update_option()
 @force_option()
 @pass_context
-def init(context, path=None, manifest_path=None, groups=None, update: bool = False, force: bool = False):
+def init(context, path=None, manifest_path=None, group_filters=None, update: bool = False, force: bool = False):
     """
     Initialize Git Workspace.
 
@@ -80,15 +80,14 @@ def init(context, path=None, manifest_path=None, groups=None, update: bool = Fal
     """
     with exceptionhandling(context):
         path = process_path(path)
-        gws = GitWS.init(main_path=path, manifest_path=manifest_path, groups=groups, force=force, secho=context.secho)
+        gws = GitWS.init(
+            main_path=path, manifest_path=manifest_path, group_filters=group_filters, force=force, secho=context.secho
+        )
         click.secho(f"Workspace initialized at {str(resolve_relative(gws.path))!r}.")
         if update:
             gws.update(skip_main=True)
         else:
-            click.secho(
-                "Please continue with:\n\n    git ws update\n",
-                fg=COLOR_INFO,
-            )
+            click.secho("Please continue with:\n\n    git ws update\n", fg=COLOR_INFO)
 
 
 @main.command()
@@ -107,18 +106,23 @@ def deinit(context):
 @click.argument("url")
 @path_option()
 @manifest_option(initial=True)
-@groups_option(initial=True)
+@group_filters_option(initial=True)
 @update_option()
 @force_option()
 @pass_context
-def clone(context, url, path=None, manifest_path=None, groups=None, update: bool = False, force: bool = False):
+def clone(context, url, path=None, manifest_path=None, group_filters=None, update: bool = False, force: bool = False):
     """
     Create a git clone and initialize Git Workspace.
     """
     with exceptionhandling(context):
         path = process_path(path)
         gws = GitWS.clone(
-            url, main_path=path, manifest_path=manifest_path, groups=groups, force=force, secho=context.secho
+            url,
+            main_path=path,
+            manifest_path=manifest_path,
+            group_filters=group_filters,
+            force=force,
+            secho=context.secho,
         )
         if update:
             gws.update(skip_main=True)
@@ -133,7 +137,7 @@ def clone(context, url, path=None, manifest_path=None, groups=None, update: bool
 @main.command()
 @projects_option()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @click.option("--skip-main", "-S", is_flag=True, default=False, help="Skip Main Repository")
 @click.option("--rebase", is_flag=True, default=False, help="Run 'git rebase' instead of 'git pull'")
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
@@ -143,7 +147,7 @@ def update(
     context,
     projects=None,
     manifest_path=None,
-    groups=None,
+    group_filters=None,
     skip_main: bool = False,
     rebase: bool = False,
     prune: bool = False,
@@ -151,11 +155,9 @@ def update(
 ):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, secho=context.secho)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.update(
             project_paths=projects,
-            manifest_path=manifest_path,
-            groups=groups,
             skip_main=skip_main,
             rebase=rebase,
             prune=prune,
@@ -166,102 +168,104 @@ def update(
 @main.command()
 @projects_option()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @reverse_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 @pass_context
-def git(context, command, projects=None, manifest_path=None, groups=None, reverse=False):
+def git(context, command, projects=None, manifest_path=None, group_filters=None, reverse=False):
     """
     Run git command on projects.
 
     This command behaves identical to `git ws foreach -- git`.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, secho=context.secho)
-        gws.run_foreach(("git",) + command, project_paths=projects, groups=groups, reverse=reverse)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
+        gws.run_foreach(("git",) + command, project_paths=projects, reverse=reverse)
 
 
 @main.command()
 @projects_option()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @pass_context
-def fetch(context, projects=None, manifest_path=None, groups=None):
+def fetch(context, projects=None, manifest_path=None, group_filters=None):
     """
     Run 'git fetch' on projects.
 
     This command behaves identical to `git ws foreach -- git fetch`.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, secho=context.secho)
-        gws.run_foreach(("git", "fetch"), project_paths=projects, groups=groups)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
+        gws.run_foreach(("git", "fetch"), project_paths=projects)
 
 
 @main.command()
 @projects_option()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @pass_context
-def pull(context, projects=None, manifest_path=None, groups=None):
+def pull(context, projects=None, manifest_path=None, group_filters=None):
     """
     Run 'git pull' on projects.
 
     This command behaves identical to `git ws foreach -- git pull`.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, secho=context.secho)
-        gws.run_foreach(("git", "pull"), project_paths=projects, groups=groups)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
+        gws.run_foreach(("git", "pull"), project_paths=projects)
 
 
 @main.command()
 @projects_option()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @pass_context
-def push(context, projects=None, manifest_path=None, groups=None):
+def push(context, projects=None, manifest_path=None, group_filters=None):
     """
     Run 'git push' on projects (in reverse order).
 
     This command behaves identical to `git ws foreach --reverse -- git push`.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, secho=context.secho)
-        gws.run_foreach(("git", "push"), project_paths=projects, groups=groups, reverse=True)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
+        gws.run_foreach(("git", "push"), project_paths=projects, reverse=True)
 
 
 @main.command()
 @projects_option()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @pass_context
-def rebase(context, projects=None, manifest_path=None, groups=None):
+def rebase(context, projects=None, manifest_path=None, group_filters=None):
     """
     Run 'git rebase' on projects.
 
     This command behaves identical to `git ws foreach -- git rebase`.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, secho=context.secho)
-        gws.run_foreach(("git", "rebase"), project_paths=projects, groups=groups)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
+        gws.run_foreach(("git", "rebase"), project_paths=projects)
 
 
 @main.command()
 @paths_argument()
 @click.option("--branch", "-b", is_flag=True, help="show branch information")
+@manifest_option()
+@group_filters_option()
 @pass_context
-def status(context, paths=None, branch: bool = False):
+def status(context, manifest_path=None, group_filters=None, paths=None, branch: bool = False):
     """
     Run 'git status' (displayed paths include the actual clone path).
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(secho=context.secho)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         for status in gws.status(paths=process_paths(paths), branch=branch):
             text = str(status)
             if isinstance(status, FileStatus):
                 fgidx = "red" if status.work in (State.IGNORED, State.UNTRACKED) else "green"
                 parts = (
                     context.style(text[0], fg=fgidx),
-                    context.style(text[1], fg='red'),
+                    context.style(text[1], fg="red"),
                     text[2:],
                 )
                 click.echo("".join(parts))
@@ -272,13 +276,15 @@ def status(context, paths=None, branch: bool = False):
 @main.command()
 @paths_argument()
 @click.option("--stat", "stat", is_flag=True, help="show diffstat instead of patch.")
+@manifest_option()
+@group_filters_option()
 @pass_context
-def diff(context, paths=None, stat=False):
+def diff(context, manifest_path=None, group_filters=None, paths=None, stat=False):
     """
     Run 'git diff' on paths (displayed paths include the actual clone path).
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(secho=context.secho)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         if stat:
             for diffstat in gws.diffstat(paths=process_paths(paths)):
                 click.echo(str(diffstat))
@@ -289,29 +295,33 @@ def diff(context, paths=None, stat=False):
 @main.command()
 @paths_argument()
 @force_option()
+@manifest_option()
+@group_filters_option()
 @pass_context
-def checkout(context, paths=None, force: bool = False):
+def checkout(context, manifest_path=None, group_filters=None, paths=None, force: bool = False):
     """
     Run 'git checkout' on paths and choose the right git clone and manifest revision automatically.
 
     Checkout all clones to their manifest revision, if no paths are given.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(secho=context.secho)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.checkout(process_paths(paths), force=force)
 
 
 @main.command()
 @paths_argument()
-@pass_context
 @click.option("--force", "-f", "force", is_flag=True, help="allow adding otherwise ignored files")
 @click.option("--all", "-A", "all_", is_flag=True, help="add changes from all tracked and untracked files")
-def add(context, paths=None, force=False, all_=False):
+@manifest_option()
+@group_filters_option()
+@pass_context
+def add(context, manifest_path=None, group_filters=None, paths=None, force=False, all_=False):
     """
     Run 'git add' on paths and choose the right git clone automatically.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(secho=context.secho)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.add(process_paths(paths), force=force, all_=all_)
 
 
@@ -321,25 +331,29 @@ def add(context, paths=None, force=False, all_=False):
 @force_option()
 @click.option("--cached", "cached", is_flag=True, help="only remove from index")
 @click.option("-r", "recursive", is_flag=True, help="allow recursive removal")
+@manifest_option()
+@group_filters_option()
 @pass_context
-def rm(context, paths=None, force=False, cached=False, recursive=False):
+def rm(context, manifest_path=None, group_filters=None, paths=None, force=False, cached=False, recursive=False):
     """
     Run 'git rm' on paths and choose the right git clone automatically.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(secho=context.secho)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.rm(process_paths(paths), force=force, cached=cached, recursive=recursive)
 
 
 @main.command()
 @paths_argument()
+@manifest_option()
+@group_filters_option()
 @pass_context
-def reset(context, paths=None):
+def reset(context, manifest_path=None, group_filters=None, paths=None):
     """
     Run 'git reset' on paths and choose the right git clone automatically.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(secho=context.secho)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.reset(process_paths(paths))
 
 
@@ -347,26 +361,28 @@ def reset(context, paths=None):
 @click.option("--message", "-m", help="commit message")
 @click.option("--all", "-a", "all_", is_flag=True, help="commit all changed files")
 @paths_argument()
+@manifest_option()
+@group_filters_option()
 @pass_context
-def commit(context, paths=None, message=None, all_=False):
+def commit(context, manifest_path=None, group_filters=None, paths=None, message=None, all_=False):
     """
     Run 'git commit' on paths and choose the right git clone automatically.
     """
     with exceptionhandling(context):
         if not message:
             raise ValueError("Please provide a commit message.")
-        gws = GitWS.from_path(secho=context.secho)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.commit(message, process_paths(paths), all_=all_)
 
 
 @main.command()
 @projects_option()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @reverse_option()
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 @pass_context
-def foreach(context, command, projects=None, manifest_path=None, groups=None, reverse=False):
+def foreach(context, command, projects=None, manifest_path=None, group_filters=None, reverse=False):
     """
     Run 'command' on projects.
 
@@ -374,8 +390,8 @@ def foreach(context, command, projects=None, manifest_path=None, groups=None, re
     (i.e. `git ws foreach -- ls -l`)
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, secho=context.secho)
-        gws.run_foreach(command, project_paths=projects, groups=groups, reverse=reverse)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
+        gws.run_foreach(command, project_paths=projects, reverse=reverse)
 
 
 main.add_command(config)

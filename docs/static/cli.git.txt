@@ -5,12 +5,12 @@ Usage: git-ws git [OPTIONS] [COMMAND]...
   This command behaves identical to `git ws foreach -- git`.
 
 Options:
-  -P, --project DIRECTORY  Project path to operate on only. All by default.
-                           This option can be specified multiple times.
-  -M, --manifest FILE      Manifest file. Initial clone/init settings by
-                           default.
-  -G, --groups TEXT        Group Filtering. TODO: more details. Initial
-                           clone/init filter settings by default.
-  -R, --reverse            Operate in Reverse Order. Start with last
-                           dependency instead of main repository.
-  -h, --help               Show this message and exit.
+  -P, --project DIRECTORY    Project path to operate on only. All by default.
+                             This option can be specified multiple times.
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -R, --reverse              Operate in Reverse Order. Start with last
+                             dependency instead of main repository.
+  -h, --help                 Show this message and exit.

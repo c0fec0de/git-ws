@@ -19,7 +19,7 @@ from contextlib import contextmanager
 
 from pytest import fixture
 
-from gitws.datamodel import Defaults, Group, ManifestSpec, ProjectSpec
+from gitws.datamodel import Defaults, ManifestSpec, ProjectSpec
 
 from .util import chdir, run
 
@@ -46,20 +46,18 @@ def repos(tmp_path):
     with git_repo(repos_path / "main", commit="initial") as path:
         (path / "data.txt").write_text("main")
         ManifestSpec(
+            group_filters=("-test",),
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep2", url="../dep2", revision="1-feature"),
+                ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
             ],
         ).save(path / "git-ws.toml")
 
     with chdir(repos_path / "main"):
         ManifestSpec(
             defaults=Defaults(revision="main"),
-            groups=[
-                Group(name="foo", optional=False),
-                Group(name="bar", optional=False),
-                Group(name="fast", optional=False),
-            ],
+            group_filters=("+foo", "+bar", "-fast"),
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep6", url="../dep6", path="sub/dep6", groups=["foo", "bar", "fast"]),
@@ -81,7 +79,7 @@ def repos(tmp_path):
         (path / "data.txt").write_text("dep2")
         ManifestSpec(
             defaults=Defaults(revision="main"),
-            groups=[Group(name="test", optional=True)],
+            group_filters=("-test",),
             dependencies=[
                 ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),

@@ -81,3 +81,14 @@ def cli(command, exit_code=0, tmp_path=None):
     output = format_output(result, tmp_path=tmp_path)
     assert result.exit_code == exit_code, (result.exit_code, output)
     return output
+
+
+def check(workspace, name, content=None, exists=True):
+    """Check."""
+    file_path = workspace / name / "data.txt"
+    content = content or name
+    if exists:
+        assert file_path.exists()
+        assert file_path.read_text() == f"{content}"
+    else:
+        assert not file_path.exists()

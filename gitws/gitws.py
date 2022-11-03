@@ -17,7 +17,7 @@
 """
 Multi Repository Management.
 
-The :any:`GitWS` class provides a simple facade to all inner `GitWS` functionality.
+The :any:`GitWS` class provides a simple facade to all Git Workspace functionality.
 """
 import logging
 import shutil
@@ -28,13 +28,11 @@ from typing import Generator, List, Optional, Tuple
 from ._util import no_echo, removesuffix, resolve_relative, run
 from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT
-from .datamodel import Manifest, ManifestSpec, Project, ProjectSpec
-from .deptree import Node, get_deptree
-from .exceptions import GitCloneMissingError, GitCloneNotCleanError, InitializedError, ManifestExistError
-from .filters import Filter, default_filter
-from .git import Git, Status
+from .datamodel import GroupFilters, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
+from .deptree import DepNode, get_deptree
+from .exceptions import GitCloneNotCleanError, InitializedError, ManifestExistError
+from .git import DiffStat, Git, Status
 from .iters import ManifestIter, ProjectIter
-from .types import Groups, ProjectFilter
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("git-ws")
@@ -48,20 +46,42 @@ class GitWS:
     Multi Repository Management.
 
     Args:
-        workspace (Workspace): workspace.
-        manifest_spec (ManifestSpec): manifest.
+        workspace: workspace.
+        manifest_path: Manifest File Path. Relative to workspace directory.
+        group_filters: Group Filters.
+
+    Keyword Args:
+        secho: `click.secho` like print method for verbose output.
+
+    There are static methods to create a :any:`GitWS` instances in the different szenarios:
+
+    * :any:`GitWS.from_path()`: Create :any:`GitWS` for EXISTING workspace at `path`.
+    * :any:`GitWS.create()`: Create NEW workspace at `path` and return corresponding :any:`GitWS`.
+    * :any:`GitWS.init()`: Initialize NEW Workspace for git clone at `main_path` and return corresponding :any:`GitWS`.
+    * :any:`GitWS.clone()`: Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
     """
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, workspace: Workspace, manifest_spec: ManifestSpec, secho=None):
+    def __init__(
+        self,
+        workspace: Workspace,
+        manifest_path: Path,
+        group_filters: GroupFilters,
+        secho=None,
+    ):
         self.workspace = workspace
-        self.manifest_spec = manifest_spec
+        self.manifest_path = manifest_path
+        self.group_filters = group_filters
         self.secho = secho or no_echo
 
     def __eq__(self, other):
         if isinstance(other, GitWS):
-            return (self.workspace, self.manifest_spec) == (other.workspace, other.manifest_spec)
+            return (self.workspace, self.manifest_path, self.group_filters) == (
+                other.workspace,
+                other.manifest_path,
+                other.group_filters,
+            )
         return NotImplemented
 
     @property
@@ -72,49 +92,90 @@ class GitWS:
         return self.workspace.path
 
     @staticmethod
-    def from_path(path: Optional[Path] = None, manifest_path: Optional[Path] = None, secho=None) -> "GitWS":
+    def from_path(
+        path: Optional[Path] = None,
+        manifest_path: Optional[Path] = None,
+        group_filters: Optional[GroupFilters] = None,
+        secho=None,
+    ) -> "GitWS":
         """
-        Create :any:`GitWS` for workspace at `path`.
+        Create :any:`GitWS` for EXISTING workspace at `path`.
 
         Keyword Args:
-            path:  Path within the workspace (Default is the current working directory).
+            path: Path within the workspace (Default is the current working directory).
+            mainfest_path: Manifest File Path. Relative to `main_path`. Default is taken from Configuration.
+            group_filters: Group Filters. Default is taken from Configuration.
+            secho: `click.secho` like print method for verbose output.
         """
         workspace = Workspace.from_path(path=path)
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
-        manifest_spec = ManifestSpec.load(manifest_path)
-        return GitWS(workspace, manifest_spec, secho=secho)
+        ManifestSpec.load(manifest_path)  # check manifest
+        if group_filters:
+            GroupFilters.validate(group_filters)
+        group_filters = workspace.get_group_filters(group_filters=group_filters or None)
+        return GitWS(workspace, manifest_path, group_filters, secho=secho)
 
     @staticmethod
-    def create(path: Path, main_path: Path, manifest_path: Path, groups: Groups = None, secho=None) -> "GitWS":
+    def create(
+        path: Path,
+        main_path: Path,
+        manifest_path: Optional[Path] = None,
+        group_filters: Optional[GroupFilters] = None,
+        secho=None,
+    ) -> "GitWS":
         """
-        Create :any:`GitWS` for workspace at `path`.
+        Create NEW workspace at `path` and return corresponding :any:`GitWS`.
+
+        Args:
+            path: Workspace Path.
+            main_path: Main Project Path.
 
         Keyword Args:
-            path:  Path within the workspace (Default is the current working directory).
-            main_path:  Main Project Path.
-            mainfest_path:  ManifestSpec File Path.
+            mainfest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
+                           This value is written to the configuration.
+            group_filters: Default Group Filters.
+                           This value is written to the configuration.
+            secho: `click.secho` like print method for verbose output.
         """
-        _LOGGER.debug("GitWS.create(%r, %r, %r, groups=%r)", str(path), str(main_path), str(manifest_path), groups)
+        _LOGGER.debug(
+            "GitWS.create(%r, %r, manifest_path=%r, group-filters=%r)",
+            str(path),
+            str(main_path),
+            str(manifest_path),
+            group_filters,
+        )
         # We need to resolve in inverted order, otherwise the manifest_path is broken
-        manifest_path = resolve_relative(manifest_path, base=main_path)
+        manifest_path_rel = resolve_relative(manifest_path or MANIFEST_PATH_DEFAULT, base=main_path)
         main_path = resolve_relative(main_path, base=path)
-        manifest_spec = ManifestSpec.load(path / main_path / manifest_path)
-        workspace = Workspace.init(path, main_path, manifest_path, groups=groups)
-        return GitWS(workspace, manifest_spec, secho=secho)
+        manifest_path = path / main_path / manifest_path_rel
+        ManifestSpec.load(manifest_path)  # check manifest
+        if group_filters:
+            GroupFilters.validate(group_filters)
+        workspace = Workspace.init(path, main_path, manifest_path_rel, group_filters=group_filters or None)
+        group_filters = workspace.get_group_filters(group_filters=group_filters)
+        return GitWS(workspace, manifest_path, group_filters, secho=secho)
 
     @staticmethod
     def init(
-        main_path: Path = None,
-        manifest_path: Path = MANIFEST_PATH_DEFAULT,
-        groups: Groups = None,
+        main_path: Optional[Path] = None,
+        manifest_path: Optional[Path] = None,
+        group_filters: Optional[GroupFilters] = None,
         force: bool = False,
         secho=None,
     ) -> "GitWS":
         """
-        Initialize Workspace for git clone at `main_path`.
+        Initialize NEW Workspace for git clone at `main_path` and return corresponding :any:`GitWS`.
 
-        :param main_path: Path within git clone. (Default is the current working directory).
-        :param manifest_path: Path to the manifest file.
+        The parent directory of `main_path` becomes the workspace directory.
+
+        Keyword Args:
+            main_path: Main Project Path.
+            mainfest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
+                           This value is written to the configuration.
+            group_filters: Default Group Filters.
+                           This value is written to the configuration.
+            force: Ignore that the workspace is not empty.
+            secho: `click.secho` like print method for verbose output.
         """
         secho = secho or no_echo
         main_path = Git.find_path(path=main_path)
@@ -126,59 +187,83 @@ class GitWS:
             Workspace.check_empty(path, main_path)
         name = main_path.name
         secho(f"===== {name} (MAIN) =====", fg=_COLOR_BANNER)
-        return GitWS.create(path, main_path, manifest_path, groups, secho=secho)
+        return GitWS.create(path, main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho)
 
     def deinit(self):
-        """De-Initialize :any:`GitWS`."""
+        """
+        De-Initialize :any:`GitWS`.
+
+        The workspace is not working anymore after that. The corresponding :any:`GitWS` instance should be deleted.
+        """
         return self.workspace.deinit()
 
     @staticmethod
     def clone(
         url: str,
         main_path: Path = None,
-        manifest_path: Path = MANIFEST_PATH_DEFAULT,
-        groups: Groups = None,
+        manifest_path: Optional[Path] = None,
+        group_filters: Optional[GroupFilters] = None,
         force: bool = False,
         secho=None,
     ) -> "GitWS":
-        """Clone git `url` and initialize Workspace."""
+        """
+        Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
+
+        Args:
+            url: Main Project URL.
+
+        Keyword Args:
+            main_path: Main Project Path.
+            mainfest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
+                           This value is written to the configuration.
+            group_filters: Default Group Filters.
+                           This value is written to the configuration.
+            force: Ignore that the workspace is not empty.
+            secho: `click.secho` like print method for verbose output.
+        """
         secho = secho or no_echo
         parsedurl = urllib.parse.urlparse(url)
-        name = Path(parsedurl.path).name
+        name = removesuffix(Path(parsedurl.path).name, ".git")
         if main_path is None:
-            main_path = Path.cwd() / removesuffix(name, ".git")
-        main_path_rel: Path = resolve_relative(main_path)
-        path = main_path_rel.parent
+            main_path = Path.cwd() / name / name
+        main_path.parent.mkdir(parents=True, exist_ok=True)
+        path = main_path.parent
         if not force:
-            Workspace.check_empty(path, main_path_rel)
-        secho(f"===== {main_path_rel.name} (MAIN) =====", fg=_COLOR_BANNER)
+            Workspace.check_empty(path, main_path)
+        secho(f"===== {resolve_relative(main_path)} (MAIN) =====", fg=_COLOR_BANNER)
         secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        git = Git(main_path_rel)
+        git = Git(resolve_relative(main_path))
         git.clone(url)
-        return GitWS.create(path, main_path_rel, manifest_path, groups, secho=secho)
+        return GitWS.create(path, main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho)
 
     def update(
         self,
-        project_paths=None,
-        manifest_path: Path = None,
-        groups: Groups = None,
+        project_paths: Optional[ProjectPaths] = None,
         skip_main: bool = False,
         prune: bool = False,
         rebase: bool = False,
         force: bool = False,
     ):
-        """Create/Update all dependent projects."""
+        """
+        Create/Update all dependent projects.
+
+        * Missing dependencies are cloned.
+        * Existing dependencies are fetched.
+        * Checkout revision from manifest
+        * Merge latest upstream changes.
+
+        Keyword Args:
+            project_paths: Limit operation to these projects.
+            skip_main: Exclude main project.
+            prune: Remove obsolete files from workspace, including non-project data!
+            rebase: Rebase instead of merge.
+            force: Enforce to prune repositories with changes.
+        """
         workspace = self.workspace
         used: List[Path] = [workspace.info.main_path]
-        for clone in self._foreach(
-            project_paths=project_paths,
-            manifest_path=manifest_path,
-            groups=groups,
-            skip_main=skip_main,
-            resolve_url=True,
-        ):
+        for clone in self._foreach(project_paths=project_paths, skip_main=skip_main, resolve_url=True):
             used.append(Path(clone.project.path))
-            self._check_clone_revision(clone, diff=False)
+            clone.check(diff=False, exists=False)
             self._update(clone, rebase)
         if prune:
             self._prune(workspace, used, force=force)
@@ -247,40 +332,69 @@ class GitWS:
         paths: Optional[Tuple[Path, ...]] = None,
         branch: bool = False,
     ) -> Generator[Status, None, None]:
-        """Iterate over Status."""
+        """
+        Enriched Git Status.
+
+        Keyword Args:
+            paths: Limit Git Status to `paths` only.
+            branch: Dump branch information.
+
+        Yields:
+            Status
+        """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
-            self._check_clone_revision(clone)
+            clone.check()
             path = clone.git.path
             for status in clone.git.status(paths=cpaths, branch=branch):
                 yield status.with_path(path)
 
     def diff(self, paths: Optional[Tuple[Path, ...]] = None):
-        """Diff."""
+        """
+        Enriched Git Diff.
+
+        Keyword Args:
+            paths: Limit Git Diff to `paths` only.
+        """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
-            self._check_clone_revision(clone)
+            clone.check()
             clone.git.diff(paths=cpaths, prefix=Path(clone.project.path))
 
-    def diffstat(self, paths: Optional[Tuple[Path, ...]] = None):
-        """Diff."""
+    def diffstat(self, paths: Optional[Tuple[Path, ...]] = None) -> Generator[DiffStat, None, None]:
+        """
+        Enriched Git Diff Status.
+
+        Keyword Args:
+            paths: Limit Git Diff to `paths` only.
+
+        Yields:
+            DiffStat
+        """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
-            self._check_clone_revision(clone)
+            clone.check()
             path = clone.git.path
             for diffstat in clone.git.diffstat(paths=cpaths):
                 yield diffstat.with_path(path)
 
     def checkout(self, paths: Tuple[Path, ...], force: bool = False):
-        """Checkout."""
+        """
+        Enriched Git Checkout.
+
+        Keyword Args:
+            paths: Limit Checkout to `paths` only. Otherwise run checkout on all git clones.
+            force: force checkout (throw away local modifications)
+
+        """
         if paths:
             # Checkout specific files only
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
                 self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
-                self._check_clone_revision(clone)
+                clone.check()
                 clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
         else:
-            # Checkout all branches
+            # Checkout all clones
             for clone in self.clones(resolve_url=True):
                 self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 git = clone.git
@@ -290,40 +404,72 @@ class GitWS:
                     git.clone(project.url, revision=project.revision)
                 if project.revision:
                     git.checkout(revision=project.revision, force=force)
-                self._check_clone_revision(clone)
+                clone.check(exists=False)
 
     def add(self, paths: Tuple[Path, ...], force: bool = False, all_: bool = False):
-        """Add."""
+        """
+        Add paths to index.
+
+        Args:
+            paths: Paths to be added
+
+        Keyword Args:
+            force: allow adding otherwise ignored files.
+            all_: add changes from all tracked and untracked files.
+        """
         if paths:
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
+                clone.git.check()
                 clone.git.add(cpaths, force=force)
         else:
             if all_:
                 for clone in self.clones():
+                    clone.git.check()
                     clone.git.add(all_=True, force=force)
             else:
                 raise ValueError("Nothing specified, nothing added.")
 
     # pylint: disable=invalid-name
     def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
-        """rm."""
+        """
+        Remove.
+
+        Args:
+            paths: Paths.
+
+        Keyword Args:
+            cached: only remove from the index
+            force: override the up-to-date check
+            recursive: allow recursive removal
+        """
         if not paths:
             raise ValueError("Nothing specified, nothing removed.")
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            clone.git.check()
             clone.git.rm(cpaths, cached=cached, force=force, recursive=recursive)
 
     def reset(self, paths: Tuple[Path, ...]):
-        """Reset."""
+        """Reset `paths`."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
+            clone.git.check()
             clone.git.reset(cpaths)
 
     def commit(self, msg: str, paths: Tuple[Path, ...], all_: bool = False):
-        """Commit."""
+        """
+        Commit.
+
+        Args:
+            msg: Commit Message
+
+        Keyword Args:
+            paths: Paths.
+            all_: commit all changed files
+        """
         if paths:
             # clone file specific commit
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
                 self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
-                self._check_clone_revision(clone)
+                clone.check()
                 clone.git.commit(msg, paths=cpaths, all_=all_)
         else:
             # commit changed clones
@@ -333,55 +479,55 @@ class GitWS:
                 clones = [clone for clone in self.clones() if clone.git.has_index_changes()]
             for clone in clones:
                 self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
-                self._check_clone_revision(clone)
+                clone.check()
                 clone.git.commit(msg, all_=all_)
 
     def run_foreach(
-        self, command, project_paths=None, manifest_path: Path = None, groups: Groups = None, reverse: bool = False
+        self,
+        command,
+        project_paths: Optional[ProjectPaths] = None,
+        reverse: bool = False,
     ):
-        """Run `command` on each project."""
-        for clone in self.foreach(
-            project_paths=project_paths, manifest_path=manifest_path, groups=groups, reverse=reverse
-        ):
-            if not clone.git.is_cloned():
-                raise GitCloneMissingError(clone.git.path)
+        """
+        Run `command` on each clone.
+
+        Args:
+            command: Command to run
+
+        Keyword Args:
+            project_paths: Limit to projects only.
+            reverse: Operate in reverse order.
+        """
+        for clone in self.foreach(project_paths=project_paths, reverse=reverse):
             run(command, cwd=clone.git.path)
 
     def foreach(
-        self,
-        project_paths=None,
-        manifest_path: Path = None,
-        groups: Groups = None,
-        resolve_url: bool = False,
-        reverse: bool = False,
+        self, project_paths: Optional[ProjectPaths] = None, resolve_url: bool = False, reverse: bool = False
     ) -> Generator[Clone, None, None]:
-        """User Level Clone Iteration."""
-        for clone in self._foreach(
-            project_paths=project_paths,
-            manifest_path=manifest_path,
-            groups=groups,
-            resolve_url=resolve_url,
-            reverse=reverse,
-        ):
-            self._check_clone_revision(clone)
+        """
+        User Level Clone Iteration.
+
+        Keyword Args:
+            project_paths: Limit to projects only.
+            resolve_url: Resolve URLs to absolute ones.
+            reverse: Operate in reverse order.
+
+        Yields:
+            Clone
+        """
+        for clone in self._foreach(project_paths=project_paths, resolve_url=resolve_url, reverse=reverse):
+            clone.check()
             yield clone
 
     def _foreach(
         self,
-        project_paths=None,
-        manifest_path: Path = None,
-        groups: Groups = None,
+        project_paths: Optional[ProjectPaths] = None,
         skip_main: bool = False,
         resolve_url: bool = False,
         reverse: bool = False,
     ) -> Generator[Clone, None, None]:
-        """User Level Clone Iteration."""
         project_paths_filter = self._create_project_paths_filter(project_paths)
-        groups = self.workspace.get_groups(groups=groups)
-        filter_ = self.create_groups_filter(groups=groups)
-        clones = self.clones(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url, reverse=reverse)
-        if groups:
-            self.secho(f"Groups: {groups!r}", bold=True)
+        clones = self.clones(skip_main=skip_main, resolve_url=resolve_url, reverse=reverse)
         for clone in clones:
             project = clone.project
             if project_paths_filter(project):
@@ -390,78 +536,70 @@ class GitWS:
             else:
                 self.secho(f"===== SKIPPING {clone.info} =====", fg=_COLOR_SKIP)
 
-    @staticmethod
-    def _check_clone_revision(clone, diff=True):
-        project = clone.project
-        projectrev = project.revision
-        if projectrev:
-            if diff:
-                try:
-                    clonerev = clone.git.get_revision()
-                except FileNotFoundError:
-                    clonerev = None
-                if clonerev and projectrev != clonerev:
-                    _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
-        elif not project.is_main:
-            _LOGGER.warning("Clone %s has no revision!", project.info)
-
     def clones(
-        self,
-        manifest_path: Path = None,
-        filter_: ProjectFilter = None,
-        skip_main: bool = False,
-        resolve_url: bool = False,
-        reverse: bool = False,
+        self, skip_main: bool = False, resolve_url: bool = False, reverse: bool = False
     ) -> Generator[Clone, None, None]:
-        """Iterate over Clones."""
+        """
+        Iterate over Clones.
+
+        Keyword Args:
+            skip_main: Skip Main Repository.
+            resolve_url: Resolve URLs to absolute ones.
+            reverse: Operate in reverse order.
+
+        Yields:
+            Clone
+        """
         workspace = self.workspace
-        projects = self.projects(manifest_path, filter_, skip_main=skip_main, resolve_url=resolve_url)
+        projects = self.projects(skip_main=skip_main, resolve_url=resolve_url)
         if reverse:
             projects = reversed(tuple(projects))  # type: ignore
         for project in projects:
             clone = Clone.from_project(workspace, project)
             yield clone
 
-    def projects(
-        self,
-        manifest_path: Optional[Path] = None,
-        filter_: ProjectFilter = None,
-        skip_main: bool = False,
-        resolve_url: bool = False,
-    ) -> Generator[Project, None, None]:
-        """Iterate over Projects."""
+    def projects(self, skip_main: bool = False, resolve_url: bool = False) -> Generator[Project, None, None]:
+        """
+        Iterate over Projects.
+
+        Keyword Args:
+            skip_main: Skip Main Repository.
+            resolve_url: Resolve URLs to absolute ones.
+
+        Yields:
+            Project
+        """
         workspace = self.workspace
-        manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
-        filter_ = filter_ or self.create_groups_filter()
-        yield from ProjectIter(workspace, manifest_path, filter_=filter_, skip_main=skip_main, resolve_url=resolve_url)
+        manifest_path = self.manifest_path
+        group_filters = self.group_filters
+        yield from ProjectIter(workspace, manifest_path, group_filters, skip_main=skip_main, resolve_url=resolve_url)
 
     def manifests(
-        self, manifest_path: Optional[Path] = None, filter_: ProjectFilter = None
+        self,
     ) -> Generator[Manifest, None, None]:
         """Iterate over Manifests."""
         workspace = self.workspace
-        manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
-        filter_ = filter_ or self.create_groups_filter()
-        yield from ManifestIter(workspace, manifest_path, filter_=filter_)
+        manifest_path = self.manifest_path
+        group_filters = self.group_filters
+        yield from ManifestIter(workspace, manifest_path, group_filters)
 
     @staticmethod
     def create_manifest(manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
-        """Create ManifestSpec File at `manifest_path`within `project`."""
+        """Create Manifest File at `manifest_path`within `project`."""
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
         manifest_spec = ManifestSpec()
         manifest_spec.save(manifest_path)
         return manifest_path
 
-    def get_manifest_spec(self, groups: Groups = None, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
+    def get_manifest_spec(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
         """Get Manifest."""
         workspace = self.workspace
-        manifest_spec = self.manifest_spec
+        manifest_path = self.manifest_path
+        manifest_spec = ManifestSpec.load(manifest_path)
         if resolve:
             rdeps: List[ProjectSpec] = []
-            groups = self.workspace.get_groups(groups)
-            filter_ = self.create_groups_filter(groups)
-            for project in self.projects(filter_=filter_, skip_main=True):
+            for project in self.projects(skip_main=True):
                 project_spec = ProjectSpec.from_project(project)
                 rdeps.append(project_spec)
             manifest_spec = manifest_spec.update(dependencies=rdeps)
@@ -472,9 +610,8 @@ class GitWS:
             fdeps: List[ProjectSpec] = []
             for project_spec, project in zip(manifest_spec.dependencies, manifest.dependencies):
                 project_path = workspace.get_project_path(project)
-                git = Git(project_path)
-                if not git.is_cloned():
-                    raise GitCloneMissingError(resolve_relative(project_path))
+                git = Git(resolve_relative(project_path))
+                git.check()
                 revision = git.get_tag() or git.get_sha()
                 fdeps.append(project_spec.update(revision=revision))
             manifest_spec = manifest_spec.update(dependencies=fdeps)
@@ -486,28 +623,20 @@ class GitWS:
         manifest_spec = self.get_manifest_spec(freeze=freeze, resolve=resolve)
         return Manifest.from_spec(manifest_spec, path=str(manifest_path))
 
-    def get_deptree(self) -> Node:
+    def get_deptree(self, primary=False) -> DepNode:
         """Get Dependency Tree."""
         manifest = self.get_manifest()
-        return get_deptree(self.workspace, manifest)
+        return get_deptree(self.workspace, manifest, primary=primary)
 
-    def _create_project_paths_filter(self, project_paths):
-        workspace_path = self.workspace.path
+    def _create_project_paths_filter(self, project_paths: Optional[ProjectPaths]):
         if project_paths:
-            project_paths = [resolve_relative(path, base=workspace_path) for path in project_paths]
-            return lambda project: resolve_relative(project.path, base=workspace_path) in project_paths
+            workspace = self.workspace
+            abspaths = [Path(project_path).resolve() for project_path in project_paths]
+            return lambda project: workspace.get_project_path(project) in abspaths
+
+        def default_filter(project: Project) -> bool:
+            """Default Filter - always returning True."""
+            # pylint: disable=unused-argument
+            return True
+
         return default_filter
-
-    def create_groups_filter(self, groups=None):
-        """Create Filter Method for `groups`."""
-        if groups is None:
-            groups = self.workspace.get_groups()
-
-        filter_ = Filter.from_str(groups or "")
-
-        def func(project):
-            groups = [group.name for group in project.groups]
-            disabled = [group.name for group in project.groups if group.optional]
-            return filter_(groups, disabled=disabled)
-
-        return func

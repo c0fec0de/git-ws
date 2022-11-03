@@ -16,19 +16,18 @@
 
 """:any:`Manifest` and :any:`Project` Iterators."""
 import logging
+from fnmatch import fnmatchcase
 from pathlib import Path
-from typing import Generator, List, Optional, Tuple
+from typing import Callable, Generator, List, Optional, Tuple
 
 from ._util import resolve_relative
-from .datamodel import Manifest, ManifestSpec, Project
+from .datamodel import GroupFilters, Groups, GroupSelects, Manifest, ManifestSpec, Project
 from .exceptions import ManifestNotFoundError
-from .filters import default_filter
 from .git import Git
-from .types import ProjectFilter
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("git-ws")
-_MANIFEST_DEFAULT = ManifestSpec()
+FilterFunc = Callable[[str, Groups], bool]
 
 
 class ManifestIter:
@@ -45,33 +44,37 @@ class ManifestIter:
     Args:
         workspace: The actual workspace
         manifest_path: Path to the manifest file **in the main project**.
-
-    Keyword Args:
-        filter_: Filter function. Only projects where the filter method returns `True` on, are evaluated.
+        group_filters: Group Filters.
 
     Yields:
         Manifest
     """
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, workspace: Workspace, manifest_path: Path, filter_: Optional[ProjectFilter] = None):
+    def __init__(self, workspace: Workspace, manifest_path: Path, group_filters: GroupFilters):
         self.workspace: Workspace = workspace
         self.manifest_path: Path = manifest_path
-        self.filter_: ProjectFilter = filter_ or default_filter
+        self.group_filters: GroupFilters = group_filters
         self.__done: List[str] = []
 
     def __iter__(self) -> Generator[Manifest, None, None]:
-        yield from self.__iter(self.manifest_path)
-
-    def __iter(self, manifest_path: Path) -> Generator[Manifest, None, None]:
-        deps: List[Path] = []
-        done: List[str] = self.__done
-        filter_ = self.filter_
-
+        self.__done.clear()
         try:
-            manifest_spec = ManifestSpec.load(manifest_path)
+            manifest_spec = ManifestSpec.load(self.manifest_path)
         except ManifestNotFoundError:
-            return
+            pass
+        else:
+            group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
+            group_selects = GroupSelects.from_group_filters(group_filters)
+            filter_ = create_filter(group_selects, default=True)
+            yield from self.__iter(self.manifest_path, manifest_spec, filter_)
+
+    def __iter(
+        self, manifest_path: Path, manifest_spec: ManifestSpec, filter_: FilterFunc
+    ) -> Generator[Manifest, None, None]:
+        deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
+        done: List[str] = self.__done
+
         manifest = Manifest.from_spec(manifest_spec, path=str(manifest_path))
         _LOGGER.debug("%r", manifest)
         yield manifest
@@ -83,21 +86,25 @@ class ManifestIter:
                 continue
             done.append(dep_project.path)
 
-            if not filter_(dep_project):
+            if not filter_(dep_project.path, dep_project.groups):
                 _LOGGER.debug("FILTERED OUT %r", dep_project)
                 continue
 
-            _LOGGER.debug("%r", dep_project)
-            dep_project_path = self.workspace.get_project_path(dep_project)
-
             # Recursive
+            dep_project_path = self.workspace.get_project_path(dep_project)
             dep_manifest_path = dep_project_path / dep_project.manifest_path
-            if dep_manifest_path.exists():
-                deps.append(dep_manifest_path)
+            try:
+                dep_manifest_spec = ManifestSpec.load(dep_manifest_path)
+            except ManifestNotFoundError:
+                pass
+            else:
+                group_selects = GroupSelects.from_groups(dep_project.with_groups)
+                deps.append((dep_manifest_path, dep_manifest_spec, group_selects))
 
         # We resolve all dependencies in a second iteration to prioritize the manifest
-        for dep_manifest_path in deps:
-            yield from self.__iter(dep_manifest_path)
+        for dep_manifest_path, dep_manifest_spec, dep_group_selects in deps:
+            dep_filter = create_filter(dep_group_selects)
+            yield from self.__iter(dep_manifest_path, dep_manifest_spec, dep_filter)
 
 
 class ProjectIter:
@@ -115,9 +122,9 @@ class ProjectIter:
     Args:
         workspace: The actual workspace
         manifest_path: Path to the manifest file **in the main project**.
+        group_filters: Group Filters.
 
     Keyword Args:
-        filter_: Filter function. Only projects where the filter method returns `True` on, are evaluated.
         skip_main: Do not yield main project.
         resolve_url: Resolve relative URLs to absolute ones.
 
@@ -131,13 +138,13 @@ class ProjectIter:
         self,
         workspace: Workspace,
         manifest_path: Path,
-        filter_: Optional[ProjectFilter] = None,
+        group_filters: GroupFilters,
         skip_main: bool = False,
         resolve_url: bool = False,
     ):
         self.workspace: Workspace = workspace
         self.manifest_path: Path = manifest_path
-        self.filter_: ProjectFilter = filter_ or default_filter
+        self.group_filters: GroupFilters = group_filters
         self.skip_main: bool = skip_main
         self.resolve_url: bool = resolve_url
         self.__done: List[str] = []
@@ -147,20 +154,23 @@ class ProjectIter:
         info = workspace.info
         self.__done = [str(info.main_path)]
         if not self.skip_main:
-            project = Project(name=info.main_path.name, path=str(info.main_path), is_main=True)
-            if self.filter_(project):
-                yield project
+            yield Project(name=info.main_path.name, path=str(info.main_path), is_main=True)
         try:
             manifest_spec = ManifestSpec.load(self.manifest_path)
         except ManifestNotFoundError:
             pass
         else:
-            yield from self.__iter(self.workspace.main_path, manifest_spec)
+            group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
+            group_selects = GroupSelects.from_group_filters(group_filters)
+            filter_ = create_filter(group_selects, default=True)
+            yield from self.__iter(self.workspace.main_path, manifest_spec, filter_)
 
-    def __iter(self, project_path: Path, manifest_spec: ManifestSpec) -> Generator[Project, None, None]:
-        deps: List[Tuple[Path, ManifestSpec]] = []
+    def __iter(
+        self, project_path: Path, manifest_spec: ManifestSpec, filter_: FilterFunc
+    ) -> Generator[Project, None, None]:
+        # pylint: disable=too-many-locals
+        deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
         refurl: Optional[str] = None
-        filter_ = self.filter_
         done: List[str] = self.__done
         if self.resolve_url and manifest_spec.dependencies:
             git = Git(resolve_relative(project_path))
@@ -177,8 +187,7 @@ class ProjectIter:
                 continue
             done.append(dep_project.path)
 
-            dep_project_path = self.workspace.get_project_path(dep_project)
-            if not filter_(dep_project):
+            if not filter_(dep_project.path, dep_project.groups):
                 _LOGGER.debug("FILTERED OUT %r", dep_project)
                 continue
 
@@ -186,14 +195,91 @@ class ProjectIter:
             yield dep_project
 
             # Recursive
+            dep_project_path = self.workspace.get_project_path(dep_project)
             dep_manifest_path = dep_project_path / dep_project.manifest_path
             try:
                 dep_manifest = ManifestSpec.load(dep_manifest_path)
             except ManifestNotFoundError:
                 pass
             else:
-                deps.append((dep_project_path, dep_manifest))
+                group_selects = GroupSelects.from_groups(dep_project.with_groups)
+                deps.append((dep_project_path, dep_manifest, group_selects))
 
         # We resolve all dependencies in a second iteration to prioritize the manifest
-        for dep_project_path, dep_manifest in deps:
-            yield from self.__iter(dep_project_path, dep_manifest)
+        for dep_project_path, dep_manifest, dep_group_selects in deps:
+            dep_filter = create_filter(dep_group_selects)
+            yield from self.__iter(dep_project_path, dep_manifest, dep_filter)
+
+
+def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterFunc:
+    """
+    Create Group Filter Function.
+
+    Filter projects based on their `path` and `groups`.
+    The filter has `group_selects`. A specification which groups should be included or excluded.
+    The default selection of these groups is controlled by `default`.
+
+    Keyword Args:
+        group_selects: Iterable with :any`GroupSelect`.
+        default: Default selection of all `groups`.
+
+    >>> group_filters=('+test', '+doc', '+feature@dep', '-doc')
+    >>> group_selects = GroupSelects.from_group_filters(group_filters)
+    >>> groupfilter = create_filter(group_selects)
+    >>> groupfilter('sub', tuple())
+    True
+    >>> groupfilter('sub', ('foo', 'bar'))
+    False
+    >>> groupfilter('sub', ('test',))
+    True
+    >>> groupfilter('sub', ('doc',))
+    False
+    >>> groupfilter('sub', ('test', 'doc'))
+    True
+    >>> groupfilter('sub', ('feature',))
+    False
+    >>> groupfilter('dep', ('feature',))
+    True
+
+    >>> groupfilter = create_filter(group_selects, default=True)
+    >>> groupfilter('sub', tuple())
+    True
+    >>> groupfilter('sub', ('foo', 'bar'))
+    True
+    >>> groupfilter('sub', ('test',))
+    True
+    >>> groupfilter('sub', ('doc',))
+    False
+    >>> groupfilter('sub', ('test', 'doc'))
+    True
+    >>> groupfilter('sub', ('feature',))
+    True
+    >>> groupfilter('dep', ('feature',))
+    True
+    """
+
+    if group_selects:
+
+        def filter_(path: str, groups: Groups):
+            if groups:
+                selects = {group: default for group in groups}
+                for group_select in group_selects:
+                    if group_select.group not in selects:
+                        # not relevant group name
+                        continue
+                    if group_select.path and not fnmatchcase(path, group_select.path):
+                        # not relevant path
+                        continue
+                    selects[group_select.group] = group_select.select
+                return any(selects.values())
+            return True
+
+    else:
+
+        def filter_(path: str, groups: Groups):
+            # pylint: disable=unused-argument
+            if groups:
+                return default
+            return True
+
+    return filter_

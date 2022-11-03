@@ -29,13 +29,13 @@ def gws(tmp_path, repos):
     """Initialized :any:`GitWS` on `repos`."""
     # pylint: disable=unused-argument
 
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
+    workspace = tmp_path / "main"
 
-    with chdir(workspace):
+    with chdir(tmp_path):
         gws = GitWS.clone(str(repos / "main"))
         gws.update(skip_main=True)
 
+    with chdir(workspace):
         yield gws
 
 
@@ -43,7 +43,7 @@ def test_status(tmp_path, gws):
     """Test status."""
     # pylint: disable=unused-argument
 
-    workspace = tmp_path / "workspace"
+    workspace = tmp_path / "main"
     dep1 = workspace / "dep1"
     dep2 = workspace / "dep2"
 
@@ -108,7 +108,7 @@ def test_workflow(tmp_path, gws):
     """Test Full Workflow."""
     # pylint: disable=unused-argument
 
-    workspace = tmp_path / "workspace"
+    workspace = tmp_path / "main"
     dep1 = workspace / "dep1"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
@@ -349,7 +349,7 @@ def test_checkout_file(tmp_path, gws):
     """Checkout files."""
     # pylint: disable=unused-argument
 
-    workspace = tmp_path / "workspace"
+    workspace = tmp_path / "main"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
 
@@ -411,7 +411,7 @@ def test_checkout(tmp_path, gws):
     """Checkout files."""
     # pylint: disable=unused-argument
 
-    workspace = tmp_path / "workspace"
+    workspace = tmp_path / "main"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
 
@@ -472,7 +472,7 @@ def test_add(tmp_path, gws):
     """Add."""
     # pylint: disable=unused-argument
 
-    workspace = tmp_path / "workspace"
+    workspace = tmp_path / "main"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
 
@@ -510,7 +510,7 @@ def test_diff(tmp_path, gws):
     """diff."""
     # pylint: disable=unused-argument
 
-    workspace = tmp_path / "workspace"
+    workspace = tmp_path / "main"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
 

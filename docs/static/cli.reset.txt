@@ -3,4 +3,8 @@ Usage: git-ws reset [OPTIONS] [PATHS]...
   Run 'git reset' on paths and choose the right git clone automatically.
 
 Options:
-  -h, --help  Show this message and exit.
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.

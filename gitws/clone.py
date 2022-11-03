@@ -20,6 +20,7 @@ Clone.
 A :any:`Clone` is just the assembly of a :any:`Project` and its corresponding git interface (:any:`Git`).
 """
 
+import logging
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
@@ -27,6 +28,8 @@ from ._util import get_repr
 from .datamodel import Project
 from .git import Git
 from .workspace import Workspace
+
+_LOGGER = logging.getLogger("git-ws")
 
 
 class Clone:
@@ -39,8 +42,6 @@ class Clone:
         git: Git.
     """
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(self, project: Project, git: Git):
         self.project = project
         self.git = git
@@ -51,6 +52,31 @@ class Clone:
         project_path = workspace.get_project_path(project, relative=True)
         git = Git(project_path)
         return Clone(project, git)
+
+    def check(self, exists=True, diff=True, no_revision=True):
+        """
+        Check Clone.
+
+        Keyword Args:
+            exists: Check if cloned.
+            diff: Check if revisions differ
+            no_revision: No revision specification.
+        """
+        if exists:
+            self.git.check()
+        project = self.project
+        projectrev = project.revision
+        if projectrev:
+            if diff:
+                try:
+                    clonerev = self.git.get_revision()
+                except FileNotFoundError:
+                    clonerev = None
+                if clonerev and projectrev != clonerev:
+                    _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
+        elif not project.is_main:
+            if no_revision:
+                _LOGGER.warning("Clone %s has no revision!", project.info)
 
     def __repr__(self):
         return get_repr(self, (self.project, self.git))
@@ -70,7 +96,7 @@ class Clone:
                 args=args,
                 kwargs=(
                     ("revision", project.revision, None),
-                    ("groups", ",".join(group.info for group in project.groups), ""),
+                    ("groups", ",".join(project.groups), ""),
                 ),
             )
         if options:

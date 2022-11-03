@@ -3,14 +3,14 @@ Usage: git-ws update [OPTIONS]
   Create/update all dependent git clones.
 
 Options:
-  -P, --project DIRECTORY  Project path to operate on only. All by default.
-                           This option can be specified multiple times.
-  -M, --manifest FILE      Manifest file. Initial clone/init settings by
-                           default.
-  -G, --groups TEXT        Group Filtering. TODO: more details. Initial
-                           clone/init filter settings by default.
-  -S, --skip-main          Skip Main Repository
-  --rebase                 Run 'git rebase' instead of 'git pull'
-  --prune                  Remove obsolete git clones
-  -f, --force              Enfore operation.
-  -h, --help               Show this message and exit.
+  -P, --project DIRECTORY    Project path to operate on only. All by default.
+                             This option can be specified multiple times.
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -S, --skip-main            Skip Main Repository
+  --rebase                   Run 'git rebase' instead of 'git pull'
+  --prune                    Remove obsolete git clones
+  -f, --force                Enfore operation.
+  -h, --help                 Show this message and exit.

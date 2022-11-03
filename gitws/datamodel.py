@@ -17,27 +17,208 @@
 """
 Central :any:`GitWS` Datamodel.
 
-* :any:`AppConfigData`: :any:`GitWS` Configuration.
-* :any:`Defaults`: Default Values.
-* :any:`Group`: Dependency Group.
-* :any:`Manifest`: Manifest as needed by :any:`GitWS`.
-* :any:`ManifestSpec`: Specification of the actual project.
-* :any:`Project`: A Single Dependency as needed by :any:`GitWS`.
-* :any:`ProjectSpec`: Dependency Specification from Manifest File.
+* :any:`Group`: Dependency Group. A string.
+* :any:`Groups`: Tuple of Group instances.
+* :any:`GroupFilter`: Group Filter Specification. A string.
+* :any:`GroupFilters`: Tuple of GroupFilter instances.
+* :any:`GroupSelect`: Group Selection. A converted :any:`GroupFilter` as needed by :any:`GitWS`.
+* :any:`GroupSelects`: Tuple of GroupSelect instances.
 * :any:`Remote`: Remote Alias.
+* :any:`Defaults`: Default Values.
+* :any:`ProjectSpec`: Dependency Specification from Manifest File.
+* :any:`Project`: A Single Dependency as needed by :any:`GitWS`.
+* :any:`ManifestSpec`: Specification of the actual project.
+* :any:`Manifest`: Manifest as needed by :any:`GitWS`.
+* :any:`AppConfigData`: :any:`GitWS` Configuration.
 """
 
+
+import re
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import tomlkit
-from pydantic import BaseSettings, Extra, Field, root_validator
+from pydantic import BaseSettings, Extra, Field, root_validator, validator
 
 from ._basemodel import BaseModel
 from ._url import urljoin, urlsub
 from ._util import add_comment, add_info, as_dict, get_repr, resolve_relative
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestError, ManifestNotFoundError
+
+_RE_GROUP = re.compile(r"\A[a-zA-Z0-9_][a-zA-Z0-9_\-]+\Z")
+
+ProjectPaths = Tuple[
+    str,
+]
+
+Group = str
+"""
+Dependency Group.
+
+A group is a name consisting of lower- and uppercase letters, numbers and underscore.
+Dashes are allowed. Except the first sign.
+
+Groups structure dependencies.
+"""
+
+
+def validate_group(group):
+    """
+    Validate Group.
+
+    Group is just a `str` for performance reasons. This function does the validation.
+    """
+    mat = _RE_GROUP.match(group)
+    if not mat:
+        raise ValueError(f"Invalid group {group!r}")
+
+
+class Groups(tuple):
+
+    """Groups."""
+
+    @staticmethod
+    def validate(groups):
+        """
+        Validate Groups.
+
+        Groups are just a `tuple` of `str` for performance reasons. This function does the validation.
+        """
+        for group in groups:
+            validate_group(group)
+
+
+_RE_GROUP_FILTER = re.compile(r"\A(?P<select>[\-\+])(?P<group>[a-zA-Z0-9_][a-zA-Z0-9_\-]*)?(@(?P<path>.+))?\Z")
+
+GroupFilter = str
+"""
+Group Filter.
+
+A group filter is a group name prefixed by '+' or '-', to select or deselect the group.
+A group filter can have an optional path at the end.
+
+Any :any:`GroupFilter` is later-on converted to a :any:`GroupSelect`.
+"""
+
+
+def validate_group_filter(group_filter):
+    """
+    Groups Filter.
+
+    Group Filters are just a `tuple` of `str` for performance reasons. This function does the validation.
+    """
+    mat = _RE_GROUP_FILTER.match(group_filter)
+    if not mat:
+        raise ValueError(f"Invalid group filter {group_filter!r}")
+
+
+class GroupFilters(tuple):
+    """
+    Groups Filter Specification from User.
+
+    Used by Config and Command Line Interface.
+    """
+
+    @staticmethod
+    def validate(group_filters):
+        """
+        Check Groups Filter.
+
+        Group Filters are just a `tuple` of `str` for performance reasons. This function does the validation.
+        """
+        for group_filter in group_filters:
+            validate_group_filter(group_filter)
+
+
+class GroupSelect(BaseModel):
+
+    """
+    Group Selection.
+
+    A group selection selects/deselects a specific group for a specific path.
+
+    Keyword Args:
+        select: Select (`True`) or Deselect (`False`)
+        group: Group Name.
+        path: Path.
+    """
+
+    group: Optional[Group] = None
+    """Group."""
+    select: bool
+    """Selected or not."""
+    path: Optional[str] = None
+    """Path."""
+
+    @staticmethod
+    def from_group_filter(group_filter) -> "GroupSelect":
+        """
+        Create Group Selection from `group_filter`.
+
+        >>> GroupSelect.from_group_filter("+test")
+        GroupSelect(group='test', select=True)
+        >>> GroupSelect.from_group_filter("-test")
+        GroupSelect(group='test', select=False)
+        >>> GroupSelect.from_group_filter("-test@path")
+        GroupSelect(group='test', select=False, path='path')
+        >>> GroupSelect.from_group_filter("te-st")
+        Traceback (most recent call last):
+            ...
+        ValueError: Invalid group selection 'te-st'
+        """
+        mat = _RE_GROUP_FILTER.match(group_filter)
+        if not mat:
+            raise ValueError(f"Invalid group selection {group_filter!r}")
+        data = mat.groupdict()
+        data["select"] = data["select"] == "+"
+        return GroupSelect(**data)
+
+    def __str__(self):
+        select = "+" if self.select else "-"
+        path = f"@{self.path}" if self.path else ""
+        return f"{select}{self.group}{path}"
+
+
+class GroupSelects(tuple):
+
+    """Collection from :any:`GroupSelect`."""
+
+    @staticmethod
+    def from_group_filters(group_filters: Optional[GroupFilters] = None) -> "GroupSelects":
+        """
+        Creage :any:`GroupSelects` from `group_filters`.
+
+        >>> GroupSelects.from_group_filters()
+        ()
+        >>> GroupSelects.from_group_filters(('', ))
+        ()
+        >>> GroupSelects.from_group_filters(('+test', ))
+        (GroupSelect(group='test', select=True),)
+        >>> GroupSelects.from_group_filters(('+test', '-doc'))
+        (GroupSelect(group='test', select=True), GroupSelect(group='doc', select=False))
+        """
+        group_filters = group_filters or GroupFilters()
+        items = [item.strip() for item in group_filters]
+        return GroupSelects(GroupSelect.from_group_filter(item) for item in items if item)
+
+    @staticmethod
+    def from_groups(groups: Optional[Groups] = None) -> "GroupSelects":
+        """
+        Creage :any:`GroupSelects` from `group_filters`.
+
+        >>> GroupSelects.from_groups()
+        ()
+        >>> GroupSelects.from_groups(('', ))
+        ()
+        >>> GroupSelects.from_groups(('test', ))
+        (GroupSelect(group='test', select=True),)
+        >>> GroupSelects.from_groups(('test', 'doc'))
+        (GroupSelect(group='test', select=True), GroupSelect(group='doc', select=True))
+        """
+        groups = groups or Groups()
+        items = [item.strip() for item in groups]
+        return GroupSelects(GroupSelect(group=item, select=True) for item in items if item)
 
 
 class Remote(BaseModel, allow_population_by_field_name=True):
@@ -65,8 +246,10 @@ class Defaults(BaseModel):
     These default values are used, if the project does not specify them.
 
     Keyword Args:
-        remote: Remote Name
-        revision: Revision
+        remote: Remote Name.
+        revision: Revision. Tag or Branch. SHA does not make sense here.
+        groups: Dependency Groups.
+        with_groups: Group Selection for refered projects.
     """
 
     remote: Optional[str] = None
@@ -75,42 +258,11 @@ class Defaults(BaseModel):
     revision: Optional[str] = None
     """The revision if not specified by the dependency. Tag or Branch. SHA does not make sense here."""
 
+    groups: Optional[Groups] = Groups()
+    """The `groups` if not specified by the dependency."""
 
-class Group(BaseModel):
-    """
-    Dependency Group.
-
-    Dependency groups structure dependencies.
-    Groups are optional by default.
-
-    Args:
-        name: Name
-
-    Keyword Args:
-        optional: Group is optional. Default is `True`.
-    """
-
-    name: str
-    """Group Name."""
-
-    optional: bool = True
-    """Group is optional and not required. Default is `True`."""
-
-    @property
-    def info(self):
-        """
-        `repr`-like information string.
-
-        >>> Group(name='name').info
-        'name'
-        >>> Group(name='name', optional=False).info
-        '+name'
-        >>> Group(name='name', optional=True).info
-        'name'
-        """
-        if not self.optional:
-            return f"+{self.name}"
-        return self.name
+    with_groups: Optional[Groups] = Groups()
+    """The `with_groups` if not specified by the dependency."""
 
 
 class Project(BaseModel):
@@ -125,10 +277,11 @@ class Project(BaseModel):
         path: Project Filesystem Path. Relative to Workspace Root Directory.
 
     Keyword Args:
-        url: URL
-        revision: Revision
+        url: URL. Assembled from `remote`s `url_base`, `sub_url` and/or `name`.
+        revision: Revision to be checked out. Tag, branch or SHA.
         manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. `git-ws.toml` by default.
         groups: Dependency Groups.
+        with_groups: Group Selection for refered project.
         is_main: Project is Main Project.
 
     The :any:`ProjectSpec` represents the User Interface. The options which can be specified in the manifest file.
@@ -149,16 +302,31 @@ class Project(BaseModel):
     """URL. Assembled from `remote`s `url_base`, `sub_url` and/or `name`."""
 
     revision: Optional[str] = None
-    """Revision to be checked out."""
+    """Revision to be checked out. Tag, branch or SHA."""
 
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
     """Path to the manifest file. Relative to `path`."""
 
-    groups: Tuple[Group, ...] = tuple()
-    """Groups."""
+    groups: Groups = Groups()
+    """Dependency Groups."""
+
+    with_groups: Groups = Field(Groups(), alias="with-groups")
+    """Group Selection for refered project."""
 
     is_main: bool = False
     """Project is the main project."""
+
+    @validator("groups", allow_reuse=True)
+    def _groups(cls, values):
+        # pylint: disable=no-self-argument,no-self-use
+        Groups.validate(values)
+        return values
+
+    @validator("with_groups", allow_reuse=True)
+    def _with_groups(cls, values):
+        # pylint: disable=no-self-argument,no-self-use
+        Groups.validate(values)
+        return values
 
     @property
     def info(self):
@@ -171,14 +339,14 @@ class Project(BaseModel):
         "name (path='path')"
         >>> Project(name='name', path='name', revision='main').info
         "name (revision='main')"
-        >>> Project(name='name', path='name', groups=(Group(name='test'), Group(name='doc', optional=False))).info
-        "name (groups='test,+doc')"
+        >>> Project(name='name', path='name', groups=('test', 'doc')).info
+        "name (groups='test,doc')"
         """
         options = get_repr(
             kwargs=(
                 ("revision", self.revision, None),
                 ("path", str(self.path), self.name),
-                ("groups", ",".join(group.info for group in self.groups), ""),
+                ("groups", ",".join(self.groups), ""),
             )
         )
         if self.is_main:
@@ -193,17 +361,19 @@ class Project(BaseModel):
         Create :any:`Project` from `manifest_spec` and `spec`.
 
         Args:
-            manifest_spec:
-            defaults: Default settings if not given by `spec`.
-            remotes: Remotes
+            manifest_spec: Manifest Specification.
             spec: Base project to be resolved.
+
+        Keyword Args:
+            refurl: Remote URL of the `manifest_spec`. If specified, relative URLs are resolved.
 
         :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
         :any:`ProjectSpec.from_project()` does the reverse.
         """
         defaults = manifest_spec.defaults
         remotes = manifest_spec.remotes
-        groups = manifest_spec.groups
+        project_groups = spec.groups or defaults.groups
+        project_with_groups = spec.with_groups or defaults.with_groups
         url = spec.url
         if not url:
             # URL assembly
@@ -221,14 +391,14 @@ class Project(BaseModel):
 
         # Resolve relative URLs.
         url = urljoin(refurl, url)
-        groupdict = {group.name: group for group in groups} if spec.groups else {}
         return Project(
             name=spec.name,
             path=spec.path or spec.name,
             url=url,
             revision=spec.revision or defaults.revision,
             manifest_path=spec.manifest_path,
-            groups=[groupdict.get(name, Group(name=name)) for name in spec.groups],
+            groups=project_groups,
+            with_groups=project_with_groups,
         )
 
 
@@ -249,6 +419,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         path: Project Filesystem Path. Relative to Workspace Root Directory.
         manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. `git-ws.toml` by default.
         groups: Dependency Groups.
+        with_groups: Group Selection for refered project.
 
     Some parameters are restricted:
 
@@ -285,8 +456,11 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
     """Path to the manifest file. Relative to `path`."""
 
-    groups: Tuple[str, ...] = tuple()
-    """Group Names."""
+    groups: Groups = Groups()
+    """Dependency Groups."""
+
+    with_groups: Groups = Field(Groups(), alias="with-groups")
+    """Group Selection for refered project."""
 
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
@@ -300,6 +474,18 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             raise ValueError("'url' and 'sub-url' are mutually exclusive")
         if sub_url and not remote:
             raise ValueError("'sub-url' requires 'remote'")
+        return values
+
+    @validator("groups", allow_reuse=True)
+    def _groups(cls, values):
+        # pylint: disable=no-self-argument,no-self-use
+        Groups.validate(values)
+        return values
+
+    @validator("with_groups", allow_reuse=True)
+    def _with_groups(cls, values):
+        # pylint: disable=no-self-argument,no-self-use
+        Groups.validate(values)
         return values
 
     @staticmethod
@@ -321,11 +507,12 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             url=project.url,
             revision=project.revision,
             manifest_path=project.manifest_path,
-            groups=[group.name for group in project.groups],
+            groups=project.groups,
+            with_groups=project.with_groups,
         )
 
 
-class Manifest(BaseModel, extra=Extra.allow):
+class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True):
 
     """
     Manifest.
@@ -333,10 +520,9 @@ class Manifest(BaseModel, extra=Extra.allow):
     A manifest describes the actual project and its dependencies.
 
     Keyword Args:
-        groups: Groups.
+        group_filters. Group Filtering.
         dependencies: Dependency Projects.
         path: Filesystem Path. Relative to Workspace Root Directory.
-
 
     The :any:`ManifestSpec` represents the User Interface. The options which can be specified in the manifest file.
     The :any:`Manifest` is the resolved version of :any:`ManifestSpec` with all calculated information needed by
@@ -345,14 +531,20 @@ class Manifest(BaseModel, extra=Extra.allow):
     :any:`Manifest.from_spec()` resolves a :any:`ManifestSpec` into a :any:`Manifest`.
     """
 
-    groups: Tuple[Group, ...] = tuple()
-    """Groups."""
+    group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
+    """Group Filtering."""
 
     dependencies: Tuple[Project, ...] = tuple()
     """Dependencies."""
 
     path: Optional[str] = None
     """Path to the manifest file, relative to project path."""
+
+    @validator("group_filters", allow_reuse=True)
+    def _group_filters(cls, values):
+        # pylint: disable=no-self-argument,no-self-use
+        GroupFilters.validate(values)
+        return values
 
     @staticmethod
     def from_spec(spec: "ManifestSpec", path: Optional[str] = None, refurl: Optional[str] = None) -> "Manifest":
@@ -367,11 +559,11 @@ class Manifest(BaseModel, extra=Extra.allow):
             refurl: URL of the repository containing `spec`.
 
         If `refurl` is specified, any relative URL in the :any:`ManifestSpec` and referred :any:`ProjectSpec` s
-        is resolved to an absolute URL.
+        are resolved to a absolute URLs.
         """
         dependencies = [Project.from_spec(spec, project_spec, refurl=refurl) for project_spec in spec.dependencies]
         return Manifest(
-            groups=spec.groups,
+            group_filters=spec.group_filters,
             dependencies=dependencies,
             path=path,
         )
@@ -391,7 +583,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     Keyword Args:
         version: Version String. Actually 1.0.
         remotes: Remote Aliases.
-        groups: Groups.
+        group_filters. Group Filtering.
         defaults: Default settings.
         dependencies: Dependency Projects.
     """
@@ -406,8 +598,8 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     remotes: Tuple[Remote, ...] = tuple()
     """Remotes."""
 
-    groups: Tuple[Group, ...] = tuple()
-    """Groups."""
+    group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
+    """Group Filtering."""
 
     defaults: Defaults = Defaults()
     """Default Values."""
@@ -427,16 +619,10 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
                 raise ValueError(f"Remote name {name!r} is used more than once")
         return values
 
-    @root_validator(allow_reuse=True)
-    def _groups_unique(cls, values):
+    @validator("group_filters", allow_reuse=True)
+    def _group_filters(cls, values):
         # pylint: disable=no-self-argument,no-self-use
-        names = set()
-        for group in values.get("groups", None) or []:
-            name = group.name
-            if name not in names:
-                names.add(name)
-            else:
-                raise ValueError(f"Group name {name!r} is used more than once")
+        GroupFilters.validate(values)
         return values
 
     @classmethod
@@ -444,8 +630,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         """
         Load :any:`ManifestSpec` from `path`.
 
-        The file referenced by `path` should be a TOML file according to the
-        manifest scheme.
+        The file referenced by `path` must be a TOML file according to the manifest scheme.
 
         Raises:
             ManifestNotFoundError: if file is not found
@@ -467,8 +652,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         Return :any:`ManifestSpec` as string.
 
         The output will include an inline documentation of all available options.
-        If `doc` or `path` are specified, any additional attributes and comments added by the user before
-        are **kept**.
+        If `doc` or `path` are specified, any additional attributes and comments are **kept**.
 
         Args:
             doc: Existing document to be updated.
@@ -502,19 +686,20 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     @classmethod
     def upgrade(cls, path: Path):
-        """Upgrade :any:`ManifestSpec` at `path` to latest revision including documentation."""
+        """Upgrade :any:`ManifestSpec` at `path` to latest version including documentation."""
         # read
         content = path.read_text()
         try:
             olddoc = tomlkit.parse(content)
-            data = dict(olddoc)
-            obj = cls(**data)
+            olddata = dict(olddoc)
+            olddata.pop("groups", None)
+            obj = cls(**olddata)
         except Exception as exc:
             raise ManifestError(resolve_relative(path), str(exc)) from None
 
         # merge
         newdoc = cls._create()
-        for key, value in olddoc.items():
+        for key, value in olddata.items():
             newdoc[key] = value
         for key, value in as_dict(obj).items():
             newdoc[key] = value
@@ -532,175 +717,39 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         add_info(
             doc,
             """
-Welcome to Git Workspace's Manifest. It actually contains 4 parts:
+Git Workspace's Manifest. Please see the documentation at:
 
-* Remotes
-* Groups
-* Defaults
-* Dependencies
+https://git-ws.readthedocs.io/en/latest/manual/manifest.html
 """,
         )
+        doc.add(tomlkit.nl())
+        doc.add(tomlkit.nl())
+
+        # Group Filtering
+        example = ManifestSpec(group_filters=GroupFilters(("+test", "-doc", "+feature@path")))
+        add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
+        doc.add("group-filters", tomlkit.array())
+        doc.add(tomlkit.nl())
+        doc.add(tomlkit.nl())
 
         # Remotes
-        add_info(
-            doc,
-            """\
-=========
- Remotes
-=========
-
-Remotes just refer to a directory with repositories.
-
-We support relative paths for dependencies. So, if your dependencies are next
-to your repository, you might NOT need any remote.
-In other terms: You only need remotes if your dependencies are located on
-OTHER servers than your server with this manifest.
-
-Remotes have two attributes:
-* name: Required. String.
-        Name of the remote. Any valid string. Must be unique within your
-        manifest.
-* url-base: Required. String.
-            URL Prefix. The project 'name' or 'sub-url' will be appended
-            later-on.
-""",
-        )
         example = ManifestSpec(remotes=[Remote(name="myremote", url_base="https://github.com/myuser")])
         add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
         doc.add("remotes", tomlkit.aot())
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
 
-        # Groups
-        add_info(
-            doc,
-            """\
-=========
- Groups
-=========
-
-Groups structure dependencies.
-
-Groups are optional by default.
-If a dependency belongs to a group, it becomes optional likewise.
-Groups can be later on selected/deselected by '+group' or '-group'.
-An optional group can be selected by '+group',
-a non-optional group can be deselected by '-group'.
-Deselection has higher priority than selection.
-
-Dependencies can refer to non-existing groups. You do NOT need to specify
-all used groups.
-
-Groups have two attributes:
-* name: Required. String.
-        Name of the group. Any valid string. Must be unique within your
-        manifest.
-* optional: Optional. Bool. Default is True.
-            Specifies if the group is optional. Meaning it must be selected
-            explicitly. Otherwise the dependency is not added by default.
-
-The following lines set a group as non-optional.""",
-        )
-        example = ManifestSpec(groups=[Group(name="test", optional=False)])
-        add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
-        doc.add("groups", tomlkit.aot())
-        doc.add(tomlkit.nl())
-        doc.add(tomlkit.nl())
-
         # Defaults
-        add_info(
-            doc,
-            """\
-==========
- Defaults
-==========
-
-The 'defaults' section specifies default values for dependencies.
-
-* remote: Optional. String.
-          Remote used as default.
-          The 'remote' MUST be defined in the 'remotes' section above!
-* revision: Optional. String.
-            Revision used as default. Tag or Branch.
-
-NOTE: It is recommended to specify a default revision (i.e. 'main').
-      If a dependency misses 'revision', GitWS will not take care about
-      revision handling. This may lead to strange side-effects. You
-      have been warned.""",
-        )
-
         doc.add("defaults", as_dict(Defaults()))
-        example = ManifestSpec(defaults=Defaults(remote="myserver", revision="main"))
+        example = ManifestSpec(
+            defaults=Defaults(remote="myserver", revision="main", groups=("+test",), with_groups=("doc",))
+        )
         add_comment(doc, "\n".join(example.dump(doc=tomlkit.document()).split("\n")[1:-1]))
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
 
         # Dependencies
-        add_info(
-            doc,
-            """\
-==============
- Dependencies
-==============
-
-The 'dependencies' section specifies all your git clones you need for your
-project to operate.
-
-A dependency has the following attributes:
-* name: Required. String.
-        Just name your dependency. It is recommended to choose a
-        unique name, but not a must.
-* remote: Optional. String. Restricted (see RESTRICTIONS below).
-          Remote Alias.
-          The 'remote' MUST be defined in the 'remotes' section above!
-          The 'remote' can also be specified in the 'defaults' section.
-* sub-url: Optional. String. Default: '../{name}[.git]' (see NOTE1 below).
-           Relative URL to 'url-base' of your specified 'remote'
-           OR
-           Relative URL to the URL of the repository containing this
-           manifest.
-* url: Optional. String. Restricted (see RESTRICTIONS below).
-       Absolute URL to the dependent repository.
-* revision: Optional. String.
-            Revision to be checked out.
-            If this attribute is left blank, GitWS does NOT manage the
-            dependency revision (see NOTE2 below)!
-            The 'revision' can also be specified in the 'defaults' section.
-* path: Optional. String. Default is '{name}'.
-        Project Filesystem Path. Relative to Workspace Root Directory.
-        The dependency 'name' is used as default for 'path'.
-        The 'path' MUST be unique within your manifest.
-* manifest_path: Optional. String. Default: 'git-ws.toml'.
-                  Path to manifest.
-                  Relative to 'path'.
-                  Avoid changing it! It is just additional effort.
-* groups: Optional. List of Strings.
-          Dependency Groups.
-          Dependencies can be categorized into groups.
-          Groups are optional by default. See 'groups' section above.
-
-NOTE1: 'sub-url' is '../{name}[.git]' by default. Meaning if the dependency
-       is next to your repository containing this manifest, the dependency
-       is automatically found.
-       The '.git' suffix is appended if the repository containing this
-       manifest uses a '.git' suffix.
-
-NOTE2: It is recommended to specify a revision (i.e. 'main') either
-       explicitly or via the 'default' section.
-       Without a 'revision' GitWS will not take care about revision
-       handling. This may lead to strange side-effects.
-       You have been warned.
-
-RESTRICTIONS:
-
-* `remote` and `url` are mutually exclusive.
-* `url` and `sub-url` are likewise mutually exclusive
-* `sub-url` requires a `remote`.
-
-
-A full flavored dependency using a 'remote':""",
-        )
-
+        add_info(doc, "A full flavored dependency using a 'remote':")
         example = ManifestSpec(
             dependencies=[
                 ProjectSpec(
@@ -771,13 +820,13 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     This option can be overridden by specifying the `GIT_WS_COLOR_UI` environment variable.
     """
 
-    groups: Optional[str] = Field(description="The groups to operate on.")
+    group_filters: Optional[GroupFilters] = Field(description="The groups to operate on.")
     """
     The groups to operate on.
 
     This is a filter for groups to operate on during workspace actions.
 
-    This option can be overridden by specifying the `GIT_WS_GROUPS` environment variable.
+    This option can be overridden by specifying the `GIT_WS_GROUP_FILTERS` environment variable.
     """
 
     @staticmethod

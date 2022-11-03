@@ -28,13 +28,13 @@ from .util import chdir, cli, format_output, run
 @fixture
 def gws(tmp_path, repos):
     """Initialized :any:`GitWS` on `repos`."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
+    workspace = tmp_path / "main"
 
-    with chdir(workspace):
+    with chdir(tmp_path):
         gws = GitWS.clone(str(repos / "main"))
         gws.update(skip_main=True)
 
+    with chdir(workspace):
         yield gws
 
 
@@ -102,7 +102,7 @@ def test_update(tmp_path, repos, gws):
         "Pulling branch 'main'.",
         "===== dep1 (revision='main') =====",
         "Pulling branch 'main'.",
-        "===== sub/dep6 ('dep6', revision='main', groups='+foo,+bar,+fast') =====",
+        "===== sub/dep6 ('dep6', revision='main', groups='foo,bar,fast') =====",
         "Cloning 'TMP/repos/dep6'.",
         "===== dep4 (revision='4-feature') =====",
         "Fetching.",
@@ -175,7 +175,7 @@ def test_update_rebase(tmp_path, repos, gws):
         "===== dep1 (revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== sub/dep6 ('dep6', revision='main', groups='+foo,+bar,+fast') =====",
+        "===== sub/dep6 ('dep6', revision='main', groups='foo,bar,fast') =====",
         "Cloning 'TMP/repos/dep6'.",
         "===== dep4 (revision='4-feature') =====",
         "Fetching.",

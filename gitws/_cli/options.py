@@ -41,7 +41,7 @@ def manifest_option(initial=False):
         help_ = f"Manifest file. '{MANIFEST_PATH_DEFAULT!s}' by default."
         default = MANIFEST_PATH_DEFAULT
     else:
-        help_ = "Manifest file. Initial clone/init settings by default."
+        help_ = "Manifest file. Initial/Configuration settings by default."
         default = None
     return click.option(
         "--manifest", "-M", "manifest_path", type=click.Path(dir_okay=False), default=default, help=help_
@@ -58,7 +58,7 @@ def force_option():
     return click.option("--force", "-f", is_flag=True, help="Enfore operation.")
 
 
-def groups_option(initial=False):
+def group_filters_option(initial=False):
     """Group Filter Option."""
     if initial:
         help_ = """\
@@ -72,7 +72,7 @@ Group Filtering.
 TODO: more details.
 Initial clone/init filter settings by default.
 """
-    return click.option("--groups", "-G", "groups", help=help_)
+    return click.option("--group-filter", "-G", "group_filters", metavar="FILTER", multiple=True, help=help_)
 
 
 def reverse_option():

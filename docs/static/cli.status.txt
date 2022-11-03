@@ -3,5 +3,9 @@ Usage: git-ws status [OPTIONS] [PATHS]...
   Run 'git status' (displayed paths include the actual clone path).
 
 Options:
-  -b, --branch  show branch information
-  -h, --help    Show this message and exit.
+  -b, --branch               show branch information
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.
