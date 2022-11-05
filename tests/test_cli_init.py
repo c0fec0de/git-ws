@@ -47,7 +47,7 @@ def test_cli_git(tmp_path):
         assert not (tmp_path / ".git-ws").exists()
 
         assert cli(["init"], exit_code=1) == [
-            "===== main (MAIN) =====",
+            "===== . (MAIN 'main') =====",
             "Error: Manifest has not been found at 'git-ws.toml'. Try:",
             "",
             "    git ws manifest create --manifest='git-ws.toml'",
@@ -63,7 +63,7 @@ def test_cli_git(tmp_path):
         assert manifest_path.read_text() == MANIFEST_DEFAULT
 
         assert cli(["init"]) == [
-            "===== main (MAIN) =====",
+            "===== . (MAIN 'main') =====",
             "Workspace initialized at '..'.",
             "Please continue with:",
             "",
@@ -89,7 +89,7 @@ def test_cli_abs_manifest(tmp_path):
         assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
 
         assert cli(["init", "-M", str(main_path / "git-ws.toml")]) == [
-            "===== main (MAIN) =====",
+            "===== . (MAIN 'main') =====",
             "Workspace initialized at '..'.",
             "Please continue with:",
             "",
@@ -117,7 +117,7 @@ def test_cli_git_path(tmp_path):
         assert cli(["init", "main", "add"], exit_code=1) == ["Error: more than one PATH specified", ""]
 
         assert cli(["init", "main"]) == [
-            "===== main (MAIN) =====",
+            "===== main (MAIN 'main') =====",
             "Workspace initialized at '.'.",
             "Please continue with:",
             "",
@@ -126,7 +126,7 @@ def test_cli_git_path(tmp_path):
             "",
         ]
 
-        assert cli(["checkout"]) == ["===== main (MAIN) =====", ""]
+        assert cli(["checkout"]) == ["===== main (MAIN 'main') =====", ""]
 
     assert (
         (tmp_path / ".git-ws" / "info.toml").read_text()
@@ -165,7 +165,7 @@ def test_cli_init_exists(tmp_path):
 
         assert not (tmp_path / ".git-ws").exists()
         assert cli(["init", "--force"], tmp_path=tmp_path) == [
-            "===== main (MAIN) =====",
+            "===== . (MAIN 'main') =====",
             "Workspace initialized at '..'.",
             "Please continue with:",
             "",
@@ -189,7 +189,7 @@ def test_cli_git_update(tmp_path):
         assert manifest_path.read_text() == MANIFEST_DEFAULT
 
         assert cli(["init", "--update"], tmp_path=tmp_path) == [
-            "===== main (MAIN) =====",
+            "===== . (MAIN 'main') =====",
             "Workspace initialized at '..'.",
             "",
         ]

@@ -186,7 +186,7 @@ class GitWS:
         if not force:
             Workspace.check_empty(path, main_path)
         name = main_path.name
-        secho(f"===== {name} (MAIN) =====", fg=_COLOR_BANNER)
+        secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         return GitWS.create(path, main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho)
 
     def deinit(self):
@@ -230,7 +230,7 @@ class GitWS:
         path = main_path.parent
         if not force:
             Workspace.check_empty(path, main_path)
-        secho(f"===== {resolve_relative(main_path)} (MAIN) =====", fg=_COLOR_BANNER)
+        secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
         git = Git(resolve_relative(main_path))
         git.clone(url)
@@ -319,7 +319,7 @@ class GitWS:
         for obsolete_path in workspace.iter_obsoletes(used):
             name = resolve_relative(obsolete_path, workspace.path)
             rel_path = resolve_relative(obsolete_path)
-            self.secho(f"===== {name} (OBSOLETE) =====", fg=_COLOR_BANNER)
+            self.secho(f"===== {rel_path} (OBSOLETE) =====", fg=_COLOR_BANNER)
             self.secho(f"Removing {str(rel_path)!r}.", fg=_COLOR_ACTION)
             git = Git(obsolete_path)
             if force or not git.is_cloned() or git.is_empty():

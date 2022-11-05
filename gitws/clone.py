@@ -89,19 +89,16 @@ class Clone:
         project = self.project
         path = str(self.git.path)
         if project.is_main:
-            options = "MAIN"
+            options = f"MAIN {project.name!r}"
         else:
-            args = (project.name,) if project.name != path else tuple()
             options = get_repr(
-                args=args,
+                args=(project.name,),
                 kwargs=(
                     ("revision", project.revision, None),
                     ("groups", ",".join(project.groups), ""),
                 ),
             )
-        if options:
-            return f"{path} ({options})"
-        return path
+        return f"{path} ({options})"
 
 
 ClonePaths = Tuple[Clone, Tuple[Path, ...]]

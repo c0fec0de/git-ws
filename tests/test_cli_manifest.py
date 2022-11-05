@@ -218,17 +218,17 @@ def test_freeze(tmp_path, gws):
     ]
 
     assert cli(["update", "-G", "+test"], tmp_path=tmp_path) == [
-        "===== main (MAIN) =====",
+        "===== main (MAIN 'main') =====",
         "Pulling branch 'main'.",
-        "===== dep1 =====",
+        "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "Pulling branch 'main'.",
-        "===== dep2 (revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature') =====",
         "Pulling branch '1-feature'.",
-        "===== dep3 (groups='test') =====",
+        "===== dep3 ('dep3', groups='test') =====",
         "git-ws WARNING Clone dep3 (groups='test') has no revision!",
         "Cloning 'TMP/repos/dep3'.",
-        "===== dep4 (revision='main') =====",
+        "===== dep4 ('dep4', revision='main') =====",
         "Pulling branch 'main'.",
         "",
     ]
@@ -243,15 +243,15 @@ def test_freeze(tmp_path, gws):
     assert output_path.read_text().split("\n") == default
 
     assert cli(["update", "--manifest", str(output_path)]) == [
-        "===== main (MAIN) =====",
+        "===== main (MAIN 'main') =====",
         "Pulling branch 'main'.",
-        f"===== dep1 (revision={sha1!r}) =====",
+        f"===== dep1 ('dep1', revision={sha1!r}) =====",
         "Fetching.",
         f"Checking out {sha1!r} (previously 'main').",
-        f"===== dep2 (revision={sha2!r}) =====",
+        f"===== dep2 ('dep2', revision={sha2!r}) =====",
         "Fetching.",
         f"Checking out {sha2!r} (previously '1-feature').",
-        f"===== dep4 (revision={sha4!r}) =====",
+        f"===== dep4 ('dep4', revision={sha4!r}) =====",
         "Fetching.",
         f"Checking out {sha4!r} (previously 'main').",
         "",
@@ -261,13 +261,13 @@ def test_freeze(tmp_path, gws):
     assert cli(["manifest", "freeze"]) == default + [""]
 
     assert cli(["update", "--manifest", str(output_path)]) == [
-        "===== main (MAIN) =====",
+        "===== main (MAIN 'main') =====",
         "Pulling branch 'main'.",
-        f"===== dep1 (revision={sha1!r}) =====",
+        f"===== dep1 ('dep1', revision={sha1!r}) =====",
         "Nothing to do.",
-        f"===== dep2 (revision={sha2!r}) =====",
+        f"===== dep2 ('dep2', revision={sha2!r}) =====",
         "Nothing to do.",
-        f"===== dep4 (revision={sha4!r}) =====",
+        f"===== dep4 ('dep4', revision={sha4!r}) =====",
         "Nothing to do.",
         "",
     ]
