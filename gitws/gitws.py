@@ -317,7 +317,6 @@ class GitWS:
 
     def _prune(self, workspace: Workspace, used: List[Path], force: bool = False):
         for obsolete_path in workspace.iter_obsoletes(used):
-            name = resolve_relative(obsolete_path, workspace.path)
             rel_path = resolve_relative(obsolete_path)
             self.secho(f"===== {rel_path} (OBSOLETE) =====", fg=_COLOR_BANNER)
             self.secho(f"Removing {str(rel_path)!r}.", fg=_COLOR_ACTION)
