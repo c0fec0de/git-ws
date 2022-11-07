@@ -67,6 +67,9 @@ def test_cli_clone_path(tmp_path, repos):
         check(workspace, "dep4", exists=False)
         check(workspace, "dep5", exists=False)
 
+        # Disable color here, to test normal error output
+        assert cli(("config", "set", "color_ui", "False")) == [""]
+
         assert cli(["checkout"], tmp_path=tmp_path) == [
             "===== main2 (MAIN 'main2') =====",
             "===== dep1 ('dep1') =====",
