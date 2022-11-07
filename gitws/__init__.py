@@ -31,7 +31,21 @@ import logging
 
 from .appconfig import AppConfig, AppConfigLocation
 from .clone import Clone, map_paths
-from .datamodel import AppConfigData, Defaults, Group, Manifest, ManifestSpec, Project, ProjectSpec, Remote
+from .datamodel import (
+    AppConfigData,
+    Defaults,
+    Group,
+    GroupFilter,
+    GroupFilters,
+    Groups,
+    GroupSelect,
+    GroupSelects,
+    Manifest,
+    ManifestSpec,
+    Project,
+    ProjectSpec,
+    Remote,
+)
 from .exceptions import (
     GitCloneMissingError,
     GitCloneNotCleanError,
@@ -46,7 +60,6 @@ from .exceptions import (
     UninitializedError,
     WorkspaceNotEmptyError,
 )
-from .filters import Filter
 from .git import Git
 from .gitws import GitWS
 from .iters import ManifestIter, ProjectIter

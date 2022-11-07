@@ -6,9 +6,9 @@ Usage: git-ws init [OPTIONS] [PATH]...
   created by 'git init' or 'git clone'.
 
 Options:
-  -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
-  -G, --groups TEXT    Group Filtering. TODO: more details. The setting
-                       becomes default for all successive runs.
-  -U, --update         Run 'git ws update' too.
-  -f, --force          Enfore operation.
-  -h, --help           Show this message and exit.
+  -M, --manifest FILE        Manifest file. 'git-ws.toml' by default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. The setting
+                             becomes default for all successive runs.
+  -U, --update               Run 'git ws update' too.
+  -f, --force                Enfore operation.
+  -h, --help                 Show this message and exit.

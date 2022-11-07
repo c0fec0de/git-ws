@@ -3,6 +3,10 @@ Usage: git-ws add [OPTIONS] [PATHS]...
   Run 'git add' on paths and choose the right git clone automatically.
 
 Options:
-  -f, --force  allow adding otherwise ignored files
-  -A, --all    add changes from all tracked and untracked files
-  -h, --help   Show this message and exit.
+  -f, --force                allow adding otherwise ignored files
+  -A, --all                  add changes from all tracked and untracked files
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.

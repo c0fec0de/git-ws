@@ -15,261 +15,24 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Clone Testing."""
-from gitws import GitWS, Group, Manifest, Project
+from pytest import raises
+
+from gitws import GitCloneNotCleanError, GitWS, Manifest, Project
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, cli
-
-
-def check(workspace, name, content=None, exists=True):
-    """Check."""
-    file_path = workspace / name / "data.txt"
-    content = content or name
-    if exists:
-        assert file_path.exists()
-        assert file_path.read_text() == f"{content}"
-    else:
-        assert not file_path.exists()
-
-
-def test_cli_clone(tmp_path, repos):
-    """Cloning via CLI."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
-
-    with chdir(workspace):
-        assert cli(["clone", str(repos / "main")]) == [
-            "===== main (MAIN) =====",
-            f"Cloning '{tmp_path}/repos/main'.",
-            "Workspace initialized at '.'. Please continue with:",
-            "",
-            "    git ws update",
-            "",
-            "",
-        ]
-
-        check(workspace, "main")
-        check(workspace, "dep1", exists=False)
-        check(workspace, "dep2", exists=False)
-        check(workspace, "dep3", exists=False)
-        check(workspace, "dep4", exists=False)
-        check(workspace, "dep5", exists=False)
-
-
-def test_cli_clone_path(tmp_path, repos):
-    """Cloning via CLI."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
-
-    with chdir(workspace):
-        assert cli(["clone", str(repos / "main"), "main2"]) == [
-            "===== main2 (MAIN) =====",
-            f"Cloning '{tmp_path}/repos/main'.",
-            "Workspace initialized at '.'. Please continue with:",
-            "",
-            "    git ws update",
-            "",
-            "",
-        ]
-
-        check(workspace, "main", exists=False)
-        check(workspace, "main2", content="main")
-        check(workspace, "dep1", exists=False)
-        check(workspace, "dep2", exists=False)
-        check(workspace, "dep3", exists=False)
-        check(workspace, "dep4", exists=False)
-        check(workspace, "dep5", exists=False)
-
-        assert cli(["checkout"], tmp_path=tmp_path) == [
-            "===== main2 (MAIN) =====",
-            "===== dep1 =====",
-            "Cloning 'TMP/repos/dep1'.",
-            "git-ws WARNING Clone dep1 has no revision!",
-            "===== dep2 (revision='1-feature') =====",
-            "Cloning 'TMP/repos/dep2'.",
-            "===== dep4 (revision='main') =====",
-            "Cloning 'TMP/repos/dep4'.",
-            "",
-        ]
-
-        check(workspace, "main", exists=False)
-        check(workspace, "main2", content="main")
-        check(workspace, "dep1")
-        check(workspace, "dep2", content="dep2-feature")
-        check(workspace, "dep3", exists=False)
-        check(workspace, "dep4")
-        check(workspace, "dep5", exists=False)
-
-
-def test_cli_clone_not_empty(tmp_path, repos):
-    """Cloning via CLI not empty."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
-
-    with chdir(workspace):
-        (workspace / "file.txt").touch()
-        assert cli(["clone", str(repos / "main")], exit_code=1) == [
-            "Error: Workspace '.' is not an empty directory.",
-            "",
-            "Choose an empty directory or use '--force'",
-            "",
-            "",
-        ]
-
-        check(workspace, "main", exists=False)
-        check(workspace, "dep1", exists=False)
-        check(workspace, "dep2", exists=False)
-        check(workspace, "dep3", exists=False)
-        check(workspace, "dep4", exists=False)
-        check(workspace, "dep5", exists=False)
-
-        assert cli(["clone", str(repos / "main"), "--force"], tmp_path=tmp_path) == [
-            "===== main (MAIN) =====",
-            "Cloning 'TMP/repos/main'.",
-            "Workspace initialized at '.'. Please continue with:",
-            "",
-            "    git ws update",
-            "",
-            "",
-        ]
-
-        check(workspace, "main")
-        check(workspace, "dep1", exists=False)
-        check(workspace, "dep2", exists=False)
-        check(workspace, "dep3", exists=False)
-        check(workspace, "dep4", exists=False)
-        check(workspace, "dep5", exists=False)
-
-
-def test_cli_clone_update(tmp_path, repos):
-    """Cloning via CLI."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
-
-    with chdir(workspace):
-        assert cli(["clone", str(repos / "main"), "--update"]) == [
-            "===== main (MAIN) =====",
-            f"Cloning '{tmp_path}/repos/main'.",
-            "===== dep1 =====",
-            "git-ws WARNING Clone dep1 has no revision!",
-            f"Cloning '{tmp_path}/repos/dep1'.",
-            "===== dep2 (revision='1-feature') =====",
-            f"Cloning '{tmp_path}/repos/dep2'.",
-            "===== dep4 (revision='main') =====",
-            f"Cloning '{tmp_path}/repos/dep4'.",
-            "",
-        ]
-
-    check(workspace, "main")
-    check(workspace, "dep1")
-    check(workspace, "dep2", content="dep2-feature")
-    check(workspace, "dep3", exists=False)
-    check(workspace, "dep4")
-    check(workspace, "dep5", exists=False)
-
-
-def test_cli_clone_checkout(tmp_path, repos):
-    """Cloning via CLI and checkout."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
-
-    with chdir(workspace):
-        assert cli(["clone", str(repos / "main")]) == [
-            "===== main (MAIN) =====",
-            f"Cloning '{tmp_path}/repos/main'.",
-            "Workspace initialized at '.'. Please continue with:",
-            "",
-            "    git ws update",
-            "",
-            "",
-        ]
-
-        check(workspace, "main")
-        check(workspace, "dep1", exists=False)
-        check(workspace, "dep2", exists=False)
-        check(workspace, "dep3", exists=False)
-        check(workspace, "dep4", exists=False)
-        check(workspace, "dep5", exists=False)
-
-    with chdir(workspace / "main"):
-        assert cli(["checkout"], tmp_path=tmp_path) == [
-            "===== . (MAIN) =====",
-            "===== ../dep1 ('dep1') =====",
-            "Cloning 'TMP/repos/dep1'.",
-            "git-ws WARNING Clone dep1 has no revision!",
-            "===== ../dep2 ('dep2', revision='1-feature') =====",
-            "Cloning 'TMP/repos/dep2'.",
-            "===== ../dep4 ('dep4', revision='main') =====",
-            "Cloning 'TMP/repos/dep4'.",
-            "",
-        ]
-
-        check(workspace, "main")
-        check(workspace, "dep1")
-        check(workspace, "dep2", content="dep2-feature")
-        check(workspace, "dep3", exists=False)
-        check(workspace, "dep4")
-        check(workspace, "dep5", exists=False)
-
-
-def test_cli_clone_groups(tmp_path, repos):
-    """Cloning via CLI with groups."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
-
-    with chdir(workspace):
-        assert cli(["clone", str(repos / "main"), "-G", "+test"]) == [
-            "===== main (MAIN) =====",
-            "Cloning " f"'{tmp_path}/repos/main'.",
-            "Workspace initialized at '.'. Please continue with:",
-            "",
-            "    git ws update",
-            "",
-            "",
-        ]
-
-        check(workspace, "main")
-        check(workspace, "dep1", exists=False)
-        check(workspace, "dep2", exists=False)
-        check(workspace, "dep3", exists=False)
-        check(workspace, "dep4", exists=False)
-        check(workspace, "dep5", exists=False)
-
-        assert cli(["update"]) == [
-            "Groups: '+test'",
-            "===== main (MAIN) =====",
-            "Pulling branch 'main'.",
-            "===== dep1 =====",
-            "git-ws WARNING Clone dep1 has no revision!",
-            f"Cloning '{tmp_path}/repos/dep1'.",
-            "===== dep2 (revision='1-feature') =====",
-            f"Cloning '{tmp_path}/repos/dep2'.",
-            "===== dep4 (revision='main') =====",
-            f"Cloning '{tmp_path}/repos/dep4'.",
-            "===== dep3 (revision='main', groups='test') =====",
-            f"Cloning '{tmp_path}/repos/dep3'.",
-            "",
-        ]
-
-        check(workspace, "main")
-        check(workspace, "dep1")
-        check(workspace, "dep2", content="dep2-feature")
-        check(workspace, "dep3")
-        check(workspace, "dep4")
-        check(workspace, "dep5", exists=False)
+from .util import chdir, check
 
 
 def test_clone(tmp_path, repos):
     """Test Cloning."""
 
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
+    workspace = tmp_path / "main"
 
-    with chdir(workspace):
-        main_path = repos / "main"
-        gws = GitWS.clone(str(main_path))
+    with chdir(tmp_path):
+        gws = GitWS.clone(str(repos / "main"))
         assert gws.path == workspace
+
         gws.update()
         assert gws.get_manifest().path == str(workspace / "main" / "git-ws.toml")
 
@@ -280,8 +43,9 @@ def test_clone(tmp_path, repos):
         check(workspace, "dep4")
         check(workspace, "dep5", exists=False)
 
-        rrepo = GitWS.from_path()
-        assert gws == rrepo
+        with chdir(workspace):
+            rrepo = GitWS.from_path()
+            assert gws == rrepo
 
         assert list(gws.projects()) == [
             Project(name="main", path="main", is_main=True),
@@ -291,42 +55,44 @@ def test_clone(tmp_path, repos):
         ]
         assert list(gws.manifests()) == [
             Manifest(
+                group_filters=("-test",),
                 dependencies=(
                     Project(name="dep1", path="dep1", url="../dep1"),
                     Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+                    Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
                 ),
-                path=str(tmp_path / "workspace/main/git-ws.toml"),
+                path=str(workspace / "main" / "git-ws.toml"),
             ),
             Manifest(
                 dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
-                path=str(tmp_path / "workspace/dep1/git-ws.toml"),
+                path=str(workspace / "dep1" / "git-ws.toml"),
             ),
             Manifest(
-                groups=(Group(name="test"),),
+                group_filters=("-test",),
                 dependencies=(
-                    Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
+                    Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=("test",)),
                     Project(name="dep4", path="dep4", url="../dep4", revision="main"),
                 ),
-                path=str(tmp_path / "workspace/dep2/git-ws.toml"),
+                path=str(workspace / "dep2" / "git-ws.toml"),
             ),
         ]
         assert list(str(item) for item in gws.clones()) == [
-            "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main')))",
-            "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('dep1')))",
-            "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), Git(PosixPath('dep2')))",
-            "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('dep4')))",
+            "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main/main')))",
+            "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
+            "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), "
+            "Git(PosixPath('main/dep2')))",
+            "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('main/dep4')))",
         ]
 
 
 def test_clone_groups(tmp_path, repos):
     """Test Cloning."""
 
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
+    workspace = tmp_path / "main"
 
-    with chdir(workspace):
+    with chdir(tmp_path):
         main_path = repos / "main"
-        gws = GitWS.clone(str(main_path), groups="+test")
+        gws = GitWS.clone(str(main_path), group_filters=("+test",))
         gws.update()
         assert gws.get_manifest().path == str(workspace / "main" / "git-ws.toml")
 
@@ -337,67 +103,60 @@ def test_clone_groups(tmp_path, repos):
         check(workspace, "dep4")
         check(workspace, "dep5", exists=False)
 
-        rrepo = GitWS.from_path()
-        assert gws == rrepo
+        with chdir(workspace):
+            rrepo = GitWS.from_path()
+            assert gws == rrepo
 
         assert list(gws.projects()) == [
             Project(name="main", path="main", is_main=True),
             Project(name="dep1", path="dep1", url="../dep1"),
             Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+            Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
-            Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
-        ]
-        assert list(gws.projects(filter_=lambda project: not project.is_main)) == [
-            Project(name="dep1", path="dep1", url="../dep1"),
-            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
-            Project(name="dep4", path="dep4", url="../dep4", revision="main"),
-            Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
         ]
         assert list(gws.manifests()) == [
             Manifest(
+                group_filters=("-test",),
                 dependencies=(
                     Project(name="dep1", path="dep1", url="../dep1"),
                     Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+                    Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
                 ),
-                path=str(tmp_path / "workspace/main/git-ws.toml"),
+                path=str(workspace / "main" / "git-ws.toml"),
             ),
             Manifest(
                 dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
-                path=str(tmp_path / "workspace/dep1/git-ws.toml"),
+                path=str(workspace / "dep1" / "git-ws.toml"),
             ),
             Manifest(
-                groups=(Group(name="test"),),
+                group_filters=("-test",),
                 dependencies=(
-                    Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=(Group(name="test"),)),
+                    Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=("test",)),
                     Project(name="dep4", path="dep4", url="../dep4", revision="main"),
                 ),
-                path=str(tmp_path / "workspace/dep2/git-ws.toml"),
+                path=str(workspace / "dep2" / "git-ws.toml"),
             ),
             Manifest(
                 dependencies=(Project(name="dep2", path="dep2", url="../dep2"),),
-                path=str(tmp_path / "workspace/dep3/git-ws.toml"),
+                path=str(workspace / "dep3" / "git-ws.toml"),
             ),
         ]
         assert list(str(item) for item in gws.clones()) == [
-            "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main')))",
-            "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('dep1')))",
-            "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), Git(PosixPath('dep2')))",
-            "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('dep4')))",
-            "Clone(Project(name='dep3', path='dep3', url='../dep3', revision='main', "
-            "groups=(Group(name='test'),)), Git(PosixPath('dep3')))",
+            "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main/main')))",
+            "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
+            "Clone(Project(name='dep2', path='dep2', url='../dep2', "
+            "revision='1-feature'), Git(PosixPath('main/dep2')))",
+            "Clone(Project(name='dep3', path='dep3', url='../dep3', groups=('test',)), Git(PosixPath('main/dep3')))",
+            "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('main/dep4')))",
         ]
-
-        assert list(gws.projects(manifest_path="missing.toml")) == [Project(name="main", path="main", is_main=True)]
-        assert not list(gws.manifests(manifest_path="missing.toml"))
 
 
 def test_clone_other(tmp_path, repos):
     """Test Clone Other."""
 
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
+    workspace = tmp_path / "main"
 
-    with chdir(workspace):
+    with chdir(tmp_path):
         main_path = repos / "main"
         gws = GitWS.clone(str(main_path), manifest_path="other.toml")
         assert gws.path == workspace
@@ -411,10 +170,11 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
 
-        rrepo = GitWS.from_path()
-        assert gws == rrepo
+        with chdir(workspace):
+            rrepo = GitWS.from_path()
+            assert gws == rrepo
 
-        gws.update(manifest_path="git-ws.toml")
+        GitWS.from_path(manifest_path="git-ws.toml", path=workspace).update()
         assert gws.get_manifest().path == str(workspace / "main" / "other.toml")
 
         check(workspace, "main")
@@ -424,22 +184,7 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep4")
         check(workspace, "dep5", exists=False)
 
-        assert cli(("update",)) == [
-            "===== main (MAIN) =====",
-            "Pulling branch 'main'.",
-            "===== dep1 (revision='main') =====",
-            "Pulling branch 'main'.",
-            "===== sub/dep6 ('dep6', revision='main', groups='+foo,+bar,+fast') =====",
-            "Pulling branch 'main'.",
-            "===== dep4 (revision='4-feature') =====",
-            "Fetching.",
-            "Checking out '4-feature' (previously 'main').",
-            "Merging branch '4-feature'.",
-            "",
-        ]
-
-        # Disable color here, to test normal error output
-        assert cli(("config", "set", "color_ui", "False")) == [""]
+        gws.update()
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -451,23 +196,8 @@ def test_clone_other(tmp_path, repos):
         (workspace / "dep5").touch()
         (workspace / "dep2" / "file.txt").touch()
 
-        assert cli(("update", "--prune"), exit_code=1) == [
-            "===== main (MAIN) =====",
-            "Pulling branch 'main'.",
-            "===== dep1 (revision='main') =====",
-            "Pulling branch 'main'.",
-            "===== sub/dep6 ('dep6', revision='main', groups='+foo,+bar,+fast') =====",
-            "Pulling branch 'main'.",
-            "===== dep4 (revision='4-feature') =====",
-            "Pulling branch '4-feature'.",
-            "===== dep2 (OBSOLETE) =====",
-            "Removing 'dep2'.",
-            "Error: Git Clone 'dep2' contains changes.",
-            "",
-            "Commit/Push all your changes and branches or use '--force'",
-            "",
-            "",
-        ]
+        with raises(GitCloneNotCleanError):
+            gws.update(prune=True)
 
         check(workspace, "main")
         check(workspace, "dep1")
@@ -476,19 +206,7 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep4", content="dep4-feature")
         check(workspace, "dep5", exists=False)
 
-        assert cli(("update", "--prune", "--force")) == [
-            "===== main (MAIN) =====",
-            "Pulling branch 'main'.",
-            "===== dep1 (revision='main') =====",
-            "Pulling branch 'main'.",
-            "===== sub/dep6 ('dep6', revision='main', groups='+foo,+bar,+fast') =====",
-            "Pulling branch 'main'.",
-            "===== dep4 (revision='4-feature') =====",
-            "Pulling branch '4-feature'.",
-            "===== dep2 (OBSOLETE) =====",
-            "Removing 'dep2'.",
-            "",
-        ]
+        gws.update(prune=True, force=True)
 
         check(workspace, "main")
         check(workspace, "dep1")

@@ -1,3 +1,19 @@
+# Copyright 2022 c0fec0de
+#
+# This file is part of Git Workspace.
+#
+# Git Workspace is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# Git Workspace is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
+
 """Dependency Tree."""
 
 import logging
@@ -13,7 +29,7 @@ from .workspace import Workspace
 _LOGGER = logging.getLogger("git-ws")
 
 
-class Node(NodeMixin):
+class DepNode(NodeMixin):
     """
     Dependency Tree Node.
     """
@@ -24,17 +40,19 @@ class Node(NodeMixin):
         self.parent = parent
 
 
-def get_deptree(workspace: Workspace, manifest: Manifest) -> Node:
+def get_deptree(workspace: Workspace, manifest: Manifest, primary: bool = False) -> DepNode:
     """Calculate Dependency Tree."""
     main = str(workspace.info.main_path)
-    main_node = Node(Project(name=main, path=main), is_primary=True)
+    main_node = DepNode(Project(name=main, path=main), is_primary=True)
     primaries: List[str] = []
     edges: List[Tuple[str, str]] = []
-    _build(primaries, edges, workspace, main_node, manifest)
+    _build(primaries, edges, workspace, main_node, manifest, primary=primary)
     return main_node
 
 
-def _build(primaries: List, edges: List, workspace: Workspace, node: Node, manifest: Manifest):
+def _build(
+    primaries: List, edges: List, workspace: Workspace, node: DepNode, manifest: Manifest, primary: bool = False
+):
     _LOGGER.debug("get_deptree(primaries=%r, path=%r)", primaries, node.project.path)
     for project in manifest.dependencies:
         edge = (node.project.path, project.path)
@@ -44,7 +62,9 @@ def _build(primaries: List, edges: List, workspace: Workspace, node: Node, manif
         is_primary = project.path not in primaries
         if is_primary:
             primaries.append(project.path)
-        project_node = Node(project, is_primary=is_primary, parent=node)
+        elif primary:
+            continue
+        project_node = DepNode(project, is_primary=is_primary, parent=node)
         manifest_path = workspace.get_project_path(project) / project.manifest_path
         try:
             manifest_spec = ManifestSpec.load(manifest_path)
@@ -52,7 +72,7 @@ def _build(primaries: List, edges: List, workspace: Workspace, node: Node, manif
             continue
         manifest = Manifest.from_spec(manifest_spec)
         if is_primary:
-            _build(primaries, edges, workspace, project_node, manifest)
+            _build(primaries, edges, workspace, project_node, manifest, primary=primary)
 
 
 class DepDotExporter(DotExporter):
@@ -74,7 +94,7 @@ class DepDotExporter(DotExporter):
         labels = []
         if project.revision:
             labels.append(project.revision)
-        groups = ",".join(group.info for group in project.groups)
+        groups = ",".join(project.groups)
         if project.groups:
             labels.append(f"({groups})")
         if labels:
@@ -84,5 +104,5 @@ class DepDotExporter(DotExporter):
             return ";".join(attrs)
         return None
 
-    def __init__(self, node: Node):
+    def __init__(self, node: DepNode):
         super().__init__(node, nodenamefunc=self._nodename, edgeattrfunc=self._edgeattr)

@@ -44,7 +44,7 @@ def no_echo(text: str, **kwargs):
     """Just suppress `text`."""
 
 
-def resolve_relative(path: Path, base: Optional[Path] = None):
+def resolve_relative(path: Path, base: Optional[Path] = None) -> Path:
     """
     Return resolved `path` relative to `base`.
 

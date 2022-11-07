@@ -22,7 +22,7 @@ import click
 from gitws import GitWS, ManifestSpec
 
 from .common import COLOR_INFO, exceptionhandling, pass_context
-from .options import groups_option, manifest_option, output_option
+from .options import group_filters_option, manifest_option, output_option
 
 
 @click.group()
@@ -34,18 +34,18 @@ def manifest():
 
 @manifest.command()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @output_option()
 @pass_context
-def resolve(context, manifest_path=None, groups=None, output=None):
+def resolve(context, manifest_path=None, group_filters=None, output=None):
     """
     Print The Manifest With All Projects And All Their Dependencies.
 
     The output is a single manifest file with all dependencies and their dependencies.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path)
-        manifest = gws.get_manifest_spec(groups=groups, resolve=True)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
+        manifest = gws.get_manifest_spec(resolve=True)
         if output:
             manifest.save(Path(output))
         else:
@@ -54,10 +54,10 @@ def resolve(context, manifest_path=None, groups=None, output=None):
 
 @manifest.command()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @output_option()
 @pass_context
-def freeze(context, manifest_path=None, groups=None, output=None):
+def freeze(context, manifest_path=None, group_filters=None, output=None):
     """
     Print The Resolved Manifest With SHAs For All Project Revisions.
 
@@ -65,8 +65,8 @@ def freeze(context, manifest_path=None, groups=None, output=None):
     Revisions are replaced by the actual SHAs.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path)
-        manifest = gws.get_manifest_spec(groups=groups, freeze=True, resolve=True)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
+        manifest = gws.get_manifest_spec(freeze=True, resolve=True)
         if output:
             manifest.save(Path(output))
         else:
@@ -86,26 +86,28 @@ def validate(context, manifest_path=None):
 
 @manifest.command()
 @manifest_option()
+@group_filters_option()
 @pass_context
-def path(context, manifest_path=None):
+def path(context, manifest_path=None, group_filters=None):
     """
     Print Path to Main Manifest File.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
         manifest = next(gws.manifests())
         click.echo(str(manifest.path))
 
 
 @manifest.command()
 @manifest_option()
+@group_filters_option()
 @pass_context
-def paths(context, manifest_path=None):
+def paths(context, manifest_path=None, group_filters=None):
     """
     Print Paths to ALL Manifest Files.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path)
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
         for manifest in gws.manifests():
             click.echo(str(manifest.path))
 
