@@ -22,7 +22,7 @@ from typing import Callable, Generator, List, Optional, Tuple
 
 from ._util import resolve_relative
 from .datamodel import GroupFilters, Groups, GroupSelects, Manifest, ManifestSpec, Project
-from .exceptions import ManifestNotFoundError
+from .exceptions import GitCloneMissingOriginError, ManifestNotFoundError
 from .git import Git
 from .workspace import Workspace
 
@@ -175,6 +175,8 @@ class ProjectIter:
         if self.resolve_url and manifest_spec.dependencies:
             git = Git(resolve_relative(project_path))
             refurl = git.get_url()
+            if not refurl:
+                raise GitCloneMissingOriginError(resolve_relative(project_path))
 
         _LOGGER.debug("%r", manifest_spec)
 

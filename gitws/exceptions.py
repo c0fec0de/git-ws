@@ -133,3 +133,12 @@ class GitCloneNotCleanError(RuntimeError):
     def __init__(self, project_path):
         super().__init__(f"Git Clone {str(project_path)!r} contains changes.")
         self.project_path = project_path
+
+
+class GitCloneMissingOriginError(RuntimeError):
+    """Git Clone has no remote 'origin'."""
+
+    def __init__(self, project_path, remote="origin"):
+        super().__init__(f"Git Clone {str(project_path)!r} has not remote '{remote}'.")
+        self.project_path = project_path
+        self.remote = remote

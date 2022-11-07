@@ -193,3 +193,34 @@ def test_update_rebase(tmp_path, repos, gws):
         "git-ws WARNING Clone dep4 (revision='main') is on different revision: '4-feature'",
         "",
     ]
+
+
+def test_update_missing_origin(tmp_path, repos, gws):
+    """Test update."""
+    # pylint: disable=unused-argument
+
+    run(("git", "remote", "remove", "origin"), cwd=tmp_path / "main" / "dep4", check=True)
+
+    # Update project
+    assert cli(["checkout"]) == [
+        "===== main (MAIN 'main') =====",
+        "===== dep1 ('dep1') =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep4 ('dep4', revision='main') =====",
+        "",
+    ]
+
+    run(("git", "remote", "remove", "origin"), cwd=tmp_path / "main" / "dep2", check=True)
+    assert cli(["checkout"], exit_code=1) == [
+        "===== main (MAIN 'main') =====",
+        "===== dep1 ('dep1') =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep4 ('dep4', revision='main') =====",
+        "Error: Git Clone 'dep2' has not remote 'origin'. Try:",
+        "",
+        "    git remote add origin <URL>",
+        "",
+        "",
+    ]
