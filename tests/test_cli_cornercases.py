@@ -22,18 +22,7 @@ from gitws.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import
 from .fixtures import git_repo
-from .util import chdir, format_logs
-
-
-def check(workspace, name, content=None, exists=True):
-    """Check."""
-    file_path = workspace / name / "data.txt"
-    content = content or name
-    if exists:
-        assert file_path.exists()
-        assert file_path.read_text() == f"{content}"
-    else:
-        assert not file_path.exists()
+from .util import chdir, check, format_logs
 
 
 @fixture
@@ -81,10 +70,9 @@ def repos_deptop(tmp_path):
 
 def test_deptop(tmp_path, repos_deptop, caplog):
     """Initialized :any:`GitWS` on `repos_deptop`."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
+    workspace = tmp_path / "top"
 
-    with chdir(workspace):
+    with chdir(tmp_path):
         gws = GitWS.clone(str(repos_deptop / "top"))
 
         check(workspace, "top")
@@ -100,45 +88,46 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         check(workspace, "dep3")
 
     assert format_logs(caplog, tmp_path) == [
-        "INFO    git-ws Git('top').clone('TMP/repos/top', revision=None)",
-        "DEBUG   git-ws run(('git', 'clone', '--', 'TMP/repos/top', 'top'), cwd='None') OK stdout=None stderr=None",
-        "DEBUG   git-ws GitWS.create('.', 'top', 'git-ws.toml', groups=None)",
-        "INFO    git-ws Initialized . Info(main_path=PosixPath('top')) "
-        "AppConfigData(manifest_path='git-ws.toml', color_ui=True, groups=None)",
-        "DEBUG   git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='top') OK "
+        "INFO    git-ws Git('top/top').clone('TMP/repos/top', revision=None)",
+        "DEBUG   git-ws run(('git', 'clone', '--', 'TMP/repos/top', 'top/top'), "
+        "cwd='None') OK stdout=None stderr=None",
+        "DEBUG   git-ws GitWS.create('TMP/top', 'TMP/top/top', manifest_path='None', group-filters=None)",
+        "INFO    git-ws Workspace path=TMP/top main=top",
+        "INFO    git-ws AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None)",
+        "DEBUG   git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='top/top') OK "
         "stdout=b'TMP/repos/top\\n' stderr=b''",
-        "INFO    git-ws Git('top').get_url() = 'TMP/repos/top'",
+        "INFO    git-ws Git('top/top').get_url() = 'TMP/repos/top'",
         "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep1', "
         "url='../dep1'), ProjectSpec(name='dep2', url='../dep2')))",
         "DEBUG   git-ws Project(name='dep1', path='dep1', url='TMP/repos/dep1')",
         "WARNING git-ws Clone dep1 has no revision!",
-        "INFO    git-ws Git('dep1').clone('TMP/repos/dep1', revision=None)",
-        "DEBUG   git-ws run(('git', 'clone', '--', 'TMP/repos/dep1', 'dep1'), "
+        "INFO    git-ws Git('top/dep1').clone('TMP/repos/dep1', revision=None)",
+        "DEBUG   git-ws run(('git', 'clone', '--', 'TMP/repos/dep1', 'top/dep1'), "
         "cwd='None') OK stdout=None stderr=None",
         "DEBUG   git-ws Project(name='dep2', path='dep2', url='TMP/repos/dep2')",
         "WARNING git-ws Clone dep2 has no revision!",
-        "INFO    git-ws Git('dep2').clone('TMP/repos/dep2', revision=None)",
-        "DEBUG   git-ws run(('git', 'clone', '--', 'TMP/repos/dep2', 'dep2'), "
+        "INFO    git-ws Git('top/dep2').clone('TMP/repos/dep2', revision=None)",
+        "DEBUG   git-ws run(('git', 'clone', '--', 'TMP/repos/dep2', 'top/dep2'), "
         "cwd='None') OK stdout=None stderr=None",
-        "DEBUG   git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='dep1') OK "
-        "stdout=b'TMP/repos/dep1\\n' stderr=b''",
-        "INFO    git-ws Git('dep1').get_url() = 'TMP/repos/dep1'",
+        "DEBUG   git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='top/dep1') "
+        "OK stdout=b'TMP/repos/dep1\\n' stderr=b''",
+        "INFO    git-ws Git('top/dep1').get_url() = 'TMP/repos/dep1'",
         "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep3', "
         "url='../dep3', revision='main'), ProjectSpec(name='top', url='../top')))",
         "DEBUG   git-ws Project(name='dep3', path='dep3', url='TMP/repos/dep3', revision='main')",
-        "INFO    git-ws Git('dep3').clone('TMP/repos/dep3', revision='main')",
+        "INFO    git-ws Git('top/dep3').clone('TMP/repos/dep3', revision='main')",
         "DEBUG   git-ws run(('git', 'clone', '--no-checkout', '--', 'TMP/repos/dep3', "
-        "'dep3'), cwd='None') OK stdout=None stderr=None",
-        "DEBUG   git-ws run(['git', 'checkout', 'main'], cwd='dep3') OK stdout=None stderr=None",
+        "'top/dep3'), cwd='None') OK stdout=None stderr=None",
+        "DEBUG   git-ws run(['git', 'checkout', 'main'], cwd='top/dep3') OK stdout=None stderr=None",
         "DEBUG   git-ws DUPLICATE Project(name='top', path='top', url='TMP/repos/top')",
-        "DEBUG   git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='dep3') OK "
-        "stdout=b'TMP/repos/dep3\\n' stderr=b''",
-        "INFO    git-ws Git('dep3').get_url() = 'TMP/repos/dep3'",
+        "DEBUG   git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='top/dep3') "
+        "OK stdout=b'TMP/repos/dep3\\n' stderr=b''",
+        "INFO    git-ws Git('top/dep3').get_url() = 'TMP/repos/dep3'",
         "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='top'),))",
         "DEBUG   git-ws DUPLICATE Project(name='top', path='top', url='TMP/repos/top')",
-        "DEBUG   git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='dep2') OK "
-        "stdout=b'TMP/repos/dep2\\n' stderr=b''",
-        "INFO    git-ws Git('dep2').get_url() = 'TMP/repos/dep2'",
+        "DEBUG   git-ws run(['git', 'remote', 'get-url', 'origin'], cwd='top/dep2') "
+        "OK stdout=b'TMP/repos/dep2\\n' stderr=b''",
+        "INFO    git-ws Git('top/dep2').get_url() = 'TMP/repos/dep2'",
         "DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep3', url='../dep3', revision='main'),))",
         "DEBUG   git-ws DUPLICATE Project(name='dep3', path='dep3', url='TMP/repos/dep3', revision='main')",
     ]

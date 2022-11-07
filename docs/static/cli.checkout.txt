@@ -6,5 +6,9 @@ Usage: git-ws checkout [OPTIONS] [PATHS]...
   Checkout all clones to their manifest revision, if no paths are given.
 
 Options:
-  -f, --force  Enfore operation.
-  -h, --help   Show this message and exit.
+  -f, --force                Enfore operation.
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.

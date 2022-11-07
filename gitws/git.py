@@ -24,7 +24,7 @@ from typing import Generator, List, Optional, Tuple, Union
 
 from ._basemodel import BaseModel
 from ._util import get_repr, run
-from .exceptions import NoGitError
+from .exceptions import GitCloneMissingError, NoGitError
 
 _RE_STATUS = re.compile(r"\A(?P<index>.)(?P<work>.)\s((?P<orig_path>.+) -> )?(?P<path>.+)\Z")
 _RE_DIFFSTAT = re.compile(r"\A\s(?P<path>.+)\s\|\s(?P<stat>.+)\Z")
@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger("git-ws")
 
 class State(Enum):
     """
-    Actual State
+    Actual State (Part of `git status` line).
 
     >>> State(" ")
     <State.UNMODIFIED: ' '>
@@ -57,7 +57,7 @@ class State(Enum):
 
 
 class Status(BaseModel):
-    """Status."""
+    """Status (One `git status` line."""
 
     def with_path(self, path: Path) -> "Status":
         """Return :any:`Status` with `path`."""
@@ -104,7 +104,7 @@ class FileStatus(Status):
     """Status of the Index."""
 
     work: State
-    """Status of Workiing Tree."""
+    """Status of Working Tree."""
 
     path: Path
     """File Path."""
@@ -228,7 +228,7 @@ class Git:
         return Git(path=path)
 
     def is_cloned(self) -> bool:
-        """Check if clone already exists."""
+        """Return if clone already exists."""
         if not self.path.exists() or not self.path.is_dir():
             return False
         result = self._run(("rev-parse", "--show-cdup"), capture_output=True, check=False)
@@ -236,17 +236,22 @@ class Git:
         _LOGGER.info("Git(%r).is_cloned() = %r", str(self.path), cloned)
         return cloned
 
+    def check(self):
+        """Check clone."""
+        if not self.is_cloned():
+            raise GitCloneMissingError(self.path)
+
     def init(self, branch="main"):
         """Initialize Git Clone."""
         _LOGGER.info("Git(%r).init(branch=%r)", str(self.path), branch)
         self._run(("init", "-b", branch))
 
     def set_config(self, name, value):
-        """Configure."""
+        """Set Git Configuration `name` to `value`."""
         self._run(("config", name, value))
 
     def clone(self, url, revision=None):
-        """Clone."""
+        """Clone `url` and checkout `revision`."""
         _LOGGER.info("Git(%r).clone(%r, revision=%r)", str(self.path), url, revision)
         if revision:
             # We do not checkout, to be faster during switch later on
@@ -293,7 +298,14 @@ class Git:
         return url
 
     def checkout(self, revision: Optional[str] = None, paths: Optional[Tuple[Path, ...]] = None, force: bool = False):
-        """Checkout Revision."""
+        """
+        Checkout Revision.
+
+        Keyword Args:
+            revision: Revision to checkout.
+            paths: File Paths to checkout, otherwise entire repo.
+            force: Overwrite local changes.
+        """
         args = ["checkout"]
         if revision:
             args.append(revision)
@@ -322,8 +334,17 @@ class Git:
         _LOGGER.info("Git(%r).rebase()", str(self.path))
         self._run(("rebase",))
 
-    def add(self, paths: Optional[Tuple[Path, ...]] = None, force: bool = False, all_: bool = False):
-        """Add."""
+    def add(self, paths: Tuple[Path, ...] = None, force: bool = False, all_: bool = False):
+        """
+        Add.
+
+        Args:
+            paths: File Paths to add.
+
+        Keyword Args:
+            force: allow adding otherwise ignored files.
+            all_: add changes from all tracked and untracked files.
+        """
         _LOGGER.info("Git(%r).add(%r, force=%r, all_=%r)", str(self.path), paths, force, all_)
         args = ["add"]
         if force:
@@ -334,7 +355,14 @@ class Git:
 
     # pylint: disable=invalid-name
     def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
-        """rm."""
+        """
+        Remove.
+
+        Keyword Args:
+            cached: only remove from the index
+            force: override the up-to-date check
+            recursive: allow recursive removal
+        """
         _LOGGER.info(
             "Git(%r).rm(%r, cached=%r, force=%r, recursive=%r)", str(self.path), paths, cached, force, recursive
         )
@@ -348,12 +376,26 @@ class Git:
         self._run(args, paths=paths)
 
     def reset(self, paths: Tuple[Path, ...]):
-        """Reset."""
+        """
+        Reset.
+
+        Args:
+            paths: File paths.
+        """
         _LOGGER.info("Git(%r).reset(%r)", str(self.path), paths)
         self._run(("reset",), paths=paths)
 
     def commit(self, msg, paths: Optional[Tuple[Path, ...]] = None, all_: bool = False):
-        """Commit."""
+        """
+        Commit.
+
+        Args:
+            msg: Commit Message
+
+        Keyword Args:
+            paths: Paths.
+            all_: commit all changed files
+        """
         _LOGGER.info("Git(%r).commit(%r, paths=%r, all_=%r)", str(self.path), msg, paths, all_)
         args = ["commit", "-m", msg]
         if all_:
@@ -361,7 +403,15 @@ class Git:
         self._run(args, paths=paths)
 
     def tag(self, name, msg=None):
-        """Create Tag."""
+        """
+        Create Tag.
+
+        Args:
+            name: Tag Name.
+
+        Keyword Args:
+            msg: Message.
+        """
         _LOGGER.info("Git(%r).tag(%r, msg=%r)", str(self.path), name, msg)
         args = ["tag", name]
         if msg:
@@ -369,7 +419,12 @@ class Git:
         self._run(args)
 
     def status(self, paths: Optional[Tuple[Path, ...]] = None, branch: bool = False) -> Generator[Status, None, None]:
-        """Git Status."""
+        """
+        Git Status.
+
+        Keyword Args:
+            branch: Show branch.
+        """
         _LOGGER.info("Git(%r).status(paths=%r, branch=%r)", str(self.path), paths, branch)
         if branch:
             lines = self._run2str(("status", "--porcelain=v1", "--branch"), paths=paths).split("\n")
@@ -382,7 +437,13 @@ class Git:
                 yield FileStatus.from_str(line)
 
     def diff(self, paths: Optional[Tuple[Path, ...]] = None, prefix: Path = None):
-        """Git Diff."""
+        """
+        Display Git Diff.
+
+        Keyword Args:
+            paths: Paths.
+            prefix: Path  Prefix.
+        """
         _LOGGER.info("Git(%r).diff(paths=%r, prefix=%r)", str(self.path), paths, prefix)
         if prefix:
             sep = os.path.sep
@@ -393,7 +454,12 @@ class Git:
             self._run(("diff",))
 
     def diffstat(self, paths: Optional[Tuple[Path, ...]] = None) -> Generator[DiffStat, None, None]:
-        """Git Diff Status."""
+        """
+        Git Diff Statistics.
+
+        Keyword Args:
+            paths: Paths.
+        """
         _LOGGER.info("Git(%r).diffstat(paths=%r)", str(self.path), paths)
         lines = self._run2str(("diff", "--stat"), paths=paths).split("\n")
         if lines:
@@ -414,7 +480,14 @@ class Git:
         return any(status.has_changes() for status in self.status())
 
     def is_empty(self):
-        """Clone does not contain any changes (untracked, staged, committed)."""
+        """
+        Clone does not contain any changes.
+
+        A clone is empty if there are:
+        * no files changed
+        * no commits which are not pushed yet
+        * nothing stashed
+        """
         _LOGGER.info("Git(%r).is_empty()", str(self.path))
         status = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
         if len(status) > 1:

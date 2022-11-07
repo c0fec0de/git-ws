@@ -33,7 +33,7 @@ def test_load():
     workspace_path = TESTDATA / "workspace0"
     workspace = Workspace.from_path(workspace_path / "bar" / "sub")
     assert workspace.path == workspace_path
-    assert workspace.info == Info(main_path=Path("bar"), manifest_path="git-ws.toml")
+    assert workspace.info == Info(main_path=Path("bar"))
 
 
 def test_load_uninit(tmp_path):
@@ -50,7 +50,8 @@ def test_init(tmp_path):
         run(("git", "init"), check=True)
         workspace = Workspace.init(tmp_path, main_path, manifest_path=Path("resolved.toml"))
         assert workspace.path == tmp_path
-        assert workspace.info == Info(main_path=Path("main"), manifest_path="resolved.toml")
+        assert workspace.info == Info(main_path=Path("main"))
+        assert workspace.info.main_path == Path("main")
         info_file = workspace.path / INFO_PATH
         assert info_file.read_text().split("\n") == [
             "# Git Workspace System File. DO NOT EDIT.",
@@ -65,7 +66,7 @@ def test_init(tmp_path):
         ]
 
         with raises(InitializedError):
-            Workspace.init(tmp_path, main_path, manifest_path=Path("resolved.toml"))
+            Workspace.init(tmp_path, main_path)
 
 
 def test_outside(tmp_path):

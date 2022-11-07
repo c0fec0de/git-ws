@@ -31,9 +31,8 @@ from ._basemodel import BaseModel
 from ._util import resolve_relative
 from .appconfig import AppConfig, AppConfigData, AppConfigLocation
 from .const import GIT_WS_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
-from .datamodel import Project
+from .datamodel import GroupFilters, Project
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError, WorkspaceNotEmptyError
-from .types import Groups
 from .workspacefinder import find_workspace
 
 _LOGGER = logging.getLogger("git-ws")
@@ -63,7 +62,7 @@ class Info(BaseModel):
         The workspace information is stored at `{path}/.gitws/info.toml`.
 
         Args:
-            path (Path): Path to GitWS root directory.
+            path: Path to GitWS root directory.
         """
         infopath = path / INFO_PATH
         doc = tomlkit.parse(infopath.read_text())
@@ -78,7 +77,7 @@ class Info(BaseModel):
         The workspace information is stored at `{path}/.gitws/info.toml`.
 
         Args:
-            path (Path): Path to GitWS root directory.
+            path: Path to GitWS root directory.
         """
         infopath = path / INFO_PATH
         infopath.parent.mkdir(parents=True, exist_ok=True)
@@ -102,8 +101,8 @@ class Workspace:
     A workspace refers to a main git clone, which defines the workspace content (i.e. dependencies).
 
     Args:
-        path (Path): Workspace Root Directory.
-        info (Info): Workspace Information.
+        path: Workspace Root Directory.
+        info: Workspace Information.
     """
 
     def __init__(self, path: Path, info: Info):
@@ -152,7 +151,8 @@ class Workspace:
         path = Workspace.find_path(path=path)
         info = Info.load(path)
         workspace = Workspace(path, info)
-        _LOGGER.info("Workspace path=%s main=%s %r", path, info.main_path, workspace.config)
+        _LOGGER.info("Workspace path=%s main=%s", path, info.main_path)
+        _LOGGER.info("%r", workspace.config)
         return workspace
 
     @staticmethod
@@ -171,17 +171,18 @@ class Workspace:
 
     @staticmethod
     def init(
-        path: Path, main_path: Path, manifest_path: Path = MANIFEST_PATH_DEFAULT, groups: Groups = None
+        path: Path, main_path: Path, manifest_path: Optional[Path] = None, group_filters: Optional[GroupFilters] = None
     ) -> "Workspace":
         """
         Initialize new :any:`Workspace` at `path`.
 
         Args:
-            path (Path):  Path to the workspace
-            main_path (Path):  Path to the main project. Relative to `path`.
+            path:  Path to the workspace
+            main_path:  Path to the main project. Relative to `path`.
 
         Keyword Args:
-            manifest_path (Path):  Path to the manifest file. Relative to `main_path`.
+            manifest_path:  Path to the manifest file. Relative to `main_path`. Default is `git-ws.toml`.
+            group_filters: Group Filters.
 
         Raises:
             OutsideWorkspaceError: `main_path` is not within `path`.
@@ -201,9 +202,10 @@ class Workspace:
         info.save(path)
         workspace = Workspace(path.resolve(), info)
         with workspace.app_config.edit(AppConfigLocation.WORKSPACE) as config:
-            config.manifest_path = str(manifest_path)
-            config.groups = groups
-        _LOGGER.info("Initialized %s %r %r", path, info, workspace.config)
+            config.manifest_path = str(manifest_path or MANIFEST_PATH_DEFAULT)
+            config.group_filters = group_filters
+        _LOGGER.info("Workspace path=%s main=%s", path, info.main_path)
+        _LOGGER.info("%r", workspace.config)
         return workspace
 
     def deinit(self):
@@ -216,7 +218,7 @@ class Workspace:
 
     @property
     def main_path(self) -> Path:
-        """Path to main project."""
+        """Resolved Path to main project."""
         return self.path / self.info.main_path
 
     @property
@@ -240,14 +242,14 @@ class Workspace:
         return project_path
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
-        """Get Manifest Path."""
+        """Get Resolved Manifest Path."""
         return self.main_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
 
-    def get_groups(self, groups: Groups = None) -> Groups:
-        """Get Groups Filter."""
-        if groups is None:
-            return self.app_config.options.groups
-        return groups
+    def get_group_filters(self, group_filters: Optional[GroupFilters] = None) -> GroupFilters:
+        """Get Group Selects."""
+        if group_filters is None:
+            return self.app_config.options.group_filters or GroupFilters()
+        return group_filters
 
     def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
         """Yield obsolete paths except `used` ones."""

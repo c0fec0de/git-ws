@@ -23,7 +23,7 @@ from gitws import GitWS
 
 from ..deptree import DepDotExporter
 from .common import exceptionhandling, pass_context
-from .options import groups_option, manifest_option
+from .options import group_filters_option, manifest_option
 
 
 @click.group()
@@ -34,49 +34,49 @@ def info():
 
 
 @info.command()
-@manifest_option()
 @pass_context
-def workspace_path(context, manifest_path=None):
+def workspace_path(context):
     """
     Print Path to Workspace.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path)
+        gws = GitWS.from_path()
         click.echo(str(gws.path))
 
 
 @info.command()
-@manifest_option()
 @pass_context
-def main_path(context, manifest_path=None):
+def main_path(context):
     """
     Print Path to Main Git Clone.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path)
+        gws = GitWS.from_path()
         click.echo(str(gws.workspace.main_path))
 
 
 @info.command()
 @manifest_option()
-@groups_option()
+@group_filters_option()
 @pass_context
-def project_paths(context, manifest_path=None, groups=None):
+def project_paths(context, manifest_path=None, group_filters=None):
     """
     Print Paths to all git clones.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path)
-        for project in gws.projects(filter_=gws.create_groups_filter(groups)):
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
+        for project in gws.projects():
             project_path = gws.workspace.get_project_path(project)
             click.echo(project_path)
 
 
 @info.command()
 @manifest_option()
+@group_filters_option()
 @click.option("--dot", "-d", "dot", is_flag=True, help="Export DOT Format to be forwarded to graphviz.")
+@click.option("--primary", "-p", is_flag=True, help="Display primary dependencies only.")
 @pass_context
-def dep_tree(context, manifest_path=None, dot: bool = False):
+def dep_tree(context, manifest_path=None, group_filters=None, dot: bool = False, primary: bool = False):
     """
     Print Dependency Tree.
 
@@ -84,11 +84,13 @@ def dep_tree(context, manifest_path=None, dot: bool = False):
     Example:
 
     $ git ws info dep-tree --dot | dot -Tpng > dep-tree.png
+
+    $ git ws info dep-tree --dot | dot -Tsvg > dep-tree.svg
     """
 
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path)
-        deptree = gws.get_deptree()
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
+        deptree = gws.get_deptree(primary=primary)
         if dot:
             click.echo("\n".join(DepDotExporter(deptree)))
         else:

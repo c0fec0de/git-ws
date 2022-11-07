@@ -28,13 +28,13 @@ from .util import chdir, cli, format_output, run
 @fixture
 def gws(tmp_path, repos):
     """Initialized :any:`GitWS` on `repos`."""
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
+    workspace = tmp_path / "main"
 
-    with chdir(workspace):
+    with chdir(tmp_path):
         gws = GitWS.clone(str(repos / "main"))
         gws.update(skip_main=True)
 
+    with chdir(workspace):
         yield gws
 
 
@@ -54,26 +54,26 @@ def test_update(tmp_path, repos, gws):
 
     # Update project
     assert cli(["update", "-P", "dep2"]) == [
-        "===== SKIPPING main (MAIN) =====",
-        "===== SKIPPING dep1 =====",
-        "===== dep2 (revision='1-feature') =====",
+        "===== SKIPPING main (MAIN 'main') =====",
+        "===== SKIPPING dep1 ('dep1') =====",
+        "===== dep2 ('dep2', revision='1-feature') =====",
         "Pulling branch '1-feature'.",
-        "===== SKIPPING dep4 (revision='main') =====",
+        "===== SKIPPING dep4 ('dep4', revision='main') =====",
         "",
     ]
 
     # Update
     assert cli(["update"], tmp_path=tmp_path) == [
-        "===== main (MAIN) =====",
+        "===== main (MAIN 'main') =====",
         "Pulling branch 'main'.",
-        "===== dep1 =====",
+        "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "Pulling branch 'main'.",
-        "===== dep2 (revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature') =====",
         "Pulling branch '1-feature'.",
-        "===== dep4 (revision='main') =====",
+        "===== dep4 ('dep4', revision='main') =====",
         "Pulling branch 'main'.",
-        "===== dep5 =====",
+        "===== dep5 ('dep5') =====",
         "git-ws WARNING Clone dep5 has no revision!",
         "Cloning 'TMP/repos/dep5'.",
         "",
@@ -81,16 +81,16 @@ def test_update(tmp_path, repos, gws):
 
     # Update again
     assert cli(["update"]) == [
-        "===== main (MAIN) =====",
+        "===== main (MAIN 'main') =====",
         "Pulling branch 'main'.",
-        "===== dep1 =====",
+        "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "Pulling branch 'main'.",
-        "===== dep2 (revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature') =====",
         "Pulling branch '1-feature'.",
-        "===== dep4 (revision='main') =====",
+        "===== dep4 ('dep4', revision='main') =====",
         "Pulling branch 'main'.",
-        "===== dep5 =====",
+        "===== dep5 ('dep5') =====",
         "git-ws WARNING Clone dep5 has no revision!",
         "Pulling branch 'main'.",
         "",
@@ -98,13 +98,13 @@ def test_update(tmp_path, repos, gws):
 
     # Update other.toml
     assert cli(["update", "--manifest", "other.toml"], tmp_path=tmp_path) == [
-        "===== main (MAIN) =====",
+        "===== main (MAIN 'main') =====",
         "Pulling branch 'main'.",
-        "===== dep1 (revision='main') =====",
+        "===== dep1 ('dep1', revision='main') =====",
         "Pulling branch 'main'.",
-        "===== sub/dep6 ('dep6', revision='main', groups='+foo,+bar,+fast') =====",
+        "===== sub/dep6 ('dep6', revision='main', groups='foo,bar,fast') =====",
         "Cloning 'TMP/repos/dep6'.",
-        "===== dep4 (revision='4-feature') =====",
+        "===== dep4 ('dep4', revision='4-feature') =====",
         "Fetching.",
         "Checking out '4-feature' (previously 'main').",
         "Merging branch '4-feature'.",
@@ -128,40 +128,40 @@ def test_update_rebase(tmp_path, repos, gws):
 
     # Rebase
     assert cli(["update", "--rebase"], tmp_path=tmp_path) == [
-        "===== main (MAIN) =====",
+        "===== main (MAIN 'main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep1 =====",
+        "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep2 (revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature') =====",
         "Fetching.",
         "Rebasing branch '1-feature'.",
-        "===== dep4 (revision='main') =====",
+        "===== dep4 ('dep4', revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep5 =====",
+        "===== dep5 ('dep5') =====",
         "git-ws WARNING Clone dep5 has no revision!",
         "Cloning 'TMP/repos/dep5'.",
         "",
     ]
 
     assert cli(["update", "--rebase"]) == [
-        "===== main (MAIN) =====",
+        "===== main (MAIN 'main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep1 =====",
+        "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep2 (revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature') =====",
         "Fetching.",
         "Rebasing branch '1-feature'.",
-        "===== dep4 (revision='main') =====",
+        "===== dep4 ('dep4', revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep5 =====",
+        "===== dep5 ('dep5') =====",
         "git-ws WARNING Clone dep5 has no revision!",
         "Fetching.",
         "Rebasing branch 'main'.",
@@ -169,15 +169,15 @@ def test_update_rebase(tmp_path, repos, gws):
     ]
 
     assert cli(["update", "--manifest", "other.toml", "--rebase"], tmp_path=tmp_path) == [
-        "===== main (MAIN) =====",
+        "===== main (MAIN 'main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== dep1 (revision='main') =====",
+        "===== dep1 ('dep1', revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
-        "===== sub/dep6 ('dep6', revision='main', groups='+foo,+bar,+fast') =====",
+        "===== sub/dep6 ('dep6', revision='main', groups='foo,bar,fast') =====",
         "Cloning 'TMP/repos/dep6'.",
-        "===== dep4 (revision='4-feature') =====",
+        "===== dep4 ('dep4', revision='4-feature') =====",
         "Fetching.",
         "Checking out '4-feature' (previously 'main').",
         "Rebasing branch '4-feature'.",
@@ -185,11 +185,11 @@ def test_update_rebase(tmp_path, repos, gws):
     ]
 
     assert cli(["status"]) == [
-        "===== main (MAIN) =====",
-        "===== dep1 =====",
+        "===== main (MAIN 'main') =====",
+        "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "===== dep2 (revision='1-feature') =====",
-        "===== dep4 (revision='main') =====",
+        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep4 ('dep4', revision='main') =====",
         "git-ws WARNING Clone dep4 (revision='main') is on different revision: '4-feature'",
         "",
     ]

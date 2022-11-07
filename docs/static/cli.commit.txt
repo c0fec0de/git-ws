@@ -3,6 +3,10 @@ Usage: git-ws commit [OPTIONS] [PATHS]...
   Run 'git commit' on paths and choose the right git clone automatically.
 
 Options:
-  -m, --message TEXT  commit message
-  -a, --all           commit all changed files
-  -h, --help          Show this message and exit.
+  -m, --message TEXT         commit message
+  -a, --all                  commit all changed files
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.

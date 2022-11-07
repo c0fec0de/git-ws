@@ -3,9 +3,9 @@ Usage: git-ws clone [OPTIONS] URL [PATH]...
   Create a git clone and initialize Git Workspace.
 
 Options:
-  -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
-  -G, --groups TEXT    Group Filtering. TODO: more details. The setting
-                       becomes default for all successive runs.
-  -U, --update         Run 'git ws update' too.
-  -f, --force          Enfore operation.
-  -h, --help           Show this message and exit.
+  -M, --manifest FILE        Manifest file. 'git-ws.toml' by default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. The setting
+                             becomes default for all successive runs.
+  -U, --update               Run 'git ws update' too.
+  -f, --force                Enfore operation.
+  -h, --help                 Show this message and exit.
