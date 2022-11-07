@@ -88,16 +88,15 @@ class Clone:
         """
         project = self.project
         path = str(self.git.path)
+        options = get_repr(
+            args=(project.name,),
+            kwargs=(
+                ("revision", project.revision, None),
+                ("groups", ",".join(project.groups), ""),
+            ),
+        )
         if project.is_main:
-            options = f"MAIN {project.name!r}"
-        else:
-            options = get_repr(
-                args=(project.name,),
-                kwargs=(
-                    ("revision", project.revision, None),
-                    ("groups", ",".join(project.groups), ""),
-                ),
-            )
+            options = f"MAIN {options}"
         return f"{path} ({options})"
 
 

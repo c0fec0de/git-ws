@@ -154,7 +154,10 @@ class ProjectIter:
         info = workspace.info
         self.__done = [str(info.main_path)]
         if not self.skip_main:
-            yield Project(name=info.main_path.name, path=str(info.main_path), is_main=True)
+            main_path = info.main_path
+            main_git = Git(resolve_relative(workspace.main_path))
+            revision = main_git.get_revision()
+            yield Project(name=main_path.name, path=str(main_path), revision=revision, is_main=True)
         try:
             manifest_spec = ManifestSpec.load(self.manifest_path)
         except ManifestNotFoundError:

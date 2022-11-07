@@ -401,7 +401,7 @@ class GitWS:
                 if not git.is_cloned():
                     self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
                     git.clone(project.url, revision=project.revision)
-                if project.revision:
+                if project.revision and not project.is_main:
                     git.checkout(revision=project.revision, force=force)
                 clone.check(exists=False)
 

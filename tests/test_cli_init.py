@@ -110,6 +110,7 @@ def test_cli_git_path(tmp_path):
     main_path.mkdir(parents=True)
     with chdir(main_path):
         run(("git", "init"), check=True)
+        run(("git", "checkout", "-b", "foo"), check=True)
         assert (main_path / ".git").exists()
         assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
 
@@ -126,7 +127,7 @@ def test_cli_git_path(tmp_path):
             "",
         ]
 
-        assert cli(["checkout"]) == ["===== main (MAIN 'main') =====", ""]
+        assert cli(["checkout"]) == ["===== main (MAIN 'main', revision='foo') =====", ""]
 
     assert (
         (tmp_path / ".git-ws" / "info.toml").read_text()

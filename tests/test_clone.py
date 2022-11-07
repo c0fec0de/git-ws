@@ -48,7 +48,7 @@ def test_clone(tmp_path, repos):
             assert gws == rrepo
 
         assert list(gws.projects()) == [
-            Project(name="main", path="main", is_main=True),
+            Project(name="main", path="main", revision="main", is_main=True),
             Project(name="dep1", path="dep1", url="../dep1"),
             Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
@@ -77,7 +77,7 @@ def test_clone(tmp_path, repos):
             ),
         ]
         assert list(str(item) for item in gws.clones()) == [
-            "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main/main')))",
+            "Clone(Project(name='main', path='main', revision='main', is_main=True), Git(PosixPath('main/main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
             "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), "
             "Git(PosixPath('main/dep2')))",
@@ -108,7 +108,7 @@ def test_clone_groups(tmp_path, repos):
             assert gws == rrepo
 
         assert list(gws.projects()) == [
-            Project(name="main", path="main", is_main=True),
+            Project(name="main", path="main", revision="main", is_main=True),
             Project(name="dep1", path="dep1", url="../dep1"),
             Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
             Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
@@ -142,7 +142,7 @@ def test_clone_groups(tmp_path, repos):
             ),
         ]
         assert list(str(item) for item in gws.clones()) == [
-            "Clone(Project(name='main', path='main', is_main=True), Git(PosixPath('main/main')))",
+            "Clone(Project(name='main', path='main', revision='main', is_main=True), Git(PosixPath('main/main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
             "Clone(Project(name='dep2', path='dep2', url='../dep2', "
             "revision='1-feature'), Git(PosixPath('main/dep2')))",

@@ -48,7 +48,7 @@ def test_status(tmp_path, gws):
     dep2 = workspace / "dep2"
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -57,7 +57,7 @@ def test_status(tmp_path, gws):
     ]
 
     assert cli(("status", "--branch")) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "## main...origin/main",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -74,7 +74,7 @@ def test_status(tmp_path, gws):
     (dep2 / "bc.txt").touch()
 
     assert cli(("status", "--branch")) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "## main...origin/main",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -129,7 +129,7 @@ def test_workflow(tmp_path, gws):
     git4.add(("foo.txt",))
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "?? dep1/foo.txt",
@@ -142,7 +142,7 @@ def test_workflow(tmp_path, gws):
 
     with chdir(dep1):
         assert cli(("status",)) == [
-            "===== ../main (MAIN 'main') =====",
+            "===== ../main (MAIN 'main', revision='main') =====",
             "===== . ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
             "?? foo.txt",
@@ -159,7 +159,7 @@ def test_workflow(tmp_path, gws):
     ]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "?? dep1/foo.txt",
@@ -173,7 +173,7 @@ def test_workflow(tmp_path, gws):
     assert cli(("add", "dep2/bb.txt", "dep1/foo.txt")) == [""]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "A  dep1/foo.txt",
@@ -190,7 +190,7 @@ def test_workflow(tmp_path, gws):
     ]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "A  dep1/foo.txt",
@@ -208,7 +208,7 @@ def test_workflow(tmp_path, gws):
     ]
 
     assert cli(("status", "--branch")) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "## main...origin/main",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -226,7 +226,7 @@ def test_workflow(tmp_path, gws):
     (dep2 / "barbar.txt").touch()
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "?? dep1/foo.txt",
@@ -239,7 +239,7 @@ def test_workflow(tmp_path, gws):
     assert cli(("commit", "-m", "test")) == [""]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "?? dep1/foo.txt",
@@ -259,7 +259,7 @@ def test_workflow(tmp_path, gws):
     assert cli(("add", "dep1", "--all", "--force")) == [""]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "A  dep1/foo.txt",
@@ -276,7 +276,7 @@ def test_workflow(tmp_path, gws):
     ]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -288,7 +288,7 @@ def test_workflow(tmp_path, gws):
     (dep4 / "foo.txt").write_text("content")
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -301,7 +301,7 @@ def test_workflow(tmp_path, gws):
     assert cli(("commit", "-m", "files", "--all")) == ["===== dep4 ('dep4', revision='main') =====", ""]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -313,7 +313,7 @@ def test_workflow(tmp_path, gws):
     assert cli(("commit", "-m", "files", "--all")) == [""]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -332,7 +332,7 @@ def test_workflow(tmp_path, gws):
     assert cli(("rm", "dep4/foo.txt")) == [""]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -357,7 +357,7 @@ def test_checkout_file(tmp_path, gws):
     (dep4 / "data.txt").write_text("Other Change")
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -381,7 +381,7 @@ def test_checkout_file(tmp_path, gws):
     ]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -397,7 +397,7 @@ def test_checkout_file(tmp_path, gws):
     ]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -419,7 +419,7 @@ def test_checkout(tmp_path, gws):
     (dep4 / "data.txt").write_text("Other Change")
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -430,7 +430,7 @@ def test_checkout(tmp_path, gws):
     ]
 
     assert cli(("checkout")) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -439,7 +439,7 @@ def test_checkout(tmp_path, gws):
     ]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -450,7 +450,7 @@ def test_checkout(tmp_path, gws):
     ]
 
     assert cli(("checkout", "--force")) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -459,7 +459,7 @@ def test_checkout(tmp_path, gws):
     ]
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -480,7 +480,7 @@ def test_add(tmp_path, gws):
     (dep4 / "data.txt").write_text("Other Change")
 
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -495,7 +495,7 @@ def test_add(tmp_path, gws):
     ]
     assert cli(("add", "--all")) == [""]
     assert cli(("status",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -518,7 +518,7 @@ def test_diff(tmp_path, gws):
     (dep4 / "data.txt").write_text("Other Text")
 
     assert cli(("diff",)) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -531,7 +531,7 @@ def test_diff(tmp_path, gws):
     ]
 
     assert cli(("diff", "--stat")) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -548,7 +548,7 @@ def test_diff(tmp_path, gws):
 
     with chdir(dep2):
         assert cli(("diff",)) == [
-            "===== ../main (MAIN 'main') =====",
+            "===== ../main (MAIN 'main', revision='main') =====",
             "===== ../dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
             "===== . ('dep2', revision='1-feature') =====",
@@ -556,7 +556,7 @@ def test_diff(tmp_path, gws):
             "",
         ]
         assert cli(("diff", "--stat")) == [
-            "===== ../main (MAIN 'main') =====",
+            "===== ../main (MAIN 'main', revision='main') =====",
             "===== ../dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
             "===== . ('dep2', revision='1-feature') =====",
