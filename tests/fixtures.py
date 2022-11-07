@@ -29,7 +29,8 @@ def git_repo(path, commit=None):
     """Initialize Repo."""
     path.mkdir(parents=True, exist_ok=True)
     with chdir(path):
-        run(("git", "init", "-b", "main"), check=True)
+        run(("git", "init"), check=True)
+        run(("git", "checkout", "-b", "main"))
         run(("git", "config", "user.email", "you@example.com"), check=True)
         run(("git", "config", "user.name", "you"), check=True)
         yield path

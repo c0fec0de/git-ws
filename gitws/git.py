@@ -26,6 +26,8 @@ from ._basemodel import BaseModel
 from ._util import get_repr, run
 from .exceptions import GitCloneMissingError, NoGitError
 
+_RE_URL = re.compile(r"\Aorigin\s+(?P<value>.+)\s+(fetch)\Z")
+_RE_BRANCH = re.compile(r"\A\*\s(?P<value>.+)\Z")
 _RE_STATUS = re.compile(r"\A(?P<index>.)(?P<work>.)\s((?P<orig_path>.+) -> )?(?P<path>.+)\Z")
 _RE_DIFFSTAT = re.compile(r"\A\s(?P<path>.+)\s\|\s(?P<stat>.+)\Z")
 _LOGGER = logging.getLogger("git-ws")
@@ -268,7 +270,7 @@ class Git:
 
     def get_branch(self) -> Optional[str]:
         """Get Actual Branch."""
-        branch = self._run2str(("branch", "--show-current")) or None
+        branch = self._run2str(("branch",), regex=_RE_BRANCH)
         _LOGGER.info("Git(%r).get_branch() = %r", str(self.path), branch)
         return branch
 
@@ -293,7 +295,7 @@ class Git:
 
     def get_url(self) -> Optional[str]:
         """Get Actual URL of 'origin'."""
-        url = self._run2str(("remote", "get-url", "origin"), check=False) or None
+        url = self._run2str(("remote", "-v"), regex=_RE_URL, check=False)
         _LOGGER.info("Git(%r).get_url() = %r", str(self.path), url)
         return url
 
@@ -427,11 +429,11 @@ class Git:
         """
         _LOGGER.info("Git(%r).status(paths=%r, branch=%r)", str(self.path), paths, branch)
         if branch:
-            lines = self._run2str(("status", "--porcelain=v1", "--branch"), paths=paths).split("\n")
+            lines = self._run2str(("status", "--porcelain", "--branch"), paths=paths).split("\n")
             yield BranchStatus.from_str(lines[0])
             lines = lines[1:]
         else:
-            lines = self._run2str(("status", "--porcelain=v1"), paths=paths).split("\n")
+            lines = self._run2str(("status", "--porcelain"), paths=paths).split("\n")
         for line in lines:
             if line:
                 yield FileStatus.from_str(line)
@@ -489,7 +491,7 @@ class Git:
         * nothing stashed
         """
         _LOGGER.info("Git(%r).is_empty()", str(self.path))
-        status = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
+        status = self._run2str(("status", "--porcelain", "--branch")).split("\n")
         if len(status) > 1:
             return False
         if self._run2str(("stash", "list")):
@@ -511,9 +513,17 @@ class Git:
         return run(cmd, cwd=self.path, **kwargs)
 
     def _run2str(
-        self, args: Union[List[str], Tuple[str, ...]], paths: Optional[Tuple[Path, ...]] = None, check=True
-    ) -> str:
+        self, args: Union[List[str], Tuple[str, ...]], paths: Optional[Tuple[Path, ...]] = None, check=True, regex=None
+    ) -> Optional[str]:
         result = self._run(args, paths=paths, check=check, capture_output=True)
         if result.stderr.strip():
             return ""
-        return result.stdout.decode("utf-8").rstrip()
+        value = result.stdout.decode("utf-8").rstrip()
+        if regex:
+            for line in value.split("\n"):
+                mat = _RE_BRANCH.match(line)
+                if mat:
+                    return mat.group("value")
+            return None
+        else:
+            return value
