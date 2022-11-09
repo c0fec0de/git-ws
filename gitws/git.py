@@ -211,8 +211,9 @@ class Git:
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, secho=None):
         self.path = path
+        self.secho = secho
 
     def __repr__(self):
         return get_repr(self, (self.path,))
@@ -228,10 +229,10 @@ class Git:
         return (path / cdup).resolve()
 
     @staticmethod
-    def from_path(path: Optional[Path] = None) -> "Git":
+    def from_path(path: Optional[Path] = None, secho=None) -> "Git":
         """Create GIT Repo Helper from `path`."""
         path = Git.find_path(path=path)
-        return Git(path=path)
+        return Git(path=path, secho=secho)
 
     def is_cloned(self) -> bool:
         """Return if clone already exists."""
@@ -257,7 +258,7 @@ class Git:
         if revision:
             # We do not checkout, to be faster during switch later on
             run(("git", "clone", "--no-checkout", "--", str(url), str(self.path)))
-            self._run(("checkout", revision))
+            self._run(("checkout", revision), capture_output=True)
         else:
             run(("git", "clone", "--", str(url), str(self.path)))
 
@@ -517,7 +518,7 @@ class Git:
         if paths:
             cmd.append("--")
             cmd.extend([str(path) for path in paths])
-        return run(cmd, cwd=self.path, **kwargs)
+        return run(cmd, cwd=self.path, secho=self.secho, **kwargs)
 
     def _run2str(self, args: Args, paths: Optional[Paths] = None, check=True, regex=None) -> Optional[str]:
         result = self._run(args, paths=paths, check=check, capture_output=True)

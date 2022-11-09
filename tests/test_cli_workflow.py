@@ -390,6 +390,7 @@ def test_workflow(tmp_path, gws):
     ]
 
     assert cli(("rm", "dep2/barbar.txt", "dep4/foo.txt"), exit_code=1) == [
+        "fatal: pathspec 'barbar.txt' did not match any files",
         "Error: 'git rm -- barbar.txt' failed.",
         "",
     ]
@@ -437,6 +438,7 @@ def test_checkout_file(tmp_path, gws):
     assert cli(("checkout", "dep1/missing.txt"), exit_code=1) == [
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
+        "error: pathspec 'missing.txt' did not match any file(s) known to git",
         "Error: 'git checkout -- missing.txt' failed.",
         "",
     ]
@@ -501,7 +503,9 @@ def test_checkout(tmp_path, gws):
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
+        "Already on '1-feature'",
         "===== dep4 ('dep4', revision='main') =====",
+        "Already on 'main'",
         "",
     ]
 
@@ -521,7 +525,9 @@ def test_checkout(tmp_path, gws):
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
+        "Already on '1-feature'",
         "===== dep4 ('dep4', revision='main') =====",
+        "Already on 'main'",
         "",
     ]
 

@@ -47,10 +47,10 @@ class Clone:
         self.git = git
 
     @staticmethod
-    def from_project(workspace: Workspace, project: Project) -> "Clone":
+    def from_project(workspace: Workspace, project: Project, secho=None) -> "Clone":
         """Create :any:`Clone` for `project` in `workspace`."""
         project_path = workspace.get_project_path(project, relative=True)
-        git = Git(project_path)
+        git = Git(project_path, secho=secho)
         return Clone(project, git)
 
     def check(self, exists=True, diff=True, no_revision=True):

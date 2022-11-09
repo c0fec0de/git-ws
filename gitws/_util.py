@@ -18,6 +18,7 @@
 import logging
 import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -27,21 +28,29 @@ _LOGGER = logging.getLogger("git-ws")
 # Dependencies to any gitws module are forbidden here!
 
 
-def run(cmd, cwd=None, capture_output=False, check=True):
+def run(cmd, cwd=None, capture_output=False, check=True, secho=None):
     """Simplified wrapper around :any:`subprocess.run`."""
     cwdrel = resolve_relative(cwd) if cwd else None
+    # format errors in red
+    stderr = None if capture_output or not secho else subprocess.PIPE
     try:
-        result = subprocess.run(cmd, capture_output=capture_output, check=check, cwd=cwd)
+        result = subprocess.run(cmd, capture_output=capture_output, stderr=stderr, check=check, cwd=cwd)
         _LOGGER.debug("run(%r, cwd='%s') OK stdout=%r stderr=%r", cmd, cwdrel, result.stdout, result.stderr)
+        if stderr and result.stderr:
+            secho(result.stderr.decode("utf-8").rstrip())
         return result
     except subprocess.CalledProcessError as error:
         _LOGGER.debug("run(%r, cwd='%s') FAILED stdout=%r stderr=%r", cmd, cwdrel, error.stdout, error.stderr)
+        if stderr and error.stderr:
+            secho(error.stderr.decode("utf-8").rstrip(), fg="red", err=True)
         raise error
 
 
 # pylint: disable=unused-argument
-def no_echo(text: str, **kwargs):
+def no_echo(text: str, err=False, **kwargs):
     """Just suppress `text`."""
+    if err:
+        print(err, file=sys.stderr)
 
 
 def resolve_relative(path: Path, base: Optional[Path] = None) -> Path:

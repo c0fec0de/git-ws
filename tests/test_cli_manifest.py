@@ -69,8 +69,11 @@ def test_validate(tmp_path, gws):
 def test_freeze(tmp_path, gws):
     """Manifest Freeze."""
     sha1 = get_sha(gws.path / "dep1")
+    sha1s = sha1[:7]
     sha2 = get_sha(gws.path / "dep2")
+    sha2s = sha2[:7]
     sha4 = get_sha(gws.path / "dep4")
+    sha4s = sha4[:7]
     default = [
         'version = "1.0"',
         "##",
@@ -215,6 +218,15 @@ def test_freeze(tmp_path, gws):
         "",
     ]
 
+    assert cli(["foreach", "git", "config", "advice.detachedHead", "false"]) == [
+        "===== main (MAIN 'main', revision='main') =====",
+        "===== dep1 ('dep1') =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep4 ('dep4', revision='main') =====",
+        "",
+    ]
+
     # STDOUT
     assert cli(["manifest", "freeze", "-G", "+test"], exit_code=1) == [
         "Error: Git Clone 'dep3' is missing. Try:",
@@ -254,13 +266,13 @@ def test_freeze(tmp_path, gws):
         "Pulling branch 'main'.",
         f"===== dep1 ('dep1', revision={sha1!r}) =====",
         "Fetching.",
-        f"Checking out {sha1!r} (previously 'main').",
+        f"HEAD is now at {sha1s} initial",
         f"===== dep2 ('dep2', revision={sha2!r}) =====",
         "Fetching.",
-        f"Checking out {sha2!r} (previously '1-feature').",
+        f"HEAD is now at {sha2s} feature",
         f"===== dep4 ('dep4', revision={sha4!r}) =====",
         "Fetching.",
-        f"Checking out {sha4!r} (previously 'main').",
+        f"HEAD is now at {sha4s} initial",
         "",
     ]
 

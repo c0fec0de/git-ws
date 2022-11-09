@@ -232,7 +232,7 @@ class GitWS:
             Workspace.check_empty(path, main_path)
         secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        git = Git(resolve_relative(main_path))
+        git = Git(resolve_relative(main_path), secho=secho)
         git.clone(url)
         return GitWS.create(path, main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho)
 
@@ -289,7 +289,6 @@ class GitWS:
                     self.secho("Fetching.", fg=_COLOR_ACTION)
                     git.fetch()
                     fetched = True
-                    self.secho(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
                     git.checkout(project.revision)
                     branch = git.get_branch()
                     revision = tag or branch or sha
@@ -322,7 +321,7 @@ class GitWS:
             rel_path = resolve_relative(obsolete_path)
             self.secho(f"===== {rel_path} (OBSOLETE) =====", fg=_COLOR_BANNER)
             self.secho(f"Removing {str(rel_path)!r}.", fg=_COLOR_ACTION)
-            git = Git(obsolete_path)
+            git = Git(obsolete_path, secho=self.secho)
             if force or not git.is_cloned() or git.is_empty():
                 shutil.rmtree(obsolete_path, ignore_errors=True)
             else:
@@ -556,7 +555,7 @@ class GitWS:
         if reverse:
             projects = reversed(tuple(projects))  # type: ignore
         for project in projects:
-            clone = Clone.from_project(workspace, project)
+            clone = Clone.from_project(workspace, project, secho=self.secho)
             yield clone
 
     def projects(self, skip_main: bool = False, resolve_url: bool = False) -> Generator[Project, None, None]:
@@ -611,7 +610,7 @@ class GitWS:
             fdeps: List[ProjectSpec] = []
             for project_spec, project in zip(manifest_spec.dependencies, manifest.dependencies):
                 project_path = workspace.get_project_path(project)
-                git = Git(resolve_relative(project_path))
+                git = Git(resolve_relative(project_path), secho=self.secho)
                 git.check()
                 revision = git.get_tag() or git.get_sha()
                 fdeps.append(project_spec.update(revision=revision))
