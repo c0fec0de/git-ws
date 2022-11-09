@@ -264,6 +264,9 @@ class Defaults(BaseModel):
     with_groups: Optional[Groups] = Groups()
     """The `with_groups` if not specified by the dependency."""
 
+    submodules: bool = True
+    """Initialize and Update `git submodules`."""
+
 
 class Project(BaseModel):
 
@@ -313,6 +316,9 @@ class Project(BaseModel):
     with_groups: Groups = Field(Groups(), alias="with-groups")
     """Group Selection for refered project."""
 
+    submodules: bool = True
+    """Initialize and Update `git submodules`."""
+
     is_main: bool = False
     """Project is the main project."""
 
@@ -347,6 +353,7 @@ class Project(BaseModel):
                 ("revision", self.revision, None),
                 ("path", str(self.path), self.name),
                 ("groups", ",".join(self.groups), ""),
+                ("submodules", self.submodules, True),
             )
         )
         if self.is_main:
@@ -375,6 +382,7 @@ class Project(BaseModel):
         project_groups = spec.groups or defaults.groups
         project_with_groups = spec.with_groups or defaults.with_groups
         url = spec.url
+        submodules = spec.submodules if spec.submodules is not None else defaults.submodules
         if not url:
             # URL assembly
             project_remote = spec.remote or defaults.remote
@@ -399,6 +407,7 @@ class Project(BaseModel):
             manifest_path=spec.manifest_path,
             groups=project_groups,
             with_groups=project_with_groups,
+            submodules=submodules,
         )
 
 
@@ -462,6 +471,9 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     with_groups: Groups = Field(Groups(), alias="with-groups")
     """Group Selection for refered project."""
 
+    submodules: Optional[bool] = None
+    """Initialize and Update `git submodules`."""
+
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
         # pylint: disable=no-self-argument,no-self-use
@@ -509,6 +521,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             manifest_path=project.manifest_path,
             groups=project.groups,
             with_groups=project.with_groups,
+            submodules=project.submodules,
         )
 
 
@@ -742,7 +755,9 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         # Defaults
         doc.add("defaults", as_dict(Defaults()))
         example = ManifestSpec(
-            defaults=Defaults(remote="myserver", revision="main", groups=("+test",), with_groups=("doc",))
+            defaults=Defaults(
+                remote="myserver", revision="main", groups=("+test",), with_groups=("doc",), submodules=True
+            )
         )
         add_comment(doc, "\n".join(example.dump(doc=tomlkit.document()).split("\n")[1:-1]))
         doc.add(tomlkit.nl())
@@ -783,7 +798,7 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         doc.add(tomlkit.nl())
 
         add_info(doc, "A minimal dependency:")
-        example = ManifestSpec(dependencies=[ProjectSpec(name="my")])
+        example = ManifestSpec(dependencies=[ProjectSpec(name="my", submodules=None)])
         add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
 
         doc.add("dependencies", tomlkit.aot())

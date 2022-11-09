@@ -93,6 +93,7 @@ class Clone:
             kwargs=(
                 ("revision", project.revision, None),
                 ("groups", ",".join(project.groups), ""),
+                ("submodules", project.submodules, True),
             ),
         )
         if project.is_main:
