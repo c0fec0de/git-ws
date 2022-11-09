@@ -127,7 +127,7 @@ def test_cli_git_path(tmp_path):
             "",
         ]
 
-        assert cli(["checkout"]) == ["===== main (MAIN 'main', revision='foo') =====", ""]
+        assert cli(["checkout"]) == ["===== main (MAIN 'main') =====", ""]
 
     assert (
         (tmp_path / ".git-ws" / "info.toml").read_text()

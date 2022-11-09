@@ -102,7 +102,7 @@ def check(workspace, name, content=None, exists=True):
 LEARN = bool(int(os.environ.get("LEARN") or 0))
 
 
-def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None):
+def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None):  # pragma: no cover
     """Compare Generated Files Versus Reference."""
     genpath.mkdir(parents=True, exist_ok=True)
     refpath.mkdir(parents=True, exist_ok=True)
