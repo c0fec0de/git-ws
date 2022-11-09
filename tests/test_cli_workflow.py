@@ -390,7 +390,7 @@ def test_workflow(tmp_path, gws):
     ]
 
     assert cli(("rm", "dep2/barbar.txt", "dep4/foo.txt"), exit_code=1) == [
-        "Error: Command '['git', 'rm', '--', 'barbar.txt']' returned non-zero exit status 128.",
+        "Error: 'git rm -- barbar.txt' failed.",
         "",
     ]
 
@@ -437,7 +437,7 @@ def test_checkout_file(tmp_path, gws):
     assert cli(("checkout", "dep1/missing.txt"), exit_code=1) == [
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "Error: Command '['git', 'checkout', '--', 'missing.txt']' returned non-zero exit status 1.",
+        "Error: 'git checkout -- missing.txt' failed.",
         "",
     ]
 

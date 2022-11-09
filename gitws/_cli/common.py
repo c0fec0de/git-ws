@@ -16,8 +16,10 @@
 
 """Command Line Interface Utilities."""
 import logging
+import shlex
 import traceback
 from contextlib import contextmanager
+from subprocess import CalledProcessError
 
 import click
 from pydantic import BaseModel
@@ -116,6 +118,10 @@ def exceptionhandling(context: Context):
     except GitCloneMissingOriginError as exc:
         _print_traceback(context)
         raise Error(f"{exc!s} Try:\n\n    git remote add origin <URL>\n") from None
+    except CalledProcessError as exc:
+        _print_traceback(context)
+        cmd = shlex.join(exc.cmd)
+        raise Error(f"{cmd!r} failed.") from None
     except Exception as exc:
         _print_traceback(context)
         raise Error(f"{exc!s}") from None

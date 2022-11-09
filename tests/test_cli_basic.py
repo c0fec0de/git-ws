@@ -152,7 +152,7 @@ def test_foreach_fail(tmp_path, gws):
     # pylint: disable=unused-argument
     assert cli(["foreach", "--", "git", "status", "--invalidoption"], exit_code=1) == [
         "===== main (MAIN 'main', revision='main') =====",
-        "Error: Command '('git', 'status', '--invalidoption')' returned non-zero exit status 129.",
+        "Error: 'git status --invalidoption' failed.",
         "",
     ]
 
