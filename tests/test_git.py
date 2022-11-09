@@ -213,8 +213,6 @@ def test_git_empty(git):
     """Git Has Changes."""
     path = git.path
 
-    assert not git.is_empty()
-
     (path / "new.txt").touch()
 
     assert not git.is_empty()
