@@ -247,11 +247,6 @@ class Git:
         if not self.is_cloned():
             raise GitCloneMissingError(self.path)
 
-    def init(self, branch="main"):
-        """Initialize Git Clone."""
-        _LOGGER.info("Git(%r).init(branch=%r)", str(self.path), branch)
-        self._run(("init", "-b", branch))
-
     def set_config(self, name, value):
         """Set Git Configuration `name` to `value`."""
         self._run(("config", name, value))
@@ -325,10 +320,10 @@ class Git:
         _LOGGER.info("Git(%r).fetch()", str(self.path))
         self._run(("fetch",))
 
-    def merge(self):
+    def merge(self, commit):
         """Merge."""
-        _LOGGER.info("Git(%r).merge()", str(self.path))
-        self._run(("merge",))
+        _LOGGER.info("Git(%r).merge(%r)", str(self.path), commit)
+        self._run(("merge", commit))
 
     def pull(self):
         """Pull."""
@@ -507,9 +502,9 @@ class Git:
             return False
         if lines[0].startswith("## No commits yet on "):
             return True
-        if "..." not in lines[0]:
-            return False
         if "[ahead " in lines[0]:
+            return False
+        if not self.get_url():
             return False
         return True
 

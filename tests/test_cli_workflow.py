@@ -21,7 +21,7 @@ from gitws import Git, GitWS
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, cli
+from .util import assert_any, chdir, cli
 
 
 @fixture
@@ -56,46 +56,95 @@ def test_status(tmp_path, gws):
         "",
     ]
 
-    assert cli(("status", "--branch")) == [
-        "===== main (MAIN 'main', revision='main') =====",
-        "## main...origin/main",
-        "===== dep1 ('dep1') =====",
-        "git-ws WARNING Clone dep1 has no revision!",
-        "## main...origin/main",
-        "===== dep2 ('dep2', revision='1-feature') =====",
-        "## 1-feature...origin/1-feature",
-        "===== dep4 ('dep4', revision='main') =====",
-        "## main...origin/main",
-        "",
-    ]
+    assert_any(
+        cli(("status", "--branch")),
+        (
+            [
+                "===== main (MAIN 'main', revision='main') =====",
+                "## main...origin/main",
+                "===== dep1 ('dep1') =====",
+                "git-ws WARNING Clone dep1 has no revision!",
+                "## main...origin/main",
+                "===== dep2 ('dep2', revision='1-feature') =====",
+                "## 1-feature...origin/1-feature",
+                "===== dep4 ('dep4', revision='main') =====",
+                "## main...origin/main",
+                "",
+            ],
+            [
+                "===== main (MAIN 'main', revision='main') =====",
+                "## main",
+                "===== dep1 ('dep1') =====",
+                "git-ws WARNING Clone dep1 has no revision!",
+                "## main",
+                "===== dep2 ('dep2', revision='1-feature') =====",
+                "## 1-feature",
+                "===== dep4 ('dep4', revision='main') =====",
+                "## main",
+                "",
+            ],
+        ),
+    )
 
     (dep1 / "foo.txt").touch()
     (dep2 / "bb.txt").touch()
     (dep2 / "bc.txt").touch()
 
-    assert cli(("status", "--branch")) == [
-        "===== main (MAIN 'main', revision='main') =====",
-        "## main...origin/main",
-        "===== dep1 ('dep1') =====",
-        "git-ws WARNING Clone dep1 has no revision!",
-        "## main...origin/main",
-        "?? dep1/foo.txt",
-        "===== dep2 ('dep2', revision='1-feature') =====",
-        "## 1-feature...origin/1-feature",
-        "?? dep2/bb.txt",
-        "?? dep2/bc.txt",
-        "===== dep4 ('dep4', revision='main') =====",
-        "## main...origin/main",
-        "",
-    ]
+    assert_any(
+        cli(("status", "--branch")),
+        (
+            [
+                "===== main (MAIN 'main', revision='main') =====",
+                "## main...origin/main",
+                "===== dep1 ('dep1') =====",
+                "git-ws WARNING Clone dep1 has no revision!",
+                "## main...origin/main",
+                "?? dep1/foo.txt",
+                "===== dep2 ('dep2', revision='1-feature') =====",
+                "## 1-feature...origin/1-feature",
+                "?? dep2/bb.txt",
+                "?? dep2/bc.txt",
+                "===== dep4 ('dep4', revision='main') =====",
+                "## main...origin/main",
+                "",
+            ],
+            [
+                "===== main (MAIN 'main', revision='main') =====",
+                "## main",
+                "===== dep1 ('dep1') =====",
+                "git-ws WARNING Clone dep1 has no revision!",
+                "## main",
+                "?? dep1/foo.txt",
+                "===== dep2 ('dep2', revision='1-feature') =====",
+                "## 1-feature",
+                "?? dep2/bb.txt",
+                "?? dep2/bc.txt",
+                "===== dep4 ('dep4', revision='main') =====",
+                "## main",
+                "",
+            ],
+        ),
+    )
 
-    assert cli(("status", "--branch", "dep2")) == [
-        "===== dep2 ('dep2', revision='1-feature') =====",
-        "## 1-feature...origin/1-feature",
-        "?? dep2/bb.txt",
-        "?? dep2/bc.txt",
-        "",
-    ]
+    assert_any(
+        cli(("status", "--branch", "dep2")),
+        (
+            [
+                "===== dep2 ('dep2', revision='1-feature') =====",
+                "## 1-feature...origin/1-feature",
+                "?? dep2/bb.txt",
+                "?? dep2/bc.txt",
+                "",
+            ],
+            [
+                "===== dep2 ('dep2', revision='1-feature') =====",
+                "## 1-feature",
+                "?? dep2/bb.txt",
+                "?? dep2/bc.txt",
+                "",
+            ],
+        ),
+    )
 
     assert cli(("status", "dep2/bc.txt")) == [
         "===== dep2 ('dep2', revision='1-feature') =====",
@@ -207,19 +256,37 @@ def test_workflow(tmp_path, gws):
         "",
     ]
 
-    assert cli(("status", "--branch")) == [
-        "===== main (MAIN 'main', revision='main') =====",
-        "## main...origin/main",
-        "===== dep1 ('dep1') =====",
-        "git-ws WARNING Clone dep1 has no revision!",
-        "## main...origin/main",
-        "A  dep1/foo.txt",
-        "===== dep2 ('dep2', revision='1-feature') =====",
-        "## 1-feature...origin/1-feature [ahead 1]",
-        "===== dep4 ('dep4', revision='main') =====",
-        "## main...origin/main [ahead 1]",
-        "",
-    ]
+    assert_any(
+        cli(("status", "--branch")),
+        (
+            [
+                "===== main (MAIN 'main', revision='main') =====",
+                "## main...origin/main",
+                "===== dep1 ('dep1') =====",
+                "git-ws WARNING Clone dep1 has no revision!",
+                "## main...origin/main",
+                "A  dep1/foo.txt",
+                "===== dep2 ('dep2', revision='1-feature') =====",
+                "## 1-feature...origin/1-feature [ahead 1]",
+                "===== dep4 ('dep4', revision='main') =====",
+                "## main...origin/main [ahead 1]",
+                "",
+            ],
+            [
+                "===== main (MAIN 'main', revision='main') =====",
+                "## main",
+                "===== dep1 ('dep1') =====",
+                "git-ws WARNING Clone dep1 has no revision!",
+                "## main",
+                "A  dep1/foo.txt",
+                "===== dep2 ('dep2', revision='1-feature') =====",
+                "## 1-feature...origin/1-feature [ahead 1]",
+                "===== dep4 ('dep4', revision='main') =====",
+                "## main...origin/main [ahead 1]",
+                "",
+            ],
+        ),
+    )
 
     assert cli(("reset", "dep1/foo.txt")) == [""]
 

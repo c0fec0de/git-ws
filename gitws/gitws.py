@@ -308,7 +308,7 @@ class GitWS:
                             git.pull()
                         else:
                             self.secho(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
-                            git.merge()
+                            git.merge(f"origin/{branch}")
 
         else:
             self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)

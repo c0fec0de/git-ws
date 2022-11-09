@@ -19,6 +19,7 @@ import re
 
 from pytest import fixture
 
+from gitws._util import run
 from gitws.git import Git
 
 # pylint: disable=unused-import
@@ -35,7 +36,8 @@ def git(tmp_path) -> Git:
     """Testfixture with initialized GIT repo."""
     git = Git(tmp_path)
     assert not git.is_cloned()
-    git.init(branch="main")
+    run(("git", "init"), cwd=tmp_path)
+    run(("git", "checkout", "-b", "main"), cwd=tmp_path)
     git.set_config("user.email", "you@example.com")
     git.set_config("user.name", "you")
     return git
@@ -211,7 +213,7 @@ def test_git_empty(git):
     """Git Has Changes."""
     path = git.path
 
-    assert git.is_empty()
+    assert not git.is_empty()
 
     (path / "new.txt").touch()
 

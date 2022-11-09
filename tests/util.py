@@ -128,3 +128,14 @@ def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None):  # pr
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as error:
         assert False, error.stdout.decode("utf-8")
+
+
+def assert_any(gen, refs):
+    """Check if one of the refs fits."""
+    for ref in refs:
+        if gen == ref:
+            assert True
+            break
+    else:
+        # complain enriched
+        assert gen == refs[0], gen
