@@ -335,7 +335,7 @@ class Git:
         _LOGGER.info("Git(%r).rebase()", str(self.path))
         self._run(("rebase",))
 
-    def add(self, paths: Paths = None, force: bool = False, all_: bool = False):
+    def add(self, paths: Optional[Paths] = None, force: bool = False, all_: bool = False):
         """
         Add.
 
@@ -432,7 +432,7 @@ class Git:
             if line:
                 yield FileStatus.from_str(line)
 
-    def diff(self, paths: Optional[Paths] = None, prefix: Path = None):
+    def diff(self, paths: Optional[Paths] = None, prefix: Optional[Path] = None):
         """
         Display Git Diff.
 
