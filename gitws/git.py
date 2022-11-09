@@ -346,12 +346,7 @@ class Git:
             all_: add changes from all tracked and untracked files.
         """
         _LOGGER.info("Git(%r).add(%r, force=%r, all_=%r)", str(self.path), paths, force, all_)
-        args = ["add"]
-        if force:
-            args.append("--force")
-        if all_:
-            args.append("--all")
-        self._run(args, paths=paths)
+        self._run(["add"], booloptions=(("--force", force), ("--all", all_)), paths=paths)
 
     # pylint: disable=invalid-name
     def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
@@ -467,6 +462,16 @@ class Git:
             for line in lines[:-1]:
                 yield DiffStat.from_str(line)
 
+    def submodule_update(self, init: bool = False, recursive: bool = False):
+        """
+        Submodule Update.
+
+        Keyword Args:
+            init: Initialize.
+            recursive: Recursive.
+        """
+        self._run(("submodule", "update"), booloptions=(("--init", init), ("--recursive", recursive)))
+
     def has_index_changes(self) -> bool:
         """Let you know if index has changes."""
         return any(status.has_index_changes() for status in self.status())
@@ -502,9 +507,18 @@ class Git:
             return False
         return True
 
-    def _run(self, args: Union[List[str], Tuple[str, ...]], paths: Optional[Tuple[Path, ...]] = None, **kwargs):
+    def _run(
+        self,
+        args: Union[List[str], Tuple[str, ...]],
+        paths: Optional[Tuple[Path, ...]] = None,
+        booloptions: Optional[Tuple[Tuple[str, bool], ...]] = None,
+        **kwargs,
+    ):
         cmd = ["git"]
         cmd.extend(args)
+        for name, value in booloptions or tuple():
+            if value:
+                cmd.append(name)
         if paths:
             cmd.append("--")
             cmd.extend([str(path) for path in paths])

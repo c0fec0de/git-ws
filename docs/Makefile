@@ -50,4 +50,5 @@ gen:
 	git-ws reset --help > static/cli.reset.txt
 	git-ws rm --help > static/cli.rm.txt
 	git-ws status --help > static/cli.status.txt
+	git-ws submodule --help > static/cli.submodule.txt
 	git-ws update --help > static/cli.update.txt
