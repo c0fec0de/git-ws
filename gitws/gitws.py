@@ -272,48 +272,50 @@ class GitWS:
         # Clone
         project = clone.project
         git = clone.git
-        if not git.is_cloned():
-            self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
-            git.clone(project.url, revision=project.revision)
-            return
-
-        # Determine actual version
-        tag = git.get_tag()
-        branch = git.get_branch()
-        sha = git.get_sha()
-
-        if project.revision in (sha, tag) and not branch:
-            self.secho("Nothing to do.", fg=_COLOR_ACTION)
-            return
-
-        revision = tag or branch or sha
-
-        # Checkout
-        fetched = False
-        if project.revision and revision != project.revision:
-            self.secho("Fetching.", fg=_COLOR_ACTION)
-            git.fetch()
-            fetched = True
-            self.secho(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
-            git.checkout(project.revision)
+        if git.is_cloned():
+            # Determine actual version
+            tag = git.get_tag()
             branch = git.get_branch()
-            revision = tag or branch or sha
+            sha = git.get_sha()
 
-        # Pull or Rebase in case we are on a branch (or have switched to it.)
-        if branch:
-            if rebase:
-                if not fetched:
+            if project.revision in (sha, tag) and not branch:
+                self.secho("Nothing to do.", fg=_COLOR_ACTION)
+            else:
+                revision = tag or branch or sha
+
+                # Checkout
+                fetched = False
+                if project.revision and revision != project.revision:
                     self.secho("Fetching.", fg=_COLOR_ACTION)
                     git.fetch()
-                self.secho(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
-                git.rebase()
-            else:
-                if not fetched:
-                    self.secho(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
-                    git.pull()
-                else:
-                    self.secho(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
-                    git.merge()
+                    fetched = True
+                    self.secho(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
+                    git.checkout(project.revision)
+                    branch = git.get_branch()
+                    revision = tag or branch or sha
+
+                # Pull or Rebase in case we are on a branch (or have switched to it.)
+                if branch:
+                    if rebase:
+                        if not fetched:
+                            self.secho("Fetching.", fg=_COLOR_ACTION)
+                            git.fetch()
+                        self.secho(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
+                        git.rebase()
+                    else:
+                        if not fetched:
+                            self.secho(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
+                            git.pull()
+                        else:
+                            self.secho(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
+                            git.merge()
+
+        else:
+            self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+            git.clone(project.url, revision=project.revision)
+
+        if project.submodules:
+            git.submodule_update(init=True, recursive=True)
 
     def _prune(self, workspace: Workspace, used: List[Path], force: bool = False):
         for obsolete_path in workspace.iter_obsoletes(used):
@@ -401,7 +403,7 @@ class GitWS:
                 if not git.is_cloned():
                     self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
                     git.clone(project.url, revision=project.revision)
-                if project.revision:
+                if project.revision and not project.is_main:
                     git.checkout(revision=project.revision, force=force)
                 clone.check(exists=False)
 

@@ -121,18 +121,21 @@ def test_freeze(tmp_path, gws):
         'url = "../dep1"',
         f'revision = "{sha1}"',
         'path = "dep1"',
+        "submodules = true",
         "",
         "[[dependencies]]",
         'name = "dep2"',
         'url = "../dep2"',
         f'revision = "{sha2}"',
         'path = "dep2"',
+        "submodules = true",
         "",
         "[[dependencies]]",
         'name = "dep4"',
         'url = "../dep4"',
         f'revision = "{sha4}"',
         'path = "dep4"',
+        "submodules = true",
         "",
     ]
     withtest = [
@@ -185,12 +188,14 @@ def test_freeze(tmp_path, gws):
         'url = "../dep1"',
         f'revision = "{sha1}"',
         'path = "dep1"',
+        "submodules = true",
         "",
         "[[dependencies]]",
         'name = "dep2"',
         'url = "../dep2"',
         f'revision = "{sha2}"',
         'path = "dep2"',
+        "submodules = true",
         "",
         "[[dependencies]]",
         'name = "dep3"',
@@ -198,12 +203,14 @@ def test_freeze(tmp_path, gws):
         'revision = "v1.0"',
         'path = "dep3"',
         'groups = ["test"]',
+        "submodules = true",
         "",
         "[[dependencies]]",
         'name = "dep4"',
         'url = "../dep4"',
         f'revision = "{sha4}"',
         'path = "dep4"',
+        "submodules = true",
         "",
         "",
     ]
@@ -218,7 +225,7 @@ def test_freeze(tmp_path, gws):
     ]
 
     assert cli(["update", "-G", "+test"], tmp_path=tmp_path) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "Pulling branch 'main'.",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -243,7 +250,7 @@ def test_freeze(tmp_path, gws):
     assert output_path.read_text().split("\n") == default
 
     assert cli(["update", "--manifest", str(output_path)]) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "Pulling branch 'main'.",
         f"===== dep1 ('dep1', revision={sha1!r}) =====",
         "Fetching.",
@@ -261,7 +268,7 @@ def test_freeze(tmp_path, gws):
     assert cli(["manifest", "freeze"]) == default + [""]
 
     assert cli(["update", "--manifest", str(output_path)]) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "Pulling branch 'main'.",
         f"===== dep1 ('dep1', revision={sha1!r}) =====",
         "Nothing to do.",
@@ -326,18 +333,21 @@ def test_resolve(tmp_path, gws):
         'name = "dep1"',
         'url = "../dep1"',
         'path = "dep1"',
+        "submodules = true",
         "",
         "[[dependencies]]",
         'name = "dep2"',
         'url = "../dep2"',
         'revision = "1-feature"',
         'path = "dep2"',
+        "submodules = true",
         "",
         "[[dependencies]]",
         'name = "dep4"',
         'url = "../dep4"',
         'revision = "main"',
         'path = "dep4"',
+        "submodules = true",
         "",
     ]
 

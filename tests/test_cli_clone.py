@@ -71,7 +71,7 @@ def test_cli_clone_path(tmp_path, repos):
         assert cli(("config", "set", "color_ui", "False")) == [""]
 
         assert cli(["checkout"], tmp_path=tmp_path) == [
-            "===== main2 (MAIN 'main2') =====",
+            "===== main2 (MAIN 'main2', revision='main') =====",
             "===== dep1 ('dep1') =====",
             "Cloning 'TMP/repos/dep1'.",
             "git-ws WARNING Clone dep1 has no revision!",
@@ -181,7 +181,7 @@ def test_cli_clone_checkout(tmp_path, repos):
 
     with chdir(workspace / "main"):
         assert cli(["checkout"], tmp_path=tmp_path) == [
-            "===== . (MAIN 'main') =====",
+            "===== . (MAIN 'main', revision='main') =====",
             "===== ../dep1 ('dep1') =====",
             "Cloning 'TMP/repos/dep1'.",
             "git-ws WARNING Clone dep1 has no revision!",
@@ -232,7 +232,7 @@ group_filters = ["+test"]
 
     with chdir(workspace):
         assert cli(["update"]) == [
-            "===== main (MAIN 'main') =====",
+            "===== main (MAIN 'main', revision='main') =====",
             "Pulling branch 'main'.",
             "===== dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",

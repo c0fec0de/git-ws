@@ -15,6 +15,10 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Shared Test Stuff."""
+from pathlib import Path
+
+TESTDATA_PATH = Path(__file__).parent / "testdata"
+
 MANIFEST_DEFAULT = """\
 version = "1.0"
 ##

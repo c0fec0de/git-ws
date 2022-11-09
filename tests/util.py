@@ -16,8 +16,11 @@
 
 """Test Utilities."""
 import contextlib
+import logging
 import os
 import re
+import shutil
+import subprocess
 
 # pylint: disable=unused-import
 from subprocess import run  # noqa
@@ -92,3 +95,36 @@ def check(workspace, name, content=None, exists=True):
         assert file_path.read_text() == f"{content}"
     else:
         assert not file_path.exists()
+
+
+# Just set in the shell `export LEARN=1`
+
+LEARN = bool(int(os.environ.get("LEARN") or 0))
+
+
+def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None):
+    """Compare Generated Files Versus Reference."""
+    genpath.mkdir(parents=True, exist_ok=True)
+    refpath.mkdir(parents=True, exist_ok=True)
+    if capsys:
+        captured = capsys.readouterr()
+        out = captured.out
+        err = captured.err
+        if tmp_path:
+            out = replace_tmp_path(out, tmp_path)
+            err = replace_tmp_path(err, tmp_path)
+        (genpath / "stdout.txt").write_text(out)
+        (genpath / "stderr.txt").write_text(err)
+    if caplog:
+        with open(genpath / "logging.txt", "wt", encoding="utf-8") as file:
+            for item in format_logs(caplog, tmp_path=tmp_path):
+                file.write(f"{item}\n")
+    if LEARN:
+        logging.getLogger(__name__).warning("LEARNING %s", refpath)
+        shutil.rmtree(refpath, ignore_errors=True)
+        shutil.copytree(genpath, refpath)
+    cmd = ["diff", "-r", "--exclude", "__pycache__", str(refpath), str(genpath)]
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as error:
+        assert False, error.stdout.decode("utf-8")

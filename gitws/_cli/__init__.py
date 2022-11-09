@@ -394,6 +394,24 @@ def foreach(context, command, projects=None, manifest_path=None, group_filters=N
         gws.run_foreach(command, project_paths=projects, reverse=reverse)
 
 
+@main.command()
+@projects_option()
+@manifest_option()
+@group_filters_option()
+@reverse_option()
+@click.argument("command", nargs=-1, type=click.UNPROCESSED)
+@pass_context
+def submodule(context, command, projects=None, manifest_path=None, group_filters=None, reverse=False):
+    """
+    Run git submodule command on projects.
+
+    This command behaves identical to `git ws foreach -- git submodule`.
+    """
+    with exceptionhandling(context):
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
+        gws.run_foreach(("git", "submodule") + command, project_paths=projects, reverse=reverse)
+
+
 main.add_command(config)
 main.add_command(info)
 main.add_command(manifest)
