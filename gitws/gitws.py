@@ -200,7 +200,7 @@ class GitWS:
     @staticmethod
     def clone(
         url: str,
-        main_path: Path = None,
+        main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
         force: bool = False,
@@ -232,7 +232,7 @@ class GitWS:
             Workspace.check_empty(path, main_path)
         secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        git = Git(resolve_relative(main_path))
+        git = Git(resolve_relative(main_path), secho=secho)
         git.clone(url)
         return GitWS.create(path, main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho)
 
@@ -272,55 +272,56 @@ class GitWS:
         # Clone
         project = clone.project
         git = clone.git
-        if not git.is_cloned():
-            self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
-            git.clone(project.url, revision=project.revision)
-            return
-
-        # Determine actual version
-        tag = git.get_tag()
-        branch = git.get_branch()
-        sha = git.get_sha()
-
-        if project.revision in (sha, tag) and not branch:
-            self.secho("Nothing to do.", fg=_COLOR_ACTION)
-            return
-
-        revision = tag or branch or sha
-
-        # Checkout
-        fetched = False
-        if project.revision and revision != project.revision:
-            self.secho("Fetching.", fg=_COLOR_ACTION)
-            git.fetch()
-            fetched = True
-            self.secho(f"Checking out {project.revision!r} (previously {revision!r}).", fg=_COLOR_ACTION)
-            git.checkout(project.revision)
+        if git.is_cloned():
+            # Determine actual version
+            tag = git.get_tag()
             branch = git.get_branch()
-            revision = tag or branch or sha
+            sha = git.get_sha()
 
-        # Pull or Rebase in case we are on a branch (or have switched to it.)
-        if branch:
-            if rebase:
-                if not fetched:
+            if project.revision in (sha, tag) and not branch:
+                self.secho("Nothing to do.", fg=_COLOR_ACTION)
+            else:
+                revision = tag or branch or sha
+
+                # Checkout
+                fetched = False
+                if project.revision and revision != project.revision:
                     self.secho("Fetching.", fg=_COLOR_ACTION)
                     git.fetch()
-                self.secho(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
-                git.rebase()
-            else:
-                if not fetched:
-                    self.secho(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
-                    git.pull()
-                else:
-                    self.secho(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
-                    git.merge()
+                    fetched = True
+                    git.checkout(project.revision)
+                    branch = git.get_branch()
+                    revision = tag or branch or sha
+
+                # Pull or Rebase in case we are on a branch (or have switched to it.)
+                if branch:
+                    if rebase:
+                        if not fetched:
+                            self.secho("Fetching.", fg=_COLOR_ACTION)
+                            git.fetch()
+                        self.secho(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
+                        git.rebase()
+                    else:
+                        if not fetched:
+                            self.secho(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
+                            git.pull()
+                        else:
+                            self.secho(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
+                            git.merge(f"origin/{branch}")
+
+        else:
+            self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+            git.clone(project.url, revision=project.revision)
+
+        if project.submodules:
+            git.submodule_update(init=True, recursive=True)
 
     def _prune(self, workspace: Workspace, used: List[Path], force: bool = False):
         for obsolete_path in workspace.iter_obsoletes(used):
             rel_path = resolve_relative(obsolete_path)
             self.secho(f"===== {rel_path} (OBSOLETE) =====", fg=_COLOR_BANNER)
             self.secho(f"Removing {str(rel_path)!r}.", fg=_COLOR_ACTION)
-            git = Git(obsolete_path)
+            git = Git(obsolete_path, secho=self.secho)
             if force or not git.is_cloned() or git.is_empty():
                 shutil.rmtree(obsolete_path, ignore_errors=True)
             else:
@@ -401,7 +402,7 @@ class GitWS:
                 if not git.is_cloned():
                     self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
                     git.clone(project.url, revision=project.revision)
-                if project.revision:
+                if project.revision and not project.is_main:
                     git.checkout(revision=project.revision, force=force)
                 clone.check(exists=False)
 
@@ -554,7 +555,7 @@ class GitWS:
         if reverse:
             projects = reversed(tuple(projects))  # type: ignore
         for project in projects:
-            clone = Clone.from_project(workspace, project)
+            clone = Clone.from_project(workspace, project, secho=self.secho)
             yield clone
 
     def projects(self, skip_main: bool = False, resolve_url: bool = False) -> Generator[Project, None, None]:
@@ -609,7 +610,7 @@ class GitWS:
             fdeps: List[ProjectSpec] = []
             for project_spec, project in zip(manifest_spec.dependencies, manifest.dependencies):
                 project_path = workspace.get_project_path(project)
-                git = Git(resolve_relative(project_path))
+                git = Git(resolve_relative(project_path), secho=self.secho)
                 git.check()
                 revision = git.get_tag() or git.get_sha()
                 fdeps.append(project_spec.update(revision=revision))

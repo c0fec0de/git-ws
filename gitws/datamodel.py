@@ -264,6 +264,9 @@ class Defaults(BaseModel):
     with_groups: Optional[Groups] = Groups()
     """The `with_groups` if not specified by the dependency."""
 
+    submodules: bool = True
+    """Initialize and Update `git submodules`."""
+
 
 class Project(BaseModel):
 
@@ -313,6 +316,9 @@ class Project(BaseModel):
     with_groups: Groups = Field(Groups(), alias="with-groups")
     """Group Selection for refered project."""
 
+    submodules: bool = True
+    """Initialize and Update `git submodules`."""
+
     is_main: bool = False
     """Project is the main project."""
 
@@ -347,6 +353,7 @@ class Project(BaseModel):
                 ("revision", self.revision, None),
                 ("path", str(self.path), self.name),
                 ("groups", ",".join(self.groups), ""),
+                ("submodules", self.submodules, True),
             )
         )
         if self.is_main:
@@ -356,7 +363,9 @@ class Project(BaseModel):
         return self.name
 
     @staticmethod
-    def from_spec(manifest_spec: "ManifestSpec", spec: "ProjectSpec", refurl: Optional[str] = None) -> "Project":
+    def from_spec(
+        manifest_spec: "ManifestSpec", spec: "ProjectSpec", refurl: Optional[str] = None, resolve_url: bool = False
+    ) -> "Project":
         """
         Create :any:`Project` from `manifest_spec` and `spec`.
 
@@ -366,15 +375,18 @@ class Project(BaseModel):
 
         Keyword Args:
             refurl: Remote URL of the `manifest_spec`. If specified, relative URLs are resolved.
+            resolve_url: Resolve URLs to absolute ones.
 
         :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
         :any:`ProjectSpec.from_project()` does the reverse.
         """
+        assert not resolve_url or refurl, "resolve_url requires refurl"
         defaults = manifest_spec.defaults
         remotes = manifest_spec.remotes
         project_groups = spec.groups or defaults.groups
         project_with_groups = spec.with_groups or defaults.with_groups
         url = spec.url
+        submodules = spec.submodules if spec.submodules is not None else defaults.submodules
         if not url:
             # URL assembly
             project_remote = spec.remote or defaults.remote
@@ -390,7 +402,8 @@ class Project(BaseModel):
                 url = f"../{project_sub_url}"
 
         # Resolve relative URLs.
-        url = urljoin(refurl, url)
+        if resolve_url:
+            url = urljoin(refurl, url)
         return Project(
             name=spec.name,
             path=spec.path or spec.name,
@@ -399,6 +412,7 @@ class Project(BaseModel):
             manifest_path=spec.manifest_path,
             groups=project_groups,
             with_groups=project_with_groups,
+            submodules=submodules,
         )
 
 
@@ -462,6 +476,9 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     with_groups: Groups = Field(Groups(), alias="with-groups")
     """Group Selection for refered project."""
 
+    submodules: Optional[bool] = None
+    """Initialize and Update `git submodules`."""
+
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
         # pylint: disable=no-self-argument,no-self-use
@@ -509,6 +526,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             manifest_path=project.manifest_path,
             groups=project.groups,
             with_groups=project.with_groups,
+            submodules=project.submodules,
         )
 
 
@@ -547,7 +565,9 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
         return values
 
     @staticmethod
-    def from_spec(spec: "ManifestSpec", path: Optional[str] = None, refurl: Optional[str] = None) -> "Manifest":
+    def from_spec(
+        spec: "ManifestSpec", path: Optional[str] = None, refurl: Optional[str] = None, resolve_url: bool = False
+    ) -> "Manifest":
         """
         Create :any:`Manifest` from :any:`ManifestSpec`.
 
@@ -557,11 +577,15 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
         Keyword Args:
             path: File path of the `spec`.
             refurl: URL of the repository containing `spec`.
+            resolve_url: Convert relative to absolute URLs. Requires `refurl`.
 
         If `refurl` is specified, any relative URL in the :any:`ManifestSpec` and referred :any:`ProjectSpec` s
         are resolved to a absolute URLs.
         """
-        dependencies = [Project.from_spec(spec, project_spec, refurl=refurl) for project_spec in spec.dependencies]
+        dependencies = [
+            Project.from_spec(spec, project_spec, refurl=refurl, resolve_url=resolve_url)
+            for project_spec in spec.dependencies
+        ]
         return Manifest(
             group_filters=spec.group_filters,
             dependencies=dependencies,
@@ -742,7 +766,9 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         # Defaults
         doc.add("defaults", as_dict(Defaults()))
         example = ManifestSpec(
-            defaults=Defaults(remote="myserver", revision="main", groups=("+test",), with_groups=("doc",))
+            defaults=Defaults(
+                remote="myserver", revision="main", groups=("+test",), with_groups=("doc",), submodules=True
+            )
         )
         add_comment(doc, "\n".join(example.dump(doc=tomlkit.document()).split("\n")[1:-1]))
         doc.add(tomlkit.nl())
@@ -783,7 +809,7 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         doc.add(tomlkit.nl())
 
         add_info(doc, "A minimal dependency:")
-        example = ManifestSpec(dependencies=[ProjectSpec(name="my")])
+        example = ManifestSpec(dependencies=[ProjectSpec(name="my", submodules=None)])
         add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
 
         doc.add("dependencies", tomlkit.aot())

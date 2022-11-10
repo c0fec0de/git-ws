@@ -48,6 +48,7 @@ from .datamodel import (
 )
 from .exceptions import (
     GitCloneMissingError,
+    GitCloneMissingOriginError,
     GitCloneNotCleanError,
     InitializedError,
     InvalidConfigurationFileError,

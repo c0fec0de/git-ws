@@ -23,14 +23,13 @@ from gitws import InitializedError, OutsideWorkspaceError, UninitializedError
 from gitws.const import CONFIG_PATH, INFO_PATH
 from gitws.workspace import Info, Workspace
 
+from .common import TESTDATA_PATH
 from .util import chdir, run
-
-TESTDATA = Path(__file__).parent / "testdata"
 
 
 def test_load():
     """Test Load."""
-    workspace_path = TESTDATA / "workspace0"
+    workspace_path = TESTDATA_PATH / "workspace0"
     workspace = Workspace.from_path(workspace_path / "bar" / "sub")
     assert workspace.path == workspace_path
     assert workspace.info == Info(main_path=Path("bar"))

@@ -22,7 +22,7 @@ from typing import Callable, Generator, List, Optional, Tuple
 
 from ._util import resolve_relative
 from .datamodel import GroupFilters, Groups, GroupSelects, Manifest, ManifestSpec, Project
-from .exceptions import ManifestNotFoundError
+from .exceptions import GitCloneMissingOriginError, ManifestNotFoundError
 from .git import Git
 from .workspace import Workspace
 
@@ -154,7 +154,10 @@ class ProjectIter:
         info = workspace.info
         self.__done = [str(info.main_path)]
         if not self.skip_main:
-            yield Project(name=info.main_path.name, path=str(info.main_path), is_main=True)
+            main_path = info.main_path
+            main_git = Git(resolve_relative(workspace.main_path))
+            revision = main_git.get_revision()
+            yield Project(name=main_path.name, path=str(main_path), revision=revision, is_main=True)
         try:
             manifest_spec = ManifestSpec.load(self.manifest_path)
         except ManifestNotFoundError:
@@ -172,14 +175,16 @@ class ProjectIter:
         deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
         refurl: Optional[str] = None
         done: List[str] = self.__done
-        if self.resolve_url and manifest_spec.dependencies:
+        if manifest_spec.dependencies:
             git = Git(resolve_relative(project_path))
             refurl = git.get_url()
+            if not refurl:
+                raise GitCloneMissingOriginError(resolve_relative(project_path))
 
         _LOGGER.debug("%r", manifest_spec)
 
         for spec in manifest_spec.dependencies:
-            dep_project = Project.from_spec(manifest_spec, spec, refurl=refurl)
+            dep_project = Project.from_spec(manifest_spec, spec, refurl=refurl, resolve_url=self.resolve_url)
 
             # Update every path just once
             if dep_project.path in done:
