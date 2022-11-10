@@ -200,7 +200,7 @@ class GitWS:
     @staticmethod
     def clone(
         url: str,
-        main_path: Path = None,
+        main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
         force: bool = False,
