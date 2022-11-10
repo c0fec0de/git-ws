@@ -76,7 +76,7 @@ def init(context, path=None, manifest_path=None, group_filters=None, update: boo
     Initialize Git Workspace.
 
     The actual directory MUST be a valid git clone, which has been
-    be either created by 'git init' or 'git clone'.
+    either created by 'git init' or 'git clone'.
     """
     with exceptionhandling(context):
         path = process_path(path)

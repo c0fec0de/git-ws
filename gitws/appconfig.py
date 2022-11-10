@@ -250,7 +250,7 @@ class AppConfig:
             return AppConfigData(**doc)
         except ValidationError as validation_error:
             raise InvalidConfigurationFileError(
-                self._get_config_file_path(location), str(validation_error)
+                self.get_config_file_path(location), str(validation_error)
             ) from validation_error
 
     def save(self, config: AppConfigData, location: AppConfigLocation):
@@ -295,7 +295,7 @@ class AppConfig:
             elif key in doc:
                 del doc[key]
 
-        doc_path = self._get_config_file_path(location)
+        doc_path = self.get_config_file_path(location)
         doc_path.parent.mkdir(parents=True, exist_ok=True)
         doc_path.write_text(doc.as_string(), encoding="utf-8")
 
@@ -358,10 +358,10 @@ class AppConfig:
             UninitializedError: When trying to load the workspace configuration while being outside a workspace.
             InvalidConfigurationLocationError: When an invalid location has been specified.
         """
-        config_file_path = self._get_config_file_path(location)
+        config_file_path = self.get_config_file_path(location)
         return AppConfig._load_config_from_path(config_file_path)
 
-    def _get_config_file_path(self, location: AppConfigLocation) -> Path:
+    def get_config_file_path(self, location: AppConfigLocation) -> Path:
         """
         Given a storage location, return the path to the config file.
 

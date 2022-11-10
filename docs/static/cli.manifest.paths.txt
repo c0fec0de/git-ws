@@ -1,0 +1,10 @@
+Usage: git-ws manifest paths [OPTIONS]
+
+  Print Paths to ALL Manifest Files.
+
+Options:
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.

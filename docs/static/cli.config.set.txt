@@ -1,0 +1,15 @@
+Usage: git-ws config set [OPTIONS] OPTION VALUE
+
+  Set the configuration option to the given value.
+
+  This sets an option to the given value. If no specific configuration file is
+  selected, then this will update the workspace configuration if run from
+  within a workspace. Otherwise, the user configuration will be updated.
+
+Options:
+  --system          Operate on system wide configuration.
+  --user            Operate on user configuration.
+  --workspace       Operate on workspace specific configuration.
+  --ignore-unknown  Set the option, even if it is not known to the
+                    application. Note that this bypasses any type checking.
+  -h, --help        Show this message and exit.

@@ -1,0 +1,15 @@
+Usage: git-ws manifest freeze [OPTIONS]
+
+  Print The Resolved Manifest With SHAs For All Project Revisions.
+
+  The output is identical to resolve, a single manifest file with all
+  dependencies and their dependencies. Revisions are replaced by the actual
+  SHAs.
+
+Options:
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -O, --output FILE          Write Manifest to file instead of STDOUT.
+  -h, --help                 Show this message and exit.

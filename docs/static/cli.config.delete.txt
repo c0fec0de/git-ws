@@ -1,0 +1,14 @@
+Usage: git-ws config delete [OPTIONS] OPTION
+
+  Remove the option from the configuration.
+
+  This removes the specified option from the selected configuration file. If
+  no configuration file is explicitly selected, this will operate on the
+  workspace configuration if ran from within a workspace. Otherwise, this will
+  operate on the user configuration.
+
+Options:
+  --system     Operate on system wide configuration.
+  --user       Operate on user configuration.
+  --workspace  Operate on workspace specific configuration.
+  -h, --help   Show this message and exit.

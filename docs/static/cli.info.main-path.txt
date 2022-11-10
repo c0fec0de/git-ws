@@ -1,0 +1,6 @@
+Usage: git-ws info main-path [OPTIONS]
+
+  Print Path to Main Git Clone.
+
+Options:
+  -h, --help  Show this message and exit.

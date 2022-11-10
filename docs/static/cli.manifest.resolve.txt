@@ -1,0 +1,14 @@
+Usage: git-ws manifest resolve [OPTIONS]
+
+  Print The Manifest With All Projects And All Their Dependencies.
+
+  The output is a single manifest file with all dependencies and their
+  dependencies.
+
+Options:
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -O, --output FILE          Write Manifest to file instead of STDOUT.
+  -h, --help                 Show this message and exit.

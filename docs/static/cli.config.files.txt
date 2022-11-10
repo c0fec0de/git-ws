@@ -1,0 +1,13 @@
+Usage: git-ws config files [OPTIONS]
+
+  Show the location of the configuration files.
+
+  This prints the location of the configuration files used. By default, all
+  paths are shown. The selection can be reduced by appropriate commands.
+
+Options:
+  -f, --format [text|json]  The format to use for showing values.
+  --system                  Operate on system wide configuration.
+  --user                    Operate on user configuration.
+  --workspace               Operate on workspace specific configuration.
+  -h, --help                Show this message and exit.
