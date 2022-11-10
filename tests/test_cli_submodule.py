@@ -15,11 +15,9 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface - Update Variants."""
-from pathlib import Path
-
 from pytest import fixture
 
-from gitws import Git, GitWS
+from gitws import GitWS
 from gitws.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import
@@ -56,11 +54,14 @@ def repos_submodules(repos_basepath):
             ],
         ).save(path / "git-ws.toml")
 
-    run(["git", "add", "../sm1", "sm1"], cwd=(repos_path / "dep1"))
-    run(["git", "commit", "-am", "add-submodule"], cwd=(repos_path / "dep1"))
+    run(["git", "submodule", "add", "../sm1", "sm1"], cwd=(repos_path / "dep1"), check=True)
+    run(["git", "commit", "-am", "add-submodule"], cwd=(repos_path / "dep1"), check=True)
 
     with git_repo(repos_path / "dep2", commit="initial") as path:
         (path / "data.txt").write_text("dep2")
+
+    run(["git", "submodule", "add", "../sm2", "sm2"], cwd=(repos_path / "dep2"), check=True)
+    run(["git", "commit", "-am", "add-submodule"], cwd=(repos_path / "dep2"), check=True)
 
     yield repos_path
 
@@ -79,6 +80,8 @@ def gws(tmp_path, repos_submodules):
 def test_update(tmp_path, repos_submodules, gws):
     """Test update."""
     # pylint: disable=unused-argument
+    # Disable color here, to test normal error output
+    # assert cli(("config", "set", "color_ui", "False")) == [""]
 
     assert cli(["-vv", "submodule", "update"], tmp_path=tmp_path, repos_path=repos_submodules) == [
         "git-ws INFO Workspace path=TMP/main main=main",
@@ -132,5 +135,5 @@ def test_update(tmp_path, repos_submodules, gws):
     workspace = gws.path
     check(workspace, "dep1")
     check(workspace, "dep2")
-    # check(workspace, "sm1", path="dep1/sm1")
-    # check(workspace, "sm2", path="dep2/sm2")
+    check(workspace, "sm1", path="dep1/sm1")
+    check(workspace, "sm2", path="dep2/sm2")
