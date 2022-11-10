@@ -175,7 +175,7 @@ class ProjectIter:
         deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
         refurl: Optional[str] = None
         done: List[str] = self.__done
-        if self.resolve_url and manifest_spec.dependencies:
+        if manifest_spec.dependencies:
             git = Git(resolve_relative(project_path))
             refurl = git.get_url()
             if not refurl:
@@ -184,7 +184,7 @@ class ProjectIter:
         _LOGGER.debug("%r", manifest_spec)
 
         for spec in manifest_spec.dependencies:
-            dep_project = Project.from_spec(manifest_spec, spec, refurl=refurl)
+            dep_project = Project.from_spec(manifest_spec, spec, refurl=refurl, resolve_url=self.resolve_url)
 
             # Update every path just once
             if dep_project.path in done:

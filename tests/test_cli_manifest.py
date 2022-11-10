@@ -20,7 +20,7 @@ from pytest import fixture
 from gitws import GitWS
 
 # pylint: disable=unused-import
-from .fixtures import repos
+from .fixtures import repos, repos_dotgit
 from .util import chdir, cli, get_sha
 
 
@@ -31,6 +31,19 @@ def gws(tmp_path, repos):
 
     with chdir(tmp_path):
         gws = GitWS.clone(str(repos / "main"))
+        gws.update()
+
+    with chdir(workspace):
+        yield gws
+
+
+@fixture
+def gws_dotgit(tmp_path, repos_dotgit):
+    """Initialized :any:`GitWS` on `repos_dotgit`."""
+    workspace = tmp_path / "main"
+
+    with chdir(tmp_path):
+        gws = GitWS.clone(str(repos_dotgit / "main.git"))
         gws.update()
 
     with chdir(workspace):
@@ -466,3 +479,124 @@ def test_upgrade_fail(tmp_path):
             "Error: Manifest 'my.toml' is broken: Unexpected character: 'n' at line 3 col 4",
             "",
         ]
+
+
+def test_freeze_dotgit(tmp_path, gws_dotgit):
+    """Manifest Freeze with .git."""
+    sha1 = get_sha(gws_dotgit.path / "dep1")
+    sha1s = sha1[:7]
+    sha2 = get_sha(gws_dotgit.path / "dep2")
+    sha2s = sha2[:7]
+    sha3 = get_sha(gws_dotgit.path / "dep3")
+    sha3s = sha3[:7]
+    sha4 = get_sha(gws_dotgit.path / "dep4")
+    sha4s = sha4[:7]
+    manifest = [
+        'version = "1.0"',
+        "##",
+        "## Git Workspace's Manifest. Please see the documentation at:",
+        "##",
+        "## https://git-ws.readthedocs.io/en/latest/manual/manifest.html",
+        "##",
+        "",
+        "",
+        '# group-filters = ["+test", "-doc", "+feature@path"]',
+        "group-filters = []",
+        "",
+        "",
+        "# [[remotes]]",
+        '# name = "myremote"',
+        '# url-base = "https://github.com/myuser"',
+        "",
+        "",
+        "[defaults]",
+        '# remote = "myserver"',
+        '# revision = "main"',
+        '# groups = ["+test"]',
+        '# with_groups = ["doc"]',
+        "",
+        "",
+        "## A full flavored dependency using a 'remote':",
+        "# [[dependencies]]",
+        '# name = "myname"',
+        '# remote = "remote"',
+        '# sub-url = "my.git"',
+        '# revision = "main"',
+        '# path = "mydir"',
+        '# groups = ["group"]',
+        "",
+        "## A full flavored dependency using a 'url':",
+        "# [[dependencies]]",
+        '# name = "myname"',
+        '# url = "https://github.com/myuser/my.git"',
+        '# revision = "main"',
+        '# path = "mydir"',
+        '# groups = ["group"]',
+        "",
+        "## A minimal dependency:",
+        "# [[dependencies]]",
+        '# name = "my"',
+        "[[dependencies]]",
+        'name = "dep1"',
+        'url = "../dep1.git"',
+        f'revision = "{sha1}"',
+        'path = "dep1"',
+        "submodules = true",
+        "",
+        "[[dependencies]]",
+        'name = "dep3"',
+        'url = "../dep3"',
+        f'revision = "{sha3}"',
+        'path = "dep3"',
+        "submodules = true",
+        "",
+        "[[dependencies]]",
+        'name = "dep2"',
+        'url = "../dep2.git"',
+        f'revision = "{sha2}"',
+        'path = "dep2"',
+        "submodules = true",
+        "",
+        "[[dependencies]]",
+        'name = "dep4"',
+        'url = "../dep4"',
+        f'revision = "{sha4}"',
+        'path = "dep4"',
+        "submodules = true",
+        "",
+    ]
+
+    assert cli(["foreach", "git", "config", "advice.detachedHead", "false"]) == [
+        "===== main (MAIN 'main', revision='main') =====",
+        "===== dep1 ('dep1', revision='main') =====",
+        "===== dep3 ('dep3', revision='main') =====",
+        "===== dep2 ('dep2', revision='main') =====",
+        "===== dep4 ('dep4', revision='main') =====",
+        "",
+    ]
+
+    # FILE
+    output_path = tmp_path / "manifest.toml"
+    assert cli(["manifest", "freeze", "--output", str(output_path)]) == [
+        "",
+    ]
+
+    assert output_path.read_text().split("\n") == manifest
+
+    assert cli(["update", "--manifest", str(output_path)]) == [
+        "===== main (MAIN 'main', revision='main') =====",
+        "Pulling branch 'main'.",
+        f"===== dep1 ('dep1', revision='{sha1}') " "=====",
+        "Fetching.",
+        f"HEAD is now at {sha1s} initial",
+        f"===== dep3 ('dep3', revision='{sha3}') " "=====",
+        "Fetching.",
+        f"HEAD is now at {sha3s} initial",
+        f"===== dep2 ('dep2', revision='{sha2}') " "=====",
+        "Fetching.",
+        f"HEAD is now at {sha2s} initial",
+        f"===== dep4 ('dep4', revision='{sha4}') " "=====",
+        "Fetching.",
+        f"HEAD is now at {sha4s} initial",
+        "",
+    ]

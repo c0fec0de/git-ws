@@ -363,7 +363,9 @@ class Project(BaseModel):
         return self.name
 
     @staticmethod
-    def from_spec(manifest_spec: "ManifestSpec", spec: "ProjectSpec", refurl: Optional[str] = None) -> "Project":
+    def from_spec(
+        manifest_spec: "ManifestSpec", spec: "ProjectSpec", refurl: Optional[str] = None, resolve_url: bool = False
+    ) -> "Project":
         """
         Create :any:`Project` from `manifest_spec` and `spec`.
 
@@ -373,10 +375,12 @@ class Project(BaseModel):
 
         Keyword Args:
             refurl: Remote URL of the `manifest_spec`. If specified, relative URLs are resolved.
+            resolve_url: Resolve URLs to absolute ones.
 
         :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
         :any:`ProjectSpec.from_project()` does the reverse.
         """
+        assert not resolve_url or refurl, "resolve_url requires refurl"
         defaults = manifest_spec.defaults
         remotes = manifest_spec.remotes
         project_groups = spec.groups or defaults.groups
@@ -398,7 +402,8 @@ class Project(BaseModel):
                 url = f"../{project_sub_url}"
 
         # Resolve relative URLs.
-        url = urljoin(refurl, url)
+        if resolve_url:
+            url = urljoin(refurl, url)
         return Project(
             name=spec.name,
             path=spec.path or spec.name,
@@ -560,7 +565,9 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
         return values
 
     @staticmethod
-    def from_spec(spec: "ManifestSpec", path: Optional[str] = None, refurl: Optional[str] = None) -> "Manifest":
+    def from_spec(
+        spec: "ManifestSpec", path: Optional[str] = None, refurl: Optional[str] = None, resolve_url: bool = False
+    ) -> "Manifest":
         """
         Create :any:`Manifest` from :any:`ManifestSpec`.
 
@@ -570,11 +577,15 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
         Keyword Args:
             path: File path of the `spec`.
             refurl: URL of the repository containing `spec`.
+            resolve_url: Convert relative to absolute URLs. Requires `refurl`.
 
         If `refurl` is specified, any relative URL in the :any:`ManifestSpec` and referred :any:`ProjectSpec` s
         are resolved to a absolute URLs.
         """
-        dependencies = [Project.from_spec(spec, project_spec, refurl=refurl) for project_spec in spec.dependencies]
+        dependencies = [
+            Project.from_spec(spec, project_spec, refurl=refurl, resolve_url=resolve_url)
+            for project_spec in spec.dependencies
+        ]
         return Manifest(
             group_filters=spec.group_filters,
             dependencies=dependencies,

@@ -441,7 +441,9 @@ def test_default_url():
     )
     assert manifest.path is None
 
-    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main", path="foo")
+    manifest = Manifest.from_spec(
+        manifest_spec, refurl="https://my.domain.com/repos/main", path="foo", resolve_url=True
+    )
     assert not manifest.group_filters
     assert manifest.dependencies == (
         Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1"),
@@ -449,7 +451,15 @@ def test_default_url():
     )
     assert manifest.path == "foo"
 
-    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.git")
+    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main", path="foo")
+    assert not manifest.group_filters
+    assert manifest.dependencies == (
+        Project(name="dep1", path="dep1", url="../dep1"),
+        Project(name="dep2", path="dep2", url="../dep2"),
+    )
+    assert manifest.path == "foo"
+
+    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.git", resolve_url=True)
     assert not manifest.group_filters
     assert manifest.dependencies == (
         Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1.git"),
@@ -457,11 +467,19 @@ def test_default_url():
     )
     assert manifest.path is None
 
-    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.suffix")
+    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.suffix", resolve_url=True)
     assert not manifest.group_filters
     assert manifest.dependencies == (
         Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1.suffix"),
         Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2.suffix"),
+    )
+    assert manifest.path is None
+
+    manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.suffix")
+    assert not manifest.group_filters
+    assert manifest.dependencies == (
+        Project(name="dep1", path="dep1", url="../dep1.suffix"),
+        Project(name="dep2", path="dep2", url="../dep2.suffix"),
     )
     assert manifest.path is None
 

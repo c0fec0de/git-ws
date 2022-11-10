@@ -29,6 +29,8 @@ from click.testing import CliRunner
 
 from gitws._cli import main
 
+LEARN = False
+
 
 @contextlib.contextmanager
 def chdir(path):
@@ -95,11 +97,6 @@ def check(workspace, name, content=None, exists=True):
         assert file_path.read_text() == f"{content}"
     else:
         assert not file_path.exists()
-
-
-# Just set in the shell `export LEARN=1`
-
-LEARN = bool(int(os.environ.get("LEARN") or 0))
 
 
 def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None):  # pragma: no cover

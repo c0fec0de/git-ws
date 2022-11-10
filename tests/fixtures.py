@@ -121,3 +121,48 @@ def repos(tmp_path):
         (path / "data.txt").write_text("dep6")
 
     yield repos_path
+
+
+@fixture
+def repos_dotgit(tmp_path):
+    """Fixture with main and four depedency repos."""
+
+    repos_path = tmp_path / "repos"
+
+    # with .git
+    with git_repo(repos_path / "main.git", commit="initial") as path:
+        (path / "data.txt").write_text("main")
+        ManifestSpec(
+            dependencies=[
+                ProjectSpec(name="dep1", revision="main"),
+                ProjectSpec(name="dep3", url="../dep3", revision="main"),
+            ],
+        ).save(path / "git-ws.toml")
+
+    # with .git
+    with git_repo(repos_path / "dep1.git", commit="initial") as path:
+        (path / "data.txt").write_text("dep1")
+        ManifestSpec(
+            dependencies=[
+                ProjectSpec(name="dep2", revision="main"),
+            ],
+        ).save(path / "git-ws.toml")
+
+    # with .git
+    with git_repo(repos_path / "dep2.git", commit="initial") as path:
+        (path / "data.txt").write_text("dep2")
+
+    # non .git
+    with git_repo(repos_path / "dep3", commit="initial") as path:
+        (path / "data.txt").write_text("dep3")
+        ManifestSpec(
+            dependencies=[
+                ProjectSpec(name="dep4", revision="main"),  # refer to non .git
+            ],
+        ).save(path / "git-ws.toml")
+
+    # non .git
+    with git_repo(repos_path / "dep4", commit="initial") as path:
+        (path / "data.txt").write_text("dep4")
+
+    yield repos_path
