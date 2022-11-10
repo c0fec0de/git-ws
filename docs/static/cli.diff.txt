@@ -1,0 +1,11 @@
+Usage: git-ws diff [OPTIONS] [PATHS]...
+
+  Run 'git diff' on paths (displayed paths include the actual clone path).
+
+Options:
+  --stat                     show diffstat instead of patch.
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.

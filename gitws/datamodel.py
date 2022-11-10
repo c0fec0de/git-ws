@@ -515,7 +515,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
 
         ..note::
             :any:`Project.from_spec()` resolves some attributes irreversible.
-            So :any:`Project.from_spec(ProjectSpec.from_project())` will not
+            So ``Project.from_spec(ProjectSpec.from_project())`` will not
             return the original project.
         """
         return ProjectSpec(

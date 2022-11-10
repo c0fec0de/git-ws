@@ -1,0 +1,6 @@
+Usage: git-ws info workspace-path [OPTIONS]
+
+  Print Path to Workspace.
+
+Options:
+  -h, --help  Show this message and exit.

@@ -225,6 +225,37 @@ def _list(context, target, format_):
             click.echo(json.dumps(data))
 
 
+@config.command(name="files")
+@format_option
+@system_option
+@user_option
+@workspace_option
+@pass_context
+def files(context, target, format_):
+    """
+    Show the location of the configuration files.
+
+    This prints the location of the configuration files used. By default, all
+    paths are shown. The selection can be reduced by appropriate commands.
+    """
+    if target is None:
+        locations = [AppConfigLocation.SYSTEM, AppConfigLocation.USER, AppConfigLocation.WORKSPACE]
+    else:
+        locations = [AppConfigLocation(target)]
+    data = {}
+    for location in locations:
+        config = AppConfig()
+        try:
+            data[location.value] = str(config.get_config_file_path(location))
+        except UninitializedError:
+            data[location.value] = ""
+    if format_ == Format.JSON.value:
+        click.echo(json.dumps(data))
+    else:
+        for key, value in data.items():
+            click.echo(f"{key}: {value}")
+
+
 def _select_default_location_if_none(location: Optional[AppConfigLocation]) -> AppConfigLocation:
     """
     Select a default config location.

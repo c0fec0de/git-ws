@@ -1,0 +1,22 @@
+Usage: git-ws config get [OPTIONS] OPTION
+
+  Get the value of a configuration option.
+
+  This prints the value of the specified option. If selected, the value of a
+  specific configuration file will be read. Otherwise, the computed value of
+  the configuration option is shown.
+
+  The computed configuration value is created by merging the system, user and
+  workspace configuration files in that order. On top, environment variables
+  of the form GIT_WS_XXX (where XXX is the name of an option) can be used to
+  override settings from the configuration files.
+
+  Note that option also can be a user specific option from one of the
+  configuration files that is not otherwise consumed by GitWS itself.
+
+Options:
+  --system                  Operate on system wide configuration.
+  --user                    Operate on user configuration.
+  --workspace               Operate on workspace specific configuration.
+  -f, --format [text|json]  The format to use for showing values.
+  -h, --help                Show this message and exit.
