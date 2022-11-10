@@ -103,8 +103,11 @@ def test_update(tmp_path, repos, gws):
         "",
     ]
 
-    # Update other.toml
-    assert cli(["update", "--manifest", "other.toml"], tmp_path=tmp_path) == [
+    # Modify dep5 to prevent deletion
+    (gws.path / "dep5" / "file.txt").touch()
+
+    # Update other.toml - FAILING
+    assert cli(["update", "--manifest", "other.toml", "--prune"], tmp_path=tmp_path, exit_code=1) == [
         "===== main (MAIN 'main', revision='main') =====",
         "Pulling branch 'main'.",
         "===== dep1 ('dep1', revision='main') =====",
@@ -115,6 +118,28 @@ def test_update(tmp_path, repos, gws):
         "Fetching.",
         "Switched to a new branch '4-feature'",
         "Merging branch '4-feature'.",
+        "===== dep5 (OBSOLETE) =====",
+        "Removing 'dep5'.",
+        "Error: Git Clone 'dep5' contains changes.",
+        "",
+        "Commit/Push all your changes and branches or use '--force'",
+        "",
+        "",
+    ]
+
+    assert cli(["update", "--manifest", "other.toml", "--prune", "--force"], tmp_path=tmp_path) == [
+        "===== main (MAIN 'main', revision='main') =====",
+        "Pulling branch 'main'.",
+        "===== dep1 ('dep1', revision='main') =====",
+        "Pulling branch 'main'.",
+        "===== sub/dep6 ('dep6', revision='main', groups='foo,bar,fast') =====",
+        "Pulling branch 'main'.",
+        "===== dep4 ('dep4', revision='4-feature') =====",
+        "Pulling branch '4-feature'.",
+        "===== dep5 (OBSOLETE) =====",
+        "Removing 'dep5'.",
+        "===== dep2 (OBSOLETE) =====",
+        "Removing 'dep2'.",
         "",
     ]
 
