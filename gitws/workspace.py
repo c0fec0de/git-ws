@@ -263,7 +263,7 @@ class Workspace:
 
 
 def _iter_obsoletes(path, usemap):
-    for sub in path.iterdir():
+    for sub in sorted(path.iterdir()):
         if sub.name in usemap:
             subusemap = usemap[sub.name]
             if subusemap:

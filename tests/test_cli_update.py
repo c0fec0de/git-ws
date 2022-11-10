@@ -114,6 +114,8 @@ def test_update(tmp_path):
             "Fetching.",
             "Switched to a new branch '4-feature'",
             "Merging branch '4-feature'.",
+            "===== dep2 (OBSOLETE) =====",
+            "Removing 'dep2'.",
             "===== dep5 (OBSOLETE) =====",
             "Removing 'dep5'.",
             "Error: Git Clone 'dep5' contains changes.",
@@ -134,8 +136,6 @@ def test_update(tmp_path):
             "Pulling branch '4-feature'.",
             "===== dep5 (OBSOLETE) =====",
             "Removing 'dep5'.",
-            "===== dep2 (OBSOLETE) =====",
-            "Removing 'dep2'.",
             "",
         ]
 
