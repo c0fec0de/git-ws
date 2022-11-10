@@ -7,8 +7,9 @@ Usage: git-ws manifest freeze [OPTIONS]
   SHAs.
 
 Options:
-  -M, --manifest FILE  Manifest file. Initial clone/init settings by default.
-  -G, --groups TEXT    Group Filtering. TODO: more details. Initial clone/init
-                       filter settings by default.
-  -O, --output FILE    Write Manifest to file instead of STDOUT.
-  -h, --help           Show this message and exit.
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -O, --output FILE          Write Manifest to file instead of STDOUT.
+  -h, --help                 Show this message and exit.

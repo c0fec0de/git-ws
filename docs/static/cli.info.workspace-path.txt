@@ -3,5 +3,4 @@ Usage: git-ws info workspace-path [OPTIONS]
   Print Path to Workspace.
 
 Options:
-  -M, --manifest FILE  Manifest file. Initial clone/init settings by default.
-  -h, --help           Show this message and exit.
+  -h, --help  Show this message and exit.

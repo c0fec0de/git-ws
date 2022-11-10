@@ -3,7 +3,8 @@ Usage: git-ws info project-paths [OPTIONS]
   Print Paths to all git clones.
 
 Options:
-  -M, --manifest FILE  Manifest file. Initial clone/init settings by default.
-  -G, --groups TEXT    Group Filtering. TODO: more details. Initial clone/init
-                       filter settings by default.
-  -h, --help           Show this message and exit.
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.

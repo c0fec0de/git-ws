@@ -3,5 +3,8 @@ Usage: git-ws manifest path [OPTIONS]
   Print Path to Main Manifest File.
 
 Options:
-  -M, --manifest FILE  Manifest file. Initial clone/init settings by default.
-  -h, --help           Show this message and exit.
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.
