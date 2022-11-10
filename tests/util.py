@@ -50,47 +50,52 @@ def get_sha(path):
     return result.stdout.decode("utf-8").strip()
 
 
-def format_output(result, tmp_path=None):
+def format_output(result, tmp_path=None, repos_path=None):
     """Format Command Output."""
     lines = result.output.split("\n")
     if tmp_path:
-        lines = [replace_tmp_path(line, tmp_path) for line in lines]
+        lines = [replace_path(line, tmp_path, "TMP") for line in lines]
+    if repos_path:
+        lines = [replace_path(line, repos_path, "REPOS") for line in lines]
     return lines
 
 
-def format_logs(caplog, tmp_path=None):
+def format_logs(caplog, tmp_path=None, repos_path=None):
     """Format Logs."""
     lines = [f"{record.levelname:7s} {record.name} {record.message}" for record in caplog.records]
     if tmp_path:  # pragma: no cover
-        lines = [replace_tmp_path(line, tmp_path) for line in lines]
+        lines = [replace_path(line, tmp_path, "TMP") for line in lines]
+    if repos_path:
+        lines = [replace_path(line, repos_path, "REPOS") for line in lines]
     return lines
 
 
-def replace_tmp_path(text, tmp_path):
-    """Replace `tmp_path` in `text`."""
-    tmp_path_esc = re.escape(str(tmp_path))
+def replace_path(text, path, repl):
+    """Replace `path` by `repl` in `text`."""
+    path_esc = re.escape(str(path))
     sep_esc = re.escape(os.path.sep)
-    regex = re.compile(rf"{tmp_path_esc}([A-Za-z0-9_{sep_esc}]*)")
+    regex = re.compile(rf"{path_esc}([A-Za-z0-9_{sep_esc}]*)")
 
-    def repl(mat):
-        sub = mat.group(1) or ""
+    def func(mat):
+        sub = mat.group(1)
         sub = sub.replace(os.path.sep, "/")
-        return f"TMP{sub}"
+        return f"{repl}{sub}"
 
-    return regex.sub(repl, text)
+    return regex.sub(func, text)
 
 
-def cli(command, exit_code=0, tmp_path=None):
+def cli(command, exit_code=0, tmp_path=None, repos_path=None):
     """Invoke CLI."""
     result = CliRunner().invoke(main, command)
-    output = format_output(result, tmp_path=tmp_path)
+    output = format_output(result, tmp_path=tmp_path, repos_path=repos_path)
     assert result.exit_code == exit_code, (result.exit_code, output)
     return output
 
 
-def check(workspace, name, content=None, exists=True):
+def check(workspace, name, path=None, content=None, exists=True):
     """Check."""
-    file_path = workspace / name / "data.txt"
+    path = path or name
+    file_path = workspace / path / "data.txt"
     content = content or name
     if exists:
         assert file_path.exists()
@@ -108,8 +113,8 @@ def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None):  # pr
         out = captured.out
         err = captured.err
         if tmp_path:
-            out = replace_tmp_path(out, tmp_path)
-            err = replace_tmp_path(err, tmp_path)
+            out = replace_path(out, tmp_path, "TMP")
+            err = replace_path(err, tmp_path, "TMP")
         (genpath / "stdout.txt").write_text(out)
         (genpath / "stderr.txt").write_text(err)
     if caplog:

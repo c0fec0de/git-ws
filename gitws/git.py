@@ -472,6 +472,7 @@ class Git:
             init: Initialize.
             recursive: Recursive.
         """
+        _LOGGER.info("Git(%r).submodule_update(init=%r, recursive=%r)", str(self.path), init, recursive)
         self._run(("submodule", "update"), booloptions=(("--init", init), ("--recursive", recursive)))
 
     def has_index_changes(self) -> bool:

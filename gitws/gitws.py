@@ -91,6 +91,13 @@ class GitWS:
         """
         return self.workspace.path
 
+    @property
+    def main_path(self) -> Path:
+        """
+        GitWS Workspace Main Directory.
+        """
+        return self.workspace.main_path
+
     @staticmethod
     def from_path(
         path: Optional[Path] = None,

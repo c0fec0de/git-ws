@@ -15,13 +15,22 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Fixtures."""
+import tempfile
 from contextlib import contextmanager
+from pathlib import Path
 
 from pytest import fixture
 
 from gitws.datamodel import Defaults, ManifestSpec, ProjectSpec
 
 from .util import chdir, run
+
+
+@fixture(scope="session")
+def repos_basepath():
+    """Repos Path."""
+    with tempfile.TemporaryDirectory(prefix="git-ws-test-repos", ignore_cleanup_errors=True) as tmpdir:
+        yield Path(tmpdir)
 
 
 @contextmanager
