@@ -80,9 +80,6 @@ def gws(tmp_path, repos_submodules):
 def test_update(tmp_path, repos_submodules, gws):
     """Test update."""
     # pylint: disable=unused-argument
-    # Disable color here, to test normal error output
-    # assert cli(("config", "set", "color_ui", "False")) == [""]
-
     assert cli(["-vv", "submodule", "update"], tmp_path=tmp_path, repos_path=repos_submodules) == [
         "git-ws INFO Workspace path=TMP/main main=main",
         "git-ws INFO AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None)",
