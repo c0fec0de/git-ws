@@ -53,20 +53,20 @@ def get_sha(path):
 def format_output(result, tmp_path=None, repos_path=None):
     """Format Command Output."""
     lines = result.output.split("\n")
-    if tmp_path:
-        lines = [replace_path(line, tmp_path, "TMP") for line in lines]
     if repos_path:
         lines = [replace_path(line, repos_path, "REPOS") for line in lines]
+    if tmp_path:
+        lines = [replace_path(line, tmp_path, "TMP") for line in lines]
     return lines
 
 
 def format_logs(caplog, tmp_path=None, repos_path=None):
     """Format Logs."""
     lines = [f"{record.levelname:7s} {record.name} {record.message}" for record in caplog.records]
-    if tmp_path:  # pragma: no cover
-        lines = [replace_path(line, tmp_path, "TMP") for line in lines]
     if repos_path:
         lines = [replace_path(line, repos_path, "REPOS") for line in lines]
+    if tmp_path:  # pragma: no cover
+        lines = [replace_path(line, tmp_path, "TMP") for line in lines]
     return lines
 
 
@@ -112,12 +112,12 @@ def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_
         captured = capsys.readouterr()
         out = captured.out
         err = captured.err
-        if tmp_path:
-            out = replace_path(out, tmp_path, "TMP")
-            err = replace_path(err, tmp_path, "TMP")
         if repos_path:
             out = replace_path(out, repos_path, "REPOS")
             err = replace_path(err, repos_path, "REPOS")
+        if tmp_path:
+            out = replace_path(out, tmp_path, "TMP")
+            err = replace_path(err, tmp_path, "TMP")
         (genpath / "stdout.txt").write_text(out)
         (genpath / "stderr.txt").write_text(err)
     if caplog:
