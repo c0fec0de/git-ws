@@ -79,7 +79,7 @@ def test_validate(tmp_path, gws):
     ]
 
 
-def test_freeze(tmp_path, gws):
+def test_freeze(tmp_path, gws, repos):
     """Manifest Freeze."""
     sha1 = get_sha(gws.path / "dep1")
     sha1s = sha1[:7]
@@ -249,7 +249,7 @@ def test_freeze(tmp_path, gws):
         "",
     ]
 
-    assert cli(["update", "-G", "+test"], tmp_path=tmp_path) == [
+    assert cli(["update", "-G", "+test"], tmp_path=tmp_path, repos_path=repos) == [
         "===== main (MAIN 'main', revision='main') =====",
         "Pulling branch 'main'.",
         "===== dep1 ('dep1') =====",
@@ -259,7 +259,7 @@ def test_freeze(tmp_path, gws):
         "Pulling branch '1-feature'.",
         "===== dep3 ('dep3', groups='test') =====",
         "git-ws WARNING Clone dep3 (groups='test') has no revision!",
-        "Cloning 'TMP/repos/dep3'.",
+        "Cloning 'REPOS/dep3'.",
         "===== dep4 ('dep4', revision='main') =====",
         "Pulling branch 'main'.",
         "",

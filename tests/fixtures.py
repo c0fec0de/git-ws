@@ -15,7 +15,9 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Fixtures."""
+import tempfile
 from contextlib import contextmanager
+from pathlib import Path
 
 from pytest import fixture
 
@@ -38,12 +40,66 @@ def git_repo(path, commit=None):
         run(("git", "commit", "-m", commit), check=True)
 
 
-@fixture
-def repos(tmp_path):
+@fixture(scope="session")
+def repos():
     """Fixture with main and four depedency repos."""
 
-    repos_path = tmp_path / "repos"
+    with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
+        repos_path = Path(tmpdir)
 
+        create_repos(repos_path)
+
+        yield repos_path
+
+
+@fixture(scope="session")
+def repos_dotgit():
+    """Fixture with main and four depedency repos."""
+
+    with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
+        repos_path = Path(tmpdir)
+
+        # with .git
+        with git_repo(repos_path / "main.git", commit="initial") as path:
+            (path / "data.txt").write_text("main")
+            ManifestSpec(
+                dependencies=[
+                    ProjectSpec(name="dep1", revision="main"),
+                    ProjectSpec(name="dep3", url="../dep3", revision="main"),
+                ],
+            ).save(path / "git-ws.toml")
+
+        # with .git
+        with git_repo(repos_path / "dep1.git", commit="initial") as path:
+            (path / "data.txt").write_text("dep1")
+            ManifestSpec(
+                dependencies=[
+                    ProjectSpec(name="dep2", revision="main"),
+                ],
+            ).save(path / "git-ws.toml")
+
+        # with .git
+        with git_repo(repos_path / "dep2.git", commit="initial") as path:
+            (path / "data.txt").write_text("dep2")
+
+        # non .git
+        with git_repo(repos_path / "dep3", commit="initial") as path:
+            (path / "data.txt").write_text("dep3")
+            ManifestSpec(
+                dependencies=[
+                    ProjectSpec(name="dep4", revision="main"),  # refer to non .git
+                ],
+            ).save(path / "git-ws.toml")
+
+        # non .git
+        with git_repo(repos_path / "dep4", commit="initial") as path:
+            (path / "data.txt").write_text("dep4")
+
+        yield repos_path
+
+
+def create_repos(repos_path):
+    """Create Test Repos."""
     with git_repo(repos_path / "main", commit="initial") as path:
         (path / "data.txt").write_text("main")
         ManifestSpec(
@@ -119,50 +175,3 @@ def repos(tmp_path):
 
     with git_repo(repos_path / "dep6", commit="initial") as path:
         (path / "data.txt").write_text("dep6")
-
-    yield repos_path
-
-
-@fixture
-def repos_dotgit(tmp_path):
-    """Fixture with main and four depedency repos."""
-
-    repos_path = tmp_path / "repos"
-
-    # with .git
-    with git_repo(repos_path / "main.git", commit="initial") as path:
-        (path / "data.txt").write_text("main")
-        ManifestSpec(
-            dependencies=[
-                ProjectSpec(name="dep1", revision="main"),
-                ProjectSpec(name="dep3", url="../dep3", revision="main"),
-            ],
-        ).save(path / "git-ws.toml")
-
-    # with .git
-    with git_repo(repos_path / "dep1.git", commit="initial") as path:
-        (path / "data.txt").write_text("dep1")
-        ManifestSpec(
-            dependencies=[
-                ProjectSpec(name="dep2", revision="main"),
-            ],
-        ).save(path / "git-ws.toml")
-
-    # with .git
-    with git_repo(repos_path / "dep2.git", commit="initial") as path:
-        (path / "data.txt").write_text("dep2")
-
-    # non .git
-    with git_repo(repos_path / "dep3", commit="initial") as path:
-        (path / "data.txt").write_text("dep3")
-        ManifestSpec(
-            dependencies=[
-                ProjectSpec(name="dep4", revision="main"),  # refer to non .git
-            ],
-        ).save(path / "git-ws.toml")
-
-    # non .git
-    with git_repo(repos_path / "dep4", commit="initial") as path:
-        (path / "data.txt").write_text("dep4")
-
-    yield repos_path

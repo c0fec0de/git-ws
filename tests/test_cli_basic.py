@@ -116,7 +116,7 @@ def test_git(tmp_path, gws):
     ]
 
 
-def test_foreach(tmp_path, gws, caplog):
+def test_foreach(tmp_path, gws, caplog, repos):
     """Test foreach."""
     # pylint: disable=unused-argument
     assert cli(["foreach", "git", "status"]) == [
@@ -127,7 +127,9 @@ def test_foreach(tmp_path, gws, caplog):
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
-    assert_gen(tmp_path / "gen", TESTDATA_PATH / "cli_basic" / "foreach", caplog=caplog, tmp_path=tmp_path)
+    assert_gen(
+        tmp_path / "gen", TESTDATA_PATH / "cli_basic" / "foreach", caplog=caplog, tmp_path=tmp_path, repos_path=repos
+    )
 
 
 def test_foreach_missing(tmp_path, gws, caplog):
@@ -186,7 +188,7 @@ def _test_foreach(tmp_path, gws, *command):
     ]
 
 
-def test_git_no_color(tmp_path, gws, caplog):
+def test_git_no_color(tmp_path, gws, caplog, repos):
     """Test git."""
     # pylint: disable=unused-argument
     assert cli(["config", "set", "color_ui", "False"]) == [""]
@@ -198,4 +200,10 @@ def test_git_no_color(tmp_path, gws, caplog):
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
-    assert_gen(tmp_path / "gen", TESTDATA_PATH / "cli_basic" / "git_no_color", caplog=caplog, tmp_path=tmp_path)
+    assert_gen(
+        tmp_path / "gen",
+        TESTDATA_PATH / "cli_basic" / "git_no_color",
+        caplog=caplog,
+        tmp_path=tmp_path,
+        repos_path=repos,
+    )

@@ -17,7 +17,7 @@ Git Workspace will also create a folder called ``.git-ws`` within the workspace 
 Main Project
 ------------
 
-Each workspace has exactly one *main project* which is a clone of a ``git`` repository. The main project is the one from where dependency resolution starts, i.e. Git Workspace collects the dependencies of the main project. If the dependencies in turn have (nested) dependencies,these also will be added to the workspace.
+Each workspace has exactly one *main project* which is a clone of a ``git`` repository. The main project is the one from where dependency resolution starts, i.e. Git Workspace collects the dependencies of the main project. If the dependencies in turn have (nested) dependencies, these also will be added to the workspace.
 
 
 Dependencies

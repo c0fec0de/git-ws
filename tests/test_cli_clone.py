@@ -25,9 +25,9 @@ def test_cli_clone(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "main")], tmp_path=tmp_path) == [
+        assert cli(["clone", str(repos / "main")], tmp_path=tmp_path, repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'TMP/repos/main'.",
+            "Cloning 'REPOS/main'.",
             "Workspace initialized at 'main'. Please continue with:",
             "",
             "    git ws update",
@@ -49,9 +49,9 @@ def test_cli_clone_path(tmp_path, repos):
     workspace.mkdir()
 
     with chdir(workspace):
-        assert cli(["clone", str(repos / "main"), "main2"], tmp_path=tmp_path) == [
+        assert cli(["clone", str(repos / "main"), "main2"], tmp_path=tmp_path, repos_path=repos) == [
             "===== main2 (MAIN 'main') =====",
-            "Cloning 'TMP/repos/main'.",
+            "Cloning 'REPOS/main'.",
             "Workspace initialized at '.'. Please continue with:",
             "",
             "    git ws update",
@@ -67,22 +67,23 @@ def test_cli_clone_path(tmp_path, repos):
         check(workspace, "dep4", exists=False)
         check(workspace, "dep5", exists=False)
 
-        # Disable color here, to test normal error output
-        assert cli(("config", "set", "color_ui", "False")) == [""]
+        with chdir(workspace / "main2"):
+            # Disable color here, to test normal error output
+            assert cli(("config", "set", "color_ui", "False")) == [""]
 
-        assert cli(["checkout"], tmp_path=tmp_path) == [
-            "===== main2 (MAIN 'main2', revision='main') =====",
-            "===== dep1 ('dep1') =====",
-            "Cloning 'TMP/repos/dep1'.",
-            "git-ws WARNING Clone dep1 has no revision!",
-            "===== dep2 ('dep2', revision='1-feature') =====",
-            "Cloning 'TMP/repos/dep2'.",
-            "Already on '1-feature'",
-            "===== dep4 ('dep4', revision='main') =====",
-            "Cloning 'TMP/repos/dep4'.",
-            "Already on 'main'",
-            "",
-        ]
+            assert cli(["checkout"], tmp_path=tmp_path, repos_path=repos) == [
+                "===== . (MAIN 'main2', revision='main') =====",
+                "===== ../dep1 ('dep1') =====",
+                "Cloning 'REPOS/dep1'.",
+                "git-ws WARNING Clone dep1 has no revision!",
+                "===== ../dep2 ('dep2', revision='1-feature') =====",
+                "Cloning 'REPOS/dep2'.",
+                "Already on '1-feature'",
+                "===== ../dep4 ('dep4', revision='main') =====",
+                "Cloning 'REPOS/dep4'.",
+                "Already on 'main'",
+                "",
+            ]
 
         check(workspace, "main", exists=False)
         check(workspace, "main2", content="main")
@@ -115,9 +116,9 @@ def test_cli_clone_not_empty(tmp_path, repos):
         check(workspace, "dep4", exists=False)
         check(workspace, "dep5", exists=False)
 
-        assert cli(["clone", str(repos / "main"), "--force"], tmp_path=tmp_path) == [
+        assert cli(["clone", str(repos / "main"), "--force"], tmp_path=tmp_path, repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'TMP/repos/main'.",
+            "Cloning 'REPOS/main'.",
             "Workspace initialized at 'main'. Please continue with:",
             "",
             "    git ws update",
@@ -138,16 +139,16 @@ def test_cli_clone_update(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "main"), "--update"], tmp_path=tmp_path) == [
+        assert cli(["clone", str(repos / "main"), "--update"], tmp_path=tmp_path, repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'TMP/repos/main'.",
+            "Cloning 'REPOS/main'.",
             "===== main/dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
-            "Cloning 'TMP/repos/dep1'.",
+            "Cloning 'REPOS/dep1'.",
             "===== main/dep2 ('dep2', revision='1-feature') =====",
-            "Cloning 'TMP/repos/dep2'.",
+            "Cloning 'REPOS/dep2'.",
             "===== main/dep4 ('dep4', revision='main') =====",
-            "Cloning 'TMP/repos/dep4'.",
+            "Cloning 'REPOS/dep4'.",
             "",
         ]
 
@@ -164,9 +165,9 @@ def test_cli_clone_checkout(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "main")], tmp_path=tmp_path) == [
+        assert cli(["clone", str(repos / "main")], tmp_path=tmp_path, repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'TMP/repos/main'.",
+            "Cloning 'REPOS/main'.",
             "Workspace initialized at 'main'. Please continue with:",
             "",
             "    git ws update",
@@ -182,16 +183,16 @@ def test_cli_clone_checkout(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
     with chdir(workspace / "main"):
-        assert cli(["checkout"], tmp_path=tmp_path) == [
+        assert cli(["checkout"], tmp_path=tmp_path, repos_path=repos) == [
             "===== . (MAIN 'main', revision='main') =====",
             "===== ../dep1 ('dep1') =====",
-            "Cloning 'TMP/repos/dep1'.",
+            "Cloning 'REPOS/dep1'.",
             "git-ws WARNING Clone dep1 has no revision!",
             "===== ../dep2 ('dep2', revision='1-feature') =====",
-            "Cloning 'TMP/repos/dep2'.",
+            "Cloning 'REPOS/dep2'.",
             "Already on '1-feature'",
             "===== ../dep4 ('dep4', revision='main') =====",
-            "Cloning 'TMP/repos/dep4'.",
+            "Cloning 'REPOS/dep4'.",
             "Already on 'main'",
             "",
         ]
@@ -209,9 +210,9 @@ def test_cli_clone_groups(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "main"), "-G", "+test"]) == [
+        assert cli(["clone", str(repos / "main"), "-G", "+test"], repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning " f"'{tmp_path}/repos/main'.",
+            "Cloning 'REPOS/main'.",
             "Workspace initialized at 'main'. Please continue with:",
             "",
             "    git ws update",
@@ -235,19 +236,19 @@ group_filters = ["+test"]
     )
 
     with chdir(workspace):
-        assert cli(["update"], tmp_path=tmp_path) == [
+        assert cli(["update"], tmp_path=tmp_path, repos_path=repos) == [
             "===== main (MAIN 'main', revision='main') =====",
             "Pulling branch 'main'.",
             "===== dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
-            "Cloning 'TMP/repos/dep1'.",
+            "Cloning 'REPOS/dep1'.",
             "===== dep2 ('dep2', revision='1-feature') =====",
-            "Cloning 'TMP/repos/dep2'.",
+            "Cloning 'REPOS/dep2'.",
             "===== dep3 ('dep3', groups='test') =====",
             "git-ws WARNING Clone dep3 (groups='test') has no revision!",
-            "Cloning 'TMP/repos/dep3'.",
+            "Cloning 'REPOS/dep3'.",
             "===== dep4 ('dep4', revision='main') =====",
-            "Cloning 'TMP/repos/dep4'.",
+            "Cloning 'REPOS/dep4'.",
             "",
         ]
 
