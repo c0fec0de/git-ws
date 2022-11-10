@@ -11,8 +11,8 @@ INFO    git-ws Git('main').get_tag() = None
 DEBUG   git-ws run(['git', 'branch'], cwd='main') OK stdout=b'* main\n' stderr=b''
 INFO    git-ws Git('main').get_branch() = 'main'
 DEBUG   git-ws run(('git', 'status'), cwd='main') OK stdout=None stderr=None
-DEBUG   git-ws run(['git', 'remote', '-v'], cwd='main') OK stdout=b'origin\tTMP/repos/main (fetch)\norigin\tTMP/repos/main (push)\n' stderr=b''
-INFO    git-ws Git('main').get_url() = 'TMP/repos/main'
+DEBUG   git-ws run(['git', 'remote', '-v'], cwd='main') OK stdout=b'origin\tREPOS/main (fetch)\norigin\tREPOS/main (push)\n' stderr=b''
+INFO    git-ws Git('main').get_url() = 'REPOS/main'
 DEBUG   git-ws ManifestSpec(group_filters=('-test',), dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2', revision='1-feature'), ProjectSpec(name='dep3', url='../dep3', groups=('test',))))
 DEBUG   git-ws Project(name='dep1', path='dep1', url='../dep1')
 DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\n' stderr=b''
@@ -28,8 +28,8 @@ DEBUG   git-ws run(['git', 'branch'], cwd='dep2') OK stdout=b'* 1-feature\n  mai
 INFO    git-ws Git('dep2').get_branch() = '1-feature'
 DEBUG   git-ws run(('git', 'status'), cwd='dep2') OK stdout=None stderr=None
 DEBUG   git-ws FILTERED OUT Project(name='dep3', path='dep3', url='../dep3', groups=('test',))
-DEBUG   git-ws run(['git', 'remote', '-v'], cwd='dep1') OK stdout=b'origin\tTMP/repos/dep1 (fetch)\norigin\tTMP/repos/dep1 (push)\n' stderr=b''
-INFO    git-ws Git('dep1').get_url() = 'TMP/repos/dep1'
+DEBUG   git-ws run(['git', 'remote', '-v'], cwd='dep1') OK stdout=b'origin\tREPOS/dep1 (fetch)\norigin\tREPOS/dep1 (push)\n' stderr=b''
+INFO    git-ws Git('dep1').get_url() = 'REPOS/dep1'
 DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep4', url='../dep4', revision='main'),))
 DEBUG   git-ws Project(name='dep4', path='dep4', url='../dep4', revision='main')
 DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep4') OK stdout=b'\n' stderr=b''
@@ -39,8 +39,8 @@ INFO    git-ws Git('dep4').get_tag() = None
 DEBUG   git-ws run(['git', 'branch'], cwd='dep4') OK stdout=b'* main\n' stderr=b''
 INFO    git-ws Git('dep4').get_branch() = 'main'
 DEBUG   git-ws run(('git', 'status'), cwd='dep4') OK stdout=None stderr=None
-DEBUG   git-ws run(['git', 'remote', '-v'], cwd='dep2') OK stdout=b'origin\tTMP/repos/dep2 (fetch)\norigin\tTMP/repos/dep2 (push)\n' stderr=b''
-INFO    git-ws Git('dep2').get_url() = 'TMP/repos/dep2'
+DEBUG   git-ws run(['git', 'remote', '-v'], cwd='dep2') OK stdout=b'origin\tREPOS/dep2 (fetch)\norigin\tREPOS/dep2 (push)\n' stderr=b''
+INFO    git-ws Git('dep2').get_url() = 'REPOS/dep2'
 DEBUG   git-ws ManifestSpec(group_filters=('-test',), defaults=Defaults(revision='main'), dependencies=(ProjectSpec(name='dep3', url='../dep3', groups=('test',)), ProjectSpec(name='dep4', url='../dep4', revision='main')))
 DEBUG   git-ws DUPLICATE Project(name='dep3', path='dep3', url='../dep3', revision='main', groups=('test',))
 DEBUG   git-ws DUPLICATE Project(name='dep4', path='dep4', url='../dep4', revision='main')

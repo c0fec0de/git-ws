@@ -15,6 +15,9 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+import tempfile
+from pathlib import Path
+
 from pytest import fixture
 
 from gitws import GitWS
@@ -28,46 +31,47 @@ from .util import assert_gen, chdir, check, format_logs
 
 
 @fixture
-def repos_deptop(tmp_path):
+def repos_deptop():
     """Fixture dep back to top."""
 
-    repos_path = tmp_path / "repos"
+    with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
+        repos_path = Path(tmpdir)
 
-    with git_repo(repos_path / "top", commit="initial") as path:
-        (path / "data.txt").write_text("top")
-        ManifestSpec(
-            dependencies=[
-                ProjectSpec(name="dep1", url="../dep1"),
-                ProjectSpec(name="dep2", url="../dep2"),
-            ],
-        ).save(path / "git-ws.toml")
+        with git_repo(repos_path / "top", commit="initial") as path:
+            (path / "data.txt").write_text("top")
+            ManifestSpec(
+                dependencies=[
+                    ProjectSpec(name="dep1", url="../dep1"),
+                    ProjectSpec(name="dep2", url="../dep2"),
+                ],
+            ).save(path / "git-ws.toml")
 
-    with git_repo(repos_path / "dep1", commit="initial") as path:
-        (path / "data.txt").write_text("dep1")
-        ManifestSpec(
-            dependencies=[
-                ProjectSpec(name="dep3", url="../dep3", revision="main"),
-                ProjectSpec(name="top", url="../top"),
-            ]
-        ).save(path / "git-ws.toml")
+        with git_repo(repos_path / "dep1", commit="initial") as path:
+            (path / "data.txt").write_text("dep1")
+            ManifestSpec(
+                dependencies=[
+                    ProjectSpec(name="dep3", url="../dep3", revision="main"),
+                    ProjectSpec(name="top", url="../top"),
+                ]
+            ).save(path / "git-ws.toml")
 
-    with git_repo(repos_path / "dep2", commit="initial") as path:
-        (path / "data.txt").write_text("dep2")
-        ManifestSpec(
-            dependencies=[
-                ProjectSpec(name="dep3", url="../dep3", revision="main"),
-            ],
-        ).save(path / "git-ws.toml")
+        with git_repo(repos_path / "dep2", commit="initial") as path:
+            (path / "data.txt").write_text("dep2")
+            ManifestSpec(
+                dependencies=[
+                    ProjectSpec(name="dep3", url="../dep3", revision="main"),
+                ],
+            ).save(path / "git-ws.toml")
 
-    with git_repo(repos_path / "dep3", commit="initial") as path:
-        (path / "data.txt").write_text("dep3")
-        ManifestSpec(
-            dependencies=[
-                ProjectSpec(name="top"),
-            ],
-        ).save(path / "git-ws.toml")
+        with git_repo(repos_path / "dep3", commit="initial") as path:
+            (path / "data.txt").write_text("dep3")
+            ManifestSpec(
+                dependencies=[
+                    ProjectSpec(name="top"),
+                ],
+            ).save(path / "git-ws.toml")
 
-    yield repos_path
+        yield repos_path
 
 
 def test_deptop(tmp_path, repos_deptop, caplog):
@@ -89,4 +93,10 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         check(workspace, "dep2")
         check(workspace, "dep3")
 
-    assert_gen(tmp_path / "gen", TESTDATA_PATH / "cli_cornercases" / "deptop", caplog=caplog, tmp_path=tmp_path)
+    assert_gen(
+        tmp_path / "gen",
+        TESTDATA_PATH / "cli_cornercases" / "deptop",
+        caplog=caplog,
+        tmp_path=tmp_path,
+        repos_path=repos_deptop,
+    )

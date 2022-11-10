@@ -15,55 +15,60 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface - Update Variants."""
+import tempfile
+from pathlib import Path
+
 from pytest import fixture
 
 from gitws import GitWS
 from gitws.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import
-from .fixtures import git_repo, repos_basepath
+from .fixtures import git_repo
 from .util import chdir, check, cli, format_output, run
 
 
 @fixture(scope="session")
-def repos_submodules(repos_basepath):
+def repos_submodules():
     """Fixture with main and four depedency repos."""
 
-    repos_path = repos_basepath / "repos_submodules"
+    with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
 
-    with git_repo(repos_path / "main", commit="initial") as path:
-        (path / "data.txt").write_text("main")
-        ManifestSpec(
-            group_filters=("-test",),
-            dependencies=[
-                ProjectSpec(name="dep1"),
-            ],
-        ).save(path / "git-ws.toml")
+        repos_path = Path(tmpdir)
 
-    with git_repo(repos_path / "sm1", commit="initial") as path:
-        (path / "data.txt").write_text("sm1")
+        with git_repo(repos_path / "main", commit="initial") as path:
+            (path / "data.txt").write_text("main")
+            ManifestSpec(
+                group_filters=("-test",),
+                dependencies=[
+                    ProjectSpec(name="dep1"),
+                ],
+            ).save(path / "git-ws.toml")
 
-    with git_repo(repos_path / "sm2", commit="initial") as path:
-        (path / "data.txt").write_text("sm2")
+        with git_repo(repos_path / "sm1", commit="initial") as path:
+            (path / "data.txt").write_text("sm1")
 
-    with git_repo(repos_path / "dep1", commit="initial") as path:
-        (path / "data.txt").write_text("dep1")
-        ManifestSpec(
-            dependencies=[
-                ProjectSpec(name="dep2", revision="main"),
-            ],
-        ).save(path / "git-ws.toml")
+        with git_repo(repos_path / "sm2", commit="initial") as path:
+            (path / "data.txt").write_text("sm2")
 
-    run(["git", "submodule", "add", "../sm1", "sm1"], cwd=(repos_path / "dep1"), check=True)
-    run(["git", "commit", "-am", "add-submodule"], cwd=(repos_path / "dep1"), check=True)
+        with git_repo(repos_path / "dep1", commit="initial") as path:
+            (path / "data.txt").write_text("dep1")
+            ManifestSpec(
+                dependencies=[
+                    ProjectSpec(name="dep2", revision="main"),
+                ],
+            ).save(path / "git-ws.toml")
 
-    with git_repo(repos_path / "dep2", commit="initial") as path:
-        (path / "data.txt").write_text("dep2")
+        run(["git", "submodule", "add", "../sm1", "sm1"], cwd=(repos_path / "dep1"), check=True)
+        run(["git", "commit", "-am", "add-submodule"], cwd=(repos_path / "dep1"), check=True)
 
-    run(["git", "submodule", "add", "../sm2", "sm2"], cwd=(repos_path / "dep2"), check=True)
-    run(["git", "commit", "-am", "add-submodule"], cwd=(repos_path / "dep2"), check=True)
+        with git_repo(repos_path / "dep2", commit="initial") as path:
+            (path / "data.txt").write_text("dep2")
 
-    yield repos_path
+        run(["git", "submodule", "add", "../sm2", "sm2"], cwd=(repos_path / "dep2"), check=True)
+        run(["git", "commit", "-am", "add-submodule"], cwd=(repos_path / "dep2"), check=True)
+
+        yield repos_path
 
 
 @fixture

@@ -104,7 +104,7 @@ def check(workspace, name, path=None, content=None, exists=True):
         assert not file_path.exists()
 
 
-def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None):  # pragma: no cover
+def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_path=None):  # pragma: no cover
     """Compare Generated Files Versus Reference."""
     genpath.mkdir(parents=True, exist_ok=True)
     refpath.mkdir(parents=True, exist_ok=True)
@@ -115,11 +115,14 @@ def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None):  # pr
         if tmp_path:
             out = replace_path(out, tmp_path, "TMP")
             err = replace_path(err, tmp_path, "TMP")
+        if repos_path:
+            out = replace_path(out, repos_path, "REPOS")
+            err = replace_path(err, repos_path, "REPOS")
         (genpath / "stdout.txt").write_text(out)
         (genpath / "stderr.txt").write_text(err)
     if caplog:
         with open(genpath / "logging.txt", "wt", encoding="utf-8") as file:
-            for item in format_logs(caplog, tmp_path=tmp_path):
+            for item in format_logs(caplog, tmp_path=tmp_path, repos_path=repos_path):
                 file.write(f"{item}\n")
     if LEARN:
         logging.getLogger(__name__).warning("LEARNING %s", refpath)
