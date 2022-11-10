@@ -28,6 +28,7 @@ def test_imports():
         Defaults,
         Git,
         GitCloneMissingError,
+        GitCloneMissingOriginError,
         GitWS,
         Group,
         GroupFilter,

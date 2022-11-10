@@ -15,9 +15,11 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface - Update Variants."""
+from pathlib import Path
+
 from pytest import fixture
 
-from gitws import GitWS
+from gitws import Git, GitWS
 from gitws.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import
@@ -49,12 +51,15 @@ def test_update(tmp_path, repos, gws):
             ProjectSpec(name="dep5", url="../dep5"),
         ]
     ).save(path / "git-ws.toml")
-    run(("git", "add", "git-ws.toml"), check=True, cwd=path)
-    run(("git", "commit", "-m", "adapt dep"), check=True, cwd=path)
+    git4 = Git(path)
+    sha1 = git4.get_sha()[:7]
+    git4.add(paths=(Path("git-ws.toml"),))
+    git4.commit("adapt dep")
+    sha2 = git4.get_sha()[:7]
 
     # Update project
     assert cli(["update", "-P", "dep2"]) == [
-        "===== SKIPPING main (MAIN 'main') =====",
+        "===== SKIPPING main (MAIN 'main', revision='main') =====",
         "===== SKIPPING dep1 ('dep1') =====",
         "===== dep2 ('dep2', revision='1-feature') =====",
         "Pulling branch '1-feature'.",
@@ -64,7 +69,7 @@ def test_update(tmp_path, repos, gws):
 
     # Update
     assert cli(["update"], tmp_path=tmp_path) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "Pulling branch 'main'.",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -73,6 +78,8 @@ def test_update(tmp_path, repos, gws):
         "Pulling branch '1-feature'.",
         "===== dep4 ('dep4', revision='main') =====",
         "Pulling branch 'main'.",
+        "From TMP/repos/dep4",
+        f"   {sha1}..{sha2}  main       -> origin/main",
         "===== dep5 ('dep5') =====",
         "git-ws WARNING Clone dep5 has no revision!",
         "Cloning 'TMP/repos/dep5'.",
@@ -81,7 +88,7 @@ def test_update(tmp_path, repos, gws):
 
     # Update again
     assert cli(["update"]) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "Pulling branch 'main'.",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -98,7 +105,7 @@ def test_update(tmp_path, repos, gws):
 
     # Update other.toml
     assert cli(["update", "--manifest", "other.toml"], tmp_path=tmp_path) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "Pulling branch 'main'.",
         "===== dep1 ('dep1', revision='main') =====",
         "Pulling branch 'main'.",
@@ -106,7 +113,7 @@ def test_update(tmp_path, repos, gws):
         "Cloning 'TMP/repos/dep6'.",
         "===== dep4 ('dep4', revision='4-feature') =====",
         "Fetching.",
-        "Checking out '4-feature' (previously 'main').",
+        "Switched to a new branch '4-feature'",
         "Merging branch '4-feature'.",
         "",
     ]
@@ -123,12 +130,15 @@ def test_update_rebase(tmp_path, repos, gws):
             ProjectSpec(name="dep5", url="../dep5"),
         ]
     ).save(path / "git-ws.toml")
-    run(("git", "add", "git-ws.toml"), check=True, cwd=path)
-    run(("git", "commit", "-m", "adapt dep"), check=True, cwd=path)
+    git4 = Git(path)
+    sha1 = git4.get_sha()[:7]
+    git4.add(paths=(Path("git-ws.toml"),))
+    git4.commit("adapt dep")
+    sha2 = git4.get_sha()[:7]
 
     # Rebase
     assert cli(["update", "--rebase"], tmp_path=tmp_path) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep1 ('dep1') =====",
@@ -140,7 +150,12 @@ def test_update_rebase(tmp_path, repos, gws):
         "Rebasing branch '1-feature'.",
         "===== dep4 ('dep4', revision='main') =====",
         "Fetching.",
+        "From TMP/repos/dep4",
+        f"   {sha1}..{sha2}  main       -> origin/main",
         "Rebasing branch 'main'.",
+        "\r"
+        "                                                                                \r"
+        "Successfully rebased and updated refs/heads/main.",
         "===== dep5 ('dep5') =====",
         "git-ws WARNING Clone dep5 has no revision!",
         "Cloning 'TMP/repos/dep5'.",
@@ -148,7 +163,7 @@ def test_update_rebase(tmp_path, repos, gws):
     ]
 
     assert cli(["update", "--rebase"]) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep1 ('dep1') =====",
@@ -169,7 +184,7 @@ def test_update_rebase(tmp_path, repos, gws):
     ]
 
     assert cli(["update", "--manifest", "other.toml", "--rebase"], tmp_path=tmp_path) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "Fetching.",
         "Rebasing branch 'main'.",
         "===== dep1 ('dep1', revision='main') =====",
@@ -179,17 +194,52 @@ def test_update_rebase(tmp_path, repos, gws):
         "Cloning 'TMP/repos/dep6'.",
         "===== dep4 ('dep4', revision='4-feature') =====",
         "Fetching.",
-        "Checking out '4-feature' (previously 'main').",
+        "Switched to a new branch '4-feature'",
         "Rebasing branch '4-feature'.",
         "",
     ]
 
     assert cli(["status"]) == [
-        "===== main (MAIN 'main') =====",
+        "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature') =====",
         "===== dep4 ('dep4', revision='main') =====",
         "git-ws WARNING Clone dep4 (revision='main') is on different revision: '4-feature'",
+        "",
+    ]
+
+
+def test_update_missing_origin(tmp_path, repos, gws):
+    """Test update."""
+    # pylint: disable=unused-argument
+
+    run(("git", "remote", "remove", "origin"), cwd=tmp_path / "main" / "dep4", check=True)
+
+    # Update project
+    assert cli(["checkout"]) == [
+        "===== main (MAIN 'main', revision='main') =====",
+        "===== dep1 ('dep1') =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 ('dep2', revision='1-feature') =====",
+        "Already on '1-feature'",
+        "===== dep4 ('dep4', revision='main') =====",
+        "Already on 'main'",
+        "",
+    ]
+
+    run(("git", "remote", "remove", "origin"), cwd=tmp_path / "main" / "dep2", check=True)
+    assert cli(["checkout"], exit_code=1) == [
+        "===== main (MAIN 'main', revision='main') =====",
+        "===== dep1 ('dep1') =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 ('dep2', revision='1-feature') =====",
+        "Already on '1-feature'",
+        "===== dep4 ('dep4', revision='main') =====",
+        "Already on 'main'",
+        "Error: Git Clone 'dep2' has not remote 'origin'. Try:",
+        "",
+        "    git remote add origin <URL>",
+        "",
         "",
     ]

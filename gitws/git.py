@@ -26,9 +26,15 @@ from ._basemodel import BaseModel
 from ._util import get_repr, run
 from .exceptions import GitCloneMissingError, NoGitError
 
+_RE_URL = re.compile(r"\Aorigin\s+(?P<value>.+)\s+\(fetch\)\Z")
+_RE_BRANCH = re.compile(r"\A\*\s(?P<value>\S+)\Z")
 _RE_STATUS = re.compile(r"\A(?P<index>.)(?P<work>.)\s((?P<orig_path>.+) -> )?(?P<path>.+)\Z")
 _RE_DIFFSTAT = re.compile(r"\A\s(?P<path>.+)\s\|\s(?P<stat>.+)\Z")
 _LOGGER = logging.getLogger("git-ws")
+
+Args = Union[List[str], Tuple[str, ...]]
+BoolOptions = Tuple[Tuple[str, bool], ...]
+Paths = Tuple[Path, ...]
 
 
 class State(Enum):
@@ -205,8 +211,9 @@ class Git:
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, secho=None):
         self.path = path
+        self.secho = secho
 
     def __repr__(self):
         return get_repr(self, (self.path,))
@@ -222,10 +229,10 @@ class Git:
         return (path / cdup).resolve()
 
     @staticmethod
-    def from_path(path: Optional[Path] = None) -> "Git":
+    def from_path(path: Optional[Path] = None, secho=None) -> "Git":
         """Create GIT Repo Helper from `path`."""
         path = Git.find_path(path=path)
-        return Git(path=path)
+        return Git(path=path, secho=secho)
 
     def is_cloned(self) -> bool:
         """Return if clone already exists."""
@@ -241,11 +248,6 @@ class Git:
         if not self.is_cloned():
             raise GitCloneMissingError(self.path)
 
-    def init(self, branch="main"):
-        """Initialize Git Clone."""
-        _LOGGER.info("Git(%r).init(branch=%r)", str(self.path), branch)
-        self._run(("init", "-b", branch))
-
     def set_config(self, name, value):
         """Set Git Configuration `name` to `value`."""
         self._run(("config", name, value))
@@ -256,7 +258,7 @@ class Git:
         if revision:
             # We do not checkout, to be faster during switch later on
             run(("git", "clone", "--no-checkout", "--", str(url), str(self.path)))
-            self._run(("checkout", revision))
+            self._run(("checkout", revision), capture_output=True)
         else:
             run(("git", "clone", "--", str(url), str(self.path)))
 
@@ -268,13 +270,13 @@ class Git:
 
     def get_branch(self) -> Optional[str]:
         """Get Actual Branch."""
-        branch = self._run2str(("branch", "--show-current")) or None
+        branch = self._run2str(("branch",), regex=_RE_BRANCH)
         _LOGGER.info("Git(%r).get_branch() = %r", str(self.path), branch)
         return branch
 
     def get_sha(self) -> Optional[str]:
         """Get SHA."""
-        sha = self._run2str(("rev-parse", "HEAD")) or None
+        sha = self._run2str(("rev-parse", "HEAD"), check=False) or None
         _LOGGER.info("Git(%r).get_sha() = %r", str(self.path), sha)
         return sha
 
@@ -293,11 +295,11 @@ class Git:
 
     def get_url(self) -> Optional[str]:
         """Get Actual URL of 'origin'."""
-        url = self._run2str(("remote", "get-url", "origin"), check=False) or None
+        url = self._run2str(("remote", "-v"), regex=_RE_URL, check=False)
         _LOGGER.info("Git(%r).get_url() = %r", str(self.path), url)
         return url
 
-    def checkout(self, revision: Optional[str] = None, paths: Optional[Tuple[Path, ...]] = None, force: bool = False):
+    def checkout(self, revision: Optional[str] = None, paths: Optional[Paths] = None, force: bool = False):
         """
         Checkout Revision.
 
@@ -319,10 +321,10 @@ class Git:
         _LOGGER.info("Git(%r).fetch()", str(self.path))
         self._run(("fetch",))
 
-    def merge(self):
+    def merge(self, commit):
         """Merge."""
-        _LOGGER.info("Git(%r).merge()", str(self.path))
-        self._run(("merge",))
+        _LOGGER.info("Git(%r).merge(%r)", str(self.path), commit)
+        self._run(("merge", commit))
 
     def pull(self):
         """Pull."""
@@ -334,7 +336,7 @@ class Git:
         _LOGGER.info("Git(%r).rebase()", str(self.path))
         self._run(("rebase",))
 
-    def add(self, paths: Optional[Tuple[Path, ...]] = None, force: bool = False, all_: bool = False):
+    def add(self, paths: Optional[Paths] = None, force: bool = False, all_: bool = False):
         """
         Add.
 
@@ -346,15 +348,10 @@ class Git:
             all_: add changes from all tracked and untracked files.
         """
         _LOGGER.info("Git(%r).add(%r, force=%r, all_=%r)", str(self.path), paths, force, all_)
-        args = ["add"]
-        if force:
-            args.append("--force")
-        if all_:
-            args.append("--all")
-        self._run(args, paths=paths)
+        self._run(["add"], booloptions=(("--force", force), ("--all", all_)), paths=paths)
 
     # pylint: disable=invalid-name
-    def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
+    def rm(self, paths: Paths, cached: bool = False, force: bool = False, recursive: bool = False):
         """
         Remove.
 
@@ -375,7 +372,7 @@ class Git:
             args.append("-r")
         self._run(args, paths=paths)
 
-    def reset(self, paths: Tuple[Path, ...]):
+    def reset(self, paths: Paths):
         """
         Reset.
 
@@ -385,7 +382,7 @@ class Git:
         _LOGGER.info("Git(%r).reset(%r)", str(self.path), paths)
         self._run(("reset",), paths=paths)
 
-    def commit(self, msg, paths: Optional[Tuple[Path, ...]] = None, all_: bool = False):
+    def commit(self, msg, paths: Optional[Paths] = None, all_: bool = False):
         """
         Commit.
 
@@ -418,7 +415,7 @@ class Git:
             args += ["-m", msg]
         self._run(args)
 
-    def status(self, paths: Optional[Tuple[Path, ...]] = None, branch: bool = False) -> Generator[Status, None, None]:
+    def status(self, paths: Optional[Paths] = None, branch: bool = False) -> Generator[Status, None, None]:
         """
         Git Status.
 
@@ -427,16 +424,16 @@ class Git:
         """
         _LOGGER.info("Git(%r).status(paths=%r, branch=%r)", str(self.path), paths, branch)
         if branch:
-            lines = self._run2str(("status", "--porcelain=v1", "--branch"), paths=paths).split("\n")
+            lines = self._run2lines(("status", "--porcelain", "--branch"), paths=paths)
             yield BranchStatus.from_str(lines[0])
             lines = lines[1:]
         else:
-            lines = self._run2str(("status", "--porcelain=v1"), paths=paths).split("\n")
+            lines = self._run2lines(("status", "--porcelain"), paths=paths)
         for line in lines:
             if line:
                 yield FileStatus.from_str(line)
 
-    def diff(self, paths: Optional[Tuple[Path, ...]] = None, prefix: Optional[Path] = None):
+    def diff(self, paths: Optional[Paths] = None, prefix: Optional[Path] = None):
         """
         Display Git Diff.
 
@@ -453,7 +450,7 @@ class Git:
         else:
             self._run(("diff",))
 
-    def diffstat(self, paths: Optional[Tuple[Path, ...]] = None) -> Generator[DiffStat, None, None]:
+    def diffstat(self, paths: Optional[Paths] = None) -> Generator[DiffStat, None, None]:
         """
         Git Diff Statistics.
 
@@ -461,11 +458,21 @@ class Git:
             paths: Paths.
         """
         _LOGGER.info("Git(%r).diffstat(paths=%r)", str(self.path), paths)
-        lines = self._run2str(("diff", "--stat"), paths=paths).split("\n")
+        lines = self._run2lines(("diff", "--stat"), paths=paths)
         if lines:
             # skip last line for now
             for line in lines[:-1]:
                 yield DiffStat.from_str(line)
+
+    def submodule_update(self, init: bool = False, recursive: bool = False):
+        """
+        Submodule Update.
+
+        Keyword Args:
+            init: Initialize.
+            recursive: Recursive.
+        """
+        self._run(("submodule", "update"), booloptions=(("--init", init), ("--recursive", recursive)))
 
     def has_index_changes(self) -> bool:
         """Let you know if index has changes."""
@@ -489,31 +496,43 @@ class Git:
         * nothing stashed
         """
         _LOGGER.info("Git(%r).is_empty()", str(self.path))
-        status = self._run2str(("status", "--porcelain=v1", "--branch")).split("\n")
-        if len(status) > 1:
+        lines = self._run2lines(("status", "--porcelain", "--branch"))
+        if len(lines) > 1:
             return False
         if self._run2str(("stash", "list")):
             return False
-        if status[0].startswith("## No commits yet on "):
+        if lines[0].startswith("## No commits yet on "):
             return True
-        if "..." not in status[0]:
+        if "[ahead " in lines[0]:
             return False
-        if "[ahead " in status[0]:
+        if not self.get_url():
             return False
         return True
 
-    def _run(self, args: Union[List[str], Tuple[str, ...]], paths: Optional[Tuple[Path, ...]] = None, **kwargs):
+    def _run(self, args: Args, paths: Optional[Paths] = None, booloptions: Optional[BoolOptions] = None, **kwargs):
         cmd = ["git"]
         cmd.extend(args)
+        for name, value in booloptions or tuple():
+            if value:
+                cmd.append(name)
         if paths:
             cmd.append("--")
             cmd.extend([str(path) for path in paths])
-        return run(cmd, cwd=self.path, **kwargs)
+        return run(cmd, cwd=self.path, secho=self.secho, **kwargs)
 
-    def _run2str(
-        self, args: Union[List[str], Tuple[str, ...]], paths: Optional[Tuple[Path, ...]] = None, check=True
-    ) -> str:
+    def _run2str(self, args: Args, paths: Optional[Paths] = None, check=True, regex=None) -> Optional[str]:
         result = self._run(args, paths=paths, check=check, capture_output=True)
         if result.stderr.strip():
             return ""
-        return result.stdout.decode("utf-8").rstrip()
+        value = result.stdout.decode("utf-8").rstrip()
+        if regex:
+            for line in value.split("\n"):
+                mat = regex.match(line)
+                if mat:
+                    return mat.group("value")
+            return None
+        return value
+
+    def _run2lines(self, args: Args, paths: Optional[Paths] = None, check=True, regex=None) -> List[str]:
+        result = self._run2str(args, paths=paths, check=check, regex=regex) or ""
+        return result.split("\n")
