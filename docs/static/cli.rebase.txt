@@ -1,4 +1,4 @@
-Usage: git-ws rebase [OPTIONS]
+Usage: git-ws rebase [OPTIONS] [COMMAND_OPTIONS]...
 
   Run 'git rebase' on projects.
 

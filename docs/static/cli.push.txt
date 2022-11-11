@@ -1,4 +1,4 @@
-Usage: git-ws push [OPTIONS]
+Usage: git-ws push [OPTIONS] [COMMAND_OPTIONS]...
 
   Run 'git push' on projects (in reverse order).
 

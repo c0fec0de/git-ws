@@ -1,4 +1,4 @@
-Usage: git-ws pull [OPTIONS]
+Usage: git-ws pull [OPTIONS] [COMMAND_OPTIONS]...
 
   Run 'git pull' on projects.
 

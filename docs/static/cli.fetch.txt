@@ -1,4 +1,4 @@
-Usage: git-ws fetch [OPTIONS]
+Usage: git-ws fetch [OPTIONS] [COMMAND_OPTIONS]...
 
   Run 'git fetch' on projects.
 
