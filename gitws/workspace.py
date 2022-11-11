@@ -171,7 +171,11 @@ class Workspace:
 
     @staticmethod
     def init(
-        path: Path, main_path: Path, manifest_path: Optional[Path] = None, group_filters: Optional[GroupFilters] = None
+        path: Path,
+        main_path: Path,
+        manifest_path: Optional[Path] = None,
+        group_filters: Optional[GroupFilters] = None,
+        force: bool = False,
     ) -> "Workspace":
         """
         Initialize new :any:`Workspace` at `path`.
@@ -183,13 +187,15 @@ class Workspace:
         Keyword Args:
             manifest_path:  Path to the manifest file. Relative to `main_path`. Default is `git-ws.toml`.
             group_filters: Group Filters.
+            force: Ignore that the workspace exists.
 
         Raises:
             OutsideWorkspaceError: `main_path` is not within `path`.
         """
-        info = Workspace.is_init(path)
-        if info:
-            raise InitializedError(path, info.main_path)
+        if not force:
+            info = Workspace.is_init(path)
+            if info:
+                raise InitializedError(path, info.main_path)
 
         # Normalize
         try:
