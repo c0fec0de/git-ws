@@ -21,6 +21,9 @@ from gitws import GitWS, InitializedError, ManifestExistError
 from gitws.const import CONFIG_PATH, INFO_PATH
 
 from .common import MANIFEST_DEFAULT
+
+# pylint: disable=unused-import
+from .fixtures import repos
 from .util import chdir, run
 
 
@@ -63,3 +66,66 @@ def test_git(tmp_path):
         assert gws.manifest_path == rrepo.manifest_path
         assert gws.group_filters == rrepo.group_filters
         assert gws == rrepo
+
+
+def test_from_path(tmp_path, repos):
+    """From Path."""
+
+    with chdir(tmp_path):
+        gws = GitWS.clone(str(repos / "main"))
+        gws.update()
+
+    workspace = tmp_path / "main"
+    main_path = workspace / "main"
+    dep1_path = workspace / "dep1"
+    dep2_path = workspace / "dep2"
+
+    assert GitWS.from_path(path=workspace).main_path == main_path
+    assert GitWS.from_path(path=main_path).main_path == main_path
+    assert GitWS.from_path(path=dep1_path).main_path == main_path
+    assert GitWS.from_path(path=dep2_path).main_path == main_path
+
+
+def test_reinit(tmp_path, repos):
+    """Initialize."""
+
+    with chdir(tmp_path):
+        gws = GitWS.clone(str(repos / "main"))
+        gws.update()
+
+    workspace = tmp_path / "main"
+    main_path = workspace / "main"
+    dep1_path = workspace / "dep1"
+    dep2_path = workspace / "dep2"
+
+    info_file = workspace / INFO_PATH
+    assert info_file.read_text().split("\n") == [
+        "# Git Workspace System File. DO NOT EDIT.",
+        "",
+        'main_path = "main"',
+        "",
+    ]
+
+    with raises(InitializedError):
+        GitWS.init(main_path=main_path)
+
+    with raises(InitializedError):
+        GitWS.init(main_path=dep1_path)
+
+    with raises(InitializedError):
+        GitWS.init(main_path=dep2_path)
+
+    # Re-Init
+    GitWS.init(main_path=dep2_path, force=True)
+    info_file = workspace / INFO_PATH
+    assert info_file.read_text().split("\n") == [
+        "# Git Workspace System File. DO NOT EDIT.",
+        "",
+        'main_path = "dep2"',
+        "",
+    ]
+
+    assert GitWS.from_path(path=workspace).main_path == dep2_path
+    assert GitWS.from_path(path=main_path).main_path == dep2_path
+    assert GitWS.from_path(path=dep1_path).main_path == dep2_path
+    assert GitWS.from_path(path=dep2_path).main_path == dep2_path

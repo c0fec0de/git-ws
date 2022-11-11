@@ -128,6 +128,7 @@ class GitWS:
         main_path: Path,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
+        force: bool = False,
         secho=None,
     ) -> "GitWS":
         """
@@ -142,6 +143,7 @@ class GitWS:
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
+            force: Ignore that the workspace exists.
             secho: `click.secho` like print method for verbose output.
         """
         _LOGGER.debug(
@@ -158,7 +160,7 @@ class GitWS:
         ManifestSpec.load(manifest_path)  # check manifest
         if group_filters:
             GroupFilters.validate(group_filters)
-        workspace = Workspace.init(path, main_path, manifest_path_rel, group_filters=group_filters or None)
+        workspace = Workspace.init(path, main_path, manifest_path_rel, group_filters=group_filters or None, force=force)
         group_filters = workspace.get_group_filters(group_filters=group_filters)
         return GitWS(workspace, manifest_path, group_filters, secho=secho)
 
@@ -181,20 +183,22 @@ class GitWS:
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
-            force: Ignore that the workspace is not empty.
+            force: Ignore that the workspace exists.
             secho: `click.secho` like print method for verbose output.
         """
         secho = secho or no_echo
         main_path = Git.find_path(path=main_path)
         path = main_path.parent
-        info = Workspace.is_init(path)
-        if info:
-            raise InitializedError(path, info.main_path)
         if not force:
+            info = Workspace.is_init(path)
+            if info:
+                raise InitializedError(path, info.main_path)
             Workspace.check_empty(path, main_path)
         name = main_path.name
         secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
-        return GitWS.create(path, main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho)
+        return GitWS.create(
+            path, main_path, manifest_path=manifest_path, group_filters=group_filters, force=force, secho=secho
+        )
 
     def deinit(self):
         """
