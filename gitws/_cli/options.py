@@ -114,3 +114,21 @@ def process_paths(paths) -> Tuple[Path, ...]:
 def paths_argument():
     """Paths."""
     return click.argument("paths", nargs=-1, type=click.UNPROCESSED)
+
+
+command_option = click.argument("command", nargs=-1, type=click.UNPROCESSED)
+
+
+def process_command(command):
+    """Process Command Argument."""
+    if not command:
+        raise click.UsageError("COMMAND is required")
+    return command
+
+
+command_options_option = click.argument("command_options", nargs=-1, type=click.UNPROCESSED)
+
+
+def process_command_options(options):
+    """Process options Argument."""
+    return options or tuple()

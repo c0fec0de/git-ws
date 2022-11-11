@@ -31,11 +31,15 @@ from .config import config
 from .info import info
 from .manifest import manifest
 from .options import (
+    command_option,
+    command_options_option,
     force_option,
     group_filters_option,
     manifest_option,
     path_option,
     paths_argument,
+    process_command,
+    process_command_options,
     process_path,
     process_paths,
     projects_option,
@@ -170,7 +174,7 @@ def update(
 @manifest_option()
 @group_filters_option()
 @reverse_option()
-@click.argument("command", nargs=-1, type=click.UNPROCESSED)
+@command_option
 @pass_context
 def git(context, command, projects=None, manifest_path=None, group_filters=None, reverse=False):
     """
@@ -179,6 +183,7 @@ def git(context, command, projects=None, manifest_path=None, group_filters=None,
     This command behaves identical to `git ws foreach -- git`.
     """
     with exceptionhandling(context):
+        command = process_command(command)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.run_foreach(("git",) + command, project_paths=projects, reverse=reverse)
 
@@ -187,64 +192,72 @@ def git(context, command, projects=None, manifest_path=None, group_filters=None,
 @projects_option()
 @manifest_option()
 @group_filters_option()
+@command_options_option
 @pass_context
-def fetch(context, projects=None, manifest_path=None, group_filters=None):
+def fetch(context, command_options=None, projects=None, manifest_path=None, group_filters=None):
     """
     Run 'git fetch' on projects.
 
     This command behaves identical to `git ws foreach -- git fetch`.
     """
     with exceptionhandling(context):
+        command_options = process_command_options(command_options)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        gws.run_foreach(("git", "fetch"), project_paths=projects)
+        gws.run_foreach(("git", "fetch") + command_options, project_paths=projects)
 
 
 @main.command()
 @projects_option()
 @manifest_option()
 @group_filters_option()
+@command_options_option
 @pass_context
-def pull(context, projects=None, manifest_path=None, group_filters=None):
+def pull(context, command_options=None, projects=None, manifest_path=None, group_filters=None):
     """
     Run 'git pull' on projects.
 
     This command behaves identical to `git ws foreach -- git pull`.
     """
     with exceptionhandling(context):
+        command_options = process_command_options(command_options)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        gws.run_foreach(("git", "pull"), project_paths=projects)
+        gws.run_foreach(("git", "pull") + command_options, project_paths=projects)
 
 
 @main.command()
 @projects_option()
 @manifest_option()
 @group_filters_option()
+@command_options_option
 @pass_context
-def push(context, projects=None, manifest_path=None, group_filters=None):
+def push(context, command_options=None, projects=None, manifest_path=None, group_filters=None):
     """
     Run 'git push' on projects (in reverse order).
 
     This command behaves identical to `git ws foreach --reverse -- git push`.
     """
     with exceptionhandling(context):
+        command_options = process_command_options(command_options)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        gws.run_foreach(("git", "push"), project_paths=projects, reverse=True)
+        gws.run_foreach(("git", "push") + command_options, project_paths=projects, reverse=True)
 
 
 @main.command()
 @projects_option()
 @manifest_option()
 @group_filters_option()
+@command_options_option
 @pass_context
-def rebase(context, projects=None, manifest_path=None, group_filters=None):
+def rebase(context, command_options=None, projects=None, manifest_path=None, group_filters=None):
     """
     Run 'git rebase' on projects.
 
     This command behaves identical to `git ws foreach -- git rebase`.
     """
     with exceptionhandling(context):
+        command_options = process_command_options(command_options)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        gws.run_foreach(("git", "rebase"), project_paths=projects)
+        gws.run_foreach(("git", "rebase") + command_options, project_paths=projects)
 
 
 @main.command()
@@ -380,7 +393,7 @@ def commit(context, manifest_path=None, group_filters=None, paths=None, message=
 @manifest_option()
 @group_filters_option()
 @reverse_option()
-@click.argument("command", nargs=-1, type=click.UNPROCESSED)
+@command_option
 @pass_context
 def foreach(context, command, projects=None, manifest_path=None, group_filters=None, reverse=False):
     """
@@ -390,6 +403,7 @@ def foreach(context, command, projects=None, manifest_path=None, group_filters=N
     (i.e. `git ws foreach -- ls -l`)
     """
     with exceptionhandling(context):
+        command = process_command(command)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.run_foreach(command, project_paths=projects, reverse=reverse)
 
@@ -399,7 +413,7 @@ def foreach(context, command, projects=None, manifest_path=None, group_filters=N
 @manifest_option()
 @group_filters_option()
 @reverse_option()
-@click.argument("command", nargs=-1, type=click.UNPROCESSED)
+@command_option
 @pass_context
 def submodule(context, command, projects=None, manifest_path=None, group_filters=None, reverse=False):
     """
@@ -408,6 +422,7 @@ def submodule(context, command, projects=None, manifest_path=None, group_filters
     This command behaves identical to `git ws foreach -- git submodule`.
     """
     with exceptionhandling(context):
+        command = process_command(command)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.run_foreach(("git", "submodule") + command, project_paths=projects, reverse=reverse)
 
