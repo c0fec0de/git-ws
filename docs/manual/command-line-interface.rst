@@ -19,6 +19,8 @@ In the following, the various commands available are explained in detail.
 ``git ws clone``
 ----------------
 
+TODO: new cloning scheme
+
 Clone a Git Workspace managed project and prepare the workspace folder.
 
 .. include:: ../static/cli.clone.txt
@@ -40,7 +42,7 @@ This is one of the two basic commands which can be used to initialize a workspac
 The clone operation can be customized using some additional options:
 
 - By default, the file ``git-ws.toml`` in the main project will be used to start searching for dependencies. The ``--manifest`` option can be used to override this and point to another file (relative to main project's root folder).
-- The ``--groups`` option can be used to fine tune the dependencies that are included (or excluded). Read more about this in :ref:`group_filtering`.
+- The ``--group-filter`` option can be used to fine tune the dependencies that are included (or excluded). Read more about this in :ref:`group_filtering`.
 - The ``--update`` option can be used to run the :ref:`git_ws_update` command right away during the clone operation.
 
 .. warning::
@@ -106,7 +108,7 @@ Another use case is keeping a workspace up-to-date. For example, after getting c
 There are also some additional options which can be used to further tweak the command:
 
 - You can use the ``--project`` option to specify which project to operate on. This option can be used multiple times. Unless otherwise specified, the command operates on all projects in a workspace. Using this option, the update can be limited to the given projects only.
-- As with the ``clone`` and ``init`` commands, you can specify an alternative manifest using the ``--manifest`` option. The operation can be further limited using the ``--groups`` filter. See :ref:`group_filtering` for more information.
+- As with the ``clone`` and ``init`` commands, you can specify an alternative manifest using the ``--manifest`` option. The operation can be further limited using the ``--group-filter`` filter. See :ref:`group_filtering` for more information.
 - By default, the update will also pull changes from the server, including the main project. If this is not desired, pulling the main repository can be avoided by using the ``--skip-main`` option.
 - If preferred, one can use the ``--rebase`` option to run a ``git rebase`` instead of a ``git pull``.
 - By using ``--prune``, ``git`` repositories that became outdated will be removed from the workspace.
@@ -148,7 +150,7 @@ This command is useful to run a shell command once for each ``git`` clone in a w
 
     git ws foreach git status
 
-- The command can be fine tuned similarly to the :ref:`git_ws_update` command using the ``--project``, ``--manifest`` and ``--groups`` options.
+- The command can be fine tuned similarly to the :ref:`git_ws_update` command using the ``--project``, ``--manifest`` and ``--group-filter`` options.
 - By default, the projects are traversed from the main project down to its dependencies. By using the ``--reverse`` option, the order in which the projects are visited are inverted.
 
 
