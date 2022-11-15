@@ -249,6 +249,8 @@ class GitWS:
         name = removesuffix(Path(parsedurl.path).name, ".git")
         if main_path is None:
             main_path = Path.cwd() / name / name
+        else:
+            main_path = main_path.resolve()
         main_path.parent.mkdir(parents=True, exist_ok=True)
         path = main_path.parent
         if not force:
@@ -304,7 +306,7 @@ class GitWS:
             if project.revision in (sha, tag) and not branch:
                 self.secho("Nothing to do.", fg=_COLOR_ACTION)
             else:
-                revision = tag or branch or sha
+                revision = branch or tag or sha
 
                 # Checkout
                 fetched = False
@@ -314,7 +316,7 @@ class GitWS:
                     fetched = True
                     git.checkout(project.revision)
                     branch = git.get_branch()
-                    revision = tag or branch or sha
+                    revision = branch or tag or sha
 
                 # Pull or Rebase in case we are on a branch (or have switched to it.)
                 if branch:
@@ -515,11 +517,13 @@ class GitWS:
         2. commit frozen manifest from `main_path/.git-ws/manifests/<name>.toml`
         3. create git tag.
         """
+        clone = Clone.from_project(self.workspace, next(self.projects()), secho=self.secho)
+        self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+        git = clone.git
         # freeze
-        git = Git(path=self.main_path, secho=self.secho)
         manifest_path = MANIFESTS_PATH / f"{name}.toml"
         manifest_spec = self.get_manifest_spec(freeze=True, resolve=True)
-        (self.main_path / MANIFESTS_PATH).mkdir(exist_ok=True)
+        (self.main_path / MANIFESTS_PATH).mkdir(exist_ok=True, parents=True)
         manifest_spec.save(self.main_path / manifest_path)
         # commit
         git.add((manifest_path,), force=True)

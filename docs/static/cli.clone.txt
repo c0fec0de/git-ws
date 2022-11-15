@@ -6,6 +6,7 @@ Options:
   -M, --manifest FILE        Manifest file. 'git-ws.toml' by default.
   -G, --group-filter FILTER  Group Filtering. TODO: more details. The setting
                              becomes default for all successive runs.
+  --revision TEXT            Revision to be checked out. Tag, Branch or SHA
   -U, --update               Run 'git ws update' too.
   -f, --force                Enfore operation.
   -h, --help                 Show this message and exit.

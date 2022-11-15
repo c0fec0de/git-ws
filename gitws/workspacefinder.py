@@ -18,7 +18,7 @@
 from pathlib import Path
 from typing import Optional
 
-from .const import GIT_WS_PATH
+from .const import INFO_PATH
 
 
 def find_workspace(path: Optional[Path] = None) -> Optional[Path]:
@@ -33,7 +33,7 @@ def find_workspace(path: Optional[Path] = None) -> Optional[Path]:
     """
     spath = path or Path.cwd()
     while True:
-        gitwspath = spath / GIT_WS_PATH
+        gitwspath = spath / INFO_PATH
         if gitwspath.exists():
             return spath
         if spath == spath.parent:

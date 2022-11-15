@@ -25,10 +25,12 @@ from .git import Git
 
 def find_manifest(path: Path) -> Optional[Path]:
     """Return Path to manifest if clone has been tagged before."""
-    git = Git(path=path)
-    tag = git.get_tag()
-    if tag:
-        manifest_path = MANIFESTS_PATH / f"{tag}.toml"
-        if (path / manifest_path).exists():
-            return manifest_path
+    if path.exists():
+        git = Git(path=path)
+        if not git.get_branch():
+            tag = git.get_tag()
+            if tag:
+                manifest_path = MANIFESTS_PATH / f"{tag}.toml"
+                if (path / manifest_path).exists():
+                    return manifest_path
     return None

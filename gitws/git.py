@@ -291,7 +291,7 @@ class Git:
         3. Get SHA.
         4. `None` if empty repo.
         """
-        return self.get_tag() or self.get_branch() or self.get_sha()
+        return self.get_branch() or self.get_tag() or self.get_sha()
 
     def get_url(self) -> Optional[str]:
         """Get Actual URL of 'origin'."""
