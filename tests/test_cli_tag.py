@@ -23,7 +23,7 @@ from pytest import fixture
 from gitws import Git, ManifestSpec
 from gitws.const import CONFIG_PATH, INFO_PATH, MANIFESTS_PATH
 
-from .fixtures import create_repos
+from .fixtures import create_repos, set_meta
 from .util import chdir, cli, run
 
 
@@ -69,6 +69,7 @@ def test_tag(tmp_path, repos):
     with chdir(workspace):
         # create tag
         assert not (workspace / "main" / MANIFESTS_PATH / "MYTAG.toml").exists()
+        set_meta(path=main_git.path)
         assert cli(("tag", "MYTAG")) == ["===== main (MAIN 'main', revision='main') =====", ""]
         assert (workspace / "main" / MANIFESTS_PATH / "MYTAG.toml").exists()
 
@@ -200,6 +201,7 @@ def test_tag_dep(tmp_path, repos):
         ]
     with chdir(dep1_workspace):
         # create tag
+        set_meta(path=dep1_workspace / "dep1")
         assert cli(("tag", "DEP1TAG")) == ["===== dep1 (MAIN 'dep1', revision='main') =====", ""]
 
         # push

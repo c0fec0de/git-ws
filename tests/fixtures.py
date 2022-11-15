@@ -26,6 +26,11 @@ from gitws.datamodel import Defaults, ManifestSpec, ProjectSpec
 from .util import chdir, run
 
 
+def set_meta(path=None):
+    run(("git", "config", "user.email", "you@example.com"), check=True, cwd=path)
+    run(("git", "config", "user.name", "you"), check=True, cwd=path)
+
+
 @contextmanager
 def git_repo(path, commit=None):
     """Initialize Repo."""
@@ -33,8 +38,7 @@ def git_repo(path, commit=None):
     with chdir(path):
         run(("git", "init"), check=True)
         run(("git", "checkout", "-b", "main"), check=True)
-        run(("git", "config", "user.email", "you@example.com"), check=True)
-        run(("git", "config", "user.name", "you"), check=True)
+        set_meta()
         yield path
         run(("git", "add", "-A"), check=True)
         run(("git", "commit", "-m", commit), check=True)
