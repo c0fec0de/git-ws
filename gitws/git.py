@@ -252,7 +252,7 @@ class Git:
         """Set Git Configuration `name` to `value`."""
         self._run(("config", name, value))
 
-    def clone(self, url, revision=None):
+    def clone(self, url, revision: Optional[str] = None):
         """Clone `url` and checkout `revision`."""
         _LOGGER.info("Git(%r).clone(%r, revision=%r)", str(self.path), url, revision)
         if revision:
@@ -382,7 +382,7 @@ class Git:
         _LOGGER.info("Git(%r).reset(%r)", str(self.path), paths)
         self._run(("reset",), paths=paths)
 
-    def commit(self, msg, paths: Optional[Paths] = None, all_: bool = False):
+    def commit(self, msg: str, paths: Optional[Paths] = None, all_: bool = False):
         """
         Commit.
 
@@ -399,7 +399,7 @@ class Git:
             args.append("--all")
         self._run(args, paths=paths)
 
-    def tag(self, name, msg=None):
+    def tag(self, name: str, msg: Optional[str] = None):
         """
         Create Tag.
 

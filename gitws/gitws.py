@@ -27,12 +27,13 @@ from typing import Generator, List, Optional, Tuple
 
 from ._util import no_echo, removesuffix, resolve_relative, run
 from .clone import Clone, map_paths
-from .const import MANIFEST_PATH_DEFAULT
+from .const import MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
 from .datamodel import GroupFilters, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
 from .deptree import DepNode, get_deptree
 from .exceptions import GitCloneNotCleanError, InitializedError, ManifestExistError
 from .git import DiffStat, Git, Status
 from .iters import ManifestIter, ProjectIter
+from .manifestfinder import find_manifest
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("git-ws")
@@ -47,7 +48,7 @@ class GitWS:
 
     Args:
         workspace: workspace.
-        manifest_path: Manifest File Path. Relative to workspace directory.
+        manifest_path: Manifest File Path. **Resolved** Path.
         group_filters: Group Filters.
 
     Keyword Args:
@@ -115,6 +116,8 @@ class GitWS:
             secho: `click.secho` like print method for verbose output.
         """
         workspace = Workspace.from_path(path=path)
+        if not manifest_path:
+            manifest_path = find_manifest(workspace.main_path)
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
         ManifestSpec.load(manifest_path)  # check manifest
         if group_filters:
@@ -154,15 +157,22 @@ class GitWS:
             group_filters,
         )
         # We need to resolve in inverted order, otherwise the manifest_path is broken
+        # `manifest_path` can be absolute or relative to `main_path`. we need it relative to `main_path`.
         manifest_path_rel = resolve_relative(manifest_path or MANIFEST_PATH_DEFAULT, base=main_path)
+        # `main_path` can be absolute or relative to `path`. we need it relative to `path`.
         main_path = resolve_relative(main_path, base=path)
-        manifest_path = path / main_path / manifest_path_rel
-        ManifestSpec.load(manifest_path)  # check manifest
+        # check manifest
+        ManifestSpec.load(path / main_path / manifest_path_rel)
+        # check group_filters
         if group_filters:
             GroupFilters.validate(group_filters)
+        # Create Workspace
         workspace = Workspace.init(path, main_path, manifest_path_rel, group_filters=group_filters or None, force=force)
         group_filters = workspace.get_group_filters(group_filters=group_filters)
-        return GitWS(workspace, manifest_path, group_filters, secho=secho)
+        # Check for tagged manifest
+        if not manifest_path:
+            manifest_path_rel = find_manifest(path / main_path) or manifest_path_rel
+        return GitWS(workspace, path / main_path / manifest_path_rel, group_filters, secho=secho)
 
     @staticmethod
     def init(
@@ -214,6 +224,7 @@ class GitWS:
         main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
+        revision: Optional[str] = None,
         force: bool = False,
         secho=None,
     ) -> "GitWS":
@@ -229,6 +240,7 @@ class GitWS:
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
+            revision: Revision instead of default one.
             force: Ignore that the workspace is not empty.
             secho: `click.secho` like print method for verbose output.
         """
@@ -244,7 +256,7 @@ class GitWS:
         secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
         git = Git(resolve_relative(main_path), secho=secho)
-        git.clone(url)
+        git.clone(url, revision=revision)
         return GitWS.create(path, main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho)
 
     def update(
@@ -492,6 +504,28 @@ class GitWS:
                 self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 clone.check()
                 clone.git.commit(msg, all_=all_)
+
+    def tag(self, name: str, msg: Optional[str] = None):
+        """
+        Create Git Tag.
+
+        The following steps are done to create a valid tag:
+
+        1. store a frozen manifest to `main_path/.git-ws/manifests/<name>.toml`
+        2. commit frozen manifest from `main_path/.git-ws/manifests/<name>.toml`
+        3. create git tag.
+        """
+        # freeze
+        git = Git(path=self.main_path, secho=self.secho)
+        manifest_path = MANIFESTS_PATH / f"{name}.toml"
+        manifest_spec = self.get_manifest_spec(freeze=True, resolve=True)
+        (self.main_path / MANIFESTS_PATH).mkdir(exist_ok=True)
+        manifest_spec.save(self.main_path / manifest_path)
+        # commit
+        git.add((manifest_path,), force=True)
+        git.commit(msg or name, paths=(manifest_path,))
+        # tag
+        git.tag(name, msg=msg)
 
     def run_foreach(
         self,

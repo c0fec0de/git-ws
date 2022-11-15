@@ -90,6 +90,9 @@ def test_update(tmp_path, repos_submodules, gws):
         "git-ws INFO AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None)",
         "git-ws DEBUG run(['git', 'describe', '--exact-match', '--tags'], cwd='.') OK "
         "stdout=b'' stderr=b'fatal: No names found, cannot describe anything.\\n'",
+        "git-ws INFO Git('TMP/main/main').get_tag() = None",
+        "git-ws DEBUG run(['git', 'describe', '--exact-match', '--tags'], cwd='.') OK "
+        "stdout=b'' stderr=b'fatal: No names found, cannot describe anything.\\n'",
         "git-ws INFO Git('.').get_tag() = None",
         "git-ws DEBUG run(['git', 'branch'], cwd='.') OK stdout=b'* main\\n' stderr=b''",
         "git-ws INFO Git('.').get_branch() = 'main'",
@@ -103,9 +106,8 @@ def test_update(tmp_path, repos_submodules, gws):
         "git-ws INFO Git('.').get_branch() = 'main'",
         "git-ws DEBUG run(('git', 'submodule', 'update'), cwd='.') OK stdout=None stderr=None",
         "git-ws DEBUG run(['git', 'remote', '-v'], cwd='.') OK "
-        "stdout=b'origin\\tREPOS/main "
-        "(fetch)\\norigin\\tREPOS/main "
-        "(push)\\n' stderr=b''",
+        "stdout=b'origin\\tREPOS/main (fetch)\\norigin\\tREPOS/main (push)\\n' "
+        "stderr=b''",
         "git-ws INFO Git('.').get_url() = 'REPOS/main'",
         "git-ws DEBUG ManifestSpec(group_filters=('-test',), dependencies=(ProjectSpec(name='dep1'),))",
         "git-ws DEBUG Project(name='dep1', path='dep1', url='../dep1')",
@@ -115,9 +117,7 @@ def test_update(tmp_path, repos_submodules, gws):
         "git-ws WARNING Clone dep1 has no revision!",
         "git-ws DEBUG run(('git', 'submodule', 'update'), cwd='../dep1') OK stdout=None stderr=None",
         "git-ws DEBUG run(['git', 'remote', '-v'], cwd='../dep1') OK "
-        "stdout=b'origin\\tREPOS/dep1 "
-        "(fetch)\\norigin\\tREPOS/dep1 "
-        "(push)\\n' stderr=b''",
+        "stdout=b'origin\\tREPOS/dep1 (fetch)\\norigin\\tREPOS/dep1 (push)\\n' stderr=b''",
         "git-ws INFO Git('../dep1').get_url() = 'REPOS/dep1'",
         "git-ws DEBUG ManifestSpec(dependencies=(ProjectSpec(name='dep2', revision='main'),))",
         "git-ws DEBUG Project(name='dep2', path='dep2', url='../dep2', revision='main')",
