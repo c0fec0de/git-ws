@@ -19,7 +19,7 @@ from pathlib import Path
 
 import click
 
-from gitws import GitWS, ManifestSpec
+from gitws import GitWS, ManifestSpec, Defaults
 
 from .common import COLOR_INFO, exceptionhandling, pass_context
 from .options import group_filters_option, manifest_option, output_option

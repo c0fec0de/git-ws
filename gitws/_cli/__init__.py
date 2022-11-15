@@ -21,7 +21,7 @@ from pathlib import Path
 import click
 import coloredlogs  # type: ignore
 
-from gitws import AppConfig, GitWS
+from gitws import AppConfig, GitWS, Defaults, ManifestSpec
 from gitws._util import resolve_relative
 from gitws.const import MANIFEST_PATH_DEFAULT
 from gitws.git import FileStatus, State
@@ -425,6 +425,37 @@ def submodule(context, command, projects=None, manifest_path=None, group_filters
         command = process_command(command)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.run_foreach(("git", "submodule") + command, project_paths=projects, reverse=reverse)
+
+
+@main.command()
+@manifest_option(initial=True)
+@click.argument("name", type=click.Choice(tuple(Defaults.__fields__)))
+@click.argument("value")
+@pass_context
+def default(context, manifest_path, name, value):
+    """
+    Set Default in Manifest.
+    """
+    with exceptionhandling(context):
+        manifest_path = Path(manifest_path)
+        manifest_spec = ManifestSpec.load(manifest_path)
+        defaults = manifest_spec.defaults.update_fromstr(**{name: value if value else None})
+        manifest_spec = manifest_spec.update(defaults=defaults)
+        manifest_spec.save(manifest_path)
+
+@main.command()
+@manifest_option(initial=True)
+@click.argument("value")
+@pass_context
+def group_filters(context, manifest_path, value):
+    """
+    Set Default in Manifest.
+    """
+    with exceptionhandling(context):
+        manifest_path = Path(manifest_path)
+        manifest_spec = ManifestSpec.load(manifest_path)
+        manifest_spec = manifest_spec.update_fromstr(**{'group-filters': value if value else None})
+        manifest_spec.save(manifest_path)
 
 
 main.add_command(config)
