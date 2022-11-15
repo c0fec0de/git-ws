@@ -27,6 +27,7 @@ from .util import chdir, run
 
 
 def set_meta(path=None):
+    """Set Meta Data for Commits."""
     run(("git", "config", "user.email", "you@example.com"), check=True, cwd=path)
     run(("git", "config", "user.name", "you"), check=True, cwd=path)
 
