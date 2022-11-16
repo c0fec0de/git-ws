@@ -15,6 +15,9 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Clone Testing."""
+
+from gitws.const import INFO_PATH
+
 # pylint: disable=unused-import
 from .fixtures import repos
 from .util import chdir, check, cli
@@ -87,6 +90,38 @@ def test_cli_clone_path(tmp_path, repos):
 
         check(workspace, "main", exists=False)
         check(workspace, "main2", content="main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
+
+
+def test_cli_clone_long_path(tmp_path, repos):
+    """Cloning via CLI."""
+    workspace = tmp_path / "some" / "where"
+
+    with chdir(tmp_path):
+        assert cli(
+            ["clone", str(repos / "main"), "some/where/main", "--update"], tmp_path=tmp_path, repos_path=repos
+        ) == [
+            "===== some/where/main (MAIN 'main') =====",
+            "Cloning 'REPOS/main'.",
+            "===== some/where/dep1 ('dep1') =====",
+            "git-ws WARNING Clone dep1 has no revision!",
+            "Cloning 'REPOS/dep1'.",
+            "===== some/where/dep2 ('dep2', revision='1-feature') =====",
+            "Cloning 'REPOS/dep2'.",
+            "===== some/where/dep4 ('dep4', revision='main') =====",
+            "Cloning 'REPOS/dep4'.",
+            "",
+        ]
+
+        assert (
+            workspace / INFO_PATH
+        ).read_text() == '# Git Workspace System File. DO NOT EDIT.\n\nmain_path = "main"\n'
+
+        check(workspace, "main")
         check(workspace, "dep1")
         check(workspace, "dep2", content="dep2-feature")
         check(workspace, "dep3", exists=False)

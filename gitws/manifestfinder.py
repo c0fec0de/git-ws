@@ -14,29 +14,23 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
-"""Workspace Finder."""
+"""Find proper manifest."""
+
 from pathlib import Path
 from typing import Optional
 
-from .const import INFO_PATH
+from .const import MANIFESTS_PATH
+from .git import Git
 
 
-def find_workspace(path: Optional[Path] = None) -> Optional[Path]:
-    """
-    Find Workspace Root Directory.
-
-    Keyword Args:
-        path (Path): directory or file within the workspace. Current working directory by default.
-
-    The workspace root directory contains a sub directory `.gitws`.
-    This one is searched upwards the given `path`.
-    """
-    spath = path or Path.cwd()
-    while True:
-        gitwspath = spath / INFO_PATH
-        if gitwspath.exists():
-            return spath
-        if spath == spath.parent:
-            break
-        spath = spath.parent
+def find_manifest(path: Path) -> Optional[Path]:
+    """Return Path to manifest if clone has been tagged before."""
+    if path.exists():
+        git = Git(path=path)
+        if not git.get_branch():
+            tag = git.get_tag()
+            if tag:
+                manifest_path = MANIFESTS_PATH / f"{tag}.toml"
+                if (path / manifest_path).exists():
+                    return manifest_path
     return None

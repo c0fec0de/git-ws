@@ -111,10 +111,20 @@ def deinit(context):
 @path_option()
 @manifest_option(initial=True)
 @group_filters_option(initial=True)
+@click.option("--revision", help="Revision to be checked out. Tag, Branch or SHA")
 @update_option()
 @force_option()
 @pass_context
-def clone(context, url, path=None, manifest_path=None, group_filters=None, update: bool = False, force: bool = False):
+def clone(
+    context,
+    url,
+    path=None,
+    manifest_path=None,
+    group_filters=None,
+    revision=None,
+    update: bool = False,
+    force: bool = False,
+):
     """
     Create a git clone and initialize Git Workspace.
     """
@@ -125,6 +135,7 @@ def clone(context, url, path=None, manifest_path=None, group_filters=None, updat
             main_path=path,
             manifest_path=manifest_path,
             group_filters=group_filters,
+            revision=revision,
             force=force,
             secho=context.secho,
         )
@@ -386,6 +397,23 @@ def commit(context, manifest_path=None, group_filters=None, paths=None, message=
             raise ValueError("Please provide a commit message.")
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.commit(message, process_paths(paths), all_=all_)
+
+
+@main.command()
+@click.argument("name")
+@click.option("--message", "-m", help="tag message")
+@manifest_option()
+@group_filters_option()
+@pass_context
+def tag(context, name, manifest_path=None, group_filters=None, message=None):
+    """
+    Create git tag on main repository.
+
+    This includes freezing all dependencies.
+    """
+    with exceptionhandling(context):
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
+        gws.tag(name, msg=message)
 
 
 @main.command()

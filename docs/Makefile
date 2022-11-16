@@ -41,6 +41,7 @@ gen:
 	git-ws config list --help > static/cli.config.list.txt
 	git-ws config set --help > static/cli.config.set.txt
 	git-ws deinit --help > static/cli.deinit.txt
+	git-ws diff --help > static/cli.diff.txt
 	git-ws fetch --help > static/cli.fetch.txt
 	git-ws foreach --help > static/cli.foreach.txt
 	git-ws git --help > static/cli.git.txt
@@ -52,13 +53,13 @@ gen:
 	git-ws init --help > static/cli.init.txt
 	git-ws manifest --help > static/cli.manifest.txt
 	git-ws manifest create --help > static/cli.manifest.create.txt
+	git-ws manifest create -M static/git-ws.toml
 	git-ws manifest freeze --help > static/cli.manifest.freeze.txt
 	git-ws manifest path --help > static/cli.manifest.path.txt
 	git-ws manifest paths --help > static/cli.manifest.paths.txt
 	git-ws manifest resolve --help > static/cli.manifest.resolve.txt
 	git-ws manifest upgrade --help > static/cli.manifest.upgrade.txt
 	git-ws manifest validate --help > static/cli.manifest.validate.txt
-	git-ws manifest create -M static/git-ws.toml
 	git-ws pull --help > static/cli.pull.txt
 	git-ws push --help > static/cli.push.txt
 	git-ws rebase --help > static/cli.rebase.txt
@@ -66,5 +67,5 @@ gen:
 	git-ws rm --help > static/cli.rm.txt
 	git-ws status --help > static/cli.status.txt
 	git-ws submodule --help > static/cli.submodule.txt
+	git-ws tag --help > static/cli.tag.txt
 	git-ws update --help > static/cli.update.txt
-	git-ws diff --help > static/cli.diff.txt
