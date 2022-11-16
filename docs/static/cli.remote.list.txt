@@ -1,0 +1,7 @@
+Usage: git-ws remote list [OPTIONS]
+
+  List Remotes.
+
+Options:
+  -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
+  -h, --help           Show this message and exit.

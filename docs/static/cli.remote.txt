@@ -1,0 +1,11 @@
+Usage: git-ws remote [OPTIONS] COMMAND [ARGS]...
+
+  Manage Remotes.
+
+Options:
+  -h, --help  Show this message and exit.
+
+Commands:
+  add     Add Remote.
+  delete  Delete Remote.
+  list    List Remotes.

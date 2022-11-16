@@ -34,6 +34,31 @@ class BaseModel(pydantic.BaseModel, allow_mutation=False):
 
     def update(self, **kwargs):
         """Create new instance with updated arguments."""
+        return self.__update(kwargs)
+
+    def update_fromstr(self, kwargs):
+        """Create new instance with updated arguments."""
+        fields = self.schema()["properties"]
+        data = {}
+        for name, value in kwargs.items():
+            data[name] = self.__fromstr(fields[name]["type"], value)
+        return self.__update(data)
+
+    def __update(self, kwargs):
         data = self.dict()
         data.update(kwargs)
         return self.__class__(**data)
+
+    @staticmethod
+    def __fromstr(type_, value):
+        if type_ == "string":
+            return value
+        if type_ == "array":
+            if value:
+                return tuple(item.strip() for item in value.split(","))
+            return tuple()
+        if type_ == "boolean":
+            if value:
+                return value.lower() in ("true", "1", "on")
+            return None
+        assert False, f"Unknown type {type_}"

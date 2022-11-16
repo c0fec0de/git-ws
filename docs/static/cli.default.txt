@@ -1,0 +1,8 @@
+Usage: git-ws default [OPTIONS]
+                      {remote|revision|groups|with_groups|submodules} VALUE
+
+  Set Default in Manifest.
+
+Options:
+  -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
+  -h, --help           Show this message and exit.

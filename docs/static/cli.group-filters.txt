@@ -1,0 +1,7 @@
+Usage: git-ws group-filters [OPTIONS] VALUE
+
+  Set Group Filter.
+
+Options:
+  -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
+  -h, --help           Show this message and exit.
