@@ -29,6 +29,7 @@ from gitws.git import FileStatus, State
 from .common import COLOR_INFO, Context, Error, exceptionhandling, get_loglevel, pass_context
 from .config import config
 from .info import info
+from .remote import remote
 from .manifest import manifest
 from .options import (
     command_option,
@@ -461,3 +462,4 @@ def group_filters(context, manifest_path, value):
 main.add_command(config)
 main.add_command(info)
 main.add_command(manifest)
+main.add_command(remote)

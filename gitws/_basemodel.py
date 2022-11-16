@@ -58,4 +58,8 @@ class BaseModel(pydantic.BaseModel, allow_mutation=False):
             if value:
                 return tuple(item.strip() for item in value.split(","))
             return tuple()
+        if type_ == "boolean":
+            if value:
+                return value.lower() in ("true", "1", "on")
+            return None
         assert False, f"Unknown type {type_}"
