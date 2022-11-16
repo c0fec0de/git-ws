@@ -66,11 +66,11 @@ def freeze(context, manifest_path=None, group_filters=None, output=None):
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
-        manifest = gws.get_manifest_spec(freeze=True, resolve=True)
+        manifest_spec = gws.get_manifest_spec(freeze=True, resolve=True)
         if output:
-            manifest.save(Path(output))
+            manifest_spec.save(Path(output))
         else:
-            click.echo(manifest.dump())
+            click.echo(manifest_spec.dump())
 
 
 @manifest.command()

@@ -24,6 +24,7 @@ from ._util import resolve_relative
 from .datamodel import GroupFilters, Groups, GroupSelects, Manifest, ManifestSpec, Project
 from .exceptions import GitCloneMissingOriginError, ManifestNotFoundError
 from .git import Git
+from .manifestfinder import find_manifest
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("git-ws")
@@ -92,7 +93,7 @@ class ManifestIter:
 
             # Recursive
             dep_project_path = self.workspace.get_project_path(dep_project)
-            dep_manifest_path = dep_project_path / dep_project.manifest_path
+            dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
             try:
                 dep_manifest_spec = ManifestSpec.load(dep_manifest_path)
             except ManifestNotFoundError:
@@ -201,7 +202,7 @@ class ProjectIter:
 
             # Recursive
             dep_project_path = self.workspace.get_project_path(dep_project)
-            dep_manifest_path = dep_project_path / dep_project.manifest_path
+            dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
             try:
                 dep_manifest = ManifestSpec.load(dep_manifest_path)
             except ManifestNotFoundError:

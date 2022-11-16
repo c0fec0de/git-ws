@@ -23,9 +23,11 @@ from pytest import fixture
 from gitws import GitWS
 from gitws.datamodel import ManifestSpec, ProjectSpec
 
+from .common import TESTDATA_PATH
+
 # pylint: disable=unused-import
 from .fixtures import git_repo
-from .util import chdir, check, cli, format_output, run
+from .util import assert_gen, chdir, check, cli, run
 
 
 @fixture(scope="session")
@@ -85,54 +87,14 @@ def gws(tmp_path, repos_submodules):
 def test_update(tmp_path, repos_submodules, gws):
     """Test update."""
     # pylint: disable=unused-argument
-    assert cli(["-vv", "submodule", "update"], tmp_path=tmp_path, repos_path=repos_submodules) == [
-        "git-ws INFO Workspace path=TMP/main main=main",
-        "git-ws INFO AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None)",
-        "git-ws DEBUG run(['git', 'describe', '--exact-match', '--tags'], cwd='.') OK "
-        "stdout=b'' stderr=b'fatal: No names found, cannot describe anything.\\n'",
-        "git-ws INFO Git('.').get_tag() = None",
-        "git-ws DEBUG run(['git', 'branch'], cwd='.') OK stdout=b'* main\\n' stderr=b''",
-        "git-ws INFO Git('.').get_branch() = 'main'",
-        "===== . (MAIN 'main', revision='main') =====",
-        "git-ws DEBUG run(['git', 'rev-parse', '--show-cdup'], cwd='.') OK stdout=b'\\n' stderr=b''",
-        "git-ws INFO Git('.').is_cloned() = True",
-        "git-ws DEBUG run(['git', 'describe', '--exact-match', '--tags'], cwd='.') OK "
-        "stdout=b'' stderr=b'fatal: No names found, cannot describe anything.\\n'",
-        "git-ws INFO Git('.').get_tag() = None",
-        "git-ws DEBUG run(['git', 'branch'], cwd='.') OK stdout=b'* main\\n' stderr=b''",
-        "git-ws INFO Git('.').get_branch() = 'main'",
-        "git-ws DEBUG run(('git', 'submodule', 'update'), cwd='.') OK stdout=None stderr=None",
-        "git-ws DEBUG run(['git', 'remote', '-v'], cwd='.') OK "
-        "stdout=b'origin\\tREPOS/main "
-        "(fetch)\\norigin\\tREPOS/main "
-        "(push)\\n' stderr=b''",
-        "git-ws INFO Git('.').get_url() = 'REPOS/main'",
-        "git-ws DEBUG ManifestSpec(group_filters=('-test',), dependencies=(ProjectSpec(name='dep1'),))",
-        "git-ws DEBUG Project(name='dep1', path='dep1', url='../dep1')",
-        "===== ../dep1 ('dep1') =====",
-        "git-ws DEBUG run(['git', 'rev-parse', '--show-cdup'], cwd='../dep1') OK stdout=b'\\n' stderr=b''",
-        "git-ws INFO Git('../dep1').is_cloned() = True",
-        "git-ws WARNING Clone dep1 has no revision!",
-        "git-ws DEBUG run(('git', 'submodule', 'update'), cwd='../dep1') OK stdout=None stderr=None",
-        "git-ws DEBUG run(['git', 'remote', '-v'], cwd='../dep1') OK "
-        "stdout=b'origin\\tREPOS/dep1 "
-        "(fetch)\\norigin\\tREPOS/dep1 "
-        "(push)\\n' stderr=b''",
-        "git-ws INFO Git('../dep1').get_url() = 'REPOS/dep1'",
-        "git-ws DEBUG ManifestSpec(dependencies=(ProjectSpec(name='dep2', revision='main'),))",
-        "git-ws DEBUG Project(name='dep2', path='dep2', url='../dep2', revision='main')",
-        "===== ../dep2 ('dep2', revision='main') =====",
-        "git-ws DEBUG run(['git', 'rev-parse', '--show-cdup'], cwd='../dep2') OK stdout=b'\\n' stderr=b''",
-        "git-ws INFO Git('../dep2').is_cloned() = True",
-        "git-ws DEBUG run(['git', 'describe', '--exact-match', '--tags'], "
-        "cwd='../dep2') OK stdout=b'' stderr=b'fatal: No names found, cannot describe "
-        "anything.\\n'",
-        "git-ws INFO Git('../dep2').get_tag() = None",
-        "git-ws DEBUG run(['git', 'branch'], cwd='../dep2') OK stdout=b'* main\\n' stderr=b''",
-        "git-ws INFO Git('../dep2').get_branch() = 'main'",
-        "git-ws DEBUG run(('git', 'submodule', 'update'), cwd='../dep2') OK stdout=None stderr=None",
-        "",
-    ]
+    genpath = tmp_path / "gen"
+    genpath.mkdir()
+
+    out = cli(["-vv", "submodule", "update"], tmp_path=tmp_path, repos_path=repos_submodules)
+    (genpath / "out.txt").write_text("\n".join(out))
+
+    refpath = TESTDATA_PATH / "cli_submodule" / "test_update"
+    assert_gen(genpath, refpath, tmp_path=tmp_path, repos_path=repos_submodules)
 
     workspace = gws.path
     check(workspace, "dep1")

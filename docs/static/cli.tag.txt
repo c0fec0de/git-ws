@@ -1,0 +1,13 @@
+Usage: git-ws tag [OPTIONS] NAME
+
+  Create git tag on main repository.
+
+  This includes freezing all dependencies.
+
+Options:
+  -m, --message TEXT         tag message
+  -M, --manifest FILE        Manifest file. Initial/Configuration settings by
+                             default.
+  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
+                             clone/init filter settings by default.
+  -h, --help                 Show this message and exit.

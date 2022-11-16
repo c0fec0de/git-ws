@@ -19,7 +19,13 @@
 from pathlib import Path
 
 GIT_WS_PATH = Path(".git-ws")
-"""The sub-folder in which the tool stores workspace related data, relative to the workspace folder."""
+"""
+The sub-folder in which the tool stores workspace related data.
+
+This path is relative to the workspace folder or the main project root.
+"""
+
+MANIFESTS_PATH = GIT_WS_PATH / "manifests"
 
 CONFIG_FILE_NAME = "config.toml"
 """Name of the config file in the :any:`GIT_WS_PATH`."""

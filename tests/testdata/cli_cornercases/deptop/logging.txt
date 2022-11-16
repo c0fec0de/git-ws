@@ -3,6 +3,8 @@ DEBUG   git-ws run(('git', 'clone', '--', 'REPOS/top', 'top/top'), cwd='None') O
 DEBUG   git-ws GitWS.create('TMP/top', 'TMP/top/top', manifest_path='None', group-filters=None)
 INFO    git-ws Workspace path=TMP/top main=top
 INFO    git-ws AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None)
+DEBUG   git-ws run(['git', 'branch'], cwd='top/top') OK stdout=b'* main\n' stderr=b''
+INFO    git-ws Git('TMP/top/top').get_branch() = 'main'
 DEBUG   git-ws run(['git', 'remote', '-v'], cwd='top/top') OK stdout=b'origin\tREPOS/top (fetch)\norigin\tREPOS/top (push)\n' stderr=b''
 INFO    git-ws Git('top/top').get_url() = 'REPOS/top'
 DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2')))
@@ -12,12 +14,16 @@ INFO    git-ws Git('top/dep1').clone('REPOS/dep1', revision=None)
 DEBUG   git-ws run(('git', 'clone', '--', 'REPOS/dep1', 'top/dep1'), cwd='None') OK stdout=None stderr=None
 INFO    git-ws Git('top/dep1').submodule_update(init=True, recursive=True)
 DEBUG   git-ws run(['git', 'submodule', 'update', '--init', '--recursive'], cwd='top/dep1') OK stdout=None stderr=b''
+DEBUG   git-ws run(['git', 'branch'], cwd='top/dep1') OK stdout=b'* main\n' stderr=b''
+INFO    git-ws Git('TMP/top/dep1').get_branch() = 'main'
 DEBUG   git-ws Project(name='dep2', path='dep2', url='REPOS/dep2')
 WARNING git-ws Clone dep2 has no revision!
 INFO    git-ws Git('top/dep2').clone('REPOS/dep2', revision=None)
 DEBUG   git-ws run(('git', 'clone', '--', 'REPOS/dep2', 'top/dep2'), cwd='None') OK stdout=None stderr=None
 INFO    git-ws Git('top/dep2').submodule_update(init=True, recursive=True)
 DEBUG   git-ws run(['git', 'submodule', 'update', '--init', '--recursive'], cwd='top/dep2') OK stdout=None stderr=b''
+DEBUG   git-ws run(['git', 'branch'], cwd='top/dep2') OK stdout=b'* main\n' stderr=b''
+INFO    git-ws Git('TMP/top/dep2').get_branch() = 'main'
 DEBUG   git-ws run(['git', 'remote', '-v'], cwd='top/dep1') OK stdout=b'origin\tREPOS/dep1 (fetch)\norigin\tREPOS/dep1 (push)\n' stderr=b''
 INFO    git-ws Git('top/dep1').get_url() = 'REPOS/dep1'
 DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep3', url='../dep3', revision='main'), ProjectSpec(name='top', url='../top')))
@@ -27,6 +33,8 @@ DEBUG   git-ws run(('git', 'clone', '--no-checkout', '--', 'REPOS/dep3', 'top/de
 DEBUG   git-ws run(['git', 'checkout', 'main'], cwd='top/dep3') OK stdout=b"Your branch is up to date with 'origin/main'.\n" stderr=b"Already on 'main'\n"
 INFO    git-ws Git('top/dep3').submodule_update(init=True, recursive=True)
 DEBUG   git-ws run(['git', 'submodule', 'update', '--init', '--recursive'], cwd='top/dep3') OK stdout=None stderr=b''
+DEBUG   git-ws run(['git', 'branch'], cwd='top/dep3') OK stdout=b'* main\n' stderr=b''
+INFO    git-ws Git('TMP/top/dep3').get_branch() = 'main'
 DEBUG   git-ws DUPLICATE Project(name='top', path='top', url='REPOS/top')
 DEBUG   git-ws run(['git', 'remote', '-v'], cwd='top/dep3') OK stdout=b'origin\tREPOS/dep3 (fetch)\norigin\tREPOS/dep3 (push)\n' stderr=b''
 INFO    git-ws Git('top/dep3').get_url() = 'REPOS/dep3'
