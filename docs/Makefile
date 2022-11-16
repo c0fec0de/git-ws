@@ -40,11 +40,17 @@ gen:
 	git-ws config get --help > static/cli.config.get.txt
 	git-ws config list --help > static/cli.config.list.txt
 	git-ws config set --help > static/cli.config.set.txt
+	git-ws default --help > static/cli.default.txt
 	git-ws deinit --help > static/cli.deinit.txt
+	git-ws dep add --help > static/cli.dep.add.txt
+	git-ws dep delete --help > static/cli.dep.delete.txt
+	git-ws dep list --help > static/cli.dep.list.txt
+	git-ws dep set --help > static/cli.dep.set.txt
 	git-ws diff --help > static/cli.diff.txt
 	git-ws fetch --help > static/cli.fetch.txt
 	git-ws foreach --help > static/cli.foreach.txt
 	git-ws git --help > static/cli.git.txt
+	git-ws group-filters --help > static/cli.group-filters.txt
 	git-ws info --help > static/cli.info.txt
 	git-ws info dep-tree --help > static/cli.info.dep-tree.txt
 	git-ws info main-path --help > static/cli.info.main-path.txt
@@ -63,6 +69,10 @@ gen:
 	git-ws pull --help > static/cli.pull.txt
 	git-ws push --help > static/cli.push.txt
 	git-ws rebase --help > static/cli.rebase.txt
+	git-ws remote --help > static/cli.remote.txt
+	git-ws remote add --help > static/cli.remote.add.txt
+	git-ws remote delete --help > static/cli.remote.delete.txt
+	git-ws remote list --help > static/cli.remote.list.txt
 	git-ws reset --help > static/cli.reset.txt
 	git-ws rm --help > static/cli.rm.txt
 	git-ws status --help > static/cli.status.txt

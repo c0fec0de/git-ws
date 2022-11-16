@@ -21,15 +21,15 @@ from pathlib import Path
 import click
 import coloredlogs  # type: ignore
 
-from gitws import AppConfig, GitWS, Defaults, ManifestSpec
+from gitws import AppConfig, Defaults, GitWS, ManifestSpec
 from gitws._util import resolve_relative
 from gitws.const import MANIFEST_PATH_DEFAULT
 from gitws.git import FileStatus, State
 
 from .common import COLOR_INFO, Context, Error, exceptionhandling, get_loglevel, pass_context
 from .config import config
+from .dep import dep
 from .info import info
-from .remote import remote
 from .manifest import manifest
 from .options import (
     command_option,
@@ -47,6 +47,7 @@ from .options import (
     reverse_option,
     update_option,
 )
+from .remote import remote
 
 _LOGGING_FORMAT = "%(name)s %(levelname)s %(message)s"
 
@@ -468,9 +469,10 @@ def default(context, manifest_path, name, value):
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
-        defaults = manifest_spec.defaults.update_fromstr(**{name: value if value else None})
+        defaults = manifest_spec.defaults.update_fromstr({name: value if value else None})
         manifest_spec = manifest_spec.update(defaults=defaults)
         manifest_spec.save(manifest_path)
+
 
 @main.command()
 @manifest_option(initial=True)
@@ -478,12 +480,12 @@ def default(context, manifest_path, name, value):
 @pass_context
 def group_filters(context, manifest_path, value):
     """
-    Set Default in Manifest.
+    Set Group Filter.
     """
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
-        manifest_spec = manifest_spec.update_fromstr(**{'group-filters': value if value else None})
+        manifest_spec = manifest_spec.update_fromstr({"group-filters": value if value else None})
         manifest_spec.save(manifest_path)
 
 
@@ -491,3 +493,4 @@ main.add_command(config)
 main.add_command(info)
 main.add_command(manifest)
 main.add_command(remote)
+main.add_command(dep)

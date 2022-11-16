@@ -36,14 +36,13 @@ class BaseModel(pydantic.BaseModel, allow_mutation=False):
         """Create new instance with updated arguments."""
         return self.__update(kwargs)
 
-    def update_fromstr(self, **kwargs):
+    def update_fromstr(self, kwargs):
         """Create new instance with updated arguments."""
-        fields = self.schema()['properties']
+        fields = self.schema()["properties"]
         data = {}
         for name, value in kwargs.items():
-            data[name] = self.__fromstr(fields[name]['type'], value)
+            data[name] = self.__fromstr(fields[name]["type"], value)
         return self.__update(data)
-
 
     def __update(self, kwargs):
         data = self.dict()

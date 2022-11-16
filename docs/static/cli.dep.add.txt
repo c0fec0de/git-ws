@@ -1,0 +1,16 @@
+Usage: git-ws dep add [OPTIONS] NAME
+
+  Add Dependency.
+
+Options:
+  --remote TEXT             Remote
+  --sub-url TEXT            Sub-URL
+  --url TEXT                URL
+  --revision TEXT           Revision
+  --path TEXT               Path
+  --dep-manifest-path TEXT  Dependency Manifest Path
+  --groups TEXT             Groups
+  --with-groups TEXT        With Groups
+  --submodules TEXT         Submodules
+  -M, --manifest FILE       Manifest file. 'git-ws.toml' by default.
+  -h, --help                Show this message and exit.

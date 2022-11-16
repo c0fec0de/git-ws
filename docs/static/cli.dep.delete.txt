@@ -1,0 +1,7 @@
+Usage: git-ws dep delete [OPTIONS] NAME
+
+  Delete Dependency.
+
+Options:
+  -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
+  -h, --help           Show this message and exit.

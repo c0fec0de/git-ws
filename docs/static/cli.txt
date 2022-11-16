@@ -8,25 +8,29 @@ Options:
   -h, --help     Show this message and exit.
 
 Commands:
-  add        Run 'git add' on paths and choose the right git clone...
-  checkout   Run 'git checkout' on paths and choose the right git clone...
-  clone      Create a git clone and initialize Git Workspace.
-  commit     Run 'git commit' on paths and choose the right git clone...
-  config     Read and modify configuration values.
-  deinit     Deinitialize Git Workspace.
-  diff       Run 'git diff' on paths (displayed paths include the actual...
-  fetch      Run 'git fetch' on projects.
-  foreach    Run 'command' on projects.
-  git        Run git command on projects.
-  info       Git Workspace Information.
-  init       Initialize Git Workspace.
-  manifest   Manifest Information.
-  pull       Run 'git pull' on projects.
-  push       Run 'git push' on projects (in reverse order).
-  rebase     Run 'git rebase' on projects.
-  reset      Run 'git reset' on paths and choose the right git clone...
-  rm         Run 'git rm' on paths and choose the right git clone...
-  status     Run 'git status' (displayed paths include the actual clone...
-  submodule  Run git submodule command on projects.
-  tag        Create git tag on main repository.
-  update     Create/update all dependent git clones.
+  add            Run 'git add' on paths and choose the right git clone...
+  checkout       Run 'git checkout' on paths and choose the right git...
+  clone          Create a git clone and initialize Git Workspace.
+  commit         Run 'git commit' on paths and choose the right git clone...
+  config         Read and modify configuration values.
+  default        Set Default in Manifest.
+  deinit         Deinitialize Git Workspace.
+  dep            Manage Dependencies.
+  diff           Run 'git diff' on paths (displayed paths include the...
+  fetch          Run 'git fetch' on projects.
+  foreach        Run 'command' on projects.
+  git            Run git command on projects.
+  group-filters  Set Group Filter.
+  info           Git Workspace Information.
+  init           Initialize Git Workspace.
+  manifest       Manifest Information.
+  pull           Run 'git pull' on projects.
+  push           Run 'git push' on projects (in reverse order).
+  rebase         Run 'git rebase' on projects.
+  remote         Manage Remotes.
+  reset          Run 'git reset' on paths and choose the right git clone...
+  rm             Run 'git rm' on paths and choose the right git clone...
+  status         Run 'git status' (displayed paths include the actual...
+  submodule      Run git submodule command on projects.
+  tag            Create git tag on main repository.
+  update         Create/update all dependent git clones.

@@ -46,7 +46,7 @@ from ._util import add_comment, add_info, as_dict, get_repr, resolve_relative
 from .const import MANIFEST_PATH_DEFAULT
 from .exceptions import ManifestError, ManifestNotFoundError
 
-_RE_GROUP = re.compile(r"\A[a-zA-Z0-9_][a-zA-Z0-9_\-]+\Z")
+_RE_GROUP = re.compile(r"\A[a-zA-Z0-9_][a-zA-Z0-9_\-]*\Z")
 
 ProjectPaths = Tuple[
     str,
@@ -467,7 +467,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     path: Optional[str] = None
     """Path within workspace. `name` will be used as default."""
 
-    manifest_path: str = str(MANIFEST_PATH_DEFAULT)
+    manifest_path: Optional[str] = Field(str(MANIFEST_PATH_DEFAULT), alias="manifest-path")
     """Path to the manifest file. Relative to `path`."""
 
     groups: Groups = Groups()
@@ -641,6 +641,18 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
                 names.add(name)
             else:
                 raise ValueError(f"Remote name {name!r} is used more than once")
+        return values
+
+    @root_validator(allow_reuse=True)
+    def _deps_unique(cls, values):
+        # pylint: disable=no-self-argument,no-self-use
+        names = set()
+        for dep in values.get("dependencies", None) or []:
+            name = dep.name
+            if name not in names:
+                names.add(name)
+            else:
+                raise ValueError(f"Dependency name {name!r} is used more than once")
         return values
 
     @validator("group_filters", allow_reuse=True)
