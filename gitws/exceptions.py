@@ -142,3 +142,12 @@ class GitCloneMissingOriginError(RuntimeError):
         super().__init__(f"Git Clone {str(project_path)!r} has not remote '{remote}'.")
         self.project_path = project_path
         self.remote = remote
+
+
+class GitTagExistsError(RuntimeError):
+
+    """Git Tag already exists."""
+
+    def __init__(self, tag):
+        super().__init__(f"tag {tag} already exists")
+        self.tag = tag

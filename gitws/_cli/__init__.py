@@ -404,10 +404,11 @@ def commit(context, manifest_path=None, group_filters=None, paths=None, message=
 @main.command()
 @click.argument("name")
 @click.option("--message", "-m", help="tag message")
+@click.option("--force", "-f", is_flag=True, help="replace the tag if exists")
 @manifest_option()
 @group_filters_option()
 @pass_context
-def tag(context, name, manifest_path=None, group_filters=None, message=None):
+def tag(context, name, manifest_path=None, group_filters=None, message=None, force=None):
     """
     Create git tag on main repository.
 
@@ -415,7 +416,7 @@ def tag(context, name, manifest_path=None, group_filters=None, message=None):
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        gws.tag(name, msg=message)
+        gws.tag(name, msg=message, force=force)
 
 
 @main.command()

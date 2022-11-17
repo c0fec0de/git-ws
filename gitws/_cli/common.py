@@ -28,6 +28,7 @@ from gitws import (
     GitCloneMissingError,
     GitCloneMissingOriginError,
     GitCloneNotCleanError,
+    GitTagExistsError,
     ManifestNotFoundError,
     NoGitError,
     UninitializedError,
@@ -118,6 +119,9 @@ def exceptionhandling(context: Context):
     except GitCloneMissingOriginError as exc:
         _print_traceback(context)
         raise Error(f"{exc!s} Try:\n\n    git remote add origin <URL>\n") from None
+    except GitTagExistsError as exc:
+        _print_traceback(context)
+        raise Error(f"{exc!s} Try:\n\nChoose another name or use '--force'\n") from None
     except CalledProcessError as exc:
         _print_traceback(context)
         cmd = shlex.join(exc.cmd)
