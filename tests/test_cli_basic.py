@@ -207,3 +207,9 @@ def test_git_no_color(tmp_path, gws, caplog, repos):
         tmp_path=tmp_path,
         repos_path=repos,
     )
+
+
+def test_foreach_missing(tmp_path, gws):
+    """Test git."""
+    # pylint: disable=unused-argument
+    assert cli(["foreach"], exit_code=1) == ["Error: COMMAND is required", ""]

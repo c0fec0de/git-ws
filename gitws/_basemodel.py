@@ -61,4 +61,4 @@ class BaseModel(pydantic.BaseModel, allow_mutation=False):
             if value:
                 return value.lower() in ("true", "1", "on")
             return None
-        assert False, f"Unknown type {type_}"
+        assert False, f"Unknown type {type_}"  # pragma: no cover

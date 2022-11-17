@@ -683,16 +683,19 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         except Exception as exc:
             raise ManifestError(resolve_relative(path), str(exc)) from None
 
-    def dump(self, doc: Optional[tomlkit.TOMLDocument] = None, path: Optional[Path] = None) -> str:
+    def dump(
+        self, doc: Optional[tomlkit.TOMLDocument] = None, path: Optional[Path] = None, minimal: bool = False
+    ) -> str:
         """
         Return :any:`ManifestSpec` as string.
 
         The output will include an inline documentation of all available options.
         If `doc` or `path` are specified, any additional attributes and comments are **kept**.
 
-        Args:
+        Keyword Args:
             doc: Existing document to be updated.
             path: Path to possibly existing document.
+            minimal: Skip unset
         """
         assert not doc or not path, "'doc' and 'path' are mutually exclusive."
         if doc is None:
@@ -700,7 +703,17 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
                 doc = tomlkit.parse(path.read_text())
             else:
                 doc = self._create()
-        for key, value in as_dict(self).items():
+        if minimal:
+            data = as_dict(self)
+        else:
+            data = {
+                "remotes": tomlkit.aot(),
+                "group-filters": tuple(),
+                "defaults": dict(),
+                "dependencies": tomlkit.aot(),
+            }
+            data.update(as_dict(self))
+        for key, value in data.items():
             doc[key] = value
         return tomlkit.dumps(doc)
 
@@ -763,14 +776,14 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
 
         # Group Filtering
         example = ManifestSpec(group_filters=GroupFilters(("+test", "-doc", "+feature@path")))
-        add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
         doc.add("group-filters", tomlkit.array())
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
 
         # Remotes
         example = ManifestSpec(remotes=[Remote(name="myremote", url_base="https://github.com/myuser")])
-        add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
         doc.add("remotes", tomlkit.aot())
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
@@ -782,7 +795,7 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
                 remote="myserver", revision="main", groups=("+test",), with_groups=("doc",), submodules=True
             )
         )
-        add_comment(doc, "\n".join(example.dump(doc=tomlkit.document()).split("\n")[1:-1]))
+        add_comment(doc, "\n".join(example.dump(doc=tomlkit.document(), minimal=True).split("\n")[1:-1]))
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
 
@@ -801,7 +814,7 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
                 )
             ]
         )
-        add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
         doc.add(tomlkit.nl())
 
         add_info(doc, "A full flavored dependency using a 'url':")
@@ -817,12 +830,12 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
                 )
             ]
         )
-        add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
         doc.add(tomlkit.nl())
 
         add_info(doc, "A minimal dependency:")
         example = ManifestSpec(dependencies=[ProjectSpec(name="my", submodules=None)])
-        add_comment(doc, example.dump(doc=tomlkit.document())[:-1])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
 
         doc.add("dependencies", tomlkit.aot())
 

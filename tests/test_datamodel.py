@@ -218,7 +218,6 @@ group-filters = ["+test"]
 [defaults]
 remote = "remote"
 
-
 [[remotes]]
 name = "remote"
 
@@ -239,6 +238,7 @@ name = "remote"
 
 [defaults]
 remote = "remote"
+
 
 [[dependencies]]
 name = "dep"

@@ -38,6 +38,7 @@ group-filters = []
 
 
 [defaults]
+
 # remote = "myserver"
 # revision = "main"
 # groups = ["+test"]
