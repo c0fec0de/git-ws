@@ -65,7 +65,7 @@ def test_dep_tree(tmp_path, gws):
         "main",
         "├── dep1",
         "│   └── dep4 (revision='main')",
-        "├── dep2 (revision='1-feature')",
+        "├── dep2 (revision='1-feature', submodules=False)",
         "│   ├── dep3 (revision='main', groups='test')",
         "│   └── dep4 (revision='main')*",
         "└── dep3 (groups='test')*",

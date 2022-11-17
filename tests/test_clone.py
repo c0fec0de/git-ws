@@ -33,6 +33,9 @@ def test_clone(tmp_path, repos):
         gws = GitWS.clone(str(repos / "main"))
         assert gws.path == workspace
 
+        for clone in gws.clones():
+            clone.check(exists=False, no_revision=True)
+
         gws.update()
         assert gws.get_manifest().path == str(workspace / "main" / "git-ws.toml")
 
@@ -50,7 +53,7 @@ def test_clone(tmp_path, repos):
         assert list(gws.projects()) == [
             Project(name="main", path="main", revision="main", is_main=True),
             Project(name="dep1", path="dep1", url="../dep1"),
-            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature", submodules=False),
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
         ]
         assert list(gws.manifests()) == [
@@ -58,7 +61,7 @@ def test_clone(tmp_path, repos):
                 group_filters=("-test",),
                 dependencies=(
                     Project(name="dep1", path="dep1", url="../dep1"),
-                    Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+                    Project(name="dep2", path="dep2", url="../dep2", revision="1-feature", submodules=False),
                     Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
                 ),
                 path=str(workspace / "main" / "git-ws.toml"),
@@ -79,7 +82,7 @@ def test_clone(tmp_path, repos):
         assert list(str(item) for item in gws.clones()) == [
             "Clone(Project(name='main', path='main', revision='main', is_main=True), Git(PosixPath('main/main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
-            "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature'), "
+            "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature', submodules=False), "
             "Git(PosixPath('main/dep2')))",
             "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('main/dep4')))",
         ]
@@ -110,7 +113,7 @@ def test_clone_groups(tmp_path, repos):
         assert list(gws.projects()) == [
             Project(name="main", path="main", revision="main", is_main=True),
             Project(name="dep1", path="dep1", url="../dep1"),
-            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature", submodules=False),
             Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
             Project(name="dep4", path="dep4", url="../dep4", revision="main"),
         ]
@@ -119,7 +122,7 @@ def test_clone_groups(tmp_path, repos):
                 group_filters=("-test",),
                 dependencies=(
                     Project(name="dep1", path="dep1", url="../dep1"),
-                    Project(name="dep2", path="dep2", url="../dep2", revision="1-feature"),
+                    Project(name="dep2", path="dep2", url="../dep2", revision="1-feature", submodules=False),
                     Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
                 ),
                 path=str(workspace / "main" / "git-ws.toml"),
@@ -145,7 +148,7 @@ def test_clone_groups(tmp_path, repos):
             "Clone(Project(name='main', path='main', revision='main', is_main=True), Git(PosixPath('main/main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
             "Clone(Project(name='dep2', path='dep2', url='../dep2', "
-            "revision='1-feature'), Git(PosixPath('main/dep2')))",
+            "revision='1-feature', submodules=False), Git(PosixPath('main/dep2')))",
             "Clone(Project(name='dep3', path='dep3', url='../dep3', groups=('test',)), Git(PosixPath('main/dep3')))",
             "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('main/dep4')))",
         ]

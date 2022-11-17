@@ -106,6 +106,7 @@ def test_freeze(tmp_path, gws, repos):
         "",
         "",
         "[defaults]",
+        "",
         '# remote = "myserver"',
         '# revision = "main"',
         '# groups = ["+test"]',
@@ -144,7 +145,7 @@ def test_freeze(tmp_path, gws, repos):
         'url = "../dep2"',
         f'revision = "{sha2}"',
         'path = "dep2"',
-        "submodules = true",
+        "submodules = false",
         "",
         "[[dependencies]]",
         'name = "dep4"',
@@ -173,6 +174,7 @@ def test_freeze(tmp_path, gws, repos):
         "",
         "",
         "[defaults]",
+        "",
         '# remote = "myserver"',
         '# revision = "main"',
         '# groups = ["+test"]',
@@ -211,7 +213,7 @@ def test_freeze(tmp_path, gws, repos):
         'url = "../dep2"',
         f'revision = "{sha2}"',
         'path = "dep2"',
-        "submodules = true",
+        "submodules = false",
         "",
         "[[dependencies]]",
         'name = "dep3"',
@@ -235,7 +237,7 @@ def test_freeze(tmp_path, gws, repos):
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
@@ -255,7 +257,7 @@ def test_freeze(tmp_path, gws, repos):
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "Pulling branch 'main'.",
-        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "Pulling branch '1-feature'.",
         "===== dep3 ('dep3', groups='test') =====",
         "git-ws WARNING Clone dep3 (groups='test') has no revision!",
@@ -280,7 +282,7 @@ def test_freeze(tmp_path, gws, repos):
         f"===== dep1 ('dep1', revision={sha1!r}) =====",
         "Fetching.",
         f"HEAD is now at {sha1s} initial",
-        f"===== dep2 ('dep2', revision={sha2!r}) =====",
+        f"===== dep2 ('dep2', revision={sha2!r}, submodules=False) =====",
         "Fetching.",
         f"HEAD is now at {sha2s} feature",
         f"===== dep4 ('dep4', revision={sha4!r}) =====",
@@ -297,7 +299,7 @@ def test_freeze(tmp_path, gws, repos):
         "Pulling branch 'main'.",
         f"===== dep1 ('dep1', revision={sha1!r}) =====",
         "Nothing to do.",
-        f"===== dep2 ('dep2', revision={sha2!r}) =====",
+        f"===== dep2 ('dep2', revision={sha2!r}, submodules=False) =====",
         "Nothing to do.",
         f"===== dep4 ('dep4', revision={sha4!r}) =====",
         "Nothing to do.",
@@ -328,6 +330,7 @@ def test_resolve(tmp_path, gws):
         "",
         "",
         "[defaults]",
+        "",
         '# remote = "myserver"',
         '# revision = "main"',
         '# groups = ["+test"]',
@@ -365,7 +368,7 @@ def test_resolve(tmp_path, gws):
         'url = "../dep2"',
         'revision = "1-feature"',
         'path = "dep2"',
-        "submodules = true",
+        "submodules = false",
         "",
         "[[dependencies]]",
         'name = "dep4"',
@@ -409,6 +412,9 @@ def test_upgrade(tmp_path):
     manifest_path = tmp_path / "my.toml"
     manifest_path.write_text(
         """
+version = "0.9"
+[defaults]
+remote = "myremote"
 """
     )
     assert cli(["manifest", "upgrade", "-M", str(manifest_path)]) == [
@@ -435,6 +441,8 @@ group-filters = []
 
 
 [defaults]
+remote = "myremote"
+
 # remote = "myserver"
 # revision = "main"
 # groups = ["+test"]
@@ -510,6 +518,7 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
         "",
         "",
         "[defaults]",
+        "",
         '# remote = "myserver"',
         '# revision = "main"',
         '# groups = ["+test"]',

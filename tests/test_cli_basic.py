@@ -51,7 +51,7 @@ def test_push(tmp_path, gws):
     # pylint: disable=unused-argument
     assert cli(("push",)) == [
         "===== dep4 ('dep4', revision='main') =====",
-        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== main (MAIN 'main', revision='main') =====",
@@ -102,7 +102,7 @@ def test_git(tmp_path, gws):
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
@@ -110,7 +110,7 @@ def test_git(tmp_path, gws):
     assert cli(["git", "status", "-P", "dep2", "-P", "./dep4"]) == [
         "===== SKIPPING main (MAIN 'main', revision='main') =====",
         "===== SKIPPING dep1 ('dep1') =====",
-        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
@@ -123,7 +123,7 @@ def test_foreach(tmp_path, gws, caplog, repos):
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
@@ -132,7 +132,7 @@ def test_foreach(tmp_path, gws, caplog, repos):
     )
 
 
-def test_foreach_missing(tmp_path, gws, caplog):
+def test_foreach_clone_missing(tmp_path, gws, caplog):
     """Test foreach."""
     # pylint: disable=unused-argument
     rmtree(tmp_path / "main" / "dep2")
@@ -140,7 +140,7 @@ def test_foreach_missing(tmp_path, gws, caplog):
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "Error: Git Clone 'dep2' is missing. Try:",
         "",
         "    git ws update",
@@ -182,7 +182,7 @@ def _test_foreach(tmp_path, gws, *command):
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
@@ -196,7 +196,7 @@ def test_git_no_color(tmp_path, gws, caplog, repos):
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "===== dep2 ('dep2', revision='1-feature') =====",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
@@ -207,3 +207,9 @@ def test_git_no_color(tmp_path, gws, caplog, repos):
         tmp_path=tmp_path,
         repos_path=repos,
     )
+
+
+def test_foreach_command_missing(tmp_path, gws):
+    """Test git."""
+    # pylint: disable=unused-argument
+    assert cli(["foreach"], exit_code=1) == ["Error: COMMAND is required", ""]

@@ -116,6 +116,6 @@ def add_comment(doc: tomlkit.TOMLDocument, text):
         doc.add(tomlkit.items.Comment(tomlkit.items.Trivia(comment_ws="  ", comment=comment)))
 
 
-def as_dict(obj):
+def as_dict(obj, exclude_defaults: bool = True):
     """Transform to dictionary."""
-    return obj.dict(by_alias=True, exclude_none=True, exclude_defaults=True)
+    return obj.dict(by_alias=True, exclude_none=True, exclude_defaults=exclude_defaults)
