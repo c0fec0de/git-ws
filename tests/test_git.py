@@ -16,6 +16,7 @@
 
 """Git Testing."""
 import re
+from pathlib import Path
 
 from pytest import fixture
 
@@ -34,12 +35,18 @@ def is_sha(sha):
 @fixture
 def git(tmp_path) -> Git:
     """Testfixture with initialized GIT repo."""
-    git = Git(tmp_path)
+    path = tmp_path / "git"
+    path.mkdir()
+    git = Git(path)
     assert not git.is_cloned()
-    run(("git", "init"), cwd=tmp_path)
-    run(("git", "checkout", "-b", "main"), cwd=tmp_path)
+    run(("git", "init"), cwd=path)
+    run(("git", "checkout", "-b", "main"), cwd=path)
     git.set_config("user.email", "you@example.com")
     git.set_config("user.name", "you")
+
+    (path / "file.txt").touch()
+    git.add((Path("file.txt"),))
+    git.commit("file")
     return git
 
 
@@ -133,6 +140,8 @@ def test_git_status(git):
 
     (path / "data.txt").touch()
     (path / "other.txt").touch()
+
+    assert git.diff() is None
 
     assert [str(item) for item in git.status()] == ["?? data.txt", "?? other.txt"]
 
@@ -232,3 +241,18 @@ def test_git_empty(git):
     (path / "new.txt").touch()
 
     assert not git.is_empty()
+
+
+def test_git_empty_stash(tmp_path, git):
+    """Empty Stash."""
+    clone_path = tmp_path / "clone"
+    clone_path.mkdir()
+    clone = Git(clone_path)
+    clone.clone(str(git.path))
+
+    assert clone.is_empty()
+
+    (clone_path / "foo.txt").touch()
+    run(("git", "stash", "-u"), cwd=clone_path)
+
+    assert not clone.is_empty()

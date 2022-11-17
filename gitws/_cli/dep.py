@@ -137,7 +137,12 @@ def delete(context, name, manifest_path):
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
-        manifest_spec = manifest_spec.update(
-            dependencies=[dep for dep in manifest_spec.dependencies if dep.name != name]
-        )
+        dependencies = list(manifest_spec.dependencies)
+        for idx, dep in enumerate(manifest_spec.dependencies):
+            if dep.name == name:
+                break
+        else:
+            raise ValueError(f"Unknown dependency {name!r}")
+        dependencies.pop(idx)
+        manifest_spec = manifest_spec.update(dependencies=dependencies)
         manifest_spec.save(manifest_path)

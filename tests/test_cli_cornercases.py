@@ -74,7 +74,7 @@ def repos_deptop():
         yield repos_path
 
 
-def test_deptop(tmp_path, repos_deptop, caplog):
+def test_deptop(tmp_path, repos_deptop, caplog, capsys):
     """Initialized :any:`GitWS` on `repos_deptop`."""
     workspace = tmp_path / "top"
 
@@ -97,6 +97,7 @@ def test_deptop(tmp_path, repos_deptop, caplog):
         tmp_path / "gen",
         TESTDATA_PATH / "cli_cornercases" / "deptop",
         caplog=caplog,
+        capsys=capsys,
         tmp_path=tmp_path,
         repos_path=repos_deptop,
     )

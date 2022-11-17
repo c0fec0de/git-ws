@@ -49,7 +49,7 @@ def test_tag(tmp_path, repos):
             "===== main/dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
             "Cloning 'REPOS/dep1'.",
-            "===== main/dep2 ('dep2', revision='1-feature') =====",
+            "===== main/dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Cloning 'REPOS/dep2'.",
             "===== main/dep4 ('dep4', revision='main') =====",
             "Cloning 'REPOS/dep4'.",
@@ -67,6 +67,8 @@ def test_tag(tmp_path, repos):
     dep4_shas = dep4_sha[:7]
 
     with chdir(workspace):
+        main_git.tag("OTHERTAG")
+
         # create tag
         assert not (workspace / "main" / MANIFESTS_PATH / "MYTAG.toml").exists()
         set_meta(path=main_git.path)
@@ -88,7 +90,7 @@ def test_tag(tmp_path, repos):
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
-            "===== dep2 ('dep2', revision='1-feature') =====",
+            "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
@@ -107,7 +109,7 @@ def test_tag(tmp_path, repos):
             "===== main (MAIN 'main', revision='MYTAG') =====",
             f"===== dep1 ('dep1', revision='{dep1_sha}') " "=====",
             f"HEAD is now at {dep1_shas} initial",
-            f"===== dep2 ('dep2', revision='{dep2_sha}') " "=====",
+            f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
             f"HEAD is now at {dep2_shas} feature",
             f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
             f"HEAD is now at {dep4_shas} initial",
@@ -120,10 +122,23 @@ def test_tag(tmp_path, repos):
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
-            "===== dep2 ('dep2', revision='1-feature') =====",
+            "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Switched to branch '1-feature'",
             "===== dep4 ('dep4', revision='main') =====",
             "Switched to branch 'main'",
+            "",
+        ]
+
+        # checkout other tag
+        main_git.checkout(revision="OTHERTAG")
+        assert cli(("checkout",)) == [
+            "===== main (MAIN 'main', revision='OTHERTAG') =====",
+            "===== dep1 ('dep1') =====",
+            "git-ws WARNING Clone dep1 has no revision!",
+            "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+            "Already on '1-feature'",
+            "===== dep4 ('dep4', revision='main') =====",
+            "Already on 'main'",
             "",
         ]
 
@@ -145,7 +160,7 @@ def test_tag(tmp_path, repos):
             "===== other/dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
             "Cloning 'REPOS/dep1'.",
-            "===== other/dep2 ('dep2', revision='1-feature') =====",
+            "===== other/dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Cloning 'REPOS/dep2'.",
             "===== other/dep4 ('dep4', revision='main') =====",
             "Cloning 'REPOS/dep4'.",
@@ -160,7 +175,7 @@ def test_tag(tmp_path, repos):
             "===== main (MAIN 'main', revision='MYTAG') =====",
             f"===== dep1 ('dep1', revision='{dep1_sha}') " "=====",
             f"HEAD is now at {dep1_shas} initial",
-            f"===== dep2 ('dep2', revision='{dep2_sha}') " "=====",
+            f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
             f"HEAD is now at {dep2_shas} feature",
             f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
             f"HEAD is now at {dep4_shas} initial",
@@ -171,7 +186,7 @@ def test_tag(tmp_path, repos):
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
-            "===== dep2 ('dep2', revision='1-feature') =====",
+            "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Switched to branch '1-feature'",
             "===== dep4 ('dep4', revision='main') =====",
             "Switched to branch 'main'",
@@ -243,7 +258,7 @@ def test_tag_dep(tmp_path, repos):
             "Pulling branch 'main'.",
             "===== dep1 ('dep1', revision='DEP1TAG') =====",
             "Cloning 'REPOS/dep1'.",
-            "===== dep2 ('dep2', revision='1-feature') =====",
+            "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Cloning 'REPOS/dep2'.",
             f"===== dep4 ('dep4', revision='{sha4}') =====",
             "Cloning 'REPOS/dep4'.",

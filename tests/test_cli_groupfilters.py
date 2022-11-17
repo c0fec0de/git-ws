@@ -17,7 +17,7 @@
 """Command Line Interface."""
 from pathlib import Path
 
-from gitws import Defaults, ManifestSpec
+from gitws import ManifestSpec
 
 from .util import chdir, cli
 

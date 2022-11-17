@@ -268,7 +268,7 @@ class Defaults(BaseModel):
     """Initialize and Update `git submodules`."""
 
 
-class Project(BaseModel):
+class Project(BaseModel, allow_population_by_field_name=True):
 
     """
     Project.
@@ -707,9 +707,10 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
             data = as_dict(self)
         else:
             data = {
+                "version": ManifestSpec().version,
                 "remotes": tomlkit.aot(),
                 "group-filters": tuple(),
-                "defaults": dict(),
+                "defaults": {},
                 "dependencies": tomlkit.aot(),
             }
             data.update(as_dict(self))
@@ -752,6 +753,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
             newdoc[key] = value
         for key, value in as_dict(obj).items():
             newdoc[key] = value
+        newdoc["version"] = "1.0"
 
         # write
         path.write_text(tomlkit.dumps(newdoc))

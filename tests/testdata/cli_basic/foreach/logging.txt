@@ -11,7 +11,7 @@ INFO    git-ws Git('main').get_branch() = 'main'
 DEBUG   git-ws run(('git', 'status'), cwd='main') OK stdout=None stderr=None
 DEBUG   git-ws run(['git', 'remote', '-v'], cwd='main') OK stdout=b'origin\tREPOS/main (fetch)\norigin\tREPOS/main (push)\n' stderr=b''
 INFO    git-ws Git('main').get_url() = 'REPOS/main'
-DEBUG   git-ws ManifestSpec(group_filters=('-test',), dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2', revision='1-feature'), ProjectSpec(name='dep3', url='../dep3', groups=('test',))))
+DEBUG   git-ws ManifestSpec(group_filters=('-test',), dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2', revision='1-feature', submodules=False), ProjectSpec(name='dep3', url='../dep3', groups=('test',))))
 DEBUG   git-ws Project(name='dep1', path='dep1', url='../dep1')
 DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\n' stderr=b''
 INFO    git-ws Git('dep1').is_cloned() = True
@@ -19,7 +19,7 @@ WARNING git-ws Clone dep1 has no revision!
 DEBUG   git-ws run(('git', 'status'), cwd='dep1') OK stdout=None stderr=None
 DEBUG   git-ws run(['git', 'branch'], cwd='dep1') OK stdout=b'* main\n' stderr=b''
 INFO    git-ws Git('TMP/main/dep1').get_branch() = 'main'
-DEBUG   git-ws Project(name='dep2', path='dep2', url='../dep2', revision='1-feature')
+DEBUG   git-ws Project(name='dep2', path='dep2', url='../dep2', revision='1-feature', submodules=False)
 DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep2') OK stdout=b'\n' stderr=b''
 INFO    git-ws Git('dep2').is_cloned() = True
 DEBUG   git-ws run(['git', 'branch'], cwd='dep2') OK stdout=b'* 1-feature\n  main\n' stderr=b''

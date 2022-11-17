@@ -108,6 +108,7 @@ def test_project():
     assert project.manifest_path == "git-ws.toml"
     assert project.groups == Groups()
     assert project.with_groups == Groups()
+    assert project.info == "name (path='path')"
 
     # Immutable
     with raises(TypeError):
@@ -116,8 +117,17 @@ def test_project():
     with raises(ValueError):
         Project(name="name", path="path", groups=("-foo",))
 
-    # with raises(ValueError):
-    Project(name="name", path="path", with_groups=("-foo",))
+    with raises(ValueError):
+        Project(name="name", path="path", with_groups=("-foo",))
+
+    project = Project(name="name", path="path", url="url", is_main=True, groups=("a", "b"), with_groups=("c", "d"))
+    assert project.name == "name"
+    assert project.url == "url"
+    assert project.revision is None
+    assert project.manifest_path == "git-ws.toml"
+    assert project.groups == Groups(("a", "b"))
+    assert project.with_groups == Groups(("c", "d"))
+    assert project.info == "name (MAIN path='path', groups='a,b')"
 
 
 def test_project_spec():
@@ -218,6 +228,7 @@ group-filters = ["+test"]
 [defaults]
 remote = "remote"
 
+
 [[remotes]]
 name = "remote"
 
@@ -238,7 +249,6 @@ name = "remote"
 
 [defaults]
 remote = "remote"
-
 
 [[dependencies]]
 name = "dep"

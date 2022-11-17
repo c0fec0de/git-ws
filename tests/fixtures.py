@@ -111,7 +111,7 @@ def create_repos(repos_path):
             group_filters=("-test",),
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
-                ProjectSpec(name="dep2", url="../dep2", revision="1-feature"),
+                ProjectSpec(name="dep2", url="../dep2", revision="1-feature", submodules=False),
                 ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
             ],
         ).save(path / "git-ws.toml")
