@@ -6,6 +6,7 @@ Usage: git-ws tag [OPTIONS] NAME
 
 Options:
   -m, --message TEXT         tag message
+  -f, --force                replace the tag if exists
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by
                              default.
   -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial

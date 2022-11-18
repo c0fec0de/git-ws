@@ -50,6 +50,7 @@ from .exceptions import (
     GitCloneMissingError,
     GitCloneMissingOriginError,
     GitCloneNotCleanError,
+    GitTagExistsError,
     InitializedError,
     InvalidConfigurationFileError,
     InvalidConfigurationLocationError,

@@ -399,7 +399,7 @@ class Git:
             args.append("--all")
         self._run(args, paths=paths)
 
-    def tag(self, name: str, msg: Optional[str] = None):
+    def tag(self, name: str, msg: Optional[str] = None, force: bool = False):
         """
         Create Tag.
 
@@ -408,12 +408,22 @@ class Git:
 
         Keyword Args:
             msg: Message.
+            force: Replace tag if exists.
         """
         _LOGGER.info("Git(%r).tag(%r, msg=%r)", str(self.path), name, msg)
         args = ["tag", name]
+        if force:
+            args.append("--force")
         if msg:
             args += ["-m", msg]
         self._run(args)
+
+    def get_tags(self, pattern: Optional[str] = None) -> Tuple[str, ...]:
+        """Get Tags matching `pattern` or all."""
+        cmd = ["tag", "-l"]
+        if pattern:
+            cmd.append(pattern)
+        return tuple(self._run2lines(cmd, skip_empty=True))
 
     def status(self, paths: Optional[Paths] = None, branch: bool = False) -> Generator[Status, None, None]:
         """
@@ -534,6 +544,11 @@ class Git:
             return None
         return value
 
-    def _run2lines(self, args: Args, paths: Optional[Paths] = None, check=True, regex=None) -> List[str]:
+    def _run2lines(
+        self, args: Args, paths: Optional[Paths] = None, check=True, regex=None, skip_empty: bool = False
+    ) -> List[str]:
         result = self._run2str(args, paths=paths, check=check, regex=regex) or ""
-        return result.split("\n")
+        lines = result.split("\n")
+        if skip_empty:
+            lines = [line for line in lines if line]
+        return lines

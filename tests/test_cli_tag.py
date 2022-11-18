@@ -227,11 +227,13 @@ def test_tag_dep(tmp_path, repos):
         # introduce changes
         (repos / "dep1" / "change.txt").touch()
         dep1_git = Git(repos / "dep1")
+        set_meta(path=dep1_git.path)
         dep1_git.add((Path("change.txt"),))
         dep1_git.commit(msg="change dep1")
 
         (repos / "dep4" / "change.txt").touch()
         dep4_git = Git(repos / "dep4")
+        set_meta(path=dep4_git.path)
         sha4 = dep4_git.get_sha()
         dep4_git.add((Path("change.txt"),))
         dep4_git.commit(msg="change dep4")
@@ -269,5 +271,70 @@ def test_tag_dep(tmp_path, repos):
             str(main_workspace / "main" / "git-ws.toml"),
             str(main_workspace / "dep1" / MANIFESTS_PATH / "DEP1TAG.toml"),
             str(main_workspace / "dep2" / "git-ws.toml"),
+            "",
+        ]
+
+
+def test_tag_overwrite(tmp_path, repos):
+    """Create Tag."""
+    workspace = tmp_path / "main"
+
+    with chdir(tmp_path):
+        cli(["clone", str(repos / "main"), "--update"], tmp_path=tmp_path, repos_path=repos)
+
+    main_git = Git(workspace / "main")
+    dep1_git = Git(workspace / "dep1")
+    dep1_sha = Git(workspace / "dep1").get_sha()
+    dep2_sha = Git(workspace / "dep2").get_sha()
+    dep4_sha = Git(workspace / "dep4").get_sha()
+    dep1_shas = dep1_sha[:7]
+    dep2_shas = dep2_sha[:7]
+    dep4_shas = dep4_sha[:7]
+
+    with chdir(workspace):
+        # shorten output
+        cli(("git", "config", "advice.detachedHead", "false"))
+
+        # create tag
+        set_meta(path=main_git.path)
+        assert cli(("tag", "MYTAG")) == ["===== main (MAIN 'main', revision='main') =====", ""]
+
+        mytag = (workspace / "main" / MANIFESTS_PATH / "MYTAG.toml").read_text()
+
+        (workspace / "dep1" / "foo.txt").touch()
+        set_meta(path=dep1_git.path)
+        dep1_git.add((Path("foo.txt"),))
+        dep1_git.commit("change")
+
+        dep1_sha = Git(workspace / "dep1").get_sha()
+        dep1_shas = dep1_sha[:7]
+
+        assert cli(("tag", "MYTAG"), exit_code=1) == [
+            "===== main (MAIN 'main', revision='main') =====",
+            "Error: tag MYTAG already exists Try:",
+            "",
+            "Choose another name or use '--force'",
+            "",
+            "",
+        ]
+        assert (workspace / "main" / MANIFESTS_PATH / "MYTAG.toml").read_text() == mytag
+
+        assert cli(("tag", "MYTAG", "--force")) == [
+            "===== main (MAIN 'main', revision='main') =====",
+            "",
+        ]
+
+        assert (workspace / "main" / MANIFESTS_PATH / "MYTAG.toml").read_text() != mytag
+
+        # checkout TAG
+        main_git.checkout(revision="MYTAG")
+        assert cli(("checkout",)) == [
+            "===== main (MAIN 'main', revision='MYTAG') =====",
+            f"===== dep1 ('dep1', revision='{dep1_sha}') " "=====",
+            f"HEAD is now at {dep1_shas} change",
+            f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
+            f"HEAD is now at {dep2_shas} feature",
+            f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
+            f"HEAD is now at {dep4_shas} initial",
             "",
         ]

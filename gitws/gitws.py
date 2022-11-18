@@ -30,7 +30,7 @@ from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
 from .datamodel import GroupFilters, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
 from .deptree import DepNode, get_deptree
-from .exceptions import GitCloneNotCleanError, InitializedError, ManifestExistError
+from .exceptions import GitCloneNotCleanError, GitTagExistsError, InitializedError, ManifestExistError
 from .git import DiffStat, Git, Status
 from .iters import ManifestIter, ProjectIter
 from .manifestfinder import find_manifest
@@ -507,7 +507,7 @@ class GitWS:
                 clone.check()
                 clone.git.commit(msg, all_=all_)
 
-    def tag(self, name: str, msg: Optional[str] = None):
+    def tag(self, name: str, msg: Optional[str] = None, force: bool = False):
         """
         Create Git Tag.
 
@@ -520,16 +520,22 @@ class GitWS:
         clone = Clone.from_project(self.workspace, next(self.projects()), secho=self.secho)
         self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
         git = clone.git
+        # check
+        if not force and git.get_tags(name):
+            raise GitTagExistsError(name)
         # freeze
         manifest_path = MANIFESTS_PATH / f"{name}.toml"
         manifest_spec = self.get_manifest_spec(freeze=True, resolve=True)
         (self.main_path / MANIFESTS_PATH).mkdir(exist_ok=True, parents=True)
+        (self.main_path / manifest_path).touch()
         manifest_spec.save(self.main_path / manifest_path)
         # commit
-        git.add((manifest_path,), force=True)
-        git.commit(msg or name, paths=(manifest_path,))
+        paths = (manifest_path,)
+        git.add(paths, force=True)
+        if any(git.status(paths=paths)):
+            git.commit(msg or name, paths=paths)
         # tag
-        git.tag(name, msg=msg)
+        git.tag(name, msg=msg, force=force)
 
     def run_foreach(
         self,
