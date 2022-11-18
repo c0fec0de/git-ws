@@ -227,11 +227,13 @@ def test_tag_dep(tmp_path, repos):
         # introduce changes
         (repos / "dep1" / "change.txt").touch()
         dep1_git = Git(repos / "dep1")
+        set_meta(path=dep1_git.path)
         dep1_git.add((Path("change.txt"),))
         dep1_git.commit(msg="change dep1")
 
         (repos / "dep4" / "change.txt").touch()
         dep4_git = Git(repos / "dep4")
+        set_meta(path=dep4_git.path)
         sha4 = dep4_git.get_sha()
         dep4_git.add((Path("change.txt"),))
         dep4_git.commit(msg="change dep4")
@@ -300,6 +302,7 @@ def test_tag_overwrite(tmp_path, repos):
         mytag = (workspace / "main" / MANIFESTS_PATH / "MYTAG.toml").read_text()
 
         (workspace / "dep1" / "foo.txt").touch()
+        set_meta(path=dep1_git.path)
         dep1_git.add((Path("foo.txt"),))
         dep1_git.commit("change")
 
