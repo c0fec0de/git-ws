@@ -882,6 +882,16 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     This option can be overridden by specifying the `GIT_WS_GROUP_FILTERS` environment variable.
     """
 
+    clone_cache: Optional[Path] = Field(description="Local Cache for Git Clones.")
+    """
+    Clone Cache.
+
+    Initial cloning a dependency takes a while. If you do this often (i.e. in CI/CD), this consumes time.
+    The local filesystem cache directory will be used, to re-use already cloned data.
+
+    This option can be overridden by specifying the `GIT_WS_CLONE_CACHE` environment variable.
+    """
+
     @staticmethod
     def defaults() -> Dict[str, Any]:
         """

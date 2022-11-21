@@ -15,13 +15,15 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Clone Testing."""
+from shutil import rmtree
+
 from pytest import raises
 
 from gitws import GitCloneNotCleanError, GitWS, Manifest, Project
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import chdir, check
+from .util import change_envvar, chdir, check
 
 
 def test_clone(tmp_path, repos):
@@ -219,3 +221,52 @@ def test_clone_other(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         assert gws.get_manifest().path == str(workspace / "main" / "other.toml")
+
+
+def test_clone_cached(tmp_path, repos):
+    """Test Cloning."""
+
+    workspace = tmp_path / "main"
+    cache = tmp_path / "cache"
+
+    with change_envvar("GIT_WS_CLONE_CACHE", str(cache)):
+        with chdir(tmp_path):
+            assert not cache.exists()
+
+            gws = GitWS.clone(str(repos / "main"))
+            assert gws.path == workspace
+
+            gws.update()
+
+            assert cache.exists()
+
+            check(workspace, "main")
+            check(workspace, "dep1")
+            check(workspace, "dep2", content="dep2-feature")
+            check(workspace, "dep3", exists=False)
+            check(workspace, "dep4")
+            check(workspace, "dep5", exists=False)
+
+            rmtree((workspace / "dep1"))
+            rmtree((workspace / "dep2"))
+
+            gws.update()
+
+            check(workspace, "main")
+            check(workspace, "dep1")
+            check(workspace, "dep2", content="dep2-feature")
+            check(workspace, "dep3", exists=False)
+            check(workspace, "dep4")
+            check(workspace, "dep5", exists=False)
+
+            # checkout too
+            rmtree((workspace / "dep4"))
+
+            gws.checkout()
+
+            check(workspace, "main")
+            check(workspace, "dep1")
+            check(workspace, "dep2", content="dep2-feature")
+            check(workspace, "dep3", exists=False)
+            check(workspace, "dep4")
+            check(workspace, "dep5", exists=False)

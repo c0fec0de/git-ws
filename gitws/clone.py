@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
 from ._util import get_repr
+from .appconfig import AppConfig
 from .datamodel import Project
 from .git import Git
 from .workspace import Workspace
@@ -50,7 +51,8 @@ class Clone:
     def from_project(workspace: Workspace, project: Project, secho=None) -> "Clone":
         """Create :any:`Clone` for `project` in `workspace`."""
         project_path = workspace.get_project_path(project, relative=True)
-        git = Git(project_path, secho=secho)
+        clone_cache = AppConfig().options.clone_cache
+        git = Git(project_path, clone_cache=clone_cache, secho=secho)
         return Clone(project, git)
 
     def check(self, exists=True, diff=True, no_revision=True):

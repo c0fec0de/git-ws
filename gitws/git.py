@@ -15,15 +15,18 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Git Utilities."""
+import hashlib
 import logging
 import os
 import re
+import shutil
 from enum import Enum
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple, Union
 
 from ._basemodel import BaseModel
-from ._util import get_repr, run
+from ._util import get_repr, no_echo, run
+from .appconfig import AppConfig
 from .exceptions import GitCloneMissingError, NoGitError
 
 _RE_URL = re.compile(r"\Aorigin\s+(?P<value>.+)\s+\(fetch\)\Z")
@@ -211,9 +214,10 @@ class Git:
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, path: Path, secho=None):
+    def __init__(self, path: Path, clone_cache: Optional[Path] = None, secho=None):
         self.path = path
-        self.secho = secho
+        self.clone_cache = clone_cache
+        self.secho = secho or no_echo
 
     def __repr__(self):
         return get_repr(self, (self.path,))
@@ -232,7 +236,8 @@ class Git:
     def from_path(path: Optional[Path] = None, secho=None) -> "Git":
         """Create GIT Repo Helper from `path`."""
         path = Git.find_path(path=path)
-        return Git(path=path, secho=secho)
+        clone_cache = AppConfig().options.clone_cache
+        return Git(path=path, clone_cache=clone_cache, secho=secho)
 
     def is_cloned(self) -> bool:
         """Return if clone already exists."""
@@ -255,12 +260,22 @@ class Git:
     def clone(self, url, revision: Optional[str] = None):
         """Clone `url` and checkout `revision`."""
         _LOGGER.info("Git(%r).clone(%r, revision=%r)", str(self.path), url, revision)
-        if revision:
-            # We do not checkout, to be faster during switch later on
-            run(("git", "clone", "--no-checkout", "--", str(url), str(self.path)))
-            self._run(("checkout", revision), capture_output=True)
+        assert not self.path.exists() or not any(self.path.iterdir())
+        if self.clone_cache:
+            key = hashlib.sha256(url.encode("utf-8")).hexdigest()
+            cache = self.clone_cache / key
+            if not cache.exists():
+                self.secho("Initializing clone-cache")
+                cache.mkdir(parents=True)
+                run(("git", "clone", "--", str(url), str(cache)))
+            else:
+                self.secho("Using clone-cache")
+                run(("git", "pull"), cwd=cache, capture_output=True)
+            shutil.copytree(cache, self.path)
         else:
             run(("git", "clone", "--", str(url), str(self.path)))
+        if revision:
+            self._run(("checkout", revision), capture_output=True)
 
     def get_tag(self) -> Optional[str]:
         """Get Actual Tag."""
