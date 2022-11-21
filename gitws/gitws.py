@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
 from ._util import no_echo, removesuffix, resolve_relative, run
+from .appconfig import AppConfig
 from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
 from .datamodel import GroupFilters, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
@@ -257,7 +258,8 @@ class GitWS:
             Workspace.check_empty(path, main_path)
         secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        git = Git(resolve_relative(main_path), secho=secho)
+        clone_cache = AppConfig().options.clone_cache
+        git = Git(resolve_relative(main_path), clone_cache=clone_cache, secho=secho)
         git.clone(url, revision=revision)
         return GitWS.create(path, main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho)
 
@@ -403,7 +405,7 @@ class GitWS:
             for diffstat in clone.git.diffstat(paths=cpaths):
                 yield diffstat.with_path(path)
 
-    def checkout(self, paths: Tuple[Path, ...], force: bool = False):
+    def checkout(self, paths: Optional[Tuple[Path, ...]] = None, force: bool = False):
         """
         Enriched Git Checkout.
 

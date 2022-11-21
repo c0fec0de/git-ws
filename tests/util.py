@@ -43,6 +43,30 @@ def chdir(path):
         os.chdir(curdir)
 
 
+@contextlib.contextmanager
+def change_envvar(name, value):
+    """Modify one environment variable and restore it."""
+    try:
+        old = os.environ[name]
+    except KeyError:
+        old = None
+    _set_envvar(name, value)
+    try:
+        yield
+    finally:
+        _set_envvar(name, old)
+
+
+def _set_envvar(name, value):
+    if value is None:
+        try:
+            del os.environ[name]
+        except KeyError:
+            pass
+    else:
+        os.environ[name] = str(value)
+
+
 def get_sha(path):
     """Get SHA for `path`."""
     assert (path / ".git").exists()
