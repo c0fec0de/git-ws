@@ -23,6 +23,7 @@ import shutil
 from enum import Enum
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple, Union
+from urllib.parse import urlparse, urlunparse
 
 from ._basemodel import BaseModel
 from ._util import get_repr, no_echo, run
@@ -262,7 +263,10 @@ class Git:
         _LOGGER.info("Git(%r).clone(%r, revision=%r)", str(self.path), url, revision)
         assert not self.path.exists() or not any(self.path.iterdir())
         if self.clone_cache:
-            key = hashlib.sha256(url.encode("utf-8")).hexdigest()
+            # strip user+password
+            parsed = urlparse(url)
+            baseurl = parsed._replace(netloc=parsed.netloc.rsplit("@", 1)[-1])
+            key = hashlib.sha256(urlunparse(baseurl).encode("utf-8")).hexdigest()
             cache = self.clone_cache / key
             if not cache.exists():
                 self.secho("Initializing clone-cache")
