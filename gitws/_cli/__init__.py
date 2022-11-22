@@ -97,14 +97,16 @@ def init(context, path=None, manifest_path=None, group_filters=None, update: boo
 
 
 @main.command()
+@click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
+@force_option()
 @pass_context
-def deinit(context):
+def deinit(context, prune: bool = False, force: bool = False):
     """
     Deinitialize Git Workspace.
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(secho=context.secho)
-        gws.deinit()
+        gws.deinit(prune=prune, force=force)
         click.secho(f"Workspace deinitialized at {str(resolve_relative(gws.path))!r}.")
 
 

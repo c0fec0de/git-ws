@@ -79,8 +79,48 @@ def test_deinit(tmp_path, gws):
     # pylint: disable=unused-argument
     assert cli(["deinit"]) == ["Workspace deinitialized at '.'.", ""]
 
-    assert not (tmp_path / "main/.gitws").exists()
-    assert (tmp_path / "main/main").exists()
+    assert not (tmp_path / "main" / ".gitws").exists()
+    assert (tmp_path / "main" / "main").exists()
+    assert (tmp_path / "main" / "dep1").exists()
+    assert (tmp_path / "main" / "dep2").exists()
+    assert not (tmp_path / "main" / "dep3").exists()
+    assert (tmp_path / "main" / "dep4").exists()
+
+    assert cli(["deinit"], exit_code=1) == [
+        "Error: git workspace has not been initialized yet. Try:",
+        "",
+        "    git ws init",
+        "",
+        "or:",
+        "",
+        "    git ws clone",
+        "",
+        "",
+    ]
+
+
+def test_deinit_prune(tmp_path, gws):
+    """Test deinit - prune."""
+    # pylint: disable=unused-argument
+    assert cli(["deinit", "--prune"]) == [
+        "===== dep1 (OBSOLETE) =====",
+        "Removing 'dep1'.",
+        "===== dep2 (OBSOLETE) =====",
+        "Removing 'dep2'.",
+        "===== dep4 (OBSOLETE) =====",
+        "Removing 'dep4'.",
+        "===== main (OBSOLETE) =====",
+        "Removing 'main'.",
+        "Workspace deinitialized at '.'.",
+        "",
+    ]
+
+    assert not (tmp_path / "main" / ".gitws").exists()
+    assert not (tmp_path / "main" / "main").exists()
+    assert not (tmp_path / "main" / "dep1").exists()
+    assert not (tmp_path / "main" / "dep2").exists()
+    assert not (tmp_path / "main" / "dep3").exists()
+    assert not (tmp_path / "main" / "dep4").exists()
 
     assert cli(["deinit"], exit_code=1) == [
         "Error: git workspace has not been initialized yet. Try:",
