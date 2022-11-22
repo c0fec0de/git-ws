@@ -23,9 +23,9 @@ import shutil
 from enum import Enum
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple, Union
-from urllib.parse import urlparse, urlunparse
 
 from ._basemodel import BaseModel
+from ._url import strip_user_password
 from ._util import get_repr, no_echo, run
 from .appconfig import AppConfig
 from .exceptions import GitCloneMissingError, NoGitError
@@ -263,23 +263,34 @@ class Git:
         _LOGGER.info("Git(%r).clone(%r, revision=%r)", str(self.path), url, revision)
         assert not self.path.exists() or not any(self.path.iterdir())
         if self.clone_cache:
-            # strip user+password
-            parsed = urlparse(url)
-            baseurl = parsed._replace(netloc=parsed.netloc.rsplit("@", 1)[-1])
-            key = hashlib.sha256(urlunparse(baseurl).encode("utf-8")).hexdigest()
-            cache = self.clone_cache / key
-            if not cache.exists():
-                self.secho("Initializing clone-cache")
-                cache.mkdir(parents=True)
-                run(("git", "clone", "--", str(url), str(cache)))
-            else:
-                self.secho("Using clone-cache")
-                run(("git", "pull"), cwd=cache, capture_output=True)
-            shutil.copytree(cache, self.path)
+            self._clone_cache(url)
         else:
             run(("git", "clone", "--", str(url), str(self.path)))
         if revision:
             self._run(("checkout", revision), capture_output=True)
+
+    def _clone_cache(self, url):
+        baseurl = strip_user_password(url)
+        # cache index
+        key = hashlib.sha256(baseurl.encode("utf-8")).hexdigest()
+        cache = self.clone_cache / key
+        # cache update
+        if not cache.exists():
+            self.secho("Initializing clone-cache")
+            cache.mkdir(parents=True)
+            run(("git", "clone", "--", str(url), str(cache)))
+        else:
+            self.secho("Using clone-cache")
+            # Restore user/password credentials
+            self._run(("remote", "add", "origin", str(url)), cwd=cache)
+            self._run(("fetch", "origin"), cwd=cache)
+            branch = self._run2str(("branch",), regex=_RE_BRANCH, cwd=cache)
+            self._run(("branch", f"--set-upstream-to=origin/{branch}", "main"), cwd=cache)
+            self._run(("merge", f"origin/{branch}"), capture_output=True, cwd=cache)
+        # use cache
+        shutil.copytree(cache, self.path)
+        # Remove user/password credentials from cache
+        self._run(("remote", "remove", "origin"), cwd=cache)
 
     def get_tag(self) -> Optional[str]:
         """Get Actual Tag."""
@@ -539,7 +550,14 @@ class Git:
             return False
         return True
 
-    def _run(self, args: Args, paths: Optional[Paths] = None, booloptions: Optional[BoolOptions] = None, **kwargs):
+    def _run(
+        self,
+        args: Args,
+        paths: Optional[Paths] = None,
+        booloptions: Optional[BoolOptions] = None,
+        cwd: Optional[Path] = None,
+        **kwargs,
+    ):
         cmd = ["git"]
         cmd.extend(args)
         for name, value in booloptions or tuple():
@@ -548,10 +566,11 @@ class Git:
         if paths:
             cmd.append("--")
             cmd.extend([str(path) for path in paths])
-        return run(cmd, cwd=self.path, secho=self.secho, **kwargs)
+        cwd = cwd or self.path
+        return run(cmd, cwd=cwd, secho=self.secho, **kwargs)
 
-    def _run2str(self, args: Args, paths: Optional[Paths] = None, check=True, regex=None) -> Optional[str]:
-        result = self._run(args, paths=paths, check=check, capture_output=True)
+    def _run2str(self, args: Args, paths: Optional[Paths] = None, check=True, regex=None, **kwargs) -> Optional[str]:
+        result = self._run(args, paths=paths, check=check, capture_output=True, **kwargs)
         if result.stderr.strip():
             return ""
         value = result.stdout.decode("utf-8").rstrip()

@@ -85,3 +85,19 @@ def urlsub(base, name):
     except ValueError:
         return name
     return f"{name}.{bsuffix}"
+
+
+def strip_user_password(url):
+    """
+    Strip User and/or Password.
+
+    >>> strip_user_password('https://domain.com/base/repo1')
+    'https://domain.com/base/repo1'
+    >>> strip_user_password('https://user@domain.com/base/repo1')
+    'https://domain.com/base/repo1'
+    >>> strip_user_password('https://user:password@domain.com/base/repo1')
+    'https://domain.com/base/repo1'
+    """
+    parsed = parse.urlparse(url)
+    baseurl = parsed._replace(netloc=parsed.netloc.rsplit("@", 1)[-1])
+    return parse.urlunparse(baseurl)
