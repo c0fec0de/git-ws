@@ -229,11 +229,7 @@ def test_update_rebase(tmp_path):
         ]
 
         assert cli(["status"]) == [
-            "===== main (MAIN 'main', revision='main') =====",
-            "===== dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
-            "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "===== dep4 ('dep4', revision='main') =====",
             "git-ws WARNING Clone dep4 (revision='main') is on different revision: '4-feature'",
             "",
         ]

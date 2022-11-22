@@ -368,6 +368,7 @@ class GitWS:
     def status(
         self,
         paths: Optional[Tuple[Path, ...]] = None,
+        banner: bool = False,
         branch: bool = False,
     ) -> Generator[Status, None, None]:
         """
@@ -381,7 +382,8 @@ class GitWS:
             Status
         """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+            if banner:
+                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
             clone.check()
             path = clone.git.path
             for status in clone.git.status(paths=cpaths, branch=branch):

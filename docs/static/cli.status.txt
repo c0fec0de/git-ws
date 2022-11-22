@@ -4,6 +4,7 @@ Usage: git-ws status [OPTIONS] [PATHS]...
 
 Options:
   -b, --branch               show branch information
+  -B, --banner               show banner of each projects
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by
                              default.
   -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
