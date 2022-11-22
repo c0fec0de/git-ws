@@ -282,10 +282,10 @@ class Git:
         else:
             self.secho("Using clone-cache")
             # Restore user/password credentials
-            self._run(("remote", "add", "origin", str(url)), cwd=cache)
-            self._run(("fetch", "origin"), cwd=cache)
+            self._run(("remote", "add", "origin", str(url)), capture_output=True, cwd=cache)
+            self._run(("fetch", "origin"), capture_output=True, cwd=cache)
             branch = self._run2str(("branch",), regex=_RE_BRANCH, cwd=cache)
-            self._run(("branch", f"--set-upstream-to=origin/{branch}", "main"), cwd=cache)
+            self._run(("branch", f"--set-upstream-to=origin/{branch}", "main"), capture_output=True, cwd=cache)
             self._run(("merge", f"origin/{branch}"), capture_output=True, cwd=cache)
         # use cache
         shutil.copytree(cache, self.path)
