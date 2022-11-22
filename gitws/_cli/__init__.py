@@ -97,14 +97,16 @@ def init(context, path=None, manifest_path=None, group_filters=None, update: boo
 
 
 @main.command()
+@click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
+@force_option()
 @pass_context
-def deinit(context):
+def deinit(context, prune: bool = False, force: bool = False):
     """
     Deinitialize Git Workspace.
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(secho=context.secho)
-        gws.deinit()
+        gws.deinit(prune=prune, force=force)
         click.secho(f"Workspace deinitialized at {str(resolve_relative(gws.path))!r}.")
 
 
@@ -276,16 +278,17 @@ def rebase(context, command_options=None, projects=None, manifest_path=None, gro
 @main.command()
 @paths_argument()
 @click.option("--branch", "-b", is_flag=True, help="show branch information")
+@click.option("--banner", "-B", is_flag=True, help="show banner of each projects")
 @manifest_option()
 @group_filters_option()
 @pass_context
-def status(context, manifest_path=None, group_filters=None, paths=None, branch: bool = False):
+def status(context, manifest_path=None, group_filters=None, paths=None, branch: bool = False, banner: bool = False):
     """
     Run 'git status' (displayed paths include the actual clone path).
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        for status in gws.status(paths=process_paths(paths), branch=branch):
+        for status in gws.status(paths=process_paths(paths), branch=branch, banner=banner):
             text = str(status)
             if isinstance(status, FileStatus):
                 fgidx = "red" if status.work in (State.IGNORED, State.UNTRACKED) else "green"

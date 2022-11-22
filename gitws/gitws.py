@@ -211,12 +211,22 @@ class GitWS:
             path, main_path, manifest_path=manifest_path, group_filters=group_filters, force=force, secho=secho
         )
 
-    def deinit(self):
+    def deinit(
+        self,
+        prune: bool = False,
+        force: bool = False,
+    ):
         """
         De-Initialize :any:`GitWS`.
 
         The workspace is not working anymore after that. The corresponding :any:`GitWS` instance should be deleted.
+
+        Keyword Args:
+            prune: Remove dependencies, including non-project data!
+            force: Enforce to prune repositories with changes.
         """
+        if prune:
+            self._prune(self.workspace, force=force)
         return self.workspace.deinit()
 
     @staticmethod
@@ -343,7 +353,8 @@ class GitWS:
         if project.submodules:
             git.submodule_update(init=True, recursive=True)
 
-    def _prune(self, workspace: Workspace, used: List[Path], force: bool = False):
+    def _prune(self, workspace: Workspace, used: Optional[List[Path]] = None, force: bool = False):
+        used = used or []
         for obsolete_path in workspace.iter_obsoletes(used):
             rel_path = resolve_relative(obsolete_path)
             self.secho(f"===== {rel_path} (OBSOLETE) =====", fg=_COLOR_BANNER)
@@ -357,6 +368,7 @@ class GitWS:
     def status(
         self,
         paths: Optional[Tuple[Path, ...]] = None,
+        banner: bool = False,
         branch: bool = False,
     ) -> Generator[Status, None, None]:
         """
@@ -370,7 +382,8 @@ class GitWS:
             Status
         """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+            if banner:
+                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
             clone.check()
             path = clone.git.path
             for status in clone.git.status(paths=cpaths, branch=branch):

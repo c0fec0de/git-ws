@@ -3,4 +3,6 @@ Usage: git-ws deinit [OPTIONS]
   Deinitialize Git Workspace.
 
 Options:
-  -h, --help  Show this message and exit.
+  --prune      Remove obsolete git clones
+  -f, --force  Enfore operation.
+  -h, --help   Show this message and exit.
