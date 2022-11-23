@@ -20,6 +20,7 @@ import logging
 import os
 import re
 import shutil
+import subprocess
 from enum import Enum
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple, Union
@@ -274,20 +275,27 @@ class Git:
         # cache index
         key = hashlib.sha256(baseurl.encode("utf-8")).hexdigest()
         cache = self.clone_cache / key
-        # cache update
+        # Restore user/password credentials
+        if cache.exists():
+            self.secho("Using clone-cache")
+            try:
+                self._run(("remote", "add", "origin", str(url)), capture_output=True, cwd=cache)
+            except subprocess.CalledProcessError:
+                shutil.rmtree(cache)  # broken
+        # Cache Update
+        if cache.exists():
+            self._run(("fetch", "origin"), capture_output=True, cwd=cache)
+            try:
+                branch = self._run2str(("branch",), regex=_RE_BRANCH, cwd=cache)
+                self._run(("branch", f"--set-upstream-to=origin/{branch}", "main"), capture_output=True, cwd=cache)
+                self._run(("merge", f"origin/{branch}"), capture_output=True, cwd=cache)
+            except subprocess.CalledProcessError:
+                shutil.rmtree(cache)  # broken
+        # (Re-)Init Cache
         if not cache.exists():
             self.secho("Initializing clone-cache")
             cache.mkdir(parents=True)
             run(("git", "clone", "--", str(url), str(cache)))
-        else:
-            self.secho("Using clone-cache")
-            # Restore user/password credentials
-            self._run(("remote", "add", "origin", str(url)), capture_output=True, cwd=cache)
-            self._run(("fetch", "origin"), capture_output=True, cwd=cache)
-            branch = self._run2str(("branch",), regex=_RE_BRANCH, cwd=cache)
-            self._run(("branch", f"--set-upstream-to=origin/{branch}", "main"), capture_output=True, cwd=cache)
-            self._run(("merge", f"origin/{branch}"), capture_output=True, cwd=cache)
-        # use cache
         shutil.copytree(cache, self.path)
         # Remove user/password credentials from cache
         self._run(("remote", "remove", "origin"), cwd=cache)
