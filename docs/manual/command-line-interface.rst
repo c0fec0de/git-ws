@@ -306,6 +306,22 @@ The following can be used:
 Use :ref:`git_ws_status` to display all changes using paths suitable for use with this command.
 
 
+.. _git_ws_rm:
+
+``git ws rm``
+-------------------
+
+.. warning::
+    Add command brief.
+
+
+.. include:: ../static/cli.rm.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
 .. _git_ws_reset:
 
 ``git ws reset``
@@ -371,6 +387,41 @@ In the second form, a ``git commit`` will be run in the repositories where the g
         -m "A commit in two projects"
 
 In this form, only the files given on the command line will be included in the commits.
+
+
+.. _git_ws_submodule:
+
+``git ws submodule``
+--------------------
+
+.. warning::
+    Add command brief.
+
+
+.. include:: ../static/cli.submodule.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
+.. _git_ws_tag:
+
+``git ws tag``
+-------------------
+
+.. warning::
+    Add command brief.
+
+
+.. include:: ../static/cli.tag.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
+
 
 .. _git_ws_info:
 
@@ -794,3 +845,127 @@ This command reads and validates a manifest file. If the file is valid, the comm
     # Error: Manifest 'my_project/git-ws.toml' is broken: 1 validation error for ManifestSpec
     # dependencies -> 0 -> groups
     #   value is not a valid tuple (type=type_error.tuple)
+
+
+.. _git_ws_default:
+
+``git ws default``
+-------------------
+
+.. warning::
+    Add command brief.
+
+
+.. include:: ../static/cli.default.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
+.. _git_ws_dep:
+
+``git ws dep``
+-------------------
+
+.. warning::
+    Add command brief.
+
+
+.. include:: ../static/cli.dep.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
+.. _git_ws_dep_add:
+
+``git ws info dep add``
++++++++++++++++++++++++
+
+.. warning::
+    Add command brief.
+
+.. include:: ../static/cli.dep.add.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
+.. _git_ws_dep_delete:
+
+``git ws info dep delete``
+++++++++++++++++++++++++++
+
+.. warning::
+    Add command brief.
+
+.. include:: ../static/cli.dep.delete.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
+.. _git_ws_dep_list:
+
+``git ws info dep list``
+++++++++++++++++++++++++
+
+.. warning::
+    Add command brief.
+
+.. include:: ../static/cli.dep.list.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
+.. _git_ws_dep_set:
+
+``git ws info dep set``
++++++++++++++++++++++++
+
+.. warning::
+    Add command brief.
+
+.. include:: ../static/cli.dep.set.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
+.. _git_ws_group_filters:
+
+``git ws group-filters``
+------------------------
+
+.. warning::
+    Add command brief.
+
+
+.. include:: ../static/cli.group-filters.txt
+    :code: bash
+
+.. warning::
+    Document this command.
+
+
+.. _git_ws_remote:
+
+``git ws remote``
+-------------------
+
+.. warning::
+    Add command brief.
+
+
+.. include:: ../static/cli.remote.txt
+    :code: bash
+
+.. warning::
+    Document this command.

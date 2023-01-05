@@ -42,6 +42,7 @@ gen:
 	git-ws config set --help > static/cli.config.set.txt
 	git-ws default --help > static/cli.default.txt
 	git-ws deinit --help > static/cli.deinit.txt
+	git-ws dep --help > static/cli.dep.txt
 	git-ws dep add --help > static/cli.dep.add.txt
 	git-ws dep delete --help > static/cli.dep.delete.txt
 	git-ws dep list --help > static/cli.dep.list.txt

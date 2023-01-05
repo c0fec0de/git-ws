@@ -20,9 +20,10 @@ use. The following chapters provide details and guide through the usage of the
    manual/use-case
    manual/nomenclature
    manual/manifest
-   manual/command-line-interface
    manual/dependency-resolution
    manual/group-filter
+   manual/tagging
+   manual/command-line-interface
    manual/api
 
 

@@ -1,0 +1,12 @@
+Usage: git-ws dep [OPTIONS] COMMAND [ARGS]...
+
+  Manage Dependencies.
+
+Options:
+  -h, --help  Show this message and exit.
+
+Commands:
+  add     Add Dependency.
+  delete  Delete Dependency.
+  list    List Dependencies.
+  set     Set Value For Dependency.
