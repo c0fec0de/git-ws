@@ -112,7 +112,7 @@ class GitWS:
 
         Keyword Args:
             path: Path within the workspace (Default is the current working directory).
-            mainfest_path: Manifest File Path. Relative to `main_path`. Default is taken from Configuration.
+            manifest_path: Manifest File Path. Relative to `main_path`. Default is taken from Configuration.
             group_filters: Group Filters. Default is taken from Configuration.
             secho: `click.secho` like print method for verbose output.
         """
@@ -143,7 +143,7 @@ class GitWS:
             main_path: Main Project Path.
 
         Keyword Args:
-            mainfest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
+            manifest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
@@ -190,7 +190,7 @@ class GitWS:
 
         Keyword Args:
             main_path: Main Project Path.
-            mainfest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
+            manifest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
@@ -247,7 +247,7 @@ class GitWS:
 
         Keyword Args:
             main_path: Main Project Path.
-            mainfest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
+            manifest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
