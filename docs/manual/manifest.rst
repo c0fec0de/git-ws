@@ -15,3 +15,28 @@ This will create a template for the manifest file that you can edit to fit your 
 .. include:: ../static/git-ws.toml
     :code: toml
 
+In the following, the various parts of a manifest file are described.
+
+
+.. _manifest_defaults:
+
+The ``defaults`` section
+------------------------
+
+
+.. _manifest_dependencies:
+
+The ``dependencies`` section
+----------------------------
+
+
+.. _manifest_remotes:
+
+The ``remotes`` section
+-----------------------
+
+
+.. _manifest_group_filters:
+
+The ``group-filters`` section
+-----------------------------
