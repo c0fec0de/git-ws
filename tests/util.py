@@ -29,6 +29,8 @@ from click.testing import CliRunner
 
 from gitws._cli import main
 
+_RE_EMPTY_LINE = re.compile(r"[ \t]*\r")
+
 LEARN = False
 
 
@@ -76,7 +78,9 @@ def get_sha(path):
 
 def format_output(result, tmp_path=None, repos_path=None):
     """Format Command Output."""
-    lines = result.output.split("\n")
+    text = result.output
+    text = _RE_EMPTY_LINE.sub("", text)
+    lines = text.split("\n")
     if repos_path:
         lines = [replace_path(line, repos_path, "REPOS") for line in lines]
     if tmp_path:

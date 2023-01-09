@@ -182,8 +182,6 @@ def test_update_rebase(tmp_path):
             "From REPOS/dep4",
             f"   {sha1}..{sha2}  main       -> origin/main",
             "Rebasing branch 'main'.",
-            "\r"
-            "                                                                                \r"
             "Successfully rebased and updated refs/heads/main.",
             "===== dep5 ('dep5') =====",
             "git-ws WARNING Clone dep5 has no revision!",
