@@ -2,7 +2,7 @@ Usage: git-ws fetch [OPTIONS] [COMMAND_OPTIONS]...
 
   Run 'git fetch' on projects.
 
-  This command behaves identical to `git ws foreach -- git fetch`.
+  This command is identical to `git ws foreach -- git fetch COMMAND_OPTIONS`.
 
 Options:
   -P, --project DIRECTORY    Project path to operate on only. All by default.

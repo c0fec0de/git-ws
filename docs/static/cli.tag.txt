@@ -1,6 +1,6 @@
 Usage: git-ws tag [OPTIONS] NAME
 
-  Create git tag on main repository.
+  Create git tag NAME on main repository.
 
   This includes freezing all dependencies.
 

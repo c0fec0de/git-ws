@@ -26,7 +26,7 @@ from .util import assert_any, chdir, cli
 
 @fixture
 def gws(tmp_path, repos):
-    """Initialized :any:`GitWS` on `repos`."""
+    """Initialized :any:`GitWS` on ``repos``."""
     # pylint: disable=unused-argument
 
     workspace = tmp_path / "main"

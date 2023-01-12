@@ -29,12 +29,14 @@ from click.testing import CliRunner
 
 from gitws._cli import main
 
+_RE_EMPTY_LINE = re.compile(r"[ \t]*\r")
+
 LEARN = False
 
 
 @contextlib.contextmanager
 def chdir(path):
-    """Change Working Directory to `path`."""
+    """Change Working Directory to ``path``."""
     curdir = os.getcwd()
     try:
         os.chdir(path)
@@ -68,7 +70,7 @@ def _set_envvar(name, value):
 
 
 def get_sha(path):
-    """Get SHA for `path`."""
+    """Get SHA for ``path``."""
     assert (path / ".git").exists()
     result = run(("git", "rev-parse", "HEAD"), capture_output=True, check=True, cwd=path)
     return result.stdout.decode("utf-8").strip()
@@ -76,7 +78,9 @@ def get_sha(path):
 
 def format_output(result, tmp_path=None, repos_path=None):
     """Format Command Output."""
-    lines = result.output.split("\n")
+    text = result.output
+    text = _RE_EMPTY_LINE.sub("", text)
+    lines = text.split("\n")
     if repos_path:
         lines = [replace_path(line, repos_path, "REPOS") for line in lines]
     if tmp_path:
@@ -95,7 +99,7 @@ def format_logs(caplog, tmp_path=None, repos_path=None):
 
 
 def replace_path(text, path, repl):
-    """Replace `path` by `repl` in `text`."""
+    """Replace ``path`` by ``repl`` in ``text``."""
     path_esc = re.escape(str(path))
     sep_esc = re.escape(os.path.sep)
     regex = re.compile(rf"{path_esc}([A-Za-z0-9_{sep_esc}]*)")

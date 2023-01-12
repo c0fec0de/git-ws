@@ -71,7 +71,7 @@ class Status(BaseModel):
     """Status (One `git status` line."""
 
     def with_path(self, path: Path) -> "Status":
-        """Return :any:`Status` with `path`."""
+        """Return :any:`Status` with ``path``."""
         raise NotImplementedError()
 
     def has_work_changes(self) -> Optional[bool]:
@@ -136,7 +136,7 @@ class FileStatus(Status):
         return FileStatus(**mat.groupdict())
 
     def with_path(self, path: Path) -> "FileStatus":
-        """Return :any:`FileStatus` with `path`."""
+        """Return :any:`FileStatus` with ``path``."""
         if self.orig_path:
             return self.update(path=path / self.path, orig_path=path / self.orig_path)
         return self.update(path=path / self.path)
@@ -152,7 +152,15 @@ class FileStatus(Status):
 
 class BranchStatus(Status):
 
-    """Branch Status."""
+    """
+    Branch Status.
+
+    >>> branchstatus = BranchStatus.from_str('main...origin/main')
+    >>> branchstatus
+    BranchStatus(info='main...origin/main')
+    >>> str(branchstatus)
+    'main...origin/main'
+    """
 
     info: str
     """Info."""
@@ -166,7 +174,7 @@ class BranchStatus(Status):
         return BranchStatus(info=line)
 
     def with_path(self, path: Path) -> "BranchStatus":
-        """Return :any:`BranchStatus` with `path`."""
+        """Return :any:`BranchStatus` with ``path``."""
         # pylint: disable=unused-argument
         return self
 
@@ -175,6 +183,14 @@ class DiffStat(BaseModel):
 
     """
     Diff Status.
+
+    >>> diffstat = DiffStat.from_str(' path/file.txt | 16 ++++++++--------')
+    >>> diffstat
+    DiffStat(path=PosixPath('path/file.txt'), stat='16 ++++++++--------')
+    >>> str(diffstat)
+    ' path/file.txt | 16 ++++++++--------'
+    >>> str(diffstat.with_path(Path('base')))
+    ' base/path/file.txt | 16 ++++++++--------'
     """
 
     path: Path
@@ -194,7 +210,7 @@ class DiffStat(BaseModel):
         return DiffStat(**mat.groupdict())
 
     def with_path(self, path: Path) -> "DiffStat":
-        """Return :any:`DiffStat` with `path`."""
+        """Return :any:`DiffStat` with ``path``."""
         return self.update(path=path / self.path)
 
 
@@ -207,9 +223,14 @@ class Git:
     But we just want to have a lean programmatic interface to git.
     Just with the functionality **we** need. Not more.
 
-    We currently do NOT check the git version, but try to use a quite common subset.
+    We currently do NOT check the git version and try to use the common subset.
 
-    The easiest way to start:
+    To initialize a git repository in the current working directory:
+
+    >>> Git.init()
+    Git(...)
+
+    The easiest way to start with an existing clone:
 
     >>> git = Git.from_path()
     """
@@ -225,6 +246,14 @@ class Git:
         return get_repr(self, (self.path,))
 
     @staticmethod
+    def init(path: Optional[Path] = None) -> "Git":
+        """Initialize new git repository at ``path``."""
+        path = path or Path.cwd()
+        path.mkdir(parents=True, exist_ok=True)
+        run(("git", "init"), cwd=path)
+        return Git(path)
+
+    @staticmethod
     def find_path(path: Optional[Path] = None) -> Path:
         """Determine Top Directory of Git Clone."""
         path = path or Path.cwd()
@@ -236,7 +265,7 @@ class Git:
 
     @staticmethod
     def from_path(path: Optional[Path] = None, secho=None) -> "Git":
-        """Create GIT Repo Helper from `path`."""
+        """Create GIT Repo Helper from ``path``."""
         path = Git.find_path(path=path)
         clone_cache = AppConfig().options.clone_cache
         return Git(path=path, clone_cache=clone_cache, secho=secho)
@@ -251,16 +280,16 @@ class Git:
         return cloned
 
     def check(self):
-        """Check clone."""
+        """Check Clone for Existance."""
         if not self.is_cloned():
             raise GitCloneMissingError(self.path)
 
     def set_config(self, name, value):
-        """Set Git Configuration `name` to `value`."""
+        """Set Git Configuration ``name`` to ``value``."""
         self._run(("config", name, value))
 
     def clone(self, url, revision: Optional[str] = None):
-        """Clone `url` and checkout `revision`."""
+        """Clone ``url`` and checkout ``revision``."""
         _LOGGER.info("Git(%r).clone(%r, revision=%r)", str(self.path), url, revision)
         assert not self.path.exists() or not any(self.path.iterdir())
         if self.clone_cache:
@@ -327,7 +356,7 @@ class Git:
         1. Get Actual Tag
         2. Get Actual Branch
         3. Get SHA.
-        4. `None` if empty repo.
+        4. ``None`` if empty repo.
         """
         return self.get_branch() or self.get_tag() or self.get_sha()
 
@@ -376,7 +405,7 @@ class Git:
 
     def add(self, paths: Optional[Paths] = None, force: bool = False, all_: bool = False):
         """
-        Add.
+        Add Files.
 
         Args:
             paths: File Paths to add.
@@ -391,7 +420,7 @@ class Git:
     # pylint: disable=invalid-name
     def rm(self, paths: Paths, cached: bool = False, force: bool = False, recursive: bool = False):
         """
-        Remove.
+        Remove Files.
 
         Keyword Args:
             cached: only remove from the index
@@ -412,7 +441,7 @@ class Git:
 
     def reset(self, paths: Paths):
         """
-        Reset.
+        Reset Files.
 
         Args:
             paths: File paths.
@@ -457,7 +486,7 @@ class Git:
         self._run(args)
 
     def get_tags(self, pattern: Optional[str] = None) -> Tuple[str, ...]:
-        """Get Tags matching `pattern` or all."""
+        """Get Tags matching ``pattern`` or all."""
         cmd = ["tag", "-l"]
         if pattern:
             cmd.append(pattern)

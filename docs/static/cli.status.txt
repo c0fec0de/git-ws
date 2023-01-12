@@ -1,10 +1,11 @@
 Usage: git-ws status [OPTIONS] [PATHS]...
 
-  Run 'git status' (displayed paths include the actual clone path).
+  Run 'git status' on PATHS or all files (displayed paths include the actual
+  clone path).
 
 Options:
   -b, --branch               show branch information
-  -B, --banner               show banner of each projects
+  -B, --banner               show banner of each project
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by
                              default.
   -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial

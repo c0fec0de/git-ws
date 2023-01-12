@@ -18,17 +18,17 @@
 Central :any:`GitWS` Datamodel.
 
 * :any:`Group`: Dependency Group. A string.
-* :any:`Groups`: Tuple of Group instances.
+* :any:`Groups`: Tuple of :any:`Group` instances.
 * :any:`GroupFilter`: Group Filter Specification. A string.
-* :any:`GroupFilters`: Tuple of GroupFilter instances.
+* :any:`GroupFilters`: Tuple of :any:`GroupFilter` instances.
 * :any:`GroupSelect`: Group Selection. A converted :any:`GroupFilter` as needed by :any:`GitWS`.
-* :any:`GroupSelects`: Tuple of GroupSelect instances.
+* :any:`GroupSelects`: Tuple of :any:`GroupSelect` instances.
 * :any:`Remote`: Remote Alias.
 * :any:`Defaults`: Default Values.
 * :any:`ProjectSpec`: Dependency Specification from Manifest File.
-* :any:`Project`: A Single Dependency as needed by :any:`GitWS`.
+* :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.
 * :any:`ManifestSpec`: Specification of the actual project.
-* :any:`Manifest`: Manifest as needed by :any:`GitWS`.
+* :any:`Manifest`: Manifest as needed by :any:`GitWS` derived from :any:`ManifestSpec`.
 * :any:`AppConfigData`: :any:`GitWS` Configuration.
 """
 
@@ -67,7 +67,7 @@ def validate_group(group):
     """
     Validate Group.
 
-    Group is just a `str` for performance reasons. This function does the validation.
+    Group is just a ``str`` for performance reasons. This function does the validation.
     """
     mat = _RE_GROUP.match(group)
     if not mat:
@@ -83,7 +83,7 @@ class Groups(tuple):
         """
         Validate Groups.
 
-        Groups are just a `tuple` of `str` for performance reasons. This function does the validation.
+        Groups are just a ``tuple`` of ``str`` for performance reasons. This function does the validation.
         """
         for group in groups:
             validate_group(group)
@@ -106,7 +106,7 @@ def validate_group_filter(group_filter):
     """
     Groups Filter.
 
-    Group Filters are just a `tuple` of `str` for performance reasons. This function does the validation.
+    Group Filters are just a ``tuple`` of ``str`` for performance reasons. This function does the validation.
     """
     mat = _RE_GROUP_FILTER.match(group_filter)
     if not mat:
@@ -125,7 +125,7 @@ class GroupFilters(tuple):
         """
         Check Groups Filter.
 
-        Group Filters are just a `tuple` of `str` for performance reasons. This function does the validation.
+        Group Filters are just a ``tuple`` of ``str`` for performance reasons. This function does the validation.
         """
         for group_filter in group_filters:
             validate_group_filter(group_filter)
@@ -147,14 +147,14 @@ class GroupSelect(BaseModel):
     group: Optional[Group] = None
     """Group."""
     select: bool
-    """Selected or not."""
+    """Selected ('+') or not ('-')."""
     path: Optional[str] = None
     """Path."""
 
     @staticmethod
     def from_group_filter(group_filter) -> "GroupSelect":
         """
-        Create Group Selection from `group_filter`.
+        Create Group Selection from ``group_filter``.
 
         >>> GroupSelect.from_group_filter("+test")
         GroupSelect(group='test', select=True)
@@ -182,12 +182,12 @@ class GroupSelect(BaseModel):
 
 class GroupSelects(tuple):
 
-    """Collection from :any:`GroupSelect`."""
+    """Collection of :any:`GroupSelect`."""
 
     @staticmethod
     def from_group_filters(group_filters: Optional[GroupFilters] = None) -> "GroupSelects":
         """
-        Creage :any:`GroupSelects` from `group_filters`.
+        Create :any:`GroupSelects` from ``group_filters``.
 
         >>> GroupSelects.from_group_filters()
         ()
@@ -205,7 +205,7 @@ class GroupSelects(tuple):
     @staticmethod
     def from_groups(groups: Optional[Groups] = None) -> "GroupSelects":
         """
-        Creage :any:`GroupSelects` from `group_filters`.
+        Create :any:`GroupSelects` from ``group_filters``.
 
         >>> GroupSelects.from_groups()
         ()
@@ -243,7 +243,7 @@ class Defaults(BaseModel):
     """
     Default Values.
 
-    These default values are used, if the project does not specify them.
+    These default values are used, if a :any:`ProjectSpec` does not specify them.
 
     Keyword Args:
         remote: Remote Name.
@@ -259,10 +259,10 @@ class Defaults(BaseModel):
     """The revision if not specified by the dependency. Tag or Branch. SHA does not make sense here."""
 
     groups: Optional[Groups] = Groups()
-    """The `groups` if not specified by the dependency."""
+    """The ``groups`` if not specified by the dependency."""
 
     with_groups: Optional[Groups] = Groups()
-    """The `with_groups` if not specified by the dependency."""
+    """The ``with_groups`` if not specified by the dependency."""
 
     submodules: bool = True
     """Initialize and Update `git submodules`."""
@@ -280,9 +280,9 @@ class Project(BaseModel, allow_population_by_field_name=True):
         path: Project Filesystem Path. Relative to Workspace Root Directory.
 
     Keyword Args:
-        url: URL. Assembled from `remote`s `url_base`, `sub_url` and/or `name`.
+        url: URL. Assembled from ``remote``s ``url_base``, ``sub_url`` and/or ``name``.
         revision: Revision to be checked out. Tag, branch or SHA.
-        manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. `git-ws.toml` by default.
+        manifest_path: Path to manifest. Relative to Project Filesystem Path. ``git-ws.toml`` by default.
         groups: Dependency Groups.
         with_groups: Group Selection for refered project.
         is_main: Project is Main Project.
@@ -293,22 +293,27 @@ class Project(BaseModel, allow_population_by_field_name=True):
 
     :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
     :any:`ProjectSpec.from_project()` does the reverse.
+
+    .. note::
+        :any:`Project.from_spec()` resolves some attributes irreversible.
+        So ``Project.from_spec(ProjectSpec.from_project())`` will not
+        return the original project.
     """
 
     name: str
     """Dependency Name."""
 
     path: str
-    """Dependency Path. `name` will be used as default."""
+    """Dependency Path. ``name`` will be used as default."""
 
     url: Optional[str] = None
-    """URL. Assembled from `remote`s `url_base`, `sub_url` and/or `name`."""
+    """URL. Assembled from ``remote``s ``url_base``, ``sub_url`` and/or ``name``."""
 
     revision: Optional[str] = None
     """Revision to be checked out. Tag, branch or SHA."""
 
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
-    """Path to the manifest file. Relative to `path`."""
+    """Path to the manifest file. Relative to ``path``."""
 
     groups: Groups = Groups()
     """Dependency Groups."""
@@ -367,14 +372,14 @@ class Project(BaseModel, allow_population_by_field_name=True):
         manifest_spec: "ManifestSpec", spec: "ProjectSpec", refurl: Optional[str] = None, resolve_url: bool = False
     ) -> "Project":
         """
-        Create :any:`Project` from `manifest_spec` and `spec`.
+        Create :any:`Project` from ``manifest_spec`` and ``spec``.
 
         Args:
             manifest_spec: Manifest Specification.
             spec: Base project to be resolved.
 
         Keyword Args:
-            refurl: Remote URL of the `manifest_spec`. If specified, relative URLs are resolved.
+            refurl: Remote URL of the ``manifest_spec``. If specified, relative URLs are resolved.
             resolve_url: Resolve URLs to absolute ones.
 
         :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
@@ -431,32 +436,29 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         url: URL
         revision: Revision
         path: Project Filesystem Path. Relative to Workspace Root Directory.
-        manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. `git-ws.toml` by default.
+        manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. ``git-ws.toml`` by default.
         groups: Dependency Groups.
         with_groups: Group Selection for refered project.
 
     Some parameters are restricted:
 
-    * `remote` and `url` are mutually exclusive.
-    * `url` and `sub-url` are likewise mutually exclusive
-    * `sub-url` requires a `remote`.
+    * ``remote`` and ``url`` are mutually exclusive.
+    * ``url`` and ``sub-url`` are likewise mutually exclusive
+    * ``sub-url`` requires a ``remote``.
 
     The :any:`ProjectSpec` represents the User Interface. The options which can be specified in the manifest file.
     The :any:`Project` is the resolved version of :any:`ProjectSpec` with all calculated information needed by
     :any:`GitWS` to operate.
-
-    :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
-    :any:`ProjectSpec.from_project()` does the reverse.
     """
 
     name: str
     """Dependency Name."""
 
     remote: Optional[str] = None
-    """Remote Alias Name. The `remote` must have been defined previously."""
+    """Remote Alias Name. The ``remote`` must have been defined previously."""
 
     sub_url: Optional[str] = Field(None, alias="sub-url")
-    """Relative URL to `remote`s `url_base` OR the URL of the manifest file."""
+    """Relative URL to `remote`s ``url_base`` OR the URL of the manifest file."""
 
     url: Optional[str] = None
     """Absolute URL."""
@@ -465,10 +467,10 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     """Revision to be checked out."""
 
     path: Optional[str] = None
-    """Path within workspace. `name` will be used as default."""
+    """Path within workspace. ``name`` will be used as default."""
 
     manifest_path: Optional[str] = Field(str(MANIFEST_PATH_DEFAULT), alias="manifest-path")
-    """Path to the manifest file. Relative to `path`."""
+    """Path to the manifest file. Relative to ``path``."""
 
     groups: Groups = Groups()
     """Dependency Groups."""
@@ -508,12 +510,12 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     @staticmethod
     def from_project(project: Project) -> "ProjectSpec":
         """
-        Create :any:`ProjectSpec` from `project`.
+        Create :any:`ProjectSpec` from ``project``.
 
         Args:
             project: The source :any:`Project`.
 
-        ..note::
+        .. note::
             :any:`Project.from_spec()` resolves some attributes irreversible.
             So ``Project.from_spec(ProjectSpec.from_project())`` will not
             return the original project.
@@ -538,7 +540,7 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     A manifest describes the actual project and its dependencies.
 
     Keyword Args:
-        group_filters. Group Filtering.
+        group_filters: Group Filtering.
         dependencies: Dependency Projects.
         path: Filesystem Path. Relative to Workspace Root Directory.
 
@@ -575,11 +577,11 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
             spec: The source :any:`ManifestSpec`.
 
         Keyword Args:
-            path: File path of the `spec`.
-            refurl: URL of the repository containing `spec`.
-            resolve_url: Convert relative to absolute URLs. Requires `refurl`.
+            path: File path of the ``spec``.
+            refurl: URL of the repository containing ``spec``.
+            resolve_url: Convert relative to absolute URLs. Requires ``refurl``.
 
-        If `refurl` is specified, any relative URL in the :any:`ManifestSpec` and referred :any:`ProjectSpec` s
+        If ``refurl`` is specified, any relative URL in the :any:`ManifestSpec` and referred :any:`ProjectSpec` s
         are resolved to a absolute URLs.
         """
         dependencies = [
@@ -607,7 +609,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     Keyword Args:
         version: Version String. Actually 1.0.
         remotes: Remote Aliases.
-        group_filters. Group Filtering.
+        group_filters: Group Filtering.
         defaults: Default settings.
         dependencies: Dependency Projects.
     """
@@ -616,7 +618,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     """
     Manifest Version Identifier.
 
-    Actual Version: `1.0`.
+    Actual Version: ``1.0``.
     """
 
     remotes: Tuple[Remote, ...] = tuple()
@@ -664,9 +666,9 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     @classmethod
     def load(cls, path: Path) -> "ManifestSpec":
         """
-        Load :any:`ManifestSpec` from `path`.
+        Load :any:`ManifestSpec` from ``path``.
 
-        The file referenced by `path` must be a TOML file according to the manifest scheme.
+        The file referenced by ``path`` must be a TOML file according to the manifest scheme.
 
         Raises:
             ManifestNotFoundError: if file is not found
@@ -690,12 +692,63 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         Return :any:`ManifestSpec` as string.
 
         The output will include an inline documentation of all available options.
-        If `doc` or `path` are specified, any additional attributes and comments are **kept**.
+        If ``doc`` or ``path`` are specified, any additional attributes and comments are **kept**.
 
         Keyword Args:
             doc: Existing document to be updated.
             path: Path to possibly existing document.
             minimal: Skip unset
+
+        >>> print(ManifestSpec(defaults=Defaults(revision='main'), dependencies=(ProjectSpec(name='mylib'),)).dump())
+        version = "1.0"
+        ##
+        ## Git Workspace's Manifest. Please see the documentation at:
+        ##
+        ## https://git-ws.readthedocs.io/en/latest/manual/manifest.html
+        ##
+        <BLANKLINE>
+        <BLANKLINE>
+        # group-filters = ["+test", "-doc", "+feature@path"]
+        group-filters = []
+        <BLANKLINE>
+        <BLANKLINE>
+        # [[remotes]]
+        # name = "myremote"
+        # url-base = "https://github.com/myuser"
+        <BLANKLINE>
+        <BLANKLINE>
+        [defaults]
+        revision = "main"
+        <BLANKLINE>
+        # remote = "myserver"
+        # revision = "main"
+        # groups = ["+test"]
+        # with_groups = ["doc"]
+        <BLANKLINE>
+        <BLANKLINE>
+        ## A full flavored dependency using a 'remote':
+        # [[dependencies]]
+        # name = "myname"
+        # remote = "remote"
+        # sub-url = "my.git"
+        # revision = "main"
+        # path = "mydir"
+        # groups = ["group"]
+        <BLANKLINE>
+        ## A full flavored dependency using a 'url':
+        # [[dependencies]]
+        # name = "myname"
+        # url = "https://github.com/myuser/my.git"
+        # revision = "main"
+        # path = "mydir"
+        # groups = ["group"]
+        <BLANKLINE>
+        ## A minimal dependency:
+        # [[dependencies]]
+        # name = "my"
+        [[dependencies]]
+        name = "mylib"
+        <BLANKLINE>
         """
         assert not doc or not path, "'doc' and 'path' are mutually exclusive."
         if doc is None:
@@ -720,7 +773,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     def save(self, path: Path, update=True):
         """
-        Save :any:`ManifestSpec` at `path`.
+        Save :any:`ManifestSpec` at ``path``.
 
         The file will include an inline documentation of all available options.
 
@@ -736,7 +789,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     @classmethod
     def upgrade(cls, path: Path):
-        """Upgrade :any:`ManifestSpec` at `path` to latest version including documentation."""
+        """Upgrade :any:`ManifestSpec` at ``path`` to latest version including documentation."""
         # read
         content = path.read_text()
         try:
@@ -859,9 +912,9 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     """
     The path of the manifest file within a repository.
 
-    If this is not defined, the default is :any:`MANIFEST_PATH_DEFAULT`.
+    If this is not defined, the default is ``git-ws.toml``.
 
-    This option can be overridden by specifying the `GIT_WS_MANIFEST_PATH` environment variable.
+    This option can be overridden by specifying the ``GIT_WS_MANIFEST_PATH`` environment variable.
     """
 
     color_ui: Optional[bool] = Field(description="If set to true, the output the tool generates will be colored.")
@@ -870,7 +923,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
 
     If this is not defined, output will be colored by default.
 
-    This option can be overridden by specifying the `GIT_WS_COLOR_UI` environment variable.
+    This option can be overridden by specifying the ``GIT_WS_COLOR_UI`` environment variable.
     """
 
     group_filters: Optional[GroupFilters] = Field(description="The groups to operate on.")
@@ -879,17 +932,17 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
 
     This is a filter for groups to operate on during workspace actions.
 
-    This option can be overridden by specifying the `GIT_WS_GROUP_FILTERS` environment variable.
+    This option can be overridden by specifying the ``GIT_WS_GROUP_FILTERS`` environment variable.
     """
 
     clone_cache: Optional[Path] = Field(description="Local Cache for Git Clones.")
     """
     Clone Cache.
 
-    Initial cloning a dependency takes a while. If you do this often (i.e. in CI/CD), this consumes time.
+    Initial cloning all dependencies takes a while. This consumes time, if you do this often (i.e. in CI/CD).
     The local filesystem cache directory will be used, to re-use already cloned data.
 
-    This option can be overridden by specifying the `GIT_WS_CLONE_CACHE` environment variable.
+    This option can be overridden by specifying the ``GIT_WS_CLONE_CACHE`` environment variable.
     """
 
     @staticmethod

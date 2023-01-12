@@ -1,6 +1,6 @@
 Usage: git-ws remote add [OPTIONS] NAME URL_BASE
 
-  Add Remote.
+  Add Remote NAME with URL_BASE.
 
 Options:
   -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.

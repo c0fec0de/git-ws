@@ -48,14 +48,14 @@ def run(cmd, cwd=None, capture_output=False, check=True, secho=None):
 
 # pylint: disable=unused-argument
 def no_echo(text: str, err=False, **kwargs):
-    """Just suppress `text`."""
+    """Just suppress ``text``."""
     if err:
         print(err, file=sys.stderr)
 
 
 def resolve_relative(path: Path, base: Optional[Path] = None) -> Path:
     """
-    Return resolved `path` relative to `base`.
+    Return resolved ``path`` relative to ``base``.
 
     :param path (Path): Path
     :param base (Path): Base Path. Current Working Directory by default.

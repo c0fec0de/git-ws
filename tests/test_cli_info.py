@@ -26,7 +26,7 @@ from .util import chdir, cli
 
 @fixture
 def gws(tmp_path, repos):
-    """Initialized :any:`GitWS` on `repos`."""
+    """Initialized :any:`GitWS` on ``repos``."""
     with chdir(tmp_path):
         gws = GitWS.clone(str(repos / "main"))
         gws.update()

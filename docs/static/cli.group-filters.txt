@@ -1,6 +1,9 @@
 Usage: git-ws group-filters [OPTIONS] VALUE
 
-  Set Group Filter.
+  Set Group Filter to VALUE.
+
+  The group filter selects/deselects dependencies based on their path and/or
+  groups.
 
 Options:
   -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.

@@ -75,7 +75,7 @@ def repos_deptop():
 
 
 def test_deptop(tmp_path, repos_deptop, caplog, capsys):
-    """Initialized :any:`GitWS` on `repos_deptop`."""
+    """Initialized :any:`GitWS` on ``repos_deptop``."""
     workspace = tmp_path / "top"
 
     with chdir(tmp_path):

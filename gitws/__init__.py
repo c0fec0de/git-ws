@@ -24,7 +24,76 @@ Git Workspace - Multi Repository Management Tool.
 * Relative URL support
 
 The :any:`GitWS` class provides a simple programmatic interface similar to the command line interface.
-See :any:`GitWS` for any details.
+See :any:`GitWS` for all details.
+
+Getting Started
+---------------
+
+There are 4 ways to create a :any:`GitWS` instances in the different szenarios:
+
+* :any:`GitWS.from_path()`: Create :any:`GitWS` for EXISTING workspace at ``path``.
+* :any:`GitWS.create()`: Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.
+* :any:`GitWS.init()`: Initialize NEW Workspace for git clone at ``main_path``, return corresponding :any:`GitWS`.
+* :any:`GitWS.clone()`: Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
+
+The python module is named `gitws`:
+
+>>> import gitws
+
+Assume an existing git clone with an empty parent directory:
+
+>>> import pathlib
+>>> main_path = pathlib.Path('main')
+>>> gitws.Git.init(main_path)
+Git(...)
+
+Create a manifest:
+
+>>> manifest = gitws.ManifestSpec(defaults=gitws.Defaults(revision='main'))
+>>> manifest.save(main_path / "git-ws.toml")
+
+Initialize Workspace
+
+>>> gws = gitws.GitWS.init(main_path)
+>>> gws
+GitWS(...)
+
+In case of an existing Git Workspace in your current working directory just run:
+
+>>> gws = gitws.GitWS.from_path()
+
+:any:`GitWS.update()` updates all dependencies
+
+>>> gws.update()
+
+Run a shell command on all git clones
+
+>>> gws.run_foreach(['ls', '-l'])
+
+For more advanced operations, the :any:`GitWS.clones` iterates over all clones, starting from the main project.
+
+>>> for clone in gws.clones():
+...     print(f"=== {clone.info} ===")
+...     clone.project
+...     clone.git
+=== main (MAIN 'main') ===
+Project(name='main', path='main', is_main=True)
+Git(...)
+
+Overview
+--------
+
+* :any:`GitWS`: the central API to the main functionality.
+* :any:`Clone`: is the pair of Of :any:`Project` And :any:`Git` Interface.
+* :any:`Git`: provides a reduced API to ``git``.
+* :any:`ProjectSpec`: Dependency Specification from Manifest File.
+* :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.
+* :any:`ManifestSpec`: Specification of the actual project.
+* :any:`Manifest`: Manifest as needed by :any:`GitWS` derived from :any:`ManifestSpec`.
+* :any:`Remote`: Remote Alias in :any:`ManifestSpec`.
+* :any:`Defaults`: Default Values in :any:`ManifestSpec`.
+* :any:`AppConfigData`: :any:`GitWS` Configuration.
+* :any:`Workspace`: the file system location containing all git clones.
 """
 
 import logging

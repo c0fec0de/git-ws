@@ -35,7 +35,7 @@ class ManifestIter:
     """
     Iterate over all :any:`Manifest` s.
 
-    The iterator takes a `workspace` and the path to a manifest file (`manifest_path`) of the main project.
+    The iterator takes a ``workspace`` and the path to a manifest file (`manifest_path`) of the main project.
     The manifest is read (:any:`ManifestSpec`) and translated to a :any:`Manifest`, which is yielded.
     The manifest files of the dependencies are also read, translated to a :any:`Manifest` and yielded likewise,
     until all manifest files and their dependencies are read.
@@ -48,7 +48,7 @@ class ManifestIter:
         group_filters: Group Filters.
 
     Yields:
-        Manifest
+        :any:`Manifest`
     """
 
     # pylint: disable=too-few-public-methods
@@ -112,7 +112,7 @@ class ProjectIter:
     """
     Iterate over all :any:`Project` s.
 
-    The iterator takes a `workspace` and the path to a manifest file (`manifest_path`) of the main project.
+    The iterator takes a ``workspace`` and the path to a manifest file (`manifest_path`) of the main project.
     The manifest is read (:any:`ManifestSpec`) and all dependencies are translated to :any:`Project` s, which are
     yielded.
     The manifest files of the dependencies are also read, translated to a :any:`Project` s and yielded likewise,
@@ -130,7 +130,7 @@ class ProjectIter:
         resolve_url: Resolve relative URLs to absolute ones.
 
     Yields:
-        Project
+        :any:`Project`
     """
 
     # pylint: disable=too-few-public-methods
@@ -221,46 +221,46 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     """
     Create Group Filter Function.
 
-    Filter projects based on their `path` and `groups`.
-    The filter has `group_selects`. A specification which groups should be included or excluded.
-    The default selection of these groups is controlled by `default`.
+    Filter projects based on their ``path`` and ``groups``.
+    The filter has ``group_selects``, a specification which groups should be included or excluded.
+    The default selection of these groups is controlled by ``default``.
 
     Keyword Args:
-        group_selects: Iterable with :any`GroupSelect`.
-        default: Default selection of all `groups`.
+        group_selects: Iterable with :any:`GroupSelect`.
+        default: Default selection of all ``groups``.
 
-    >>> group_filters=('+test', '+doc', '+feature@dep', '-doc')
+    >>> group_filters = ('+test', '+doc', '+feature@dep', '-doc')
     >>> group_selects = GroupSelects.from_group_filters(group_filters)
     >>> groupfilter = create_filter(group_selects)
-    >>> groupfilter('sub', tuple())
+    >>> groupfilter('sub', tuple())  # selected as there is no group
     True
-    >>> groupfilter('sub', ('foo', 'bar'))
+    >>> groupfilter('sub', ('foo', 'bar'))  # no group selected by group_filters
     False
-    >>> groupfilter('sub', ('test',))
+    >>> groupfilter('sub', ('test',))  # 'test' is selected by group_filters
     True
-    >>> groupfilter('sub', ('doc',))
+    >>> groupfilter('sub', ('doc',))  # 'doc' is deselected by group_filters
     False
-    >>> groupfilter('sub', ('test', 'doc'))
+    >>> groupfilter('sub', ('test', 'doc'))  # 'test' is selected by group_filters
     True
-    >>> groupfilter('sub', ('feature',))
+    >>> groupfilter('sub', ('feature',))  # 'feature' is only selected for 'dep', but not 'sub'
     False
-    >>> groupfilter('dep', ('feature',))
+    >>> groupfilter('dep', ('feature',))  # 'feature' is only selected for 'dep'
     True
 
     >>> groupfilter = create_filter(group_selects, default=True)
-    >>> groupfilter('sub', tuple())
+    >>> groupfilter('sub', tuple())  # selected as there is no group
     True
-    >>> groupfilter('sub', ('foo', 'bar'))
+    >>> groupfilter('sub', ('foo', 'bar'))  # no group selected by group_filters, but `default=True`
     True
-    >>> groupfilter('sub', ('test',))
+    >>> groupfilter('sub', ('test',))  # 'test' is selected by group_filters
     True
-    >>> groupfilter('sub', ('doc',))
+    >>> groupfilter('sub', ('doc',))  # 'doc' is deselected by group_filters
     False
-    >>> groupfilter('sub', ('test', 'doc'))
+    >>> groupfilter('sub', ('test', 'doc'))  # 'test' is selected by group_filters
     True
-    >>> groupfilter('sub', ('feature',))
+    >>> groupfilter('sub', ('feature',))  # 'feature' is only selected for 'dep', but not 'sub', but `default=True`
     True
-    >>> groupfilter('dep', ('feature',))
+    >>> groupfilter('dep', ('feature',))  # 'feature' is only selected for 'dep'
     True
     """
 

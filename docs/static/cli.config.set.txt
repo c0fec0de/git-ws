@@ -1,6 +1,6 @@
 Usage: git-ws config set [OPTIONS] OPTION VALUE
 
-  Set the configuration option to the given value.
+  Set the configuration OPTION to the given VALUE.
 
   This sets an option to the given value. If no specific configuration file is
   selected, then this will update the workspace configuration if run from

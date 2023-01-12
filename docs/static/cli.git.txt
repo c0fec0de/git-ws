@@ -1,8 +1,8 @@
 Usage: git-ws git [OPTIONS] [COMMAND]...
 
-  Run git command on projects.
+  Run git COMMAND on projects.
 
-  This command behaves identical to `git ws foreach -- git`.
+  This command is identical to `git ws foreach -- git COMMAND`.
 
 Options:
   -P, --project DIRECTORY    Project path to operate on only. All by default.

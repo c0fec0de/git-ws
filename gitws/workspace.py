@@ -57,9 +57,9 @@ class Info(BaseModel):
     @staticmethod
     def load(path: Path) -> "Info":
         """
-        Load Workspace Information from GitWS root directory at `path`.
+        Load Workspace Information from GitWS root directory at ``path``.
 
-        The workspace information is stored at `{path}/.gitws/info.toml`.
+        The workspace information is stored at ``{path}/.gitws/info.toml``.
 
         Args:
             path: Path to GitWS root directory.
@@ -72,9 +72,9 @@ class Info(BaseModel):
 
     def save(self, path: Path):
         """
-        Save Workspace Information at GitWS root directory at `path`.
+        Save Workspace Information at GitWS root directory at ``path``.
 
-        The workspace information is stored at `{path}/.gitws/info.toml`.
+        The workspace information is stored at ``{path}/.gitws/info.toml``.
 
         Args:
             path: Path to GitWS root directory.
@@ -126,8 +126,8 @@ class Workspace:
         Raises:
             UninitializedError: If directory of file is not within a workspace.
 
-        The workspace root directory contains a sub directory `.gitws`.
-        This one is searched upwards the given `path`.
+        The workspace root directory contains a sub directory ``.gitws``.
+        This one is searched upwards the given ``path``.
         """
         path = find_workspace(path=path)
         if path:
@@ -137,7 +137,7 @@ class Workspace:
     @staticmethod
     def from_path(path=None) -> "Workspace":
         """
-        Create :any:`Workspace` for existing workspace at `path`.
+        Create :any:`Workspace` for existing workspace at ``path``.
 
         Keyword Args:
             path (Path): directory or file within the workspace. Current working directory by default.
@@ -145,8 +145,8 @@ class Workspace:
         Raises:
             UninitializedError: If directory of file is not within a workspace.
 
-        The workspace root directory contains a sub directory `.gitws`.
-        This one is searched upwards the given `path`.
+        The workspace root directory contains a sub directory ``.gitws``.
+        This one is searched upwards the given ``path``.
         """
         path = Workspace.find_path(path=path)
         info = Info.load(path)
@@ -165,7 +165,7 @@ class Workspace:
 
     @staticmethod
     def check_empty(path: Path, main_path: Path):
-        """Check if Workspace at `path` with `main_path` is empty."""
+        """Check if Workspace at ``path`` with ``main_path`` is empty."""
         if any(item != main_path for item in path.iterdir()):
             raise WorkspaceNotEmptyError(resolve_relative(path))
 
@@ -178,19 +178,19 @@ class Workspace:
         force: bool = False,
     ) -> "Workspace":
         """
-        Initialize new :any:`Workspace` at `path`.
+        Initialize new :any:`Workspace` at ``path``.
 
         Args:
             path:  Path to the workspace
-            main_path:  Path to the main project. Relative to `path`.
+            main_path:  Path to the main project. Relative to ``path``.
 
         Keyword Args:
-            manifest_path:  Path to the manifest file. Relative to `main_path`. Default is `git-ws.toml`.
+            manifest_path:  Path to the manifest file. Relative to ``main_path``. Default is ``git-ws.toml``.
             group_filters: Group Filters.
             force: Ignore that the workspace exists.
 
         Raises:
-            OutsideWorkspaceError: `main_path` is not within `path`.
+            OutsideWorkspaceError: ``main_path`` is not within ``path``.
         """
         if not force:
             info = Workspace.is_init(path)
@@ -218,13 +218,13 @@ class Workspace:
         """
         Deinitialize.
 
-        Remove `GIT_WS_PATH` directory.
+        Remove ``GIT_WS_PATH`` directory.
         """
         shutil.rmtree(self.path / GIT_WS_PATH)
 
     @property
     def main_path(self) -> Path:
-        """Resolved Path to main project."""
+        """Resolved path to main project."""
         return self.path / self.info.main_path
 
     @property
@@ -258,7 +258,7 @@ class Workspace:
         return group_filters
 
     def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
-        """Yield obsolete paths except `used` ones."""
+        """Yield obsolete paths except *used* ones."""
         usemap: Dict[str, Any] = {GIT_WS_PATH.name: {}}
         for path in used:
             pathmap = usemap

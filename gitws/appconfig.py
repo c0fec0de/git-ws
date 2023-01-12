@@ -127,8 +127,8 @@ class AppConfig:
     highest priority.
 
     On top, the class will also evaluate environment variables named `GIT_WS_*` and allow overriding
-    configuration values that way. For example, the `manifest_path` option can be explicitly overridden by
-    setting the `GIT_WS_MANIFEST_PATH` environment variable.
+    configuration values that way. For example, the ``manifest_path`` option can be explicitly overridden by
+    setting the ``GIT_WS_MANIFEST_PATH`` environment variable.
 
     Keyword Args:
 

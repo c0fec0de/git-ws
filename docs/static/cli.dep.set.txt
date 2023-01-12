@@ -1,7 +1,7 @@
 Usage: git-ws dep set [OPTIONS] DEP {name|remote|sub_url|url|revision|path|man
                       ifest_path|groups|with_groups|submodules} VALUE
 
-  Set Value For Dependency.
+  Set ATTRIBUTE For Dependency DEP to VALUE.
 
 Options:
   -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
