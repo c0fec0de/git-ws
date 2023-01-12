@@ -70,7 +70,7 @@ Run a shell command on all git clones
 
 >>> gws.run_foreach(['ls', '-l'])
 
-For more advanced operations, the `GitWS.clones` iterates over all clones, starting from the main project.
+For more advanced operations, the :any:`GitWS.clones` iterates over all clones, starting from the main project.
 
 >>> for clone in gws.clones():
 ...     print(f"=== {clone.info} ===")
@@ -79,6 +79,21 @@ For more advanced operations, the `GitWS.clones` iterates over all clones, start
 === main (MAIN 'main') ===
 Project(name='main', path='main', is_main=True)
 Git(...)
+
+Overview
+--------
+
+* :any:`GitWS`: the central API to the main functionality.
+* :any:`Clone`: is the pair of Of :any:`Project` And :any:`Git` Interface.
+* :any:`Git`: provides a reduced API to ``git``.
+* :any:`ProjectSpec`: Dependency Specification from Manifest File.
+* :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.
+* :any:`ManifestSpec`: Specification of the actual project.
+* :any:`Manifest`: Manifest as needed by :any:`GitWS` derived from :any:`ManifestSpec`.
+* :any:`Remote`: Remote Alias in :any:`ManifestSpec`.
+* :any:`Defaults`: Default Values in :any:`ManifestSpec`.
+* :any:`AppConfigData`: :any:`GitWS` Configuration.
+* :any:`Workspace`: the file system location containing all git clones.
 """
 
 import logging
