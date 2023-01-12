@@ -33,3 +33,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_rtd_theme"
 # html_static_path = ["static"]
+
+intersphinx_mapping = {
+    "click": ("https://click.palletsprojects.com/en/latest/", None),
+}

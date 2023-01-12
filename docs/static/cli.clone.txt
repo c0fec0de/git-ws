@@ -1,6 +1,8 @@
 Usage: git-ws clone [OPTIONS] URL [PATH]...
 
-  Create a git clone and initialize Git Workspace.
+  Create a git clone from URL and initialize Git Workspace.
+
+  PATH is optional. If not specified `REPONAME/REPONAME/` by default.
 
 Options:
   -M, --manifest FILE        Manifest file. 'git-ws.toml' by default.

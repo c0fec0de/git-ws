@@ -1,9 +1,9 @@
 Usage: git-ws foreach [OPTIONS] [COMMAND]...
 
-  Run 'command' on projects.
+  Run COMMAND on projects.
 
   Please use '--' to separate 'git ws' command line options from options
-  forwarded to the `command` (i.e. `git ws foreach -- ls -l`)
+  forwarded to the COMMAND (i.e. `git ws foreach -- ls -l`)
 
 Options:
   -P, --project DIRECTORY    Project path to operate on only. All by default.

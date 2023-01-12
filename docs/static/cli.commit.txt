@@ -1,6 +1,6 @@
 Usage: git-ws commit [OPTIONS] [PATHS]...
 
-  Run 'git commit' on paths and choose the right git clone automatically.
+  Run 'git commit' on PATHS and choose the right git clone automatically.
 
 Options:
   -m, --message TEXT         commit message

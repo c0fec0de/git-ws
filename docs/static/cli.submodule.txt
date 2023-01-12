@@ -1,8 +1,8 @@
 Usage: git-ws submodule [OPTIONS] [COMMAND]...
 
-  Run git submodule command on projects.
+  Run git submodule COMMAND on projects.
 
-  This command behaves identical to `git ws foreach -- git submodule`.
+  This command is identical to `git ws foreach -- git submodule COMMAND`.
 
 Options:
   -P, --project DIRECTORY    Project path to operate on only. All by default.

@@ -46,7 +46,7 @@ _LOGLEVELMAP = {
 
 
 def get_loglevel(verbose: int):
-    """Return `logging.level` according to verbosity."""
+    """Return ``logging.level`` according to verbosity."""
     return _LOGLEVELMAP.get(verbose, logging.DEBUG)
 
 
@@ -64,7 +64,7 @@ class Context(BaseModel):
         return click.echo(message)
 
     def style(self, text, **kwargs):
-        """Format `text`."""
+        """Format ``text``."""
         if self.color:
             return click.style(text, **kwargs)
         return text

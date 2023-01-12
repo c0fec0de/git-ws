@@ -6,7 +6,7 @@ Options:
   -h, --help  Show this message and exit.
 
 Commands:
-  add     Add Dependency.
-  delete  Delete Dependency.
+  add     Add Dependency NAME.
+  delete  Delete Dependency NAME.
   list    List Dependencies.
-  set     Set Value For Dependency.
+  set     Set ATTRIBUTE For Dependency DEP to VALUE.

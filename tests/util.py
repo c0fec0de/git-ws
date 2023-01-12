@@ -36,7 +36,7 @@ LEARN = False
 
 @contextlib.contextmanager
 def chdir(path):
-    """Change Working Directory to `path`."""
+    """Change Working Directory to ``path``."""
     curdir = os.getcwd()
     try:
         os.chdir(path)
@@ -70,7 +70,7 @@ def _set_envvar(name, value):
 
 
 def get_sha(path):
-    """Get SHA for `path`."""
+    """Get SHA for ``path``."""
     assert (path / ".git").exists()
     result = run(("git", "rev-parse", "HEAD"), capture_output=True, check=True, cwd=path)
     return result.stdout.decode("utf-8").strip()
@@ -99,7 +99,7 @@ def format_logs(caplog, tmp_path=None, repos_path=None):
 
 
 def replace_path(text, path, repl):
-    """Replace `path` by `repl` in `text`."""
+    """Replace ``path`` by ``repl`` in ``text``."""
     path_esc = re.escape(str(path))
     sep_esc = re.escape(os.path.sep)
     regex = re.compile(rf"{path_esc}([A-Za-z0-9_{sep_esc}]*)")

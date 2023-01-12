@@ -1,6 +1,6 @@
 Usage: git-ws rm [OPTIONS] [PATHS]...
 
-  Run 'git rm' on paths and choose the right git clone automatically.
+  Run 'git rm' on PATHS and choose the right git clone automatically.
 
 Options:
   -f, --force                Enfore operation.

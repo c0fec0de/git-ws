@@ -40,7 +40,7 @@ def remote():
 @pass_context
 def add(context, name, url_base, manifest_path):
     """
-    Add Remote.
+    Add Remote NAME with URL_BASE.
     """
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)
@@ -71,7 +71,7 @@ def list_(context, manifest_path):
 @pass_context
 def delete(context, name, manifest_path):
     """
-    Delete Remote.
+    Delete Remote NAME.
     """
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)

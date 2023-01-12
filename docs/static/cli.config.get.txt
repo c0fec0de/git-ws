@@ -1,6 +1,6 @@
 Usage: git-ws config get [OPTIONS] OPTION
 
-  Get the value of a configuration option.
+  Get the value of a configuration OPTION.
 
   This prints the value of the specified option. If selected, the value of a
   specific configuration file will be read. Otherwise, the computed value of

@@ -1,6 +1,6 @@
 Usage: git-ws init [OPTIONS] [PATH]...
 
-  Initialize Git Workspace.
+  Initialize Git Workspace at PATH or current directory.
 
   The actual directory MUST be a valid git clone, which has been either
   created by 'git init' or 'git clone'.

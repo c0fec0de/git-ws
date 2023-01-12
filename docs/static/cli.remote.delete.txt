@@ -1,6 +1,6 @@
 Usage: git-ws remote delete [OPTIONS] NAME
 
-  Delete Remote.
+  Delete Remote NAME.
 
 Options:
   -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.

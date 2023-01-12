@@ -25,7 +25,7 @@ import urllib
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
-from ._util import no_echo, removesuffix, resolve_relative, run
+from ._util import get_repr, no_echo, removesuffix, resolve_relative, run
 from .appconfig import AppConfig
 from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
@@ -53,13 +53,13 @@ class GitWS:
         group_filters: Group Filters.
 
     Keyword Args:
-        secho: `click.secho` like print method for verbose output.
+        secho: :any:`click.secho` like print method for verbose output.
 
     There are static methods to create a :any:`GitWS` instances in the different szenarios:
 
-    * :any:`GitWS.from_path()`: Create :any:`GitWS` for EXISTING workspace at `path`.
-    * :any:`GitWS.create()`: Create NEW workspace at `path` and return corresponding :any:`GitWS`.
-    * :any:`GitWS.init()`: Initialize NEW Workspace for git clone at `main_path` and return corresponding :any:`GitWS`.
+    * :any:`GitWS.from_path()`: Create :any:`GitWS` for EXISTING workspace at ``path``.
+    * :any:`GitWS.create()`: Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.
+    * :any:`GitWS.init()`: Initialize NEW Workspace for git clone at ``main_path``, return corresponding :any:`GitWS`.
     * :any:`GitWS.clone()`: Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
     """
 
@@ -86,6 +86,9 @@ class GitWS:
             )
         return NotImplemented
 
+    def __repr__(self):
+        return get_repr(self, (self.workspace, self.manifest_path, self.group_filters))
+
     @property
     def path(self) -> Path:
         """
@@ -108,13 +111,13 @@ class GitWS:
         secho=None,
     ) -> "GitWS":
         """
-        Create :any:`GitWS` for EXISTING workspace at `path`.
+        Create :any:`GitWS` for EXISTING workspace at ``path``.
 
         Keyword Args:
             path: Path within the workspace (Default is the current working directory).
-            manifest_path: Manifest File Path. Relative to `main_path`. Default is taken from Configuration.
+            manifest_path: Manifest File Path. Relative to ``main_path``. Default is taken from Configuration.
             group_filters: Group Filters. Default is taken from Configuration.
-            secho: `click.secho` like print method for verbose output.
+            secho: :any:`click.secho` like print method for verbose output.
         """
         workspace = Workspace.from_path(path=path)
         if not manifest_path:
@@ -136,19 +139,19 @@ class GitWS:
         secho=None,
     ) -> "GitWS":
         """
-        Create NEW workspace at `path` and return corresponding :any:`GitWS`.
+        Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.
 
         Args:
             path: Workspace Path.
             main_path: Main Project Path.
 
         Keyword Args:
-            manifest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
+            manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
             force: Ignore that the workspace exists.
-            secho: `click.secho` like print method for verbose output.
+            secho: :any:`click.secho` like print method for verbose output.
         """
         _LOGGER.debug(
             "GitWS.create(%r, %r, manifest_path=%r, group-filters=%r)",
@@ -158,9 +161,9 @@ class GitWS:
             group_filters,
         )
         # We need to resolve in inverted order, otherwise the manifest_path is broken
-        # `manifest_path` can be absolute or relative to `main_path`. we need it relative to `main_path`.
+        # ``manifest_path`` can be absolute or relative to ``main_path``. we need it relative to ``main_path``.
         manifest_path_rel = resolve_relative(manifest_path or MANIFEST_PATH_DEFAULT, base=main_path)
-        # `main_path` can be absolute or relative to `path`. we need it relative to `path`.
+        # ``main_path`` can be absolute or relative to ``path``. we need it relative to ``path``.
         main_path = resolve_relative(main_path, base=path)
         # check manifest
         ManifestSpec.load(path / main_path / manifest_path_rel)
@@ -184,18 +187,18 @@ class GitWS:
         secho=None,
     ) -> "GitWS":
         """
-        Initialize NEW Workspace for git clone at `main_path` and return corresponding :any:`GitWS`.
+        Initialize NEW Workspace for git clone at ``main_path`` and return corresponding :any:`GitWS`.
 
-        The parent directory of `main_path` becomes the workspace directory.
+        The parent directory of ``main_path`` becomes the workspace directory.
 
         Keyword Args:
             main_path: Main Project Path.
-            manifest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
+            manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
             force: Ignore that the workspace exists.
-            secho: `click.secho` like print method for verbose output.
+            secho: :any:`click.secho` like print method for verbose output.
         """
         secho = secho or no_echo
         main_path = Git.find_path(path=main_path)
@@ -247,13 +250,13 @@ class GitWS:
 
         Keyword Args:
             main_path: Main Project Path.
-            manifest_path: Manifest File Path. Relative to `main_path`. Default is 'git-ws.toml'.
+            manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
             revision: Revision instead of default one.
             force: Ignore that the workspace is not empty.
-            secho: `click.secho` like print method for verbose output.
+            secho: :any:`click.secho` like print method for verbose output.
         """
         secho = secho or no_echo
         parsedurl = urllib.parse.urlparse(url)
@@ -375,11 +378,11 @@ class GitWS:
         Enriched Git Status.
 
         Keyword Args:
-            paths: Limit Git Status to `paths` only.
+            paths: Limit Git Status to ``paths`` only.
             branch: Dump branch information.
 
         Yields:
-            Status
+            :any:`Status`
         """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             if banner:
@@ -394,7 +397,7 @@ class GitWS:
         Enriched Git Diff.
 
         Keyword Args:
-            paths: Limit Git Diff to `paths` only.
+            paths: Limit Git Diff to ``paths`` only.
         """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
@@ -406,10 +409,10 @@ class GitWS:
         Enriched Git Diff Status.
 
         Keyword Args:
-            paths: Limit Git Diff to `paths` only.
+            paths: Limit Git Diff to ``paths`` only.
 
         Yields:
-            DiffStat
+            :any:`DiffStat`
         """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
@@ -423,7 +426,7 @@ class GitWS:
         Enriched Git Checkout.
 
         Keyword Args:
-            paths: Limit Checkout to `paths` only. Otherwise run checkout on all git clones.
+            paths: Limit Checkout to ``paths`` only. Otherwise run checkout on all git clones.
             force: force checkout (throw away local modifications)
 
         """
@@ -472,7 +475,7 @@ class GitWS:
     # pylint: disable=invalid-name
     def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
         """
-        Remove.
+        Remove ``paths``.
 
         Args:
             paths: Paths.
@@ -489,7 +492,7 @@ class GitWS:
             clone.git.rm(cpaths, cached=cached, force=force, recursive=recursive)
 
     def reset(self, paths: Tuple[Path, ...]):
-        """Reset `paths`."""
+        """Reset ``paths``."""
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             clone.git.check()
             clone.git.reset(cpaths)
@@ -524,12 +527,12 @@ class GitWS:
 
     def tag(self, name: str, msg: Optional[str] = None, force: bool = False):
         """
-        Create Git Tag.
+        Create Git Tag `name` with `msg`.
 
         The following steps are done to create a valid tag:
 
-        1. store a frozen manifest to `main_path/.git-ws/manifests/<name>.toml`
-        2. commit frozen manifest from `main_path/.git-ws/manifests/<name>.toml`
+        1. store a frozen manifest to ``main_path/.git-ws/manifests/<name>.toml``
+        2. commit frozen manifest from ``main_path/.git-ws/manifests/<name>.toml``
         3. create git tag.
         """
         clone = Clone.from_project(self.workspace, next(self.projects()), secho=self.secho)
@@ -559,7 +562,7 @@ class GitWS:
         reverse: bool = False,
     ):
         """
-        Run `command` on each clone.
+        Run ``command`` on each clone.
 
         Args:
             command: Command to run
@@ -583,7 +586,7 @@ class GitWS:
             reverse: Operate in reverse order.
 
         Yields:
-            Clone
+            :any:`Clone`
         """
         for clone in self._foreach(project_paths=project_paths, resolve_url=resolve_url, reverse=reverse):
             clone.check()
@@ -618,7 +621,7 @@ class GitWS:
             reverse: Operate in reverse order.
 
         Yields:
-            Clone
+            :any:`Clone`
         """
         workspace = self.workspace
         projects = self.projects(skip_main=skip_main, resolve_url=resolve_url)
@@ -637,7 +640,7 @@ class GitWS:
             resolve_url: Resolve URLs to absolute ones.
 
         Yields:
-            Project
+            :any:`Project`
         """
         workspace = self.workspace
         manifest_path = self.manifest_path
@@ -655,7 +658,7 @@ class GitWS:
 
     @staticmethod
     def create_manifest(manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
-        """Create Manifest File at `manifest_path`within `project`."""
+        """Create Manifest File at `manifest_path`within ``project``."""
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
         manifest_spec = ManifestSpec()

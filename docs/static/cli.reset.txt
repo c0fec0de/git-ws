@@ -1,6 +1,6 @@
 Usage: git-ws reset [OPTIONS] [PATHS]...
 
-  Run 'git reset' on paths and choose the right git clone automatically.
+  Run 'git reset' on PATHS and choose the right git clone automatically.
 
 Options:
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by

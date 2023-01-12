@@ -7,6 +7,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = build
+APIOPTS       = --separate --force --module-first --maxdepth 2 --no-toc
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -24,7 +25,7 @@ quick-html: api Makefile
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 api:
-	sphinx-apidoc --output-dir api .. ../gitws/cli ../docs ../tests $(wildcard ../*.py) --separate --force --module-first --maxdepth 2
+	sphinx-apidoc --output-dir api .. ../gitws/cli ../docs ../tests $(wildcard ../*.py) $(APIOPTS)
 .PHONY: api
 
 gen:

@@ -75,7 +75,7 @@ def repos_submodules():
 
 @fixture
 def gws(tmp_path, repos_submodules):
-    """Initialized :any:`GitWS` on `repos_submodules`."""
+    """Initialized :any:`GitWS` on ``repos_submodules``."""
     with chdir(tmp_path):
         gws = GitWS.clone(str(repos_submodules / "main"))
         gws.update(skip_main=True)

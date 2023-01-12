@@ -98,7 +98,7 @@ def path_option():
 
 
 def process_path(value) -> Optional[Path]:
-    """Process `path_option`."""
+    """Process ``path_option``."""
     if value:
         if len(value) > 1:
             raise click.UsageError("more than one PATH specified")
@@ -107,7 +107,7 @@ def process_path(value) -> Optional[Path]:
 
 
 def process_paths(paths) -> Tuple[Path, ...]:
-    """Process `paths_argument`."""
+    """Process ``paths_argument``."""
     return tuple(Path(path) for path in paths)
 
 

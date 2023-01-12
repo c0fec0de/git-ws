@@ -6,6 +6,6 @@ Options:
   -h, --help  Show this message and exit.
 
 Commands:
-  add     Add Remote.
-  delete  Delete Remote.
+  add     Add Remote NAME with URL_BASE.
+  delete  Delete Remote NAME.
   list    List Remotes.

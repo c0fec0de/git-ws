@@ -6,8 +6,8 @@ Options:
   -h, --help  Show this message and exit.
 
 Commands:
-  delete  Remove the option from the configuration.
+  delete  Remove the OPTION from the configuration.
   files   Show the location of the configuration files.
-  get     Get the value of a configuration option.
+  get     Get the value of a configuration OPTION.
   list    List all configuration options.
-  set     Set the configuration option to the given value.
+  set     Set the configuration OPTION to the given VALUE.

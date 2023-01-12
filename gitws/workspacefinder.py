@@ -28,8 +28,8 @@ def find_workspace(path: Optional[Path] = None) -> Optional[Path]:
     Keyword Args:
         path (Path): directory or file within the workspace. Current working directory by default.
 
-    The workspace root directory contains a sub directory `.gitws`.
-    This one is searched upwards the given `path`.
+    The workspace root directory contains a sub directory ``.gitws``.
+    This one is searched upwards the given ``path``.
     """
     spath = path or Path.cwd()
     while True:

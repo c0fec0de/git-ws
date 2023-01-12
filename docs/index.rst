@@ -24,7 +24,6 @@ use. The following chapters provide details and guide through the usage of the
    manual/group-filter
    manual/tagging
    manual/command-line-interface/index
-   manual/api
 
 
 Besides use on the command line, Git Workspace also has a public API which can be used
@@ -34,7 +33,7 @@ for more advanced automatization of your projects:
    :maxdepth: 1
    :caption: Programmer's Manual:
 
-   api/modules
+   api/gitws
 
 
 Indices and tables

@@ -1,6 +1,7 @@
 Usage: git-ws diff [OPTIONS] [PATHS]...
 
-  Run 'git diff' on paths (displayed paths include the actual clone path).
+  Run 'git diff' on PATHS or all files (displayed paths include the actual
+  clone path).
 
 Options:
   --stat                     show diffstat instead of patch.
