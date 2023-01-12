@@ -10,8 +10,8 @@ Working With ``git`` Clones
 
 Run a command once for every ``git`` clone in a workspace.
 
-.. include:: ../../static/cli.foreach.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.foreach.txt
+   :language: text
 
 This command is useful to run a shell command once for each ``git`` clone in a workspace. For example, the following would run a ``git status`` in all clones:
 
@@ -30,8 +30,8 @@ This command is useful to run a shell command once for each ``git`` clone in a w
 
 Run a ``git`` command for all clones within a workspace.
 
-.. include:: ../../static/cli.git.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.git.txt
+   :language: text
 
 This is similar to the :ref:`git_ws_foreach`, but automatically calls ``git``. It is basically a shorthand for ``git ws foreach git``.
 
@@ -51,8 +51,8 @@ This is similar to the :ref:`git_ws_foreach`, but automatically calls ``git``. I
 
 Run a ``git pull`` in all clones within a workspace.
 
-.. include:: ../../static/cli.pull.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.pull.txt
+   :language: text
 
 
 .. _git_ws_push:
@@ -62,8 +62,8 @@ Run a ``git pull`` in all clones within a workspace.
 
 Run a ``git push`` in all clones within a workspace.
 
-.. include:: ../../static/cli.push.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.push.txt
+   :language: text
 
 
 .. _git_ws_rebase:
@@ -73,8 +73,8 @@ Run a ``git push`` in all clones within a workspace.
 
 Run a ``git rebase`` in all clones within a workspace.
 
-.. include:: ../../static/cli.rebase.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.rebase.txt
+   :language: text
 
 
 .. _git_ws_fetch:
@@ -84,8 +84,8 @@ Run a ``git rebase`` in all clones within a workspace.
 
 Run a ``git fetch`` in all clones within a workspace.
 
-.. include:: ../../static/cli.fetch.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.fetch.txt
+   :language: text
 
 
 .. _git_ws_diff:
@@ -95,8 +95,8 @@ Run a ``git fetch`` in all clones within a workspace.
 
 Run a ``git diff`` in all clones within a workspace.
 
-.. include:: ../../static/cli.diff.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.diff.txt
+   :language: text
 
 This command can be used to show the differences in clones in all clones within a workspace. Note that this command is not equivalent to calling ``git ws git diff``: The command will show paths relative to the workspace folder. This is useful if you want to e.g. create a patch for an entire workspace:
 
@@ -116,8 +116,8 @@ This command can be used to show the differences in clones in all clones within 
 
 Check out all projects to the revision specified in the manifest.
 
-.. include:: ../../static/cli.checkout.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.checkout.txt
+   :language: text
 
 This command can be used to check out all dependencies to the revision which has been specified in the manifest file. This can be useful if some repositories have been manually checked out to other revisions, as the command will ensure all repositories are on their well defined version.
 
@@ -145,8 +145,8 @@ This command can be used to check out all dependencies to the revision which has
 
 Show repository status of all projects within a workspace.
 
-.. include:: ../../static/cli.status.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.status.txt
+   :language: text
 
 This is similar to running ``git ws git status``, but the file paths shown will be modified such that they can be used with commands such as :ref:`git_ws_add`, :ref:`git_ws_reset` and :ref:`git_ws_commit`.
 
@@ -157,8 +157,8 @@ This is similar to running ``git ws git status``, but the file paths shown will 
 
 Run a ``git add`` on the specified paths.
 
-.. include:: ../../static/cli.add.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.add.txt
+   :language: text
 
 This command can be used to conveniently add files to the index for later commit. It is mostly useful if there are modifications in multiple repositories. So instead of the following:
 
@@ -193,8 +193,8 @@ Use :ref:`git_ws_status` to display all changes using paths suitable for use wit
 Run ``git rm`` on specified files within the workspace.
 
 
-.. include:: ../../static/cli.rm.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.rm.txt
+   :language: text
 
 This command can be used to conveniently run a ``git rm`` on file spread across several ``git`` clones within a workspace. So instead of the following:
 
@@ -220,8 +220,8 @@ You can use this:
 
 Run a ``git reset`` on the given paths.
 
-.. include:: ../../static/cli.reset.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.reset.txt
+   :language: text
 
 Similarly to the :ref:`git_ws_add` command, this allows conveniently running a ``git reset`` on files spread across repositories in a workspace. So instead of this:
 
@@ -256,8 +256,8 @@ Use :ref:`git_ws_status` to display all changes using paths suitable for use wit
 
 Runs a ``git commit`` in the projects within a workspace.
 
-.. include:: ../../static/cli.commit.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.commit.txt
+   :language: text
 
 This command can be used in two ways (similar to the use of ``git commit`` itself). In the first form, when no file paths are specified, the command runs a commit in all repositories which have staged changes:
 
@@ -288,8 +288,8 @@ In this form, only the files given on the command line will be included in the c
 Run a ``git submodule`` in all clones within a workspace.
 
 
-.. include:: ../../static/cli.submodule.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.submodule.txt
+   :language: text
 
 This command can be used to conveniently work with ``git submodules`` that are included by some of the projects within a workspace. For example, to initialize and checkout submodules in all of the projects in a workspace, the following can be used:
 
@@ -306,8 +306,8 @@ This command can be used to conveniently work with ``git submodules`` that are i
 Create a tag in the main project including a connected, frozen manifest.
 
 
-.. include:: ../../static/cli.tag.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.tag.txt
+   :language: text
 
 This command can be used to create a (named) tag in the workspace by:
 

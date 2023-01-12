@@ -11,8 +11,8 @@ A part of the aspects of ``git ws`` can be configured at various levels. Program
 
 Get and set application configuration options.
 
-.. include:: ../../static/cli.config.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.config.txt
+   :language: text
 
 The ``config`` sub-command can be used to retrieve and modify configuration values for the system wide, per user and workspace configuration.
 
@@ -36,8 +36,8 @@ To interact with the configuration, a set of sub-commands are available. By defa
 
 Delete an option.
 
-.. include:: ../../static/cli.config.delete.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.config.delete.txt
+   :language: text
 
 This deletes the given option from the configuration such that the implicit default will be used instead:
 
@@ -54,8 +54,8 @@ This deletes the given option from the configuration such that the implicit defa
 
 Get the location of the configuration files.
 
-.. include:: ../../static/cli.config.files.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.config.files.txt
+   :language: text
 
 This prints the locations of the configuration files. The location of these files are system dependent, so this command is useful to learn where to put configuration files on a concrete system:
 
@@ -76,8 +76,8 @@ This prints the locations of the configuration files. The location of these file
 
 Read a single configuration option.
 
-.. include:: ../../static/cli.config.get.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.config.get.txt
+   :language: text
 
 This reads and prints the value of the given configuration option.
 
@@ -95,8 +95,8 @@ This reads and prints the value of the given configuration option.
 
 Read all configuration values.
 
-.. include:: ../../static/cli.config.list.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.config.list.txt
+   :language: text
 
 This reads and prints all configuration options, including a short description
 for each option:
@@ -121,8 +121,8 @@ for each option:
 
 Set a configuration option.
 
-.. include:: ../../static/cli.config.set.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.config.set.txt
+   :language: text
 
 This command sets the given option to the specified value. By default, if an unknown option is given, the command terminates with an error. Using the ``--ignore-unknown`` option, writing any option can be enforced.
 

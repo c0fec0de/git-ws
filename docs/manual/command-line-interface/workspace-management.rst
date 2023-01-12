@@ -13,8 +13,8 @@ The following group of commands is used to create and modify :ref:`workspaces <n
 
 Clone a Git Workspace managed project and prepare the workspace folder.
 
-.. include:: ../../static/cli.clone.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.clone.txt
+   :language: text
 
 This is one of the two basic commands which can be used to initialize a workspace for an existing project. If you have a suitable project on a server and aim to create a new workspace from it, you would run something like this:
 
@@ -48,8 +48,8 @@ The clone operation can be customized using some additional options:
 
 Prepare a workspace folder from an existing ``git`` clone.
 
-.. include:: ../../static/cli.init.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.init.txt
+   :language: text
 
 This command is pretty similar to the :ref:`git_ws_clone` command, except that it operates on an existing ``git`` clone. Typically, it is used like this:
 
@@ -72,8 +72,8 @@ Typically, using ``git ws clone`` is a bit shorter and more concise. In fact, th
 
 Fetch dependencies and check them out at the revision specified in the manifest.
 
-.. include:: ../../static/cli.update.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.update.txt
+   :language: text
 
 The ``git ws update`` command is used to actually create a workspace and keep it up-to-date. After initializing a workspace using :ref:`git_ws_init` or :ref:`git_ws_clone`, use this command to clone also all dependencies and check them out at the revision specified in the project's manifest file:
 
@@ -113,8 +113,8 @@ There are also some additional options which can be used to further tweak the co
 
 De-initialize a workspace.
 
-.. include:: ../../static/cli.deinit.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.deinit.txt
+   :language: text
 
 This command is used to remove any Git Workspace related information from a workspace folder. Basically this will remove the ``.git-ws`` folder and hence any kind of workspace settings. This can be useful if the workspace folder is going to be reused:
 
@@ -135,8 +135,8 @@ In this example, we remove the workspace settings which were based on the former
 
 Retrieve information about the workspace.
 
-.. include:: ../../static/cli.info.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.info.txt
+   :language: text
 
 This command has further sub-commands which can be used to get information about the workspace. In particular, these commands are the following:
 
@@ -147,8 +147,8 @@ This command has further sub-commands which can be used to get information about
 
 Show the dependency tree of the project.
 
-.. include:: ../../static/cli.info.dep-tree.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.info.dep-tree.txt
+   :language: text
 
 This command can be useful to show the dependency tree for an existing project. By default, the tree structure is printed out like this:
 
@@ -181,8 +181,8 @@ Running it through ``dot`` would generate a graph like this:
 
 Get the path to the main project within a workspace.
 
-.. include:: ../../static/cli.info.main-path.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.info.main-path.txt
+   :language: text
 
 This command simply prints the path to the main project for the current workspace:
 
@@ -201,8 +201,8 @@ This command simply prints the path to the main project for the current workspac
 
 Show the paths to all projects within a workspace.
 
-.. include:: ../../static/cli.info.project-paths.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.info.project-paths.txt
+   :language: text
 
 This command prints the list of paths to all projects within a workspace. For example:
 
@@ -227,8 +227,8 @@ This command prints the list of paths to all projects within a workspace. For ex
 
 Show the path to the workspace folder.
 
-.. include:: ../../static/cli.info.workspace-path.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.info.workspace-path.txt
+   :language: text
 
 This command simply prints the path to the workspace folder like that:
 

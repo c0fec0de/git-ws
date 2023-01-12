@@ -11,8 +11,8 @@ The :ref:`manifest <nomenclature_manifest>` is one of the core aspects of ``git 
 
 Work with manifest files.
 
-.. include:: ../../static/cli.manifest.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.manifest.txt
+   :language: text
 
 Git Workspace extensively uses manifest files to store meta information and manage dependencies. The ``git ws manifest`` command allows working with these manifest files, creating them and play other tricks needed in the daily workflow.
 
@@ -23,8 +23,8 @@ Git Workspace extensively uses manifest files to store meta information and mana
 
 Create a new manifest.
 
-.. include:: ../../static/cli.manifest.create.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.manifest.create.txt
+   :language: text
 
 This command generates a new manifest file. The generated file comes with some built-in documentation, hence, editing the file should be quite easy. Refer to :ref:`manifest_manual` to learn more about the general structure of the manifest file.
 
@@ -44,8 +44,8 @@ This command generates a new manifest file. The generated file comes with some b
 
 Freeze a project.
 
-.. include:: ../../static/cli.manifest.freeze.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.manifest.freeze.txt
+   :language: text
 
 This command is useful to create a *frozen* state of a project. Often, projects will pull in dependencies on branches or tags. This means that - depending on when the workspace is created, the concrete content might differ. However, there are use cases where a particular state of a workspace needs to be conserved, e.g. when running a CI/CD pipeline for a particular snapshot of the project. This is exactly what the ``freeze`` command does. It creates a new manifest from the current one but fixes each dependency on its specific ``git`` commit hash. Also transitive dependencies are recorded.
 
@@ -83,8 +83,8 @@ To recreate a historic state of the project, one can use the ``--manifest`` opti
 
 Print the path to the main manifest:
 
-.. include:: ../../static/cli.manifest.path.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.manifest.path.txt
+   :language: text
 
 This command prints the path to the manifest of the main project.
 
@@ -102,8 +102,8 @@ This command prints the path to the manifest of the main project.
 
 Print the paths of all manifest files (i.e. the main project and all, also transitive, dependencies).
 
-.. include:: ../../static/cli.manifest.paths.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.manifest.paths.txt
+   :language: text
 
 This commands prints the paths to the main manifest file as well as any manifest files of dependencies:
 
@@ -123,8 +123,8 @@ This commands prints the paths to the main manifest file as well as any manifest
 
 Create a merged manifest.
 
-.. include:: ../../static/cli.manifest.resolve.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.manifest.resolve.txt
+   :language: text
 
 This command creates a new manifest from the current one, merging all the dependencies such that everything is contained stand-alone in one file.
 
@@ -146,8 +146,8 @@ Such a resolved manifest can be useful to understand the layout of the created w
 
 Upgrade an existing manifest.
 
-.. include:: ../../static/cli.manifest.upgrade.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.manifest.upgrade.txt
+   :language: text
 
 The intention of this command is to update existing manifest files when new versions of ``git ws`` introduce new options. In addition, the comments in the file will be updated to the current version.
 
@@ -165,8 +165,8 @@ Any user specific values are kept as-is, however, comments are stripped from the
 
 Validate a manifest file.
 
-.. include:: ../../static/cli.manifest.validate.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.manifest.validate.txt
+   :language: text
 
 This command reads and validates a manifest file. If the file is valid, the command exits with an exit code of ``0``. In case the file is not valid, the error is printed and the command exits with an error code.
 
@@ -189,8 +189,8 @@ This command reads and validates a manifest file. If the file is valid, the comm
 Update the defaults in a manifest.
 
 
-.. include:: ../../static/cli.default.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.default.txt
+   :language: text
 
 This command can be used to update values in the :ref:`defaults <manifest_defaults>` section of a manifest. For example, if one wants to use a branch called `stable` in all projects in their environment as default one, this could be done like this:
 
@@ -208,8 +208,8 @@ This command can be used to update values in the :ref:`defaults <manifest_defaul
 Programmatically edit dependencies of a project.
 
 
-.. include:: ../../static/cli.dep.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.dep.txt
+   :language: text
 
 This is a complex command with - via its sub-commands - allows to edit the :ref:`dependencies of a project <manifest_dependencies>` on the command line.
 
@@ -220,8 +220,8 @@ This is a complex command with - via its sub-commands - allows to edit the :ref:
 
 Add a new dependency to the project.
 
-.. include:: ../../static/cli.dep.add.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.dep.add.txt
+   :language: text
 
 This command can be used to add new dependencies to a project. At least, the name of the dependency is required - other information is - if not explicitly specified - derived from the name.
 
@@ -246,8 +246,8 @@ This command can be used to add new dependencies to a project. At least, the nam
 
 Remove a dependency.
 
-.. include:: ../../static/cli.dep.delete.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.dep.delete.txt
+   :language: text
 
 This removes a dependency from the manifest:
 
@@ -263,8 +263,8 @@ This removes a dependency from the manifest:
 
 List dependencies specified in the manifest.
 
-.. include:: ../../static/cli.dep.list.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.dep.list.txt
+   :language: text
 
 This prints the list of dependencies as specified in the manifest file.
 
@@ -275,8 +275,8 @@ This prints the list of dependencies as specified in the manifest file.
 
 Update properties of a dependency.
 
-.. include:: ../../static/cli.dep.set.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.dep.set.txt
+   :language: text
 
 This command can be used to update the properties of a property. It takes the name of a dependency, the name of a property and a new value for it.
 
@@ -297,8 +297,8 @@ This command can be used to update the properties of a property. It takes the na
 Edit :ref:`group filters <manifest_group_filters>` specified in a manifest.
 
 
-.. include:: ../../static/cli.group-filters.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.group-filters.txt
+   :language: text
 
 This command allows setting the  groups filters in the manifest:
 
@@ -314,8 +314,8 @@ This command allows setting the  groups filters in the manifest:
 
 Edit :ref:`remotes <manifest_remotes>` in a manifest.
 
-.. include:: ../../static/cli.remote.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.remote.txt
+   :language: text
 
 This complex command allows editing values in the remotes section of a manifest.
 
@@ -329,8 +329,8 @@ This complex command allows editing values in the remotes section of a manifest.
 Add a new remote.
 
 
-.. include:: ../../static/cli.remote.add.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.remote.add.txt
+   :language: text
 
 This command adds a new remote to the manifest:
 
@@ -348,8 +348,8 @@ This command adds a new remote to the manifest:
 
 Remove a remote.
 
-.. include:: ../../static/cli.remote.delete.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.remote.delete.txt
+   :language: text
 
 
 This removes the named remote from the manifest:
@@ -366,8 +366,8 @@ This removes the named remote from the manifest:
 
 List defined remotes.
 
-.. include:: ../../static/cli.remote.list.txt
-    :code: bash
+.. literalinclude:: ../../static/cli.remote.list.txt
+   :language: text
 
 
 This command simply lists the remotes that are defined in the manifest file.
