@@ -103,7 +103,8 @@ There are also some additional options which can be used to further tweak the co
 - As with the ``clone`` and ``init`` commands, you can specify an alternative manifest using the ``--manifest`` option. The operation can be further limited using the ``--group-filter`` filter. See :ref:`group_filtering` for more information.
 - By default, the update will also pull changes from the server, including the main project. If this is not desired, pulling the main repository can be avoided by using the ``--skip-main`` option.
 - If preferred, one can use the ``--rebase`` option to run a ``git rebase`` instead of a ``git pull``.
-- By using ``--prune``, ``git`` repositories that became obsolete (i.e. because they are no longer referenced as a dependency) will be removed from the workspace.
+- By using ``--prune``, ``git`` clones that became obsolete (i.e. because they are no longer referenced as a dependency) will be removed from the workspace.
+- ``--prune`` checks obsolete clones to be empty. If the clone contains untracked files, uncommitted changes, unpushed commits or stashed changes, the prune operation will fail. Use ``--force`` to disable this check.
 
 
 .. _git_ws_deinit:
