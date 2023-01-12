@@ -256,3 +256,27 @@ def test_git_empty_stash(tmp_path, git):
     run(("git", "stash", "-u"), cwd=clone_path)
 
     assert not clone.is_empty()
+
+
+def test_cache_modified(tmp_path, repos):
+    """Broken cache."""
+    cache_path = tmp_path / "cache"
+    repo = (repos / "dep2").resolve()
+
+    # first clone - initialize cache
+    git = Git(tmp_path / "main1", clone_cache=cache_path)
+    git.clone(str(repo))
+    git.checkout("1-feature")
+    assert (git.path / "data.txt").read_text() == "dep2-feature"
+
+    # corrupt cache
+    cache_entry_path = tuple(cache_path.glob("*"))[0]
+    (cache_entry_path / "data.txt").write_text("dep2-feature*")
+    (cache_entry_path / "new.txt").touch()
+
+    # second clone on corrupt cache
+    git = Git(tmp_path / "main2", clone_cache=cache_path)
+    git.clone(str(repo))
+    git.checkout("1-feature")
+    assert (git.path / "data.txt").read_text() == "dep2-feature"
+    assert not (git.path / "new.txt").exists()

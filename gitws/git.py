@@ -304,11 +304,13 @@ class Git:
         # cache index
         key = hashlib.sha256(baseurl.encode("utf-8")).hexdigest()
         cache = self.clone_cache / key
-        # Restore user/password credentials
+        # Restore user/password credentials, repair corrupted cache
         if cache.exists():
             self.secho("Using clone-cache")
             try:
                 self._run(("remote", "add", "origin", str(url)), capture_output=True, cwd=cache)
+                self._run(("reset", "--hard"), capture_output=True, cwd=cache)
+                self._run(("clean", "-xdf"), capture_output=True, cwd=cache)
             except subprocess.CalledProcessError:
                 shutil.rmtree(cache)  # broken
         # Cache Update
@@ -325,6 +327,7 @@ class Git:
             self.secho("Initializing clone-cache")
             cache.mkdir(parents=True)
             run(("git", "clone", "--", str(url), str(cache)))
+        _LOGGER.debug("Copy %s to  %s)", cache, self.path)
         shutil.copytree(cache, self.path)
         # Remove user/password credentials from cache
         self._run(("remote", "remove", "origin"), cwd=cache)
