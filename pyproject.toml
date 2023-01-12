@@ -105,6 +105,9 @@ basepython = python3
 
 [testenv:py]
 allowlist_externals = *
+setenv =
+    LANGUAGE=en_US
+
 commands =
     poetry install --with=dev --with=doc
     poetry run black .
