@@ -49,7 +49,7 @@ class Clone:
 
     @staticmethod
     def from_project(workspace: Workspace, project: Project, secho=None) -> "Clone":
-        """Create :any:`Clone` for `project` in `workspace`."""
+        """Create :any:`Clone` for ``project`` in ``workspace``."""
         project_path = workspace.get_project_path(project, relative=True)
         clone_cache = AppConfig().options.clone_cache
         git = Git(project_path, clone_cache=clone_cache, secho=secho)
@@ -108,12 +108,12 @@ ClonePaths = Tuple[Clone, Tuple[Path, ...]]
 
 def map_paths(clones: Tuple[Clone, ...], paths: Optional[Tuple[Path, ...]]) -> Generator[ClonePaths, None, None]:
     """
-    Map `paths` to `clones`.
+    Map ``paths`` to ``clones``.
 
-    Associate the given `paths` to the corresponding `clones`.
+    Associate the given ``paths`` to the corresponding ``clones``.
 
-    If `paths` is not empty, the corresponding clone and paths pairs are yielded.
-    If `paths` is empty, just all clones with an empty paths tuple are yielded.
+    If ``paths`` is not empty, the corresponding clone and paths pairs are yielded.
+    If ``paths`` is empty, just all clones with an empty paths tuple are yielded.
     """
     if paths:
         clonepaths: Tuple[Tuple[Clone, List[Path]], ...] = tuple((clone, []) for clone in clones)

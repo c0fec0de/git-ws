@@ -30,7 +30,7 @@ from .util import assert_gen, chdir, cli, format_logs
 
 @fixture
 def gws(tmp_path, repos):
-    """Initialized :any:`GitWS` on `repos`."""
+    """Initialized :any:`GitWS` on ``repos``."""
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):

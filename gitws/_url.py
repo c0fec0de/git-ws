@@ -20,9 +20,9 @@ from urllib import parse
 
 def urljoin(base, url):
     """
-    Resolve a `url` relative to `base`.
+    Resolve a ``url`` relative to ``base``.
 
-    Other than `urllib.parse.urljoin` this function supports relative URLs on SSH.
+    Other than ``urllib.parse.urljoin`` this function supports relative URLs on SSH.
 
     >>> urljoin('https://domain.com/base/repo1.git', 'https://domain.com/base/repo2.git')
     'https://domain.com/base/repo2.git'
@@ -61,7 +61,7 @@ def urljoin(base, url):
 
 def urlsub(base, name):
     """
-    Create sub-url for `name` with suffix of `base`.
+    Create sub-url for ``name`` with suffix of ``base``.
 
     >>> urlsub('https://domain.com/base/repo1', 'repo2')
     'repo2'

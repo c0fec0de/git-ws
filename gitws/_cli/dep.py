@@ -62,7 +62,7 @@ def add(
     submodules=None,
 ):
     """
-    Add Dependency.
+    Add Dependency NAME.
     """
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)
@@ -90,12 +90,12 @@ def add(
 @dep.command(name="set")
 @manifest_option(initial=True)
 @click.argument("dep")
-@click.argument("name", type=click.Choice(tuple(ProjectSpec.__fields__)))
+@click.argument("attribute", type=click.Choice(tuple(ProjectSpec.__fields__)))
 @click.argument("value")
 @pass_context
-def set_(context, manifest_path, dep, name, value):
+def set_(context, manifest_path, dep, attribute, value):
     """
-    Set Value For Dependency.
+    Set ATTRIBUTE For Dependency DEP to VALUE.
     """
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)
@@ -106,7 +106,7 @@ def set_(context, manifest_path, dep, name, value):
                 break
         else:
             raise ValueError(f"Unknown dependency {dep!r}")
-        dependencies[idx] = dependencies[idx].update_fromstr({name: value if value else None})
+        dependencies[idx] = dependencies[idx].update_fromstr({attribute: value if value else None})
         manifest_spec = manifest_spec.update(dependencies=dependencies)
         manifest_spec.save(manifest_path)
 
@@ -132,7 +132,7 @@ def list_(context, manifest_path):
 @pass_context
 def delete(context, name, manifest_path):
     """
-    Delete Dependency.
+    Delete Dependency NAME.
     """
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)

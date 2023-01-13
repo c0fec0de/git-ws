@@ -26,7 +26,7 @@ from .util import chdir, cli, get_sha
 
 @fixture
 def gws(tmp_path, repos):
-    """Initialized :any:`GitWS` on `repos`."""
+    """Initialized :any:`GitWS` on ``repos``."""
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
@@ -39,7 +39,7 @@ def gws(tmp_path, repos):
 
 @fixture
 def gws_dotgit(tmp_path, repos_dotgit):
-    """Initialized :any:`GitWS` on `repos_dotgit`."""
+    """Initialized :any:`GitWS` on ``repos_dotgit``."""
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):

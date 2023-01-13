@@ -23,8 +23,8 @@ class BaseModel(pydantic.BaseModel, allow_mutation=False):
     Refined :any:`pydantic.BaseModel`.
 
     * Data Models are immutable.
-    * The `repr` implementation skips fields, which are identical to their default value.
-    * A `new` implementation eases the creation of new instances with the same values.
+    * The ``repr`` implementation skips fields, which are identical to their default value.
+    * A ``new`` implementation eases the creation of new instances with the same values.
     """
 
     def __repr_args__(self: pydantic.BaseModel):

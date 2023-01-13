@@ -79,7 +79,7 @@ def main(ctx=None, verbose=0):
 @pass_context
 def init(context, path=None, manifest_path=None, group_filters=None, update: bool = False, force: bool = False):
     """
-    Initialize Git Workspace.
+    Initialize Git Workspace at PATH or current directory.
 
     The actual directory MUST be a valid git clone, which has been
     either created by 'git init' or 'git clone'.
@@ -130,7 +130,9 @@ def clone(
     force: bool = False,
 ):
     """
-    Create a git clone and initialize Git Workspace.
+    Create a git clone from URL and initialize Git Workspace.
+
+    PATH is optional. If not specified `REPONAME/REPONAME/` by default.
     """
     with exceptionhandling(context):
         path = process_path(path)
@@ -193,9 +195,9 @@ def update(
 @pass_context
 def git(context, command, projects=None, manifest_path=None, group_filters=None, reverse=False):
     """
-    Run git command on projects.
+    Run git COMMAND on projects.
 
-    This command behaves identical to `git ws foreach -- git`.
+    This command is identical to `git ws foreach -- git COMMAND`.
     """
     with exceptionhandling(context):
         command = process_command(command)
@@ -213,7 +215,7 @@ def fetch(context, command_options=None, projects=None, manifest_path=None, grou
     """
     Run 'git fetch' on projects.
 
-    This command behaves identical to `git ws foreach -- git fetch`.
+    This command is identical to `git ws foreach -- git fetch COMMAND_OPTIONS`.
     """
     with exceptionhandling(context):
         command_options = process_command_options(command_options)
@@ -231,7 +233,7 @@ def pull(context, command_options=None, projects=None, manifest_path=None, group
     """
     Run 'git pull' on projects.
 
-    This command behaves identical to `git ws foreach -- git pull`.
+    This command is identical to `git ws foreach -- git pull COMMAND_OPTIONS`.
     """
     with exceptionhandling(context):
         command_options = process_command_options(command_options)
@@ -249,7 +251,7 @@ def push(context, command_options=None, projects=None, manifest_path=None, group
     """
     Run 'git push' on projects (in reverse order).
 
-    This command behaves identical to `git ws foreach --reverse -- git push`.
+    This command is identical to `git ws foreach --reverse -- git push COMMAND_OPTIONS`.
     """
     with exceptionhandling(context):
         command_options = process_command_options(command_options)
@@ -267,7 +269,7 @@ def rebase(context, command_options=None, projects=None, manifest_path=None, gro
     """
     Run 'git rebase' on projects.
 
-    This command behaves identical to `git ws foreach -- git rebase`.
+    This command is identical to `git ws foreach -- git rebase COMMAND_OPTIONS`.
     """
     with exceptionhandling(context):
         command_options = process_command_options(command_options)
@@ -278,13 +280,13 @@ def rebase(context, command_options=None, projects=None, manifest_path=None, gro
 @main.command()
 @paths_argument()
 @click.option("--branch", "-b", is_flag=True, help="show branch information")
-@click.option("--banner", "-B", is_flag=True, help="show banner of each projects")
+@click.option("--banner", "-B", is_flag=True, help="show banner of each project")
 @manifest_option()
 @group_filters_option()
 @pass_context
 def status(context, manifest_path=None, group_filters=None, paths=None, branch: bool = False, banner: bool = False):
     """
-    Run 'git status' (displayed paths include the actual clone path).
+    Run 'git status' on PATHS or all files (displayed paths include the actual clone path).
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
@@ -310,7 +312,7 @@ def status(context, manifest_path=None, group_filters=None, paths=None, branch: 
 @pass_context
 def diff(context, manifest_path=None, group_filters=None, paths=None, stat=False):
     """
-    Run 'git diff' on paths (displayed paths include the actual clone path).
+    Run 'git diff' on PATHS or all files (displayed paths include the actual clone path).
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
@@ -329,7 +331,7 @@ def diff(context, manifest_path=None, group_filters=None, paths=None, stat=False
 @pass_context
 def checkout(context, manifest_path=None, group_filters=None, paths=None, force: bool = False):
     """
-    Run 'git checkout' on paths and choose the right git clone and manifest revision automatically.
+    Run 'git checkout' on PATHS and choose the right git clone and manifest revision automatically.
 
     Checkout all clones to their manifest revision, if no paths are given.
     """
@@ -347,7 +349,7 @@ def checkout(context, manifest_path=None, group_filters=None, paths=None, force:
 @pass_context
 def add(context, manifest_path=None, group_filters=None, paths=None, force=False, all_=False):
     """
-    Run 'git add' on paths and choose the right git clone automatically.
+    Run 'git add' on PATHS and choose the right git clone automatically.
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
@@ -365,7 +367,7 @@ def add(context, manifest_path=None, group_filters=None, paths=None, force=False
 @pass_context
 def rm(context, manifest_path=None, group_filters=None, paths=None, force=False, cached=False, recursive=False):
     """
-    Run 'git rm' on paths and choose the right git clone automatically.
+    Run 'git rm' on PATHS and choose the right git clone automatically.
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
@@ -379,7 +381,7 @@ def rm(context, manifest_path=None, group_filters=None, paths=None, force=False,
 @pass_context
 def reset(context, manifest_path=None, group_filters=None, paths=None):
     """
-    Run 'git reset' on paths and choose the right git clone automatically.
+    Run 'git reset' on PATHS and choose the right git clone automatically.
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
@@ -395,7 +397,7 @@ def reset(context, manifest_path=None, group_filters=None, paths=None):
 @pass_context
 def commit(context, manifest_path=None, group_filters=None, paths=None, message=None, all_=False):
     """
-    Run 'git commit' on paths and choose the right git clone automatically.
+    Run 'git commit' on PATHS and choose the right git clone automatically.
     """
     with exceptionhandling(context):
         if not message:
@@ -413,7 +415,7 @@ def commit(context, manifest_path=None, group_filters=None, paths=None, message=
 @pass_context
 def tag(context, name, manifest_path=None, group_filters=None, message=None, force=None):
     """
-    Create git tag on main repository.
+    Create git tag NAME on main repository.
 
     This includes freezing all dependencies.
     """
@@ -431,9 +433,9 @@ def tag(context, name, manifest_path=None, group_filters=None, message=None, for
 @pass_context
 def foreach(context, command, projects=None, manifest_path=None, group_filters=None, reverse=False):
     """
-    Run 'command' on projects.
+    Run COMMAND on projects.
 
-    Please use '--' to separate 'git ws' command line options from options forwarded to the `command`
+    Please use '--' to separate 'git ws' command line options from options forwarded to the COMMAND
     (i.e. `git ws foreach -- ls -l`)
     """
     with exceptionhandling(context):
@@ -451,9 +453,9 @@ def foreach(context, command, projects=None, manifest_path=None, group_filters=N
 @pass_context
 def submodule(context, command, projects=None, manifest_path=None, group_filters=None, reverse=False):
     """
-    Run git submodule command on projects.
+    Run git submodule COMMAND on projects.
 
-    This command behaves identical to `git ws foreach -- git submodule`.
+    This command is identical to `git ws foreach -- git submodule COMMAND`.
     """
     with exceptionhandling(context):
         command = process_command(command)
@@ -468,7 +470,7 @@ def submodule(context, command, projects=None, manifest_path=None, group_filters
 @pass_context
 def default(context, manifest_path, name, value):
     """
-    Set Default in Manifest.
+    Set DEFAULT in Manifest to VALUE.
     """
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)
@@ -484,7 +486,9 @@ def default(context, manifest_path, name, value):
 @pass_context
 def group_filters(context, manifest_path, value):
     """
-    Set Group Filter.
+    Set Group Filter to VALUE.
+
+    The group filter selects/deselects dependencies based on their path and/or groups.
     """
     with exceptionhandling(context):
         manifest_path = Path(manifest_path)

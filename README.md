@@ -163,7 +163,7 @@ Git Workspace is written in Python. Besides the `git ws` command line tool, ther
 
 ## 🤝 Alternatives
 
-Before writing Git Workspace, we investigates several other existing tools in the hope they would fulfil out needs. In particular, we looked into the following tools and methodologies which are widely used to organize large projects:
+Before writing Git Workspace, we investigates several other existing tools in the hope they would fulfil our needs. In particular, we looked into the following tools and methodologies which are widely used to organize large projects:
 
 - [`git submodules`](https://git-scm.com/book/en/v2/Git-Tools-Submodules).
 - Google's [repo](https://gerrit.googlesource.com/git-repo/) tool.
@@ -171,7 +171,7 @@ Before writing Git Workspace, we investigates several other existing tools in th
 - Leaving the pure `git` domain, one can also use a package manager like [`conan`](https://conan.io/).
 - And lastly, there are also approaches to still pack everything into a large so called *monorepo*.
 
-Unfortunately, none of the tools we tested really satisfied us. But hey, as we are developers - *why not starting our own tool for the purpose?*
+Unfortunately, none of the tools we tested really satisfied us. But hey, as we are developers - *why not start our own tool for the purpose?*
 
 And that's what we did - Git Workspace is a our tool for managing a large workspace consisting of several smaller `git` projects. Here is how it compares to the other tools we evaluated:
 

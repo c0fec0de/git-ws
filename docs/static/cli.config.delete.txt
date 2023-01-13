@@ -1,6 +1,6 @@
 Usage: git-ws config delete [OPTIONS] OPTION
 
-  Remove the option from the configuration.
+  Remove the OPTION from the configuration.
 
   This removes the specified option from the selected configuration file. If
   no configuration file is explicitly selected, this will operate on the

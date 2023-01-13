@@ -92,7 +92,7 @@ def config(ctx=None, verbose=0):
 @pass_context
 def get(context, option, target, format_):
     """
-    Get the value of a configuration option.
+    Get the value of a configuration OPTION.
 
     This prints the value of the specified option. If selected,
     the value of a specific configuration file will be read. Otherwise, the
@@ -135,7 +135,7 @@ def get(context, option, target, format_):
 @pass_context
 def set_(context, option, value, target, ignore_unknown):
     """
-    Set the configuration option to the given value.
+    Set the configuration OPTION to the given VALUE.
 
     This sets an option to the given value. If no specific configuration file
     is selected, then this will update the workspace configuration if run
@@ -167,7 +167,7 @@ def set_(context, option, value, target, ignore_unknown):
 @pass_context
 def delete(context, option, target):
     """
-    Remove the option from the configuration.
+    Remove the OPTION from the configuration.
 
     This removes the specified option from the selected configuration file. If
     no configuration file is explicitly selected, this will operate on the

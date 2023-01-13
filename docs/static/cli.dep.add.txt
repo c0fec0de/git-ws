@@ -1,6 +1,6 @@
 Usage: git-ws dep add [OPTIONS] NAME
 
-  Add Dependency.
+  Add Dependency NAME.
 
 Options:
   --remote TEXT             Remote
