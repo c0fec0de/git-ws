@@ -329,13 +329,13 @@ class Project(BaseModel, allow_population_by_field_name=True):
 
     @validator("groups", allow_reuse=True)
     def _groups(cls, values):
-        # pylint: disable=no-self-argument,no-self-use
+        # pylint: disable=no-self-argument
         Groups.validate(values)
         return values
 
     @validator("with_groups", allow_reuse=True)
     def _with_groups(cls, values):
-        # pylint: disable=no-self-argument,no-self-use
+        # pylint: disable=no-self-argument
         Groups.validate(values)
         return values
 
@@ -483,7 +483,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
 
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
-        # pylint: disable=no-self-argument,no-self-use
+        # pylint: disable=no-self-argument
         remote = values.get("remote", None)
         sub_url = values.get("sub_url", None)
         url = values.get("url", None)
@@ -497,13 +497,13 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
 
     @validator("groups", allow_reuse=True)
     def _groups(cls, values):
-        # pylint: disable=no-self-argument,no-self-use
+        # pylint: disable=no-self-argument
         Groups.validate(values)
         return values
 
     @validator("with_groups", allow_reuse=True)
     def _with_groups(cls, values):
-        # pylint: disable=no-self-argument,no-self-use
+        # pylint: disable=no-self-argument
         Groups.validate(values)
         return values
 
@@ -562,7 +562,7 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
 
     @validator("group_filters", allow_reuse=True)
     def _group_filters(cls, values):
-        # pylint: disable=no-self-argument,no-self-use
+        # pylint: disable=no-self-argument
         GroupFilters.validate(values)
         return values
 
@@ -635,7 +635,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     @root_validator(allow_reuse=True)
     def _remotes_unique(cls, values):
-        # pylint: disable=no-self-argument,no-self-use
+        # pylint: disable=no-self-argument
         names = set()
         for remote in values.get("remotes", None) or []:
             name = remote.name
@@ -647,7 +647,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     @root_validator(allow_reuse=True)
     def _deps_unique(cls, values):
-        # pylint: disable=no-self-argument,no-self-use
+        # pylint: disable=no-self-argument
         names = set()
         for dep in values.get("dependencies", None) or []:
             name = dep.name
@@ -659,7 +659,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     @validator("group_filters", allow_reuse=True)
     def _group_filters(cls, values):
-        # pylint: disable=no-self-argument,no-self-use
+        # pylint: disable=no-self-argument
         GroupFilters.validate(values)
         return values
 
