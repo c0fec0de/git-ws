@@ -74,10 +74,10 @@ def test_defaults():
         defaults.remote = "other"
 
     with raises(ValueError):
-        Defaults(groups=("-foo"))
+        Defaults(groups="-foo")
 
     with raises(ValueError):
-        Defaults(with_groups=("-foo"))
+        Defaults(with_groups="-foo")
 
 
 def test_group_select():
@@ -155,10 +155,10 @@ def test_project_spec():
         project_spec.name = "other"
 
     with raises(ValueError):
-        ProjectSpec(name="name", groups=("-foo"))
+        ProjectSpec(name="name", groups="-foo")
 
     with raises(ValueError):
-        ProjectSpec(name="name", with_groups=("-foo"))
+        ProjectSpec(name="name", with_groups="-foo")
 
 
 def test_manifest():
