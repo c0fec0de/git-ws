@@ -52,7 +52,7 @@ from .remote import remote
 _LOGGING_FORMAT = "%(name)s %(levelname)s %(message)s"
 
 
-@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option("-v", "--verbose", count=True)
 @click.version_option(package_name="git-ws")
 @click.pass_context
