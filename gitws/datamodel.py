@@ -87,6 +87,7 @@ class Groups(tuple):
         """
         for group in groups:
             validate_group(group)
+        return groups
 
 
 _RE_GROUP_FILTER = re.compile(r"\A(?P<select>[\-\+])(?P<group>[a-zA-Z0-9_][a-zA-Z0-9_\-]*)?(@(?P<path>.+))?\Z")
@@ -129,6 +130,7 @@ class GroupFilters(tuple):
         """
         for group_filter in group_filters:
             validate_group_filter(group_filter)
+        return group_filters
 
 
 class GroupSelect(BaseModel):
@@ -268,6 +270,24 @@ class Defaults(BaseModel):
     """Initialize and Update `git submodules`."""
 
 
+class Symlink(BaseModel):
+    """
+    Symbolic Link.
+
+    Symbolic Link to Workspace from Project.
+
+    Keyword Args:
+        src: Source - relative path to the project directory.
+        dest: Destination - relative path to the workspace directory.
+    """
+
+    src: str
+    """Source - relative path to the project directory."""
+
+    dest: str
+    """Destination - relative path to the workspace directory."""
+
+
 class Project(BaseModel, allow_population_by_field_name=True):
 
     """
@@ -324,20 +344,21 @@ class Project(BaseModel, allow_population_by_field_name=True):
     submodules: bool = True
     """Initialize and Update `git submodules`."""
 
+    symlinks: Tuple[Symlink, ...] = tuple()
+    """Symbolic Links."""
+
     is_main: bool = False
     """Project is the main project."""
 
     @validator("groups", allow_reuse=True)
     def _groups(cls, values):
         # pylint: disable=no-self-argument
-        Groups.validate(values)
-        return values
+        return Groups.validate(values)
 
     @validator("with_groups", allow_reuse=True)
     def _with_groups(cls, values):
         # pylint: disable=no-self-argument
-        Groups.validate(values)
-        return values
+        return Groups.validate(values)
 
     @property
     def info(self):
@@ -418,6 +439,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
             groups=project_groups,
             with_groups=project_with_groups,
             submodules=submodules,
+            symlinks=spec.symlinks,
         )
 
 
@@ -481,6 +503,9 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     submodules: Optional[bool] = None
     """Initialize and Update `git submodules`."""
 
+    symlinks: Tuple[Symlink, ...] = tuple()
+    """Symbolic Links."""
+
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
         # pylint: disable=no-self-argument
@@ -498,14 +523,12 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     @validator("groups", allow_reuse=True)
     def _groups(cls, values):
         # pylint: disable=no-self-argument
-        Groups.validate(values)
-        return values
+        return Groups.validate(values)
 
     @validator("with_groups", allow_reuse=True)
     def _with_groups(cls, values):
         # pylint: disable=no-self-argument
-        Groups.validate(values)
-        return values
+        return Groups.validate(values)
 
     @staticmethod
     def from_project(project: Project) -> "ProjectSpec":
@@ -529,6 +552,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             groups=project.groups,
             with_groups=project.with_groups,
             submodules=project.submodules,
+            symlinks=project.symlinks,
         )
 
 
@@ -563,8 +587,7 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     @validator("group_filters", allow_reuse=True)
     def _group_filters(cls, values):
         # pylint: disable=no-self-argument
-        GroupFilters.validate(values)
-        return values
+        return GroupFilters.validate(values)
 
     @staticmethod
     def from_spec(
@@ -660,8 +683,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     @validator("group_filters", allow_reuse=True)
     def _group_filters(cls, values):
         # pylint: disable=no-self-argument
-        GroupFilters.validate(values)
-        return values
+        return GroupFilters.validate(values)
 
     @classmethod
     def load(cls, path: Path) -> "ManifestSpec":

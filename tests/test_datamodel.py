@@ -17,7 +17,18 @@
 """Manifest Testing."""
 from pytest import raises
 
-from gitws import Defaults, Groups, GroupSelect, GroupSelects, Manifest, ManifestSpec, Project, ProjectSpec, Remote
+from gitws import (
+    Defaults,
+    Groups,
+    GroupSelect,
+    GroupSelects,
+    Manifest,
+    ManifestSpec,
+    Project,
+    ProjectSpec,
+    Remote,
+    Symlink,
+)
 
 from .common import MANIFEST_DEFAULT
 
@@ -108,6 +119,8 @@ def test_project():
     assert project.manifest_path == "git-ws.toml"
     assert project.groups == Groups()
     assert project.with_groups == Groups()
+    assert project.submodules is True
+    assert project.symlinks == tuple()
     assert project.info == "name (path='path')"
 
     # Immutable
@@ -120,13 +133,23 @@ def test_project():
     with raises(ValueError):
         Project(name="name", path="path", with_groups=("-foo",))
 
-    project = Project(name="name", path="path", url="url", is_main=True, groups=("a", "b"), with_groups=("c", "d"))
+    project = Project(
+        name="name",
+        path="path",
+        url="url",
+        is_main=True,
+        groups=("a", "b"),
+        with_groups=("c", "d"),
+        submodules=True,
+        symlinks=[{"src": "src0", "dest": "dest0"}, {"src": "src1", "dest": "dest1"}],
+    )
     assert project.name == "name"
     assert project.url == "url"
     assert project.revision is None
     assert project.manifest_path == "git-ws.toml"
     assert project.groups == Groups(("a", "b"))
     assert project.with_groups == Groups(("c", "d"))
+    assert project.symlinks == (Symlink(src="src0", dest="dest0"), Symlink(src="src1", dest="dest1"))
     assert project.info == "name (MAIN path='path', groups='a,b')"
 
 
@@ -142,6 +165,8 @@ def test_project_spec():
     assert project_spec.manifest_path == "git-ws.toml"
     assert project_spec.groups == Groups()
     assert project_spec.with_groups == Groups()
+    assert project_spec.submodules is None
+    assert project_spec.symlinks == tuple()
 
     with raises(ValueError):
         ProjectSpec(name="name", remote="remote", url="url")
@@ -326,9 +351,20 @@ def test_manifest_spec_from_data(tmp_path):
         ],
         "group-filters": ["+foo", "-bar"],
         "dependencies": [
-            {"name": "dep1", "remote": "remote1", "groups": ["test", "foo"]},
+            {
+                "name": "dep1",
+                "remote": "remote1",
+                "groups": [
+                    "test",
+                    "foo",
+                ],
+                "symlinks": [
+                    {"src": "s0", "dest": "d0"},
+                    {"src": "s1", "dest": "d1"},
+                ],
+            },
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
-            {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main"},
+            {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main", "submodules": False},
         ],
     }
     manifest_spec = ManifestSpec(**data)
@@ -339,9 +375,17 @@ def test_manifest_spec_from_data(tmp_path):
     )
     assert manifest_spec.group_filters == ("+foo", "-bar")
     assert manifest_spec.dependencies == (
-        ProjectSpec(name="dep1", remote="remote1", groups=("test", "foo")),
+        ProjectSpec(
+            name="dep1",
+            remote="remote1",
+            groups=("test", "foo"),
+            symlinks=(
+                {"src": "s0", "dest": "d0"},
+                {"src": "s1", "dest": "d1"},
+            ),
+        ),
         ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
-        ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
+        ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main", submodules=False),
     )
 
     filepath = tmp_path / "manifest.toml"
@@ -408,7 +452,15 @@ def test_manifest_from_spec():
         },
         "group-filters": ["-doc", "-bar"],
         "dependencies": [
-            {"name": "dep1", "remote": "remote2", "groups": ["test", "doc"]},
+            {
+                "name": "dep1",
+                "remote": "remote2",
+                "groups": ["test", "doc"],
+                "symlinks": [
+                    {"src": "ss0", "dest": "dd0"},
+                    {"src": "ss1", "dest": "dd1"},
+                ],
+            },
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
             {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main", "groups": ["test"]},
         ],
@@ -418,7 +470,16 @@ def test_manifest_from_spec():
     manifest = Manifest.from_spec(manifest_spec)
     assert manifest.group_filters == ("-doc", "-bar")
     assert manifest.dependencies == (
-        Project(name="dep1", path="dep1", url="file:///repos/url2/dep1", groups=("test", "doc")),
+        Project(
+            name="dep1",
+            path="dep1",
+            url="file:///repos/url2/dep1",
+            groups=("test", "doc"),
+            symlinks=(
+                {"src": "ss0", "dest": "dd0"},
+                {"src": "ss1", "dest": "dd1"},
+            ),
+        ),
         Project(name="dep2", path="dep2dir", url="https://git.example.com/base3/dep2.git"),
         Project(name="dep3", path="dep3", url="file:///repos/url1/sub.git", revision="main", groups=("test",)),
     )

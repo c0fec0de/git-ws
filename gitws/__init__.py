@@ -114,6 +114,7 @@ from .datamodel import (
     Project,
     ProjectSpec,
     Remote,
+    Symlink,
 )
 from .exceptions import (
     GitCloneMissingError,
