@@ -1,4 +1,4 @@
-name: ^hon
+name: test
 
 on: [push]
 
