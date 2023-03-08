@@ -15,7 +15,9 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Clone Testing."""
+import os
 from shutil import rmtree
+from unittest import mock
 
 from pytest import raises
 
@@ -23,7 +25,7 @@ from gitws import GitCloneNotCleanError, GitWS, Manifest, Project
 
 # pylint: disable=unused-import
 from .fixtures import repos
-from .util import change_envvar, chdir, check
+from .util import chdir, check
 
 
 def test_clone(tmp_path, repos):
@@ -229,7 +231,7 @@ def test_clone_cached(tmp_path, repos):
     workspace = tmp_path / "main"
     cache = tmp_path / "cache"
 
-    with change_envvar("GIT_WS_CLONE_CACHE", str(cache)):
+    with mock.patch.dict(os.environ, {"GIT_WS_CLONE_CACHE": str(cache)}):
         with chdir(tmp_path):
             assert not cache.exists()
 

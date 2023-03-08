@@ -22,11 +22,14 @@ from tempfile import TemporaryDirectory
 from typing import List, Optional
 from unittest import mock
 
+from appdirs import site_config_dir, user_config_dir
 from click.testing import CliRunner
 from pytest import mark
 
 from gitws._cli import main
 from gitws.const import (
+    APP_AUTHOR,
+    APP_NAME,
     BLOCK_APP_CONFIG_FROM_ENV_ENV_NAME,
     MANIFEST_PATH_DEFAULT,
     SYSTEM_CONFIG_PATH_ENV_NAME,
@@ -36,7 +39,12 @@ from gitws.const import (
 
 from .util import format_output
 
+_SYSTEM_CONFIG_DIR = site_config_dir(APP_NAME, appauthor=APP_AUTHOR)
 
+_USER_CONFIG_DIR = user_config_dir(APP_NAME, appauthor=APP_AUTHOR)
+
+
+# pylint: disable=too-many-statements
 @mark.parametrize(
     "env_patches,cli_args,initial_manifest_path",
     [
@@ -138,3 +146,19 @@ def test_config_cli(env_patches: List[str], cli_args: List[str], initial_manifes
             result = CliRunner().invoke(main, ["config", "set", "color_ui", "foo"] + cli_args)
             assert result.exit_code != 0
             assert format_output(result) == ["Error: Invalid value foo has been passed to option color_ui", ""]
+
+            # Config Files
+            expected = {}
+            for name, env_name, default in [
+                ("system", SYSTEM_CONFIG_PATH_ENV_NAME, _SYSTEM_CONFIG_DIR),
+                ("user", USER_CONFIG_PATH_ENV_NAME, _USER_CONFIG_DIR),
+                ("workspace", WORKSPACE_CONFIG_PATH_ENV_NAME, None),
+            ]:
+                config_path = patch.get(env_name, default)
+                if not cli_args or f"--{name}" in cli_args:
+                    file_path = str(Path(config_path) / "config.toml") if config_path else ""
+                    expected[name] = file_path
+            result = CliRunner().invoke(main, ["config", "files"] + cli_args)
+            assert format_output(result) == [f"{name}: {path}" for name, path in expected.items()] + [""]
+            result = CliRunner().invoke(main, ["config", "files", "--format=json"] + cli_args)
+            assert json.loads(result.output) == expected
