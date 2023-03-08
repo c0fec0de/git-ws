@@ -22,6 +22,7 @@ The :any:`Workspace` class represents the file system location containing all gi
 """
 import logging
 import shutil
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
@@ -31,7 +32,7 @@ from ._basemodel import BaseModel
 from ._util import resolve_relative
 from .appconfig import AppConfig, AppConfigData, AppConfigLocation
 from .const import GIT_WS_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
-from .datamodel import GroupFilters, Project
+from .datamodel import GroupFilters, Project, ProjectFileRefsMutable
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError, WorkspaceNotEmptyError
 from .workspacefinder import find_workspace
 
@@ -54,6 +55,16 @@ class Info(BaseModel):
     Path to main project. Relative to workspace root directory.
     """
 
+    project_linkfiles: ProjectFileRefsMutable = {}
+    """
+    Project Symlinks.
+    """
+
+    project_copyfiles: ProjectFileRefsMutable = {}
+    """
+    Project File Copies.
+    """
+
     @staticmethod
     def load(path: Path) -> "Info":
         """
@@ -68,6 +79,8 @@ class Info(BaseModel):
         doc = tomlkit.parse(infopath.read_text())
         return Info(
             main_path=doc["main_path"],
+            project_linkfiles=doc.get("project_linkfiles", {}),
+            project_copyfiles=doc.get("project_copyfiles", {}),
         )
 
     def save(self, path: Path):
@@ -81,6 +94,7 @@ class Info(BaseModel):
         """
         infopath = path / INFO_PATH
         infopath.parent.mkdir(parents=True, exist_ok=True)
+        # structure
         try:
             doc = tomlkit.parse(infopath.read_text())
         except FileNotFoundError:
@@ -88,7 +102,15 @@ class Info(BaseModel):
             doc.add(tomlkit.comment("Git Workspace System File. DO NOT EDIT."))
             doc.add(tomlkit.nl())
             doc.add("main_path", "")  # type: ignore
-        doc["main_path"] = str(self.main_path)
+        # update
+        selfdict = self.dict()
+        selfdict["main_path"] = str(self.main_path)
+        doc.update(selfdict)
+        # remove
+        for name in ("project_linkfiles", "project_copyfiles"):
+            if not doc[name]:
+                doc.pop(name)
+        # write
         infopath.write_text(tomlkit.dumps(doc))
 
 
@@ -201,7 +223,7 @@ class Workspace:
         try:
             main_path = (path / main_path).resolve().relative_to(path.resolve())
         except ValueError:
-            raise OutsideWorkspaceError(path, main_path) from None
+            raise OutsideWorkspaceError(path, main_path, "Project") from None
 
         # Initialize Info
         info = Info(main_path=main_path)
@@ -266,6 +288,14 @@ class Workspace:
                 pathmap[part] = {}
                 pathmap = pathmap[part]
         yield from _iter_obsoletes(self.path, usemap)
+
+    @contextmanager
+    def edit_info(self) -> Generator[Info, None, None]:
+        """Yield Contextmanager to edit :any:`Info` and write back changes."""
+        try:
+            yield self.info
+        finally:
+            self.info.save(self.path)
 
 
 def _iter_obsoletes(path, usemap):

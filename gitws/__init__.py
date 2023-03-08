@@ -103,6 +103,7 @@ from .clone import Clone, map_paths
 from .datamodel import (
     AppConfigData,
     Defaults,
+    FileRef,
     Group,
     GroupFilter,
     GroupFilters,
@@ -114,7 +115,6 @@ from .datamodel import (
     Project,
     ProjectSpec,
     Remote,
-    Symlink,
 )
 from .exceptions import (
     GitCloneMissingError,

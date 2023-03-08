@@ -60,12 +60,12 @@ class ManifestExistError(RuntimeError):
 
 
 class OutsideWorkspaceError(RuntimeError):
-    """Project Is Located Outside Of Workspace."""
+    """Reference to Outside Of Workspace."""
 
-    def __init__(self, path, project_path):
-        super().__init__(f"Project {str(project_path)!r} is located outside {str(path)!r}.")
+    def __init__(self, workspace_path, path, what):
+        super().__init__(f"{what} {str(path)!r} is refers outside of workspace ({str(workspace_path)!r}).")
+        self.workspace_path = workspace_path
         self.path = path
-        self.project_path = project_path
 
 
 class WorkspaceNotEmptyError(RuntimeError):

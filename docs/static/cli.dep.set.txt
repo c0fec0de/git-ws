@@ -1,5 +1,6 @@
 Usage: git-ws dep set [OPTIONS] DEP {name|remote|sub_url|url|revision|path|man
-                      ifest_path|groups|with_groups|submodules|symlinks} VALUE
+                      ifest_path|groups|with_groups|submodules|linkfiles|copyf
+                      iles} VALUE
 
   Set ATTRIBUTE For Dependency DEP to VALUE.
 

@@ -25,6 +25,7 @@ import urllib
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
+from ._filerefupdater import CopyFileUpdater, LinkFileUpdater
 from ._util import get_repr, no_echo, removesuffix, resolve_relative, run
 from .appconfig import AppConfig
 from .clone import Clone, map_paths
@@ -301,10 +302,21 @@ class GitWS:
         """
         workspace = self.workspace
         used: List[Path] = [workspace.info.main_path]
+        linkfileupdater = LinkFileUpdater(workspace.path, secho=self.secho)
+        copyfileupdater = CopyFileUpdater(workspace.path, secho=self.secho)
         for clone in self._foreach(project_paths=project_paths, skip_main=skip_main, resolve_url=True):
-            used.append(Path(clone.project.path))
+            project = clone.project
+            used.append(Path(project.path))
             clone.check(diff=False, exists=False)
             self._update(clone, rebase)
+            linkfileupdater.set(project.path, project.linkfiles)
+            copyfileupdater.set(project.path, project.copyfiles)
+        # Remove all obsolete files first, to all re-map without issues
+        with workspace.edit_info() as info:
+            linkfileupdater.remove(info.project_linkfiles)
+            copyfileupdater.remove(info.project_copyfiles)
+            linkfileupdater.update(info.project_linkfiles)
+            copyfileupdater.update(info.project_copyfiles)
         if prune:
             self._prune(workspace, used, force=force)
 

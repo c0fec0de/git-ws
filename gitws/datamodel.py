@@ -35,7 +35,7 @@ Central :any:`GitWS` Datamodel.
 
 import re
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import tomlkit
 from pydantic import BaseSettings, Extra, Field, root_validator, validator
@@ -270,11 +270,11 @@ class Defaults(BaseModel):
     """Initialize and Update `git submodules`."""
 
 
-class Symlink(BaseModel):
+class FileRef(BaseModel):
     """
-    Symbolic Link.
+    File Reference (Symbolic Link or File to Copy)
 
-    Symbolic Link to Workspace from Project.
+    File Reference to Workspace from Project.
 
     Keyword Args:
         src: Source - relative path to the project directory.
@@ -286,6 +286,12 @@ class Symlink(BaseModel):
 
     dest: str
     """Destination - relative path to the workspace directory."""
+
+
+FileRefs = Tuple[FileRef, ...]
+ProjectFileRefs = Dict[str, FileRefs]
+FileRefsMutable = List[FileRef]
+ProjectFileRefsMutable = Dict[str, FileRefsMutable]
 
 
 class Project(BaseModel, allow_population_by_field_name=True):
@@ -344,8 +350,11 @@ class Project(BaseModel, allow_population_by_field_name=True):
     submodules: bool = True
     """Initialize and Update `git submodules`."""
 
-    symlinks: Tuple[Symlink, ...] = tuple()
+    linkfiles: Tuple[FileRef, ...] = tuple()
     """Symbolic Links."""
+
+    copyfiles: Tuple[FileRef, ...] = tuple()
+    """Copied Files."""
 
     is_main: bool = False
     """Project is the main project."""
@@ -439,7 +448,8 @@ class Project(BaseModel, allow_population_by_field_name=True):
             groups=project_groups,
             with_groups=project_with_groups,
             submodules=submodules,
-            symlinks=spec.symlinks,
+            linkfiles=spec.linkfiles,
+            copyfiles=spec.copyfiles,
         )
 
 
@@ -503,8 +513,11 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     submodules: Optional[bool] = None
     """Initialize and Update `git submodules`."""
 
-    symlinks: Tuple[Symlink, ...] = tuple()
+    linkfiles: Tuple[FileRef, ...] = tuple()
     """Symbolic Links."""
+
+    copyfiles: Tuple[FileRef, ...] = tuple()
+    """Copied Files."""
 
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
@@ -552,7 +565,8 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             groups=project.groups,
             with_groups=project.with_groups,
             submodules=project.submodules,
-            symlinks=project.symlinks,
+            linkfiles=project.linkfiles,
+            copyfiles=project.copyfiles,
         )
 
 
