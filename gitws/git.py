@@ -309,7 +309,7 @@ class Git:
                 self._run(("remote", "add", "origin", str(url)), capture_output=True, cwd=cache)
                 self._run(("reset", "--hard"), capture_output=True, cwd=cache)
                 self._run(("clean", "-xdf"), capture_output=True, cwd=cache)
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError:  # pragma: no cover
                 shutil.rmtree(cache)  # broken
         # Cache Update
         if cache.exists():
@@ -318,7 +318,7 @@ class Git:
                 branch = self._run2str(("branch",), regex=_RE_BRANCH, cwd=cache)
                 self._run(("branch", f"--set-upstream-to=origin/{branch}", "main"), capture_output=True, cwd=cache)
                 self._run(("merge", f"origin/{branch}"), capture_output=True, cwd=cache)
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError:  # pragma: no cover
                 shutil.rmtree(cache)  # broken
         # (Re-)Init Cache
         if not cache.exists():
