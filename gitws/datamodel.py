@@ -32,6 +32,7 @@ Central :any:`GitWS` Datamodel.
 * :any:`AppConfigData`: :any:`GitWS` Configuration.
 """
 
+# pylint: disable=too-many-lines
 
 import re
 from pathlib import Path
@@ -592,6 +593,12 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
     """Group Filtering."""
 
+    linkfiles: Tuple[FileRef, ...] = tuple()
+    """Symbolic Links."""
+
+    copyfiles: Tuple[FileRef, ...] = tuple()
+    """Copied Files."""
+
     dependencies: Tuple[Project, ...] = tuple()
     """Dependencies."""
 
@@ -627,6 +634,8 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
         ]
         return Manifest(
             group_filters=spec.group_filters,
+            linkfiles=spec.linkfiles,
+            copyfiles=spec.copyfiles,
             dependencies=dependencies,
             path=path,
         )
@@ -657,12 +666,17 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     Actual Version: ``1.0``.
     """
+    group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
+    """Group Filtering."""
+
+    linkfiles: Tuple[FileRef, ...] = tuple()
+    """Symbolic Links."""
+
+    copyfiles: Tuple[FileRef, ...] = tuple()
+    """Copied Files."""
 
     remotes: Tuple[Remote, ...] = tuple()
     """Remotes."""
-
-    group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
-    """Group Filtering."""
 
     defaults: Defaults = Defaults()
     """Default Values."""
@@ -748,6 +762,16 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         group-filters = []
         <BLANKLINE>
         <BLANKLINE>
+        # [[linkfiles]]
+        # src = "file-in-main-clone.txt"
+        # dest = "link-in-workspace.txt"
+        <BLANKLINE>
+        <BLANKLINE>
+        # [[copyfiles]]
+        # src = "file-in-main-clone.txt"
+        # dest = "file-in-workspace.txt"
+        <BLANKLINE>
+        <BLANKLINE>
         # [[remotes]]
         # name = "myremote"
         # url-base = "https://github.com/myuser"
@@ -770,6 +794,22 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         # revision = "main"
         # path = "mydir"
         # groups = ["group"]
+        #
+        # [[dependencies.linkfiles]]
+        # src = "file0-in-mydir.txt"
+        # dest = "link0-in-workspace.txt"
+        #
+        # [[dependencies.linkfiles]]
+        # src = "file1-in-mydir.txt"
+        # dest = "link1-in-workspace.txt"
+        #
+        # [[dependencies.copyfiles]]
+        # src = "file0-in-mydir.txt"
+        # dest = "file0-in-workspace.txt"
+        #
+        # [[dependencies.copyfiles]]
+        # src = "file1-in-mydir.txt"
+        # dest = "file1-in-workspace.txt"
         <BLANKLINE>
         ## A full flavored dependency using a 'url':
         # [[dependencies]]
@@ -778,6 +818,22 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         # revision = "main"
         # path = "mydir"
         # groups = ["group"]
+        #
+        # [[dependencies.linkfiles]]
+        # src = "file0-in-mydir.txt"
+        # dest = "link0-in-workspace.txt"
+        #
+        # [[dependencies.linkfiles]]
+        # src = "file1-in-mydir.txt"
+        # dest = "link1-in-workspace.txt"
+        #
+        # [[dependencies.copyfiles]]
+        # src = "file0-in-mydir.txt"
+        # dest = "file0-in-workspace.txt"
+        #
+        # [[dependencies.copyfiles]]
+        # src = "file1-in-mydir.txt"
+        # dest = "file1-in-workspace.txt"
         <BLANKLINE>
         ## A minimal dependency:
         # [[dependencies]]
@@ -801,6 +857,8 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
                 "group-filters": tuple(),
                 "defaults": {},
                 "dependencies": tomlkit.aot(),
+                "linkfiles": tomlkit.aot(),
+                "copyfiles": tomlkit.aot(),
             }
             data.update(as_dict(self))
         for key, value in data.items():
@@ -872,6 +930,20 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
 
+        # linkfíles
+        example = ManifestSpec(linkfiles=[FileRef(src="file-in-main-clone.txt", dest="link-in-workspace.txt")])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
+        doc.add("linkfiles", tomlkit.aot())
+        doc.add(tomlkit.nl())
+        doc.add(tomlkit.nl())
+
+        # copyfíles
+        example = ManifestSpec(copyfiles=[FileRef(src="file-in-main-clone.txt", dest="file-in-workspace.txt")])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
+        doc.add("copyfiles", tomlkit.aot())
+        doc.add(tomlkit.nl())
+        doc.add(tomlkit.nl())
+
         # Remotes
         example = ManifestSpec(remotes=[Remote(name="myremote", url_base="https://github.com/myuser")])
         add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
@@ -902,6 +974,14 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
                     path="mydir",
                     manifest_path="git-ws.toml",
                     groups=("group",),
+                    linkfiles=[
+                        FileRef(src="file0-in-mydir.txt", dest="link0-in-workspace.txt"),
+                        FileRef(src="file1-in-mydir.txt", dest="link1-in-workspace.txt"),
+                    ],
+                    copyfiles=[
+                        FileRef(src="file0-in-mydir.txt", dest="file0-in-workspace.txt"),
+                        FileRef(src="file1-in-mydir.txt", dest="file1-in-workspace.txt"),
+                    ],
                 )
             ]
         )
@@ -918,6 +998,14 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
                     path="mydir",
                     manifest_path="git-ws.toml",
                     groups=("group",),
+                    linkfiles=[
+                        FileRef(src="file0-in-mydir.txt", dest="link0-in-workspace.txt"),
+                        FileRef(src="file1-in-mydir.txt", dest="link1-in-workspace.txt"),
+                    ],
+                    copyfiles=[
+                        FileRef(src="file0-in-mydir.txt", dest="file0-in-workspace.txt"),
+                        FileRef(src="file1-in-mydir.txt", dest="file1-in-workspace.txt"),
+                    ],
                 )
             ]
         )

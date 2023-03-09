@@ -38,7 +38,7 @@ def test_clone(tmp_path, repos):
         assert gws.path == workspace
 
         for clone in gws.clones():
-            clone.check(exists=False, no_revision=True)
+            clone.check(exists=False)
 
         gws.update()
         assert gws.get_manifest().path == str(workspace / "main" / "git-ws.toml")

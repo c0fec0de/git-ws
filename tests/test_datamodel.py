@@ -261,6 +261,16 @@ version = "1.1"
 group-filters = ["+test"]
 
 
+# [[linkfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "link-in-workspace.txt"
+
+
+# [[copyfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "file-in-workspace.txt"
+
+
 # [[remotes]]
 # name = "myremote"
 # url-base = "https://github.com/myuser"
@@ -344,6 +354,16 @@ version = "1.1"
 group-filters = ["+test"]
 
 
+# [[linkfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "link-in-workspace.txt"
+
+
+# [[copyfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "file-in-workspace.txt"
+
+
 # [[remotes]]
 # name = "myremote"
 # url-base = "https://github.com/myuser"
@@ -368,6 +388,22 @@ remote = "remote"
 # revision = "main"
 # path = "mydir"
 # groups = ["group"]
+#
+# [[dependencies.linkfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "link0-in-workspace.txt"
+#
+# [[dependencies.linkfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "link1-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "file0-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "file1-in-workspace.txt"
 
 ## A full flavored dependency using a 'url':
 # [[dependencies]]
@@ -376,6 +412,22 @@ remote = "remote"
 # revision = "main"
 # path = "mydir"
 # groups = ["group"]
+#
+# [[dependencies.linkfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "link0-in-workspace.txt"
+#
+# [[dependencies.linkfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "link1-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "file0-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "file1-in-workspace.txt"
 
 ## A minimal dependency:
 # [[dependencies]]

@@ -31,7 +31,7 @@ from gitws._cli import main
 
 _RE_EMPTY_LINE = re.compile(r"[ \t]*\r")
 
-LEARN = True
+LEARN = False
 
 
 @contextlib.contextmanager

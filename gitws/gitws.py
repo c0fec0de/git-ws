@@ -311,14 +311,23 @@ class GitWS:
             self._update(clone, rebase)
             linkfileupdater.set(project.path, project.linkfiles)
             copyfileupdater.set(project.path, project.copyfiles)
-        # Remove all obsolete files first, to all re-map without issues
-        with workspace.edit_info() as info:
-            linkfileupdater.remove(info.project_linkfiles)
-            copyfileupdater.remove(info.project_copyfiles)
-            linkfileupdater.update(info.project_linkfiles)
-            copyfileupdater.update(info.project_copyfiles)
+        # read latest manifest
+        if not skip_main:
+            manifest_spec = self.get_manifest_spec()
+            main_path = str(workspace.info.main_path)
+            linkfileupdater.set(main_path, manifest_spec.linkfiles)
+            copyfileupdater.set(main_path, manifest_spec.copyfiles)
         if prune:
             self._prune(workspace, used, force=force)
+        if workspace.info.project_linkfiles or workspace.info.project_copyfiles or linkfileupdater or copyfileupdater:
+            # Update Links/Copies
+            self.secho("===== Update Files =====", fg=_COLOR_BANNER)
+            with workspace.edit_info() as info:
+                # Remove all obsolete files first, to all re-map without issues
+                linkfileupdater.remove(info.project_linkfiles)
+                copyfileupdater.remove(info.project_copyfiles)
+                linkfileupdater.update(info.project_linkfiles)
+                copyfileupdater.update(info.project_copyfiles)
 
     def _update(self, clone: Clone, rebase: bool):
         # Clone

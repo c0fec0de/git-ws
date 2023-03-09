@@ -24,7 +24,7 @@ from filecmp import cmp
 from pathlib import Path
 from shutil import copy2
 
-from ._util import no_echo, resolve_relative
+from ._util import no_echo, relative
 from .datamodel import FileRef, FileRefs, FileRefsMutable, ProjectFileRefs, ProjectFileRefsMutable
 from .exceptions import OutsideWorkspaceError
 
@@ -45,18 +45,23 @@ class AFileRefUpdater:
 
     def set(self, path: str, filerefs: FileRefs):
         """Set `filerefs` for `path`."""
-        self._project_filerefs[path] = filerefs
+        if filerefs:
+            self._project_filerefs[path] = filerefs
+        else:
+            self._project_filerefs.pop(path, None)
 
     def get(self, path: str) -> FileRefs:
         """Get `filerefs` for `path`"""
         filerefs: FileRefs = self._project_filerefs.get(path, [])  # type: ignore
         return filerefs
 
+    def __bool__(self) -> bool:
+        return bool(self._project_filerefs)
+
     def remove(self, existing: ProjectFileRefsMutable):
         """Remove obsolete file references and update tracking in `existing`."""
         for path, efilerefs in tuple(existing.items()):
             required = self.get(path)
-
             if required:
                 # remove some
                 for efileref in tuple(efilerefs):
@@ -82,7 +87,7 @@ class AFileRefUpdater:
 
     def _remove(self, dest: Path):
         try:
-            destrel = resolve_relative(dest)
+            destrel = relative(dest)
             self.secho(f"Removing '{destrel!s}'")
             dest.unlink()
         except FileNotFoundError:
@@ -91,7 +96,7 @@ class AFileRefUpdater:
     def update(self, existing: ProjectFileRefsMutable):
         """Update file references and update tracking in `existing`."""
         for path, filerefs in self._project_filerefs.items():
-            efilerefs = existing.get(path, [])
+            efilerefs = existing.setdefault(path, [])
             for fileref in filerefs:
                 try:
                     self._update_fileref(efilerefs, path, fileref)
@@ -99,13 +104,14 @@ class AFileRefUpdater:
                     _LOGGER.error("Cannot update %s: %s", self.what, exc)
 
     def _update_fileref(self, efilerefs: FileRefsMutable, path: str, fileref: FileRef):
-        dest = self.path / fileref.dest
-        src = self.path / path / fileref.src
+        dest = (self.path / fileref.dest).resolve()
+        src = (self.path / path / fileref.src).resolve()
         self.__check_path(dest, "destination")
         self.__check_path(src, "source")
         dest.parent.mkdir(parents=True, exist_ok=True)
         self._update(src, dest)
-        efilerefs.append(fileref)
+        if fileref not in efilerefs:
+            efilerefs.append(fileref)
 
     def _update(self, src: Path, dest: Path):
         raise NotImplementedError()
@@ -121,21 +127,30 @@ class LinkFileUpdater(AFileRefUpdater):
 
     """Symbolic Link Updater."""
 
+    what: str = "symbolic link"
+
     def _update(self, src: Path, dest: Path):
-        if not dest.exists() or not dest.is_symlink():
-            srcrel = resolve_relative(src)
-            destrel = resolve_relative(dest)
-            self.secho(f"Linking '{srcrel!s}' -> '{destrel!s}'")
-            dest.symlink_to(src)
+        if not dest.exists():
+            srcrel = relative(src)
+            destrel = relative(dest)
+            if not src.exists():
+                _LOGGER.warning("Link source '%s' does not exists!", srcrel)
+            else:
+                self.secho(f"Linking '{srcrel!s}' -> '{destrel!s}'")
+                dest.symlink_to(src)
 
 
 class CopyFileUpdater(AFileRefUpdater):
 
     """Copy File Updater."""
 
+    what: str = "copied file"
+
     def _update(self, src: Path, dest: Path):
-        if not dest.exists() or not cmp(src, dest):
-            srcrel = resolve_relative(src)
-            destrel = resolve_relative(dest)
+        srcrel = relative(src)
+        if not src.exists():
+            _LOGGER.warning("Copy source '%s' does not exists!", srcrel)
+        elif not dest.exists() or not cmp(src, dest):
+            destrel = relative(dest)
             self.secho(f"Copying '{srcrel!s}' -> '{destrel!s}'")
             copy2(src, dest)
