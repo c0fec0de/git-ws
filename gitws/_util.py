@@ -57,11 +57,28 @@ def resolve_relative(path: Path, base: Optional[Path] = None) -> Path:
     """
     Return resolved ``path`` relative to ``base``.
 
-    :param path (Path): Path
-    :param base (Path): Base Path. Current Working Directory by default.
+    Args:
+        path: Path
+
+    Keyword Args:
+        base: Base Path. Current Working Directory by default.
     """
     base = (base or Path.cwd()).resolve()
     path = (base / path).resolve()
+    return relative(path, base)
+
+
+def relative(path: Path, base: Optional[Path] = None) -> Path:
+    """
+    Return ``path`` relative to ``base``.
+
+    Args:
+        path: Path
+
+    Keyword Args:
+        base: Base Path. Current Working Directory by default.
+    """
+    base = base or Path.cwd()
     try:
         return path.relative_to(base)
     except ValueError:

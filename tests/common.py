@@ -22,7 +22,7 @@ TESTDATA_PATH = Path(__file__).parent / "testdata"
 MANIFEST_DEFAULT = """\
 version = "1.0"
 ##
-## Git Workspace\'s Manifest. Please see the documentation at:
+## Git Workspace's Manifest. Please see the documentation at:
 ##
 ## https://git-ws.readthedocs.io/en/latest/manual/manifest.html
 ##
@@ -30,6 +30,16 @@ version = "1.0"
 
 # group-filters = ["+test", "-doc", "+feature@path"]
 group-filters = []
+
+
+# [[linkfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "link-in-workspace.txt"
+
+
+# [[copyfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "file-in-workspace.txt"
 
 
 # [[remotes]]
@@ -45,7 +55,7 @@ group-filters = []
 # with_groups = ["doc"]
 
 
-## A full flavored dependency using a \'remote\':
+## A full flavored dependency using a 'remote':
 # [[dependencies]]
 # name = "myname"
 # remote = "remote"
@@ -53,14 +63,46 @@ group-filters = []
 # revision = "main"
 # path = "mydir"
 # groups = ["group"]
+#
+# [[dependencies.linkfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "link0-in-workspace.txt"
+#
+# [[dependencies.linkfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "link1-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "file0-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "file1-in-workspace.txt"
 
-## A full flavored dependency using a \'url\':
+## A full flavored dependency using a 'url':
 # [[dependencies]]
 # name = "myname"
 # url = "https://github.com/myuser/my.git"
 # revision = "main"
 # path = "mydir"
 # groups = ["group"]
+#
+# [[dependencies.linkfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "link0-in-workspace.txt"
+#
+# [[dependencies.linkfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "link1-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "file0-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "file1-in-workspace.txt"
 
 ## A minimal dependency:
 # [[dependencies]]

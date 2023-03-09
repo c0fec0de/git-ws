@@ -103,6 +103,7 @@ from .clone import Clone, map_paths
 from .datamodel import (
     AppConfigData,
     Defaults,
+    FileRef,
     Group,
     GroupFilter,
     GroupFilters,

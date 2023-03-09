@@ -19,12 +19,12 @@ from pathlib import Path
 
 from pytest import raises
 
-from gitws import InitializedError, OutsideWorkspaceError, UninitializedError
+from gitws import FileRef, InitializedError, OutsideWorkspaceError, UninitializedError
 from gitws.const import CONFIG_PATH, INFO_PATH
 from gitws.workspace import Info, Workspace
 
 from .common import TESTDATA_PATH
-from .util import chdir, run
+from .util import chdir
 
 
 def test_load():
@@ -46,7 +46,6 @@ def test_init(tmp_path):
     with chdir(tmp_path):
         main_path = tmp_path / "main"
         main_path.mkdir(parents=True)
-        run(("git", "init"), check=True)
         workspace = Workspace.init(tmp_path, main_path, manifest_path=Path("resolved.toml"))
         assert workspace.path == tmp_path
         assert workspace.info == Info(main_path=Path("main"))
@@ -75,3 +74,80 @@ def test_outside(tmp_path):
         sub_path.mkdir(parents=True)
         with raises(OutsideWorkspaceError):
             Workspace.init(sub_path, tmp_path)
+
+
+def test_edit_info(tmp_path):
+    """Test Info Edit"""
+    with chdir(tmp_path):
+        main_path = tmp_path / "main"
+        main_path.mkdir(parents=True)
+        workspace = Workspace.init(tmp_path, main_path)
+        info_file = workspace.path / INFO_PATH
+        assert info_file.read_text().split("\n") == [
+            "# Git Workspace System File. DO NOT EDIT.",
+            "",
+            'main_path = "main"',
+            "",
+        ]
+
+        with workspace.edit_info() as info:
+            info.project_copyfiles["sub0/pa th"] = [FileRef(src="src0", dest="dest0")]
+        assert info_file.read_text().split("\n") == [
+            "# Git Workspace System File. DO NOT EDIT.",
+            "",
+            'main_path = "main"',
+            "",
+            '[[project_copyfiles."sub0/pa th"]]',
+            'src = "src0"',
+            'dest = "dest0"',
+            "",
+        ]
+
+        with workspace.edit_info() as info:
+            info.project_linkfiles["sub3"] = [
+                FileRef(src="src2", dest="sub/dest2"),
+                FileRef(src="sub/src3", dest="dest3"),
+            ]
+        assert info_file.read_text().split("\n") == [
+            "# Git Workspace System File. DO NOT EDIT.",
+            "",
+            'main_path = "main"',
+            "",
+            '[[project_copyfiles."sub0/pa th"]]',
+            'src = "src0"',
+            'dest = "dest0"',
+            "",
+            "",
+            "[[project_linkfiles.sub3]]",
+            'src = "src2"',
+            'dest = "sub/dest2"',
+            "",
+            "[[project_linkfiles.sub3]]",
+            'src = "sub/src3"',
+            'dest = "dest3"',
+            "",
+        ]
+
+        with workspace.edit_info() as info:
+            info.project_linkfiles.clear()
+        assert info_file.read_text().split("\n") == [
+            "# Git Workspace System File. DO NOT EDIT.",
+            "",
+            'main_path = "main"',
+            "",
+            '[[project_copyfiles."sub0/pa th"]]',
+            'src = "src0"',
+            'dest = "dest0"',
+            "",
+            "",
+        ]
+
+        with workspace.edit_info() as info:
+            info.project_copyfiles.clear()
+        assert info_file.read_text().split("\n") == [
+            "# Git Workspace System File. DO NOT EDIT.",
+            "",
+            'main_path = "main"',
+            "",
+            "",
+        ]
