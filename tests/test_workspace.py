@@ -139,7 +139,6 @@ def test_edit_info(tmp_path):
             'src = "src0"',
             'dest = "dest0"',
             "",
-            "",
         ]
 
         with workspace.edit_info() as info:

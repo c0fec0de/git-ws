@@ -101,16 +101,14 @@ class Info(BaseModel):
             doc = tomlkit.document()
             doc.add(tomlkit.comment("Git Workspace System File. DO NOT EDIT."))
             doc.add(tomlkit.nl())
-            doc.add("main_path", "")  # type: ignore
         # update
-        selfdict = self.dict()
-        if self.main_path:
-            selfdict["main_path"] = str(self.main_path)
-        doc.update(selfdict)
-        # remove-empty
-        for name in tuple(doc):
-            if not doc[name]:
-                doc.pop(name)
+        selfdict = self.dict(exclude_none=True)
+        selfdict["main_path"] = str(self.main_path) if self.main_path else None
+        for name, value in selfdict.items():
+            if value:
+                doc[name] = value
+            else:
+                doc.pop(name, None)
         # write
         infopath.write_text(tomlkit.dumps(doc))
 
@@ -256,6 +254,14 @@ class Workspace:
         return None
 
     @property
+    def base_path(self) -> Path:
+        """Resolved path to main project or workspace."""
+        info_main_path = self.info.main_path
+        if info_main_path:
+            return self.path / info_main_path
+        return self.path
+
+    @property
     def config(self) -> AppConfigData:
         """Application Configuration Values."""
         return self.app_config.options
@@ -277,7 +283,7 @@ class Workspace:
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
         """Get Resolved Manifest Path."""
-        return self.main_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
+        return self.base_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
 
     def get_group_filters(self, group_filters: Optional[GroupFilters] = None) -> GroupFilters:
         """Get Group Selects."""

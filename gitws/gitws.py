@@ -121,8 +121,9 @@ class GitWS:
             secho: :any:`click.secho` like print method for verbose output.
         """
         workspace = Workspace.from_path(path=path)
-        if not manifest_path:
-            manifest_path = find_manifest(workspace.main_path)
+        main_path = workspace.main_path
+        if main_path and not manifest_path:
+            manifest_path = find_manifest(main_path)
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
         ManifestSpec.load(manifest_path)  # check manifest
         if group_filters:
@@ -157,33 +158,38 @@ class GitWS:
         _LOGGER.debug(
             "GitWS.create(%r, main_path=%r, manifest_path=%r, group-filters=%r)",
             str(path),
-            str(main_path or ""),
+            str(main_path),
             str(manifest_path),
             group_filters,
         )
-        main_path_or_path = main_path or path
+        # Relative to main_path if given, or workspace path as fallback
         # We need to resolve in inverted order, otherwise the manifest_path is broken
-        # ``manifest_path`` can be absolute or relative to ``main_path``. we need it relative to ``main_path``.
-        manifest_path_rel = resolve_relative(manifest_path or MANIFEST_PATH_DEFAULT, base=main_path_or_path)
+        # ``manifest_path`` can be absolute or relative to ``base_path``. we need it relative to ``base_path``.
+        manifest_path_rel = resolve_relative(manifest_path or MANIFEST_PATH_DEFAULT, base=(main_path or path))
         if main_path:
             # ``main_path`` can be absolute or relative to ``path``. we need it relative to ``path``.
             main_path = resolve_relative(main_path, base=path)
-            # check manifest
-            ManifestSpec.load(path / main_path / manifest_path_rel)
+            base_path = path / main_path
         else:
-            ManifestSpec.load(path / manifest_path_rel)
+            base_path = path
+        # check manifest
+        ManifestSpec.load(base_path / manifest_path_rel)
         # check group_filters
         if group_filters:
             GroupFilters.validate(group_filters)
         # Create Workspace
         workspace = Workspace.init(
-            path, main_path=main_path, manifest_path=manifest_path_rel, group_filters=group_filters or None, force=force
+            path,
+            main_path=main_path,
+            manifest_path=manifest_path_rel,
+            group_filters=group_filters or None,
+            force=force,
         )
         group_filters = workspace.get_group_filters(group_filters=group_filters)
         # Check for tagged manifest
-        if not manifest_path:
-            manifest_path_rel = find_manifest(path / main_path) or manifest_path_rel
-        return GitWS(workspace, path / main_path / manifest_path_rel, group_filters, secho=secho)
+        if main_path and not manifest_path:
+            manifest_path_rel = find_manifest(base_path) or manifest_path_rel
+        return GitWS(workspace, base_path / manifest_path_rel, group_filters, secho=secho)
 
     @staticmethod
     def init(
