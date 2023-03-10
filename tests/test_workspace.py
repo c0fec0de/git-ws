@@ -46,7 +46,7 @@ def test_init(tmp_path):
     with chdir(tmp_path):
         main_path = tmp_path / "main"
         main_path.mkdir(parents=True)
-        workspace = Workspace.init(tmp_path, main_path, manifest_path=Path("resolved.toml"))
+        workspace = Workspace.init(tmp_path, main_path=main_path, manifest_path=Path("resolved.toml"))
         assert workspace.path == tmp_path
         assert workspace.info == Info(main_path=Path("main"))
         assert workspace.info.main_path == Path("main")
@@ -64,7 +64,7 @@ def test_init(tmp_path):
         ]
 
         with raises(InitializedError):
-            Workspace.init(tmp_path, main_path)
+            Workspace.init(tmp_path, main_path=main_path)
 
 
 def test_outside(tmp_path):
@@ -73,7 +73,7 @@ def test_outside(tmp_path):
         sub_path = tmp_path / "sub"
         sub_path.mkdir(parents=True)
         with raises(OutsideWorkspaceError):
-            Workspace.init(sub_path, tmp_path)
+            Workspace.init(sub_path, main_path=tmp_path)
 
 
 def test_edit_info(tmp_path):
@@ -81,7 +81,7 @@ def test_edit_info(tmp_path):
     with chdir(tmp_path):
         main_path = tmp_path / "main"
         main_path.mkdir(parents=True)
-        workspace = Workspace.init(tmp_path, main_path)
+        workspace = Workspace.init(tmp_path, main_path=main_path)
         info_file = workspace.path / INFO_PATH
         assert info_file.read_text().split("\n") == [
             "# Git Workspace System File. DO NOT EDIT.",

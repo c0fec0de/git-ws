@@ -50,7 +50,7 @@ class Info(BaseModel):
         main_path: Path to main project. Relative to workspace root directory.
     """
 
-    main_path: Path
+    main_path: Optional[Path] = None
     """
     Path to main project. Relative to workspace root directory.
     """
@@ -78,7 +78,7 @@ class Info(BaseModel):
         infopath = path / INFO_PATH
         doc = tomlkit.parse(infopath.read_text())
         return Info(
-            main_path=doc["main_path"],
+            main_path=doc.get("main_path", None),
             project_linkfiles=doc.get("project_linkfiles", {}),
             project_copyfiles=doc.get("project_copyfiles", {}),
         )
@@ -104,10 +104,11 @@ class Info(BaseModel):
             doc.add("main_path", "")  # type: ignore
         # update
         selfdict = self.dict()
-        selfdict["main_path"] = str(self.main_path)
+        if self.main_path:
+            selfdict["main_path"] = str(self.main_path)
         doc.update(selfdict)
-        # remove
-        for name in ("project_linkfiles", "project_copyfiles"):
+        # remove-empty
+        for name in tuple(doc):
             if not doc[name]:
                 doc.pop(name)
         # write
@@ -194,19 +195,20 @@ class Workspace:
     @staticmethod
     def init(
         path: Path,
-        main_path: Path,
+        main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
         force: bool = False,
     ) -> "Workspace":
-        """
+        """t
+
         Initialize new :any:`Workspace` at ``path``.
 
         Args:
             path:  Path to the workspace
-            main_path:  Path to the main project. Relative to ``path``.
 
         Keyword Args:
+            main_path:  Path to the main project. Relative to ``path``.
             manifest_path:  Path to the manifest file. Relative to ``main_path``. Default is ``git-ws.toml``.
             group_filters: Group Filters.
             force: Ignore that the workspace exists.
@@ -220,10 +222,11 @@ class Workspace:
                 raise InitializedError(path, info.main_path)
 
         # Normalize
-        try:
-            main_path = (path / main_path).resolve().relative_to(path.resolve())
-        except ValueError:
-            raise OutsideWorkspaceError(path, main_path, "Project") from None
+        if main_path:
+            try:
+                main_path = (path / main_path).resolve().relative_to(path.resolve())
+            except ValueError:
+                raise OutsideWorkspaceError(path, main_path, "Project") from None
 
         # Initialize Info
         info = Info(main_path=main_path)
@@ -245,9 +248,12 @@ class Workspace:
         shutil.rmtree(self.path / GIT_WS_PATH)
 
     @property
-    def main_path(self) -> Path:
+    def main_path(self) -> Optional[Path]:
         """Resolved path to main project."""
-        return self.path / self.info.main_path
+        info_main_path = self.info.main_path
+        if info_main_path:
+            return self.path / info_main_path
+        return None
 
     @property
     def config(self) -> AppConfigData:

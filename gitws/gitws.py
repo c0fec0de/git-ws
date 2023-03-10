@@ -133,7 +133,7 @@ class GitWS:
     @staticmethod
     def create(
         path: Path,
-        main_path: Path,
+        main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
         force: bool = False,
@@ -144,9 +144,9 @@ class GitWS:
 
         Args:
             path: Workspace Path.
-            main_path: Main Project Path.
 
         Keyword Args:
+            main_path: Main Project Path.
             manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
@@ -155,24 +155,30 @@ class GitWS:
             secho: :any:`click.secho` like print method for verbose output.
         """
         _LOGGER.debug(
-            "GitWS.create(%r, %r, manifest_path=%r, group-filters=%r)",
+            "GitWS.create(%r, main_path=%r, manifest_path=%r, group-filters=%r)",
             str(path),
-            str(main_path),
+            str(main_path or ""),
             str(manifest_path),
             group_filters,
         )
+        main_path_or_path = main_path or path
         # We need to resolve in inverted order, otherwise the manifest_path is broken
         # ``manifest_path`` can be absolute or relative to ``main_path``. we need it relative to ``main_path``.
-        manifest_path_rel = resolve_relative(manifest_path or MANIFEST_PATH_DEFAULT, base=main_path)
-        # ``main_path`` can be absolute or relative to ``path``. we need it relative to ``path``.
-        main_path = resolve_relative(main_path, base=path)
-        # check manifest
-        ManifestSpec.load(path / main_path / manifest_path_rel)
+        manifest_path_rel = resolve_relative(manifest_path or MANIFEST_PATH_DEFAULT, base=main_path_or_path)
+        if main_path:
+            # ``main_path`` can be absolute or relative to ``path``. we need it relative to ``path``.
+            main_path = resolve_relative(main_path, base=path)
+            # check manifest
+            ManifestSpec.load(path / main_path / manifest_path_rel)
+        else:
+            ManifestSpec.load(path / manifest_path_rel)
         # check group_filters
         if group_filters:
             GroupFilters.validate(group_filters)
         # Create Workspace
-        workspace = Workspace.init(path, main_path, manifest_path_rel, group_filters=group_filters or None, force=force)
+        workspace = Workspace.init(
+            path, main_path=main_path, manifest_path=manifest_path_rel, group_filters=group_filters or None, force=force
+        )
         group_filters = workspace.get_group_filters(group_filters=group_filters)
         # Check for tagged manifest
         if not manifest_path:
@@ -212,7 +218,12 @@ class GitWS:
         name = main_path.name
         secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         return GitWS.create(
-            path, main_path, manifest_path=manifest_path, group_filters=group_filters, force=force, secho=secho
+            path,
+            main_path=main_path,
+            manifest_path=manifest_path,
+            group_filters=group_filters,
+            force=force,
+            secho=secho,
         )
 
     def deinit(
@@ -232,6 +243,33 @@ class GitWS:
         if prune:
             self._prune(self.workspace, force=force)
         return self.workspace.deinit()
+
+    @staticmethod
+    def init_from_manifest(
+        path: Path,
+        manifest_path: Optional[Path] = None,
+        group_filters: Optional[GroupFilters] = None,
+        force: bool = False,
+        secho=None,
+    ) -> "GitWS":
+        """
+        Initialize NEW Workspace from manifest without main repository and return corresponding :any:`GitWS`.
+
+        Keyword Args:
+            path: Workspace Path.
+            manifest_path: Manifest File Path. Relative to ``path``. Default is ``git-ws.toml``.
+                           This value is written to the configuration.
+            group_filters: Default Group Filters.
+                           This value is written to the configuration.
+            force: Ignore that the workspace exists.
+            secho: :any:`click.secho` like print method for verbose output.
+        """
+        secho = secho or no_echo
+        if not force:
+            info = Workspace.is_init(path)
+            if info:
+                raise InitializedError(path, info.main_path)
+        return GitWS.create(path, manifest_path=manifest_path, group_filters=group_filters, force=force, secho=secho)
 
     @staticmethod
     def clone(
@@ -275,7 +313,9 @@ class GitWS:
         clone_cache = AppConfig().options.clone_cache
         git = Git(resolve_relative(main_path), clone_cache=clone_cache, secho=secho)
         git.clone(url, revision=revision)
-        return GitWS.create(path, main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho)
+        return GitWS.create(
+            path, main_path=main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho
+        )
 
     def update(
         self,
