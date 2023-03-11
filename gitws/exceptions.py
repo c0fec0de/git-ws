@@ -17,6 +17,7 @@
 """Collection Of All Exceptions Which Might Occur."""
 
 from pathlib import Path
+from typing import Optional
 
 
 class UninitializedError(RuntimeError):
@@ -29,10 +30,13 @@ class UninitializedError(RuntimeError):
 class InitializedError(RuntimeError):
     """Git Workspace Has Already Been Initialized."""
 
-    def __init__(self, path, main_path):
-        super().__init__(
-            f"git workspace has already been initialized at {str(path)!r} with main repo at {str(main_path)!r}."
-        )
+    def __init__(self, path: Path, main_path: Optional[Path]):
+        msg = f"git workspace has already been initialized at {str(path)!r}"
+        if main_path:
+            msg = f"{msg} with main repo at {str(main_path)!r}."
+        else:
+            msg = f"{msg}."
+        super().__init__(msg)
         self.path = path
         self.main_path = main_path
 
@@ -151,3 +155,17 @@ class GitTagExistsError(RuntimeError):
     def __init__(self, tag):
         super().__init__(f"tag {tag} already exists")
         self.tag = tag
+
+
+class NoMainError(RuntimeError):
+    """Workspace Has No Main Project."""
+
+    def __init__(self):
+        super().__init__("Workspace has been initialized from manifest only, without a main project.")
+
+
+class NoAbsUrlError(RuntimeError):
+    """No Relative URL Possible."""
+
+    def __init__(self):
+        super().__init__("Absolute URL required. Please specify an absolute 'url' or a 'sub_url' with a 'remote'")

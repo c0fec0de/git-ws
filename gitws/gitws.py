@@ -32,7 +32,7 @@ from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
 from .datamodel import GroupFilters, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
 from .deptree import DepNode, get_deptree
-from .exceptions import GitCloneNotCleanError, GitTagExistsError, InitializedError, ManifestExistError
+from .exceptions import GitCloneNotCleanError, GitTagExistsError, InitializedError, ManifestExistError, NoMainError
 from .git import DiffStat, Git, Status
 from .iters import ManifestIter, ProjectIter
 from .manifestfinder import find_manifest
@@ -62,6 +62,7 @@ class GitWS:
     * :any:`GitWS.create()`: Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.
     * :any:`GitWS.init()`: Initialize NEW Workspace for git clone at ``main_path``, return corresponding :any:`GitWS`.
     * :any:`GitWS.clone()`: Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
+    * :any:`GitWS.init_from_manifest()`: Create NEW workspace at ``path`` without main repo.
     """
 
     # pylint: disable=too-many-public-methods
@@ -98,11 +99,18 @@ class GitWS:
         return self.workspace.path
 
     @property
-    def main_path(self) -> Path:
+    def main_path(self) -> Optional[Path]:
         """
         GitWS Workspace Main Directory.
         """
         return self.workspace.main_path
+
+    @property
+    def base_path(self) -> Path:
+        """
+        GitWS Workspace Main Directory or GitWS Workspace Directory.
+        """
+        return self.workspace.base_path
 
     @staticmethod
     def from_path(
@@ -116,7 +124,7 @@ class GitWS:
 
         Keyword Args:
             path: Path within the workspace (Default is the current working directory).
-            manifest_path: Manifest File Path. Relative to ``main_path``. Default is taken from Configuration.
+            manifest_path: Manifest File Path. Relative to ``base_path``. Default is taken from Configuration.
             group_filters: Group Filters. Default is taken from Configuration.
             secho: :any:`click.secho` like print method for verbose output.
         """
@@ -148,7 +156,8 @@ class GitWS:
 
         Keyword Args:
             main_path: Main Project Path.
-            manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
+            manifest_path: Manifest File Path. Relative to ``main_path`` if given, otherwise relative to ``path``.
+                           Default is ``git-ws.toml``.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
@@ -205,7 +214,7 @@ class GitWS:
         The parent directory of ``main_path`` becomes the workspace directory.
 
         Keyword Args:
-            main_path: Main Project Path.
+            main_path: Main Project Path. Actual Git Clone Root Directory by default.
             manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
@@ -294,7 +303,7 @@ class GitWS:
             url: Main Project URL.
 
         Keyword Args:
-            main_path: Main Project Path.
+            main_path: Main Project Path. Twice the URL stem in the current working directory by default.
             manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
@@ -311,16 +320,21 @@ class GitWS:
         else:
             main_path = main_path.resolve()
         main_path.parent.mkdir(parents=True, exist_ok=True)
+        main_path_rel = resolve_relative(main_path)
         path = main_path.parent
         if not force:
             Workspace.check_empty(path, main_path)
-        secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
+        secho(f"===== {main_path_rel} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
         clone_cache = AppConfig().options.clone_cache
-        git = Git(resolve_relative(main_path), clone_cache=clone_cache, secho=secho)
+        git = Git(main_path_rel, clone_cache=clone_cache, secho=secho)
         git.clone(url, revision=revision)
         return GitWS.create(
-            path, main_path=main_path, manifest_path=manifest_path, group_filters=group_filters, secho=secho
+            path,
+            main_path=main_path,
+            manifest_path=manifest_path,
+            group_filters=group_filters,
+            secho=secho,
         )
 
     def update(
@@ -346,8 +360,10 @@ class GitWS:
             rebase: Rebase instead of merge.
             force: Enforce to prune repositories with changes.
         """
+        # pylint: disable=too-many-locals
         workspace = self.workspace
-        used: List[Path] = [workspace.info.main_path]
+        main_path = workspace.info.main_path
+        used: List[Path] = []
         linkfileupdater = LinkFileUpdater(workspace.path, secho=self.secho)
         copyfileupdater = CopyFileUpdater(workspace.path, secho=self.secho)
         for clone in self._foreach(project_paths=project_paths, skip_main=skip_main, resolve_url=True):
@@ -357,12 +373,12 @@ class GitWS:
             self._update(clone, rebase)
             linkfileupdater.set(project.path, project.linkfiles)
             copyfileupdater.set(project.path, project.copyfiles)
-        # read latest manifest
-        if not skip_main:
+        if main_path and not skip_main:
+            used.append(main_path)
             manifest_spec = self.get_manifest_spec()
-            main_path = str(workspace.info.main_path)
-            linkfileupdater.set(main_path, manifest_spec.linkfiles)
-            copyfileupdater.set(main_path, manifest_spec.copyfiles)
+            main_path_str = str(workspace.info.main_path)
+            linkfileupdater.set(main_path_str, manifest_spec.linkfiles)
+            copyfileupdater.set(main_path_str, manifest_spec.copyfiles)
         if prune:
             self._prune(workspace, used, force=force)
         if workspace.info.project_linkfiles or workspace.info.project_copyfiles or linkfileupdater or copyfileupdater:
@@ -602,6 +618,9 @@ class GitWS:
         2. commit frozen manifest from ``main_path/.git-ws/manifests/<name>.toml``
         3. create git tag.
         """
+        main_path = self.main_path
+        if not main_path:
+            raise NoMainError()
         clone = Clone.from_project(self.workspace, next(self.projects()), secho=self.secho)
         self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
         git = clone.git
@@ -611,9 +630,9 @@ class GitWS:
         # freeze
         manifest_path = MANIFESTS_PATH / f"{name}.toml"
         manifest_spec = self.get_manifest_spec(freeze=True, resolve=True)
-        (self.main_path / MANIFESTS_PATH).mkdir(exist_ok=True, parents=True)
-        (self.main_path / manifest_path).touch()
-        manifest_spec.save(self.main_path / manifest_path)
+        (main_path / MANIFESTS_PATH).mkdir(exist_ok=True, parents=True)
+        (main_path / manifest_path).touch()
+        manifest_spec.save(main_path / manifest_path)
         # commit
         paths = (manifest_path,)
         git.add(paths, force=True)

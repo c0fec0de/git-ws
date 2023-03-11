@@ -185,7 +185,7 @@ class Workspace:
         return None
 
     @staticmethod
-    def check_empty(path: Path, main_path: Path):
+    def check_empty(path: Path, main_path: Optional[Path]):
         """Check if Workspace at ``path`` with ``main_path`` is empty."""
         if any(item != main_path for item in path.iterdir()):
             raise WorkspaceNotEmptyError(resolve_relative(path))
@@ -212,6 +212,7 @@ class Workspace:
             force: Ignore that the workspace exists.
 
         Raises:
+            InitializedError: ``path`` already contains workspace.
             OutsideWorkspaceError: ``main_path`` is not within ``path``.
         """
         if not force:
@@ -247,7 +248,7 @@ class Workspace:
 
     @property
     def main_path(self) -> Optional[Path]:
-        """Resolved path to main project."""
+        """Resolved Path To Main Project."""
         info_main_path = self.info.main_path
         if info_main_path:
             return self.path / info_main_path
@@ -255,7 +256,7 @@ class Workspace:
 
     @property
     def base_path(self) -> Path:
-        """Resolved path to main project or workspace."""
+        """Resolved Path To Main Project Or Workspace."""
         info_main_path = self.info.main_path
         if info_main_path:
             return self.path / info_main_path

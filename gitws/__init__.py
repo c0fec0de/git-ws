@@ -35,7 +35,7 @@ There are 4 ways to create a :any:`GitWS` instances in the different szenarios:
 * :any:`GitWS.create()`: Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.
 * :any:`GitWS.init()`: Initialize NEW Workspace for git clone at ``main_path``, return corresponding :any:`GitWS`.
 * :any:`GitWS.clone()`: Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
-* :any:`GitWS.create_from_manifest()`: Create NEW workspace at ``path`` without main repo.
+* :any:`GitWS.init_from_manifest()`: Create NEW workspace at ``path`` without main repo.
 
 The python module is named `gitws`:
 

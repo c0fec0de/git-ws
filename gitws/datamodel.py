@@ -42,10 +42,10 @@ import tomlkit
 from pydantic import BaseSettings, Extra, Field, root_validator, validator
 
 from ._basemodel import BaseModel
-from ._url import urljoin, urlsub
+from ._url import is_urlabs, urljoin, urlsub
 from ._util import add_comment, add_info, as_dict, get_repr, resolve_relative
 from .const import MANIFEST_PATH_DEFAULT
-from .exceptions import ManifestError, ManifestNotFoundError
+from .exceptions import ManifestError, ManifestNotFoundError, NoAbsUrlError
 
 _RE_GROUP = re.compile(r"\A[a-zA-Z0-9_][a-zA-Z0-9_\-]*\Z")
 
@@ -416,13 +416,13 @@ class Project(BaseModel, allow_population_by_field_name=True):
         :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
         :any:`ProjectSpec.from_project()` does the reverse.
         """
-        assert not resolve_url or refurl, "resolve_url requires refurl"
         defaults = manifest_spec.defaults
         remotes = manifest_spec.remotes
         project_groups = spec.groups or defaults.groups
         project_with_groups = spec.with_groups or defaults.with_groups
-        url = spec.url
         submodules = spec.submodules if spec.submodules is not None else defaults.submodules
+        # URL
+        url = spec.url
         if not url:
             # URL assembly
             project_remote = spec.remote or defaults.remote
@@ -438,8 +438,12 @@ class Project(BaseModel, allow_population_by_field_name=True):
                 url = f"../{project_sub_url}"
 
         # Resolve relative URLs.
-        if resolve_url:
+        if resolve_url and not is_urlabs(url):
+            if not refurl:
+                raise NoAbsUrlError()
             url = urljoin(refurl, url)
+
+        # Create
         return Project(
             name=spec.name,
             path=spec.path or spec.name,

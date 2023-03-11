@@ -42,7 +42,7 @@ class DepNode(NodeMixin):
 
 def get_deptree(workspace: Workspace, manifest: Manifest, primary: bool = False) -> DepNode:
     """Calculate Dependency Tree."""
-    main = str(workspace.info.main_path)
+    main = str(workspace.info.main_path or "")
     main_node = DepNode(Project(name=main, path=main), is_primary=True)
     primaries: List[str] = []
     edges: List[Tuple[str, str]] = []

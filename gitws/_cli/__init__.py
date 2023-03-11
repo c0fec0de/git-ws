@@ -87,7 +87,11 @@ def init(context, path=None, manifest_path=None, group_filters=None, update: boo
     with exceptionhandling(context):
         path = process_path(path)
         gws = GitWS.init(
-            main_path=path, manifest_path=manifest_path, group_filters=group_filters, force=force, secho=context.secho
+            main_path=path,
+            manifest_path=manifest_path,
+            group_filters=group_filters,
+            force=force,
+            secho=context.secho,
         )
         click.secho(f"Workspace initialized at {str(resolve_relative(gws.path))!r}.")
         if update:

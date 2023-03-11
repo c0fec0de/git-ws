@@ -153,18 +153,19 @@ class ProjectIter:
     def __iter__(self) -> Generator[Project, None, None]:
         workspace = self.workspace
         info = workspace.info
-        self.__done = [str(info.main_path)]
+        main_path_rel = str(info.main_path or "")
+        self.__done = [main_path_rel]
         try:
             manifest_spec = ManifestSpec.load(self.manifest_path)
         except ManifestNotFoundError:
             manifest_spec = ManifestSpec()
-        if not self.skip_main:
-            main_path = info.main_path
-            main_git = Git(resolve_relative(workspace.main_path))
+        main_path = workspace.main_path
+        if main_path and not self.skip_main:
+            main_git = Git(resolve_relative(main_path))
             revision = main_git.get_revision()
             yield Project(
                 name=main_path.name,
-                path=str(main_path),
+                path=main_path_rel,
                 revision=revision,
                 linkfiles=manifest_spec.linkfiles,
                 copyfiles=manifest_spec.copyfiles,
@@ -174,20 +175,21 @@ class ProjectIter:
             group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
             group_selects = GroupSelects.from_group_filters(group_filters)
             filter_ = create_filter(group_selects, default=True)
-            yield from self.__iter(self.workspace.main_path, manifest_spec, filter_)
+            yield from self.__iter(main_path, manifest_spec, filter_)
 
     def __iter(
-        self, project_path: Path, manifest_spec: ManifestSpec, filter_: FilterFunc
+        self, project_path: Optional[Path], manifest_spec: ManifestSpec, filter_: FilterFunc
     ) -> Generator[Project, None, None]:
         # pylint: disable=too-many-locals
         deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
         refurl: Optional[str] = None
         done: List[str] = self.__done
-        if manifest_spec.dependencies:
-            git = Git(resolve_relative(project_path))
+        if project_path and manifest_spec.dependencies:
+            project_path_rel = resolve_relative(project_path)
+            git = Git(project_path_rel)
             refurl = git.get_url()
             if not refurl:
-                raise GitCloneMissingOriginError(resolve_relative(project_path))
+                raise GitCloneMissingOriginError(project_path_rel)
 
         _LOGGER.debug("%r", manifest_spec)
 
