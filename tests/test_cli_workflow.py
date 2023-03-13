@@ -147,7 +147,7 @@ def test_status(tmp_path, gws):
 
 def test_workflow(tmp_path, gws):
     """Test Full Workflow."""
-    # pylint: disable=unused-argument
+    # pylint: disable=unused-argument,too-many-statements
 
     workspace = tmp_path / "main"
     dep1 = workspace / "dep1"
@@ -180,6 +180,10 @@ def test_workflow(tmp_path, gws):
         "A  dep4/foo.txt",
         "",
     ]
+
+    assert cli(("config", "get", "color_ui", "--workspace")) == ["", ""]
+    assert cli(("config", "set", "color_ui", "false", "--workspace")) == [""]
+    assert cli(("config", "get", "color_ui", "--workspace")) == ["False", ""]
 
     with chdir(dep1):
         assert cli(("status", "--banner")) == [
