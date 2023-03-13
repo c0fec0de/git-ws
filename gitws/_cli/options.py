@@ -92,12 +92,23 @@ def output_option():
     )
 
 
-def path_option():
-    """Path."""
-    return click.argument("path", nargs=-1, type=click.UNPROCESSED)
+def ws_path_option():
+    """Workspace Path Option."""
+    return click.option(
+        "--ws-path",
+        "-w",
+        "ws_path",
+        type=click.Path(file_okay=False),
+        help="Workspace Path.",
+    )
 
 
-def process_path(value) -> Optional[Path]:
+def main_path_option():
+    """Main Repository Path."""
+    return click.argument("main_path", nargs=-1, type=click.UNPROCESSED)
+
+
+def process_main_path(value) -> Optional[Path]:
     """Process ``path_option``."""
     if value:
         if len(value) > 1:

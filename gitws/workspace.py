@@ -187,8 +187,9 @@ class Workspace:
     @staticmethod
     def check_empty(path: Path, main_path: Optional[Path]):
         """Check if Workspace at ``path`` with ``main_path`` is empty."""
-        if any(item != main_path for item in path.iterdir()):
-            raise WorkspaceNotEmptyError(resolve_relative(path))
+        items = [item for item in path.iterdir() if item != main_path]
+        if any(items):
+            raise WorkspaceNotEmptyError(resolve_relative(path), items)
 
     @staticmethod
     def init(

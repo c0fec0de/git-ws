@@ -32,7 +32,14 @@ from .clone import Clone, map_paths
 from .const import MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
 from .datamodel import GroupFilters, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
 from .deptree import DepNode, get_deptree
-from .exceptions import GitCloneNotCleanError, GitTagExistsError, InitializedError, ManifestExistError, NoMainError
+from .exceptions import (
+    GitCloneNotCleanError,
+    GitTagExistsError,
+    InitializedError,
+    ManifestExistError,
+    NoGitError,
+    NoMainError,
+)
 from .git import DiffStat, Git, Status
 from .iters import ManifestIter, ProjectIter
 from .manifestfinder import find_manifest
@@ -62,7 +69,6 @@ class GitWS:
     * :any:`GitWS.create()`: Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.
     * :any:`GitWS.init()`: Initialize NEW Workspace for git clone at ``main_path``, return corresponding :any:`GitWS`.
     * :any:`GitWS.clone()`: Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
-    * :any:`GitWS.init_from_manifest()`: Create NEW workspace at ``path`` without main repo.
     """
 
     # pylint: disable=too-many-public-methods
@@ -202,6 +208,7 @@ class GitWS:
 
     @staticmethod
     def init(
+        path: Optional[Path] = None,
         main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
@@ -214,6 +221,7 @@ class GitWS:
         The parent directory of ``main_path`` becomes the workspace directory.
 
         Keyword Args:
+            path: Workspace Path. Parent directory of Git Clone Root Directory or Current Working Directory by default.
             main_path: Main Project Path. Actual Git Clone Root Directory by default.
             manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
                            This value is written to the configuration.
@@ -223,15 +231,29 @@ class GitWS:
             secho: :any:`click.secho` like print method for verbose output.
         """
         secho = secho or no_echo
-        main_path = Git.find_path(path=main_path)
-        path = main_path.parent
+        if main_path:
+            # Initialize with explicit main project
+            main_path = Git.find_path(path=main_path)
+            path = path or main_path.parent
+        else:
+            # Are we in a git clone?
+            try:
+                # YES --> use it as main project
+                main_path = Git.find_path()
+                path = path or main_path.parent
+            except NoGitError:
+                # NO --> no main project
+                path = path or Path.cwd()
         if not force:
             info = Workspace.is_init(path)
             if info:
                 raise InitializedError(path, info.main_path)
-            Workspace.check_empty(path, main_path)
-        name = main_path.name
-        secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
+            # There might be anything in the workspace if we have no clean main repo!
+            if main_path:
+                Workspace.check_empty(path, main_path)
+        if main_path:
+            name = main_path.name
+            secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         return GitWS.create(
             path,
             main_path=main_path,
@@ -260,35 +282,9 @@ class GitWS:
         return self.workspace.deinit()
 
     @staticmethod
-    def init_from_manifest(
-        path: Path,
-        manifest_path: Optional[Path] = None,
-        group_filters: Optional[GroupFilters] = None,
-        force: bool = False,
-        secho=None,
-    ) -> "GitWS":
-        """
-        Initialize NEW Workspace from manifest without main repository and return corresponding :any:`GitWS`.
-
-        Keyword Args:
-            path: Workspace Path.
-            manifest_path: Manifest File Path. Relative to ``path``. Default is ``git-ws.toml``.
-                           This value is written to the configuration.
-            group_filters: Default Group Filters.
-                           This value is written to the configuration.
-            force: Ignore that the workspace exists.
-            secho: :any:`click.secho` like print method for verbose output.
-        """
-        secho = secho or no_echo
-        if not force:
-            info = Workspace.is_init(path)
-            if info:
-                raise InitializedError(path, info.main_path)
-        return GitWS.create(path, manifest_path=manifest_path, group_filters=group_filters, force=force, secho=secho)
-
-    @staticmethod
     def clone(
         url: str,
+        path: Optional[Path] = None,
         main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
@@ -303,6 +299,7 @@ class GitWS:
             url: Main Project URL.
 
         Keyword Args:
+            path: Workspace Path. Parent directory of Git Clone Root Directory by default.
             main_path: Main Project Path. Twice the URL stem in the current working directory by default.
             manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
                            This value is written to the configuration.
@@ -321,7 +318,7 @@ class GitWS:
             main_path = main_path.resolve()
         main_path.parent.mkdir(parents=True, exist_ok=True)
         main_path_rel = resolve_relative(main_path)
-        path = main_path.parent
+        path = path or main_path.parent
         if not force:
             Workspace.check_empty(path, main_path)
         secho(f"===== {main_path_rel} (MAIN {name!r}) =====", fg=_COLOR_BANNER)

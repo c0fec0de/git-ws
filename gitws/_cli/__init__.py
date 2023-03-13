@@ -36,16 +36,17 @@ from .options import (
     command_options_option,
     force_option,
     group_filters_option,
+    main_path_option,
     manifest_option,
-    path_option,
     paths_argument,
     process_command,
     process_command_options,
-    process_path,
+    process_main_path,
     process_paths,
     projects_option,
     reverse_option,
     update_option,
+    ws_path_option,
 )
 from .remote import remote
 
@@ -71,23 +72,33 @@ def main(ctx=None, verbose=0):
 
 
 @main.command()
-@path_option()
+@main_path_option()
+@ws_path_option()
 @manifest_option(initial=True)
 @group_filters_option(initial=True)
 @update_option()
 @force_option()
 @pass_context
-def init(context, path=None, manifest_path=None, group_filters=None, update: bool = False, force: bool = False):
+def init(
+    context,
+    ws_path=None,
+    main_path=None,
+    manifest_path=None,
+    group_filters=None,
+    update: bool = False,
+    force: bool = False,
+):
     """
-    Initialize Git Workspace at PATH or current directory.
+    Initialize Git Workspace.
 
     The actual directory MUST be a valid git clone, which has been
     either created by 'git init' or 'git clone'.
     """
     with exceptionhandling(context):
-        path = process_path(path)
+        main_path = process_main_path(main_path)
         gws = GitWS.init(
-            main_path=path,
+            path=ws_path,
+            main_path=main_path,
             manifest_path=manifest_path,
             group_filters=group_filters,
             force=force,
@@ -116,7 +127,8 @@ def deinit(context, prune: bool = False, force: bool = False):
 
 @main.command()
 @click.argument("url")
-@path_option()
+@main_path_option()
+@ws_path_option()
 @manifest_option(initial=True)
 @group_filters_option(initial=True)
 @click.option("--revision", help="Revision to be checked out. Tag, Branch or SHA")
@@ -126,7 +138,8 @@ def deinit(context, prune: bool = False, force: bool = False):
 def clone(
     context,
     url,
-    path=None,
+    ws_path=None,
+    main_path=None,
     manifest_path=None,
     group_filters=None,
     revision=None,
@@ -136,13 +149,14 @@ def clone(
     """
     Create a git clone from URL and initialize Git Workspace.
 
-    PATH is optional. If not specified `REPONAME/REPONAME/` by default.
+    MAIN_PATH is optional. If not specified `REPONAME/REPONAME/` by default.
     """
     with exceptionhandling(context):
-        path = process_path(path)
+        main_path = process_main_path(main_path)
         gws = GitWS.clone(
             url,
-            main_path=path,
+            path=ws_path,
+            main_path=main_path,
             manifest_path=manifest_path,
             group_filters=group_filters,
             revision=revision,

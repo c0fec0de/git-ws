@@ -36,7 +36,7 @@ def test_git(tmp_path):
         manifest_path = path / "git-ws.toml"
         assert manifest_path.read_text() == MANIFEST_DEFAULT
 
-        gws = GitWS.init_from_manifest(path)
+        gws = GitWS.init(path=path)
 
         assert gws.path == path
         info_file = gws.path / INFO_PATH
@@ -52,7 +52,7 @@ def test_git(tmp_path):
         ]
 
         with raises(InitializedError):
-            GitWS.init_from_manifest(path)
+            GitWS.init(path=path)
 
         rrepo = GitWS.from_path()
         assert rrepo.path == path
@@ -62,7 +62,7 @@ def test_git(tmp_path):
         assert gws == rrepo
 
         # re-init
-        arepo = GitWS.init_from_manifest(path, force=True, group_filters=("+test", "-doc"))
+        arepo = GitWS.init(path=path, force=True, group_filters=("+test", "-doc"))
         assert arepo.path == path
         assert gws.workspace == arepo.workspace
         assert gws.manifest_path == arepo.manifest_path
