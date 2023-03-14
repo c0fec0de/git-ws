@@ -80,10 +80,21 @@ def test_from_path(tmp_path, repos):
     dep1_path = workspace / "dep1"
     dep2_path = workspace / "dep2"
 
-    assert GitWS.from_path(path=workspace).main_path == main_path
-    assert GitWS.from_path(path=main_path).main_path == main_path
-    assert GitWS.from_path(path=dep1_path).main_path == main_path
-    assert GitWS.from_path(path=dep2_path).main_path == main_path
+    gws = GitWS.from_path(path=workspace)
+    assert gws.main_path == main_path
+    assert gws.base_path == main_path
+
+    gws = GitWS.from_path(path=main_path)
+    assert gws.main_path == main_path
+    assert gws.base_path == main_path
+
+    gws = GitWS.from_path(path=dep1_path)
+    assert gws.main_path == main_path
+    assert gws.base_path == main_path
+
+    gws = GitWS.from_path(path=dep2_path)
+    assert gws.main_path == main_path
+    assert gws.base_path == main_path
 
 
 def test_reinit(tmp_path, repos):

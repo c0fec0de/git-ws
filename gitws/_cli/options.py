@@ -92,14 +92,18 @@ def output_option():
     )
 
 
-def ws_path_option():
+def ws_path_option(nomain: bool = False):
     """Workspace Path Option."""
+    if nomain:
+        descr = "Workspace Path. Parent directory of main project by default."
+    else:
+        descr = "Workspace Path. Parent directory of main project or current working directory by default."
     return click.option(
         "--ws-path",
         "-w",
         "ws_path",
         type=click.Path(file_okay=False),
-        help="Workspace Path.",
+        help=descr,
     )
 
 

@@ -440,7 +440,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         # Resolve relative URLs.
         if resolve_url and not is_urlabs(url):
             if not refurl:
-                raise NoAbsUrlError()
+                raise NoAbsUrlError(spec.name)
             url = urljoin(refurl, url)
 
         # Create

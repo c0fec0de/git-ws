@@ -168,5 +168,8 @@ class NoMainError(RuntimeError):
 class NoAbsUrlError(RuntimeError):
     """No Relative URL Possible."""
 
-    def __init__(self):
-        super().__init__("Absolute URL required. Please specify an absolute 'url' or a 'sub_url' with a 'remote'")
+    def __init__(self, project_name: str):
+        super().__init__(
+            "Absolute URL required. Please specify an absolute 'url' or a 'sub_url'"
+            f" with a 'remote' for {project_name!r}."
+        )

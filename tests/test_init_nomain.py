@@ -17,18 +17,16 @@
 """Initialization Tests without Main Repo."""
 from pytest import raises
 
-from gitws import GitWS, InitializedError
-from gitws.const import CONFIG_PATH, INFO_PATH
+from gitws import Defaults, GitWS, InitializedError, ManifestSpec, NoAbsUrlError, NoMainError, ProjectSpec, Remote
+from gitws.const import CONFIG_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 
 from .common import MANIFEST_DEFAULT
-
-# pylint: disable=unused-import
-from .fixtures import repos
-from .util import chdir, run
+from .fixtures import create_repos
+from .util import chdir
 
 
-def test_git(tmp_path):
-    """Init with GIT repo."""
+def test_nomain(tmp_path):
+    """Init without main."""
     path = tmp_path / "workspace"
     path.mkdir(parents=True)
     with chdir(path):
@@ -39,6 +37,8 @@ def test_git(tmp_path):
         gws = GitWS.init(path=path)
 
         assert gws.path == path
+        assert gws.main_path is None
+        assert gws.base_path == path
         info_file = gws.path / INFO_PATH
         assert info_file.read_text().split("\n") == [
             "# Git Workspace System File. DO NOT EDIT.",
@@ -67,3 +67,47 @@ def test_git(tmp_path):
         assert gws.workspace == arepo.workspace
         assert gws.manifest_path == arepo.manifest_path
         assert arepo.group_filters == ("+test", "-doc")
+
+
+def test_noabs(tmp_path):
+    """Test Without absolute paths"""
+    path = tmp_path / "workspace"
+    path.mkdir(parents=True)
+    with chdir(path):
+        dependencies = [
+            ProjectSpec(name="dep1"),
+        ]
+        manifest_spec = ManifestSpec(dependencies=dependencies)
+        manifest_spec.save(MANIFEST_PATH_DEFAULT)
+
+        gws = GitWS.init(path=path)
+        with raises(NoAbsUrlError):
+            gws.update()
+
+
+def test_deps(tmp_path):
+    """Pulling of dependencies."""
+    path = tmp_path / "workspace"
+    path.mkdir(parents=True)
+    repos = tmp_path / "repos"
+    create_repos(repos)
+    with chdir(path):
+        manifest_spec = ManifestSpec(
+            defaults=Defaults(revision="main"),
+            remotes=[
+                Remote(name="main", url_base=f"file://{repos!s}"),
+            ],
+            dependencies=[
+                ProjectSpec(name="dep1", sub_url="dep1", remote="main"),
+            ],
+        )
+        manifest_spec.save(MANIFEST_PATH_DEFAULT)
+        gws = GitWS.init(path=path)
+        gws.update()
+        assert (path / "dep1").exists()
+        assert not (path / "dep2").exists()
+        assert not (path / "dep3").exists()
+        assert (path / "dep4").exists()
+
+        with raises(NoMainError):
+            gws.tag("mytag")

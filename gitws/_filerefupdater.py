@@ -82,7 +82,7 @@ class AFileRefUpdater:
             self.__check_path(dest, "destination")
             self._remove(dest)
             efilerefs.remove(fileref)
-        except Exception as exc:  # pylint: disable=broad-exception-caught
+        except Exception as exc:  # pylint: disable=broad-exception-caught # pragma: no cover
             _LOGGER.error("Cannot remove %s: %s", self.what, exc)
 
     def _remove(self, dest: Path):

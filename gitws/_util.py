@@ -50,7 +50,7 @@ def run(cmd, cwd=None, capture_output=False, check=True, secho=None):
 def no_echo(text: str, err=False, **kwargs):
     """Just suppress ``text``."""
     if err:
-        print(err, file=sys.stderr)
+        print(text, file=sys.stderr)
 
 
 def resolve_relative(path: Path, base: Optional[Path] = None) -> Path:

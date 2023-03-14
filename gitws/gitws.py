@@ -139,7 +139,7 @@ class GitWS:
         if main_path and not manifest_path:
             manifest_path = find_manifest(main_path)
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
-        ManifestSpec.load(manifest_path)  # check manifest
+        GitWS.check_manifest(manifest_path)
         if group_filters:
             GroupFilters.validate(group_filters)
         group_filters = workspace.get_group_filters(group_filters=group_filters or None)
@@ -188,7 +188,7 @@ class GitWS:
         else:
             base_path = path
         # check manifest
-        ManifestSpec.load(base_path / manifest_path_rel)
+        GitWS.check_manifest(base_path / manifest_path_rel)
         # check group_filters
         if group_filters:
             GroupFilters.validate(group_filters)
@@ -280,6 +280,12 @@ class GitWS:
         if prune:
             self._prune(self.workspace, force=force)
         return self.workspace.deinit()
+
+    @staticmethod
+    def check_manifest(manifest_path: Path):
+        """Check Manifest at ``manifest_path``"""
+        manifest_spec = ManifestSpec.load(manifest_path)
+        Manifest.from_spec(manifest_spec, path=str(manifest_path))
 
     @staticmethod
     def clone(
@@ -633,8 +639,7 @@ class GitWS:
         # commit
         paths = (manifest_path,)
         git.add(paths, force=True)
-        if any(git.status(paths=paths)):
-            git.commit(msg or name, paths=paths)
+        git.commit(msg or name, paths=paths)
         # tag
         git.tag(name, msg=msg, force=force)
 

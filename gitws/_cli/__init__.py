@@ -89,10 +89,17 @@ def init(
     force: bool = False,
 ):
     """
-    Initialize Git Workspace.
+    Initialize Git Workspace *with* or *without* main project.
 
-    The actual directory MUST be a valid git clone, which has been
-    either created by 'git init' or 'git clone'.
+    *with* main project: run `git ws init` in the directory of an actual git clone OR
+    run `git ws init PATH_TO_MAIN_GIT_CLONE`. The git clone becomes the main project
+    in both cases.
+
+    *without* main project: run `git ws init` in the intended workspace directory.
+    No main git project is needed.
+
+    In any of these cases a manifest file (i.e. `git-ws.toml`) is required.
+    It can be created via `git ws manifest create`.
     """
     with exceptionhandling(context):
         main_path = process_main_path(main_path)
@@ -128,7 +135,7 @@ def deinit(context, prune: bool = False, force: bool = False):
 @main.command()
 @click.argument("url")
 @main_path_option()
-@ws_path_option()
+@ws_path_option(nomain=True)
 @manifest_option(initial=True)
 @group_filters_option(initial=True)
 @click.option("--revision", help="Revision to be checked out. Tag, Branch or SHA")
