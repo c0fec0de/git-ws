@@ -54,7 +54,7 @@ Create a manifest:
 
 Initialize Workspace
 
->>> gws = gitws.GitWS.init(main_path)
+>>> gws = gitws.GitWS.init(main_path=main_path)
 >>> gws
 GitWS(...)
 
@@ -127,7 +127,9 @@ from .exceptions import (
     ManifestError,
     ManifestExistError,
     ManifestNotFoundError,
+    NoAbsUrlError,
     NoGitError,
+    NoMainError,
     OutsideWorkspaceError,
     UninitializedError,
     WorkspaceNotEmptyError,

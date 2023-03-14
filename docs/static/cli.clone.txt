@@ -1,10 +1,12 @@
-Usage: git-ws clone [OPTIONS] URL [PATH]...
+Usage: git-ws clone [OPTIONS] URL [MAIN_PATH]...
 
   Create a git clone from URL and initialize Git Workspace.
 
-  PATH is optional. If not specified `REPONAME/REPONAME/` by default.
+  MAIN_PATH is optional. If not specified `REPONAME/REPONAME/` by default.
 
 Options:
+  -w, --ws-path DIRECTORY    Workspace Path. Parent directory of main project
+                             by default.
   -M, --manifest FILE        Manifest file. 'git-ws.toml' by default.
   -G, --group-filter FILTER  Group Filtering. TODO: more details. The setting
                              becomes default for all successive runs.

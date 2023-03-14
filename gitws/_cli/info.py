@@ -22,6 +22,7 @@ from anytree import ContStyle, RenderTree
 from gitws import GitWS
 
 from ..deptree import DepDotExporter
+from ..exceptions import NoMainError
 from .common import exceptionhandling, pass_context
 from .options import group_filters_option, manifest_option
 
@@ -52,7 +53,10 @@ def main_path(context):
     """
     with exceptionhandling(context):
         gws = GitWS.from_path()
-        click.echo(str(gws.workspace.main_path))
+        main_path = gws.workspace.main_path
+        if not main_path:
+            raise NoMainError()
+        click.echo(str(main_path))
 
 
 @info.command()

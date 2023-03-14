@@ -22,7 +22,7 @@ Commands:
   git            Run git COMMAND on projects.
   group-filters  Set Group Filter to VALUE.
   info           Git Workspace Information.
-  init           Initialize Git Workspace at PATH or current directory.
+  init           Initialize Git Workspace *with* or *without* main project.
   manifest       Manifest Information.
   pull           Run 'git pull' on projects.
   push           Run 'git push' on projects (in reverse order).

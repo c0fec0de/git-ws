@@ -136,8 +136,8 @@ def test_cli_clone_not_empty(tmp_path, repos):
 
     with chdir(tmp_path):
         (workspace / "file.txt").touch()
-        assert cli(["clone", str(repos / "main")], exit_code=1) == [
-            "Error: Workspace 'main' is not an empty directory.",
+        assert cli(["clone", str(repos / "main")], exit_code=1, tmp_path=tmp_path) == [
+            "Error: Workspace 'main' is not an empty directory. It contains: TMP/main/file.txt.",
             "",
             "Choose an empty directory or use '--force'",
             "",

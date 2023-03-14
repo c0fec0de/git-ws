@@ -92,12 +92,27 @@ def output_option():
     )
 
 
-def path_option():
-    """Path."""
-    return click.argument("path", nargs=-1, type=click.UNPROCESSED)
+def ws_path_option(nomain: bool = False):
+    """Workspace Path Option."""
+    if nomain:
+        descr = "Workspace Path. Parent directory of main project by default."
+    else:
+        descr = "Workspace Path. Parent directory of main project or current working directory by default."
+    return click.option(
+        "--ws-path",
+        "-w",
+        "ws_path",
+        type=click.Path(file_okay=False),
+        help=descr,
+    )
 
 
-def process_path(value) -> Optional[Path]:
+def main_path_option():
+    """Main Repository Path."""
+    return click.argument("main_path", nargs=-1, type=click.UNPROCESSED)
+
+
+def process_main_path(value) -> Optional[Path]:
     """Process ``path_option``."""
     if value:
         if len(value) > 1:
