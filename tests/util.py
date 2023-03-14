@@ -45,30 +45,6 @@ def chdir(path):
         os.chdir(curdir)
 
 
-@contextlib.contextmanager
-def change_envvar(name, value):
-    """Modify one environment variable and restore it."""
-    try:
-        old = os.environ[name]
-    except KeyError:
-        old = None
-    _set_envvar(name, value)
-    try:
-        yield
-    finally:
-        _set_envvar(name, old)
-
-
-def _set_envvar(name, value):
-    if value is None:
-        try:
-            del os.environ[name]
-        except KeyError:
-            pass
-    else:
-        os.environ[name] = str(value)
-
-
 def get_sha(path):
     """Get SHA for ``path``."""
     assert (path / ".git").exists()
@@ -137,15 +113,15 @@ def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_
     genpath.mkdir(parents=True, exist_ok=True)
     refpath.mkdir(parents=True, exist_ok=True)
     if capsys:
+        assert tmp_path
+        assert repos_path
         captured = capsys.readouterr()
         out = captured.out
         err = captured.err
-        if repos_path:
-            out = replace_path(out, repos_path, "REPOS")
-            err = replace_path(err, repos_path, "REPOS")
-        if tmp_path:
-            out = replace_path(out, tmp_path, "TMP")
-            err = replace_path(err, tmp_path, "TMP")
+        out = replace_path(out, repos_path, "REPOS")
+        err = replace_path(err, repos_path, "REPOS")
+        out = replace_path(out, tmp_path, "TMP")
+        err = replace_path(err, tmp_path, "TMP")
         (genpath / "stdout.txt").write_text(out)
         (genpath / "stderr.txt").write_text(err)
     if caplog:

@@ -9,11 +9,11 @@
 
 # Git Workspace - Multi Repository Management Tool
 
-* [Installation](#installation)
-* [Usage](#usage)
-* [Cheat-Sheet](#cheat-sheet)
-* [Python API](#api)
-* [Alternatives](#alternatives)
+* [Installation](https://github.com/c0fec0de/git-ws#-installation)
+* [Usage](https://github.com/c0fec0de/git-ws#-usage)
+* [Cheat-Sheet](https://github.com/c0fec0de/git-ws#-cheat-sheet)
+* [Python API](https://github.com/c0fec0de/git-ws#-api)
+* [Alternatives](https://github.com/c0fec0de/git-ws#-alternatives)
 
 Git Workspace is a lightweight tool for creating and managing *workspaces* consisting of several interdependent `git` repositories. Starting from a *main repository*, Git Workspace discovers dependencies specified in a *manifest file*, fetching any specified required repositories and assembling them into a single workspace.
 
@@ -22,7 +22,8 @@ Git Workspace is a lightweight tool for creating and managing *workspaces* consi
 👉 You can read more about the used [nomenclature](https://git-ws.readthedocs.io/en/latest/manual/nomenclature.html) in the [documentation](https://git-ws.readthedocs.io/en/latest/index.html).
 
 
-# 📦 Installation
+
+## 📦 Installation
 
 Git Workspace is written in Python and - as usual - installing it is pretty easy:
 
@@ -38,9 +39,11 @@ poetry add --group dev git-ws
 ```
 
 
-# 📔 Usage
+## 📔 Usage
 
 Git Workspace is integrated into git `git ws` - this is what you will be using most of the time.
+
+#### The Manifest
 
 Let's assume we have a project called `myapp`, which requires a library `mylib` that is maintained in another `git` repository. In order to use this project with Git Workspace, `myapp` needs to provide a so called *manifest*. An Git Workspace manifest is a simple [TOML](https://toml.io/) file - by default called `git-ws.toml` in the project's root folder - which defines the dependencies a project has as well as some other meta information. A minimal manifest for our project could look like this:
 
@@ -61,12 +64,14 @@ revision = "v2.3.4"
 
 The project will be searched via a relative path (which is either `../mylib` or `../mylib.git` depending on the main repository's URL). Relative paths are in general useful as they allow to use the same protocol for the main repository as well as any of its dependencies.
 
+See the [Manifest Documentation](https://git-ws.readthedocs.io/en/latest/manual/manifest.html) for any further details on available options.
+
+#### The Initial Clone
+
 To build a workspace from a project prepared like that, simply clone it via `git ws`:
 
 ```bash
 cd $HOME/Projects
-mkdir my_app_workspace
-cd my_app_workspace
 git ws clone --update git@github.com:example/myapp.git
 ```
 
@@ -75,7 +80,7 @@ git ws clone --update git@github.com:example/myapp.git
 The above will clone the app repository and also the library side-by-side:
 
 ```bash
-ls -a
+ls -a myapp/
 # Should print something like
 .
 ..
@@ -86,13 +91,23 @@ mylib
 
 As you can see, besides the two repositories we wanted, there is also a hidden `.git-ws` folder where the tool stores the needed configuration data.
 
-Sometimes there are use cases where using `git ws clone` cannot be used. For example, when a CI/CD system creates the initial clone of the main repository, you may need a way to fetch the remaining projects. This can be done by simply running the following within the main project:
+The [`git ws clone` documentation](https://git-ws.readthedocs.io/en/latest/manual/command-line-interface/workspace-management.html#git-ws-clone) describes all options.
+
+#### Initialization
+
+Sometimes there are use cases where using `git ws clone` cannot be used. For example, when you setup your manifest the first
+time or when a CI/CD system creates the initial clone of the main repository, you may need a way to fetch the remaining projects. This can be done by simply running the following **within** the main project:
 
 ```bash
 git ws init --update
 ```
 
 👉 As with `git ws clone`, without the `--update`, no dependencies will be fetched.
+
+This command initializes the workspace and just needs to run once.
+Changes on the manifest require an update operation (see next section) but no re-initialization.
+
+#### Updating
 
 Another important use case is keeping a workspace up-to-date. Lets say you pull in an update in the main repository, which in turn might cause changes in the manifest to be pulled in as well. Updating the existing workspace is as simple as
 
@@ -103,14 +118,43 @@ git ws update
 # Alternatively, run `git rebase` instead of `git pull` in dependencies:
 git ws update --rebase
 ```
-## Cheat-Sheet
+
+#### Non-Git Main Projects
+
+`git ws` can leave the manifest version control to any other version control system (Subversion, VCS, DesignSync, etc.).
+Just manage the manifest file `git-ws.toml` within the version control system of your choice.
+Run `git ws init --update` or `git ws init --update -M path/to/git-ws.toml` in the intended workspace directory.
+
+👉 As before, without the `--update`, no dependencies will be fetched.
+
+**Inside** a git clone `git ws init` uses the actual git project as the *main project* of the workspace.
+**Outside** a git clone `git ws init` initializes a workspace *without* a *main project*.
+
+👉 There are just two drawbacks of a workspace without a main project:
+
+1. `git ws tag` has no main project to tag and will fail. Please use [`git ws manifest freeze`](https://git-ws.readthedocs.io/en/latest/manual/command-line-interface/manifest.html#git-ws-manifest-freeze).
+2. Relative URLs are not supported, as there is no URL to be relative to. Please use `remotes`:
+
+```toml
+[[remotes]]
+name = "main"
+url-base = "git@github.example.com:your-group"
+
+[[dependencies]]
+name = "dep1"
+remote = "main"
+```
+
+
+## 🕹️ Cheat-Sheet
 
 #### Initialization
 
 | Command | Description |
 | --- | --- |
 | `git ws clone URL` | Clone git repository from `URL` as main repository and initialize Git Workspace |
-| `git ws init` | Initialize Git Workspace. Use current git clone as main repository |
+| `git ws init` (**inside** a git clone) | Initialize Git Workspace at parent directory. Use current git clone as main repository |
+| `git ws init` (**outside** a git clone) | Initialize Git Workspace at current directory. No main repository. |
 | `git ws manifest create` | Create well documented, empty manifest |
 
 #### Basic
@@ -156,6 +200,9 @@ git ws update --rebase
 | `git ws info dep-tree --dot \| dot -Tpng > dep-tree.png` | Draw Dependency Diagramm (needs [graphviz](https://graphviz.org)) |
 
 
+See the [command-line interface documentation](https://git-ws.readthedocs.io/en/latest/manual/command-line-interface/index.html) for any further details.
+
+
 ## 🐍 Python API
 
 Git Workspace is written in Python. Besides the `git ws` command line tool, there is also an API which you can use to further automate workspace creation and maintenance. If you are interested, have a look into the [API documentation](https://git-ws.readthedocs.io/en/latest/api/gitws.html).
@@ -188,5 +235,5 @@ And that's what we did - Git Workspace is a our tool for managing a large worksp
 
 👉 Please note that our view on the various features might be biased. As we did, always look at all the options available to you before deciding for one tool or the other. While the other tools in comparison did not model what we needed for our workflow, they might just be what you are looking for.
 
-If you want to learn more, have a look into the [documentation](https://git-ws.readthedocs.io/en/latest/manual/why.html).
+If you want to learn more, have a look into [Why We Started Git Workspace](https://git-ws.readthedocs.io/en/latest/manual/why.html).
 

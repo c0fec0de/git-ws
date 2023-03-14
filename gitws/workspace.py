@@ -22,6 +22,7 @@ The :any:`Workspace` class represents the file system location containing all gi
 """
 import logging
 import shutil
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
@@ -31,7 +32,7 @@ from ._basemodel import BaseModel
 from ._util import resolve_relative
 from .appconfig import AppConfig, AppConfigData, AppConfigLocation
 from .const import GIT_WS_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
-from .datamodel import GroupFilters, Project
+from .datamodel import GroupFilters, Project, ProjectFileRefsMutable
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError, WorkspaceNotEmptyError
 from .workspacefinder import find_workspace
 
@@ -49,9 +50,19 @@ class Info(BaseModel):
         main_path: Path to main project. Relative to workspace root directory.
     """
 
-    main_path: Path
+    main_path: Optional[Path] = None
     """
     Path to main project. Relative to workspace root directory.
+    """
+
+    project_linkfiles: ProjectFileRefsMutable = {}
+    """
+    Project Symlinks.
+    """
+
+    project_copyfiles: ProjectFileRefsMutable = {}
+    """
+    Project File Copies.
     """
 
     @staticmethod
@@ -67,7 +78,9 @@ class Info(BaseModel):
         infopath = path / INFO_PATH
         doc = tomlkit.parse(infopath.read_text())
         return Info(
-            main_path=doc["main_path"],
+            main_path=doc.get("main_path", None),
+            project_linkfiles=doc.get("project_linkfiles", {}),
+            project_copyfiles=doc.get("project_copyfiles", {}),
         )
 
     def save(self, path: Path):
@@ -81,14 +94,22 @@ class Info(BaseModel):
         """
         infopath = path / INFO_PATH
         infopath.parent.mkdir(parents=True, exist_ok=True)
+        # structure
         try:
             doc = tomlkit.parse(infopath.read_text())
         except FileNotFoundError:
             doc = tomlkit.document()
             doc.add(tomlkit.comment("Git Workspace System File. DO NOT EDIT."))
             doc.add(tomlkit.nl())
-            doc.add("main_path", "")  # type: ignore
-        doc["main_path"] = str(self.main_path)
+        # update
+        selfdict = self.dict(exclude_none=True)
+        selfdict["main_path"] = str(self.main_path) if self.main_path else None
+        for name, value in selfdict.items():
+            if value:
+                doc[name] = value
+            else:
+                doc.pop(name, None)
+        # write
         infopath.write_text(tomlkit.dumps(doc))
 
 
@@ -164,32 +185,35 @@ class Workspace:
         return None
 
     @staticmethod
-    def check_empty(path: Path, main_path: Path):
+    def check_empty(path: Path, main_path: Optional[Path]):
         """Check if Workspace at ``path`` with ``main_path`` is empty."""
-        if any(item != main_path for item in path.iterdir()):
-            raise WorkspaceNotEmptyError(resolve_relative(path))
+        items = [item for item in path.iterdir() if item != main_path]
+        if any(items):
+            raise WorkspaceNotEmptyError(resolve_relative(path), items)
 
     @staticmethod
     def init(
         path: Path,
-        main_path: Path,
+        main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
         force: bool = False,
     ) -> "Workspace":
-        """
+        """t
+
         Initialize new :any:`Workspace` at ``path``.
 
         Args:
             path:  Path to the workspace
-            main_path:  Path to the main project. Relative to ``path``.
 
         Keyword Args:
+            main_path:  Path to the main project. Relative to ``path``.
             manifest_path:  Path to the manifest file. Relative to ``main_path``. Default is ``git-ws.toml``.
             group_filters: Group Filters.
             force: Ignore that the workspace exists.
 
         Raises:
+            InitializedError: ``path`` already contains workspace.
             OutsideWorkspaceError: ``main_path`` is not within ``path``.
         """
         if not force:
@@ -198,10 +222,11 @@ class Workspace:
                 raise InitializedError(path, info.main_path)
 
         # Normalize
-        try:
-            main_path = (path / main_path).resolve().relative_to(path.resolve())
-        except ValueError:
-            raise OutsideWorkspaceError(path, main_path) from None
+        if main_path:
+            try:
+                main_path = (path / main_path).resolve().relative_to(path.resolve())
+            except ValueError:
+                raise OutsideWorkspaceError(path, main_path, "Project") from None
 
         # Initialize Info
         info = Info(main_path=main_path)
@@ -223,9 +248,20 @@ class Workspace:
         shutil.rmtree(self.path / GIT_WS_PATH)
 
     @property
-    def main_path(self) -> Path:
-        """Resolved path to main project."""
-        return self.path / self.info.main_path
+    def main_path(self) -> Optional[Path]:
+        """Resolved Path To Main Project."""
+        info_main_path = self.info.main_path
+        if info_main_path:
+            return self.path / info_main_path
+        return None
+
+    @property
+    def base_path(self) -> Path:
+        """Resolved Path To Main Project Or Workspace."""
+        info_main_path = self.info.main_path
+        if info_main_path:
+            return self.path / info_main_path
+        return self.path
 
     @property
     def config(self) -> AppConfigData:
@@ -249,7 +285,7 @@ class Workspace:
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
         """Get Resolved Manifest Path."""
-        return self.main_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
+        return self.base_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
 
     def get_group_filters(self, group_filters: Optional[GroupFilters] = None) -> GroupFilters:
         """Get Group Selects."""
@@ -266,6 +302,14 @@ class Workspace:
                 pathmap[part] = {}
                 pathmap = pathmap[part]
         yield from _iter_obsoletes(self.path, usemap)
+
+    @contextmanager
+    def edit_info(self) -> Generator[Info, None, None]:
+        """Yield Contextmanager to edit :any:`Info` and write back changes."""
+        try:
+            yield self.info
+        finally:
+            self.info.save(self.path)
 
 
 def _iter_obsoletes(path, usemap):

@@ -309,7 +309,7 @@ class Git:
                 self._run(("remote", "add", "origin", str(url)), capture_output=True, cwd=cache)
                 self._run(("reset", "--hard"), capture_output=True, cwd=cache)
                 self._run(("clean", "-xdf"), capture_output=True, cwd=cache)
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError:  # pragma: no cover
                 shutil.rmtree(cache)  # broken
         # Cache Update
         if cache.exists():
@@ -318,7 +318,7 @@ class Git:
                 branch = self._run2str(("branch",), regex=_RE_BRANCH, cwd=cache)
                 self._run(("branch", f"--set-upstream-to=origin/{branch}", "main"), capture_output=True, cwd=cache)
                 self._run(("merge", f"origin/{branch}"), capture_output=True, cwd=cache)
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError:  # pragma: no cover
                 shutil.rmtree(cache)  # broken
         # (Re-)Init Cache
         if not cache.exists():
@@ -536,11 +536,9 @@ class Git:
             paths: Paths.
         """
         _LOGGER.info("Git(%r).diffstat(paths=%r)", str(self.path), paths)
-        lines = self._run2lines(("diff", "--stat"), paths=paths)
-        if lines:
-            # skip last line for now
-            for line in lines[:-1]:
-                yield DiffStat.from_str(line)
+        lines = self._run2lines(("diff", "--stat"), paths=paths)[:-1]
+        for line in lines:
+            yield DiffStat.from_str(line)
 
     def submodule_update(self, init: bool = False, recursive: bool = False):
         """
@@ -580,7 +578,7 @@ class Git:
             return False
         if self._run2str(("stash", "list")):
             return False
-        if lines[0].startswith("## No commits yet on "):
+        if lines[0].startswith("## No commits yet on "):  # pragma: no cover
             return True
         if "[ahead " in lines[0]:
             return False

@@ -32,19 +32,20 @@ Central :any:`GitWS` Datamodel.
 * :any:`AppConfigData`: :any:`GitWS` Configuration.
 """
 
+# pylint: disable=too-many-lines
 
 import re
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import tomlkit
 from pydantic import BaseSettings, Extra, Field, root_validator, validator
 
 from ._basemodel import BaseModel
-from ._url import urljoin, urlsub
+from ._url import is_urlabs, urljoin, urlsub
 from ._util import add_comment, add_info, as_dict, get_repr, resolve_relative
 from .const import MANIFEST_PATH_DEFAULT
-from .exceptions import ManifestError, ManifestNotFoundError
+from .exceptions import ManifestError, ManifestNotFoundError, NoAbsUrlError
 
 _RE_GROUP = re.compile(r"\A[a-zA-Z0-9_][a-zA-Z0-9_\-]*\Z")
 
@@ -87,6 +88,7 @@ class Groups(tuple):
         """
         for group in groups:
             validate_group(group)
+        return groups
 
 
 _RE_GROUP_FILTER = re.compile(r"\A(?P<select>[\-\+])(?P<group>[a-zA-Z0-9_][a-zA-Z0-9_\-]*)?(@(?P<path>.+))?\Z")
@@ -129,6 +131,7 @@ class GroupFilters(tuple):
         """
         for group_filter in group_filters:
             validate_group_filter(group_filter)
+        return group_filters
 
 
 class GroupSelect(BaseModel):
@@ -268,6 +271,30 @@ class Defaults(BaseModel):
     """Initialize and Update `git submodules`."""
 
 
+class FileRef(BaseModel):
+    """
+    File Reference (Symbolic Link or File to Copy)
+
+    File Reference to Workspace from Project.
+
+    Keyword Args:
+        src: Source - relative path to the project directory.
+        dest: Destination - relative path to the workspace directory.
+    """
+
+    src: str
+    """Source - relative path to the project directory."""
+
+    dest: str
+    """Destination - relative path to the workspace directory."""
+
+
+FileRefs = Tuple[FileRef, ...]
+ProjectFileRefs = Dict[str, FileRefs]
+FileRefsMutable = List[FileRef]
+ProjectFileRefsMutable = Dict[str, FileRefsMutable]
+
+
 class Project(BaseModel, allow_population_by_field_name=True):
 
     """
@@ -324,20 +351,24 @@ class Project(BaseModel, allow_population_by_field_name=True):
     submodules: bool = True
     """Initialize and Update `git submodules`."""
 
+    linkfiles: Tuple[FileRef, ...] = tuple()
+    """Symbolic Links."""
+
+    copyfiles: Tuple[FileRef, ...] = tuple()
+    """Copied Files."""
+
     is_main: bool = False
     """Project is the main project."""
 
     @validator("groups", allow_reuse=True)
     def _groups(cls, values):
         # pylint: disable=no-self-argument
-        Groups.validate(values)
-        return values
+        return Groups.validate(values)
 
     @validator("with_groups", allow_reuse=True)
     def _with_groups(cls, values):
         # pylint: disable=no-self-argument
-        Groups.validate(values)
-        return values
+        return Groups.validate(values)
 
     @property
     def info(self):
@@ -385,13 +416,13 @@ class Project(BaseModel, allow_population_by_field_name=True):
         :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
         :any:`ProjectSpec.from_project()` does the reverse.
         """
-        assert not resolve_url or refurl, "resolve_url requires refurl"
         defaults = manifest_spec.defaults
         remotes = manifest_spec.remotes
         project_groups = spec.groups or defaults.groups
         project_with_groups = spec.with_groups or defaults.with_groups
-        url = spec.url
         submodules = spec.submodules if spec.submodules is not None else defaults.submodules
+        # URL
+        url = spec.url
         if not url:
             # URL assembly
             project_remote = spec.remote or defaults.remote
@@ -407,8 +438,12 @@ class Project(BaseModel, allow_population_by_field_name=True):
                 url = f"../{project_sub_url}"
 
         # Resolve relative URLs.
-        if resolve_url:
+        if resolve_url and not is_urlabs(url):
+            if not refurl:
+                raise NoAbsUrlError(spec.name)
             url = urljoin(refurl, url)
+
+        # Create
         return Project(
             name=spec.name,
             path=spec.path or spec.name,
@@ -418,6 +453,8 @@ class Project(BaseModel, allow_population_by_field_name=True):
             groups=project_groups,
             with_groups=project_with_groups,
             submodules=submodules,
+            linkfiles=spec.linkfiles,
+            copyfiles=spec.copyfiles,
         )
 
 
@@ -481,6 +518,12 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     submodules: Optional[bool] = None
     """Initialize and Update `git submodules`."""
 
+    linkfiles: Tuple[FileRef, ...] = tuple()
+    """Symbolic Links."""
+
+    copyfiles: Tuple[FileRef, ...] = tuple()
+    """Copied Files."""
+
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
         # pylint: disable=no-self-argument
@@ -498,14 +541,12 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     @validator("groups", allow_reuse=True)
     def _groups(cls, values):
         # pylint: disable=no-self-argument
-        Groups.validate(values)
-        return values
+        return Groups.validate(values)
 
     @validator("with_groups", allow_reuse=True)
     def _with_groups(cls, values):
         # pylint: disable=no-self-argument
-        Groups.validate(values)
-        return values
+        return Groups.validate(values)
 
     @staticmethod
     def from_project(project: Project) -> "ProjectSpec":
@@ -529,6 +570,8 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
             groups=project.groups,
             with_groups=project.with_groups,
             submodules=project.submodules,
+            linkfiles=project.linkfiles,
+            copyfiles=project.copyfiles,
         )
 
 
@@ -554,6 +597,12 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
     """Group Filtering."""
 
+    linkfiles: Tuple[FileRef, ...] = tuple()
+    """Symbolic Links."""
+
+    copyfiles: Tuple[FileRef, ...] = tuple()
+    """Copied Files."""
+
     dependencies: Tuple[Project, ...] = tuple()
     """Dependencies."""
 
@@ -563,8 +612,7 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     @validator("group_filters", allow_reuse=True)
     def _group_filters(cls, values):
         # pylint: disable=no-self-argument
-        GroupFilters.validate(values)
-        return values
+        return GroupFilters.validate(values)
 
     @staticmethod
     def from_spec(
@@ -590,6 +638,8 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
         ]
         return Manifest(
             group_filters=spec.group_filters,
+            linkfiles=spec.linkfiles,
+            copyfiles=spec.copyfiles,
             dependencies=dependencies,
             path=path,
         )
@@ -620,12 +670,17 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     Actual Version: ``1.0``.
     """
+    group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
+    """Group Filtering."""
+
+    linkfiles: Tuple[FileRef, ...] = tuple()
+    """Symbolic Links."""
+
+    copyfiles: Tuple[FileRef, ...] = tuple()
+    """Copied Files."""
 
     remotes: Tuple[Remote, ...] = tuple()
     """Remotes."""
-
-    group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
-    """Group Filtering."""
 
     defaults: Defaults = Defaults()
     """Default Values."""
@@ -660,8 +715,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     @validator("group_filters", allow_reuse=True)
     def _group_filters(cls, values):
         # pylint: disable=no-self-argument
-        GroupFilters.validate(values)
-        return values
+        return GroupFilters.validate(values)
 
     @classmethod
     def load(cls, path: Path) -> "ManifestSpec":
@@ -712,6 +766,16 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         group-filters = []
         <BLANKLINE>
         <BLANKLINE>
+        # [[linkfiles]]
+        # src = "file-in-main-clone.txt"
+        # dest = "link-in-workspace.txt"
+        <BLANKLINE>
+        <BLANKLINE>
+        # [[copyfiles]]
+        # src = "file-in-main-clone.txt"
+        # dest = "file-in-workspace.txt"
+        <BLANKLINE>
+        <BLANKLINE>
         # [[remotes]]
         # name = "myremote"
         # url-base = "https://github.com/myuser"
@@ -734,6 +798,22 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         # revision = "main"
         # path = "mydir"
         # groups = ["group"]
+        #
+        # [[dependencies.linkfiles]]
+        # src = "file0-in-mydir.txt"
+        # dest = "link0-in-workspace.txt"
+        #
+        # [[dependencies.linkfiles]]
+        # src = "file1-in-mydir.txt"
+        # dest = "link1-in-workspace.txt"
+        #
+        # [[dependencies.copyfiles]]
+        # src = "file0-in-mydir.txt"
+        # dest = "file0-in-workspace.txt"
+        #
+        # [[dependencies.copyfiles]]
+        # src = "file1-in-mydir.txt"
+        # dest = "file1-in-workspace.txt"
         <BLANKLINE>
         ## A full flavored dependency using a 'url':
         # [[dependencies]]
@@ -742,6 +822,22 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         # revision = "main"
         # path = "mydir"
         # groups = ["group"]
+        #
+        # [[dependencies.linkfiles]]
+        # src = "file0-in-mydir.txt"
+        # dest = "link0-in-workspace.txt"
+        #
+        # [[dependencies.linkfiles]]
+        # src = "file1-in-mydir.txt"
+        # dest = "link1-in-workspace.txt"
+        #
+        # [[dependencies.copyfiles]]
+        # src = "file0-in-mydir.txt"
+        # dest = "file0-in-workspace.txt"
+        #
+        # [[dependencies.copyfiles]]
+        # src = "file1-in-mydir.txt"
+        # dest = "file1-in-workspace.txt"
         <BLANKLINE>
         ## A minimal dependency:
         # [[dependencies]]
@@ -765,6 +861,8 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
                 "group-filters": tuple(),
                 "defaults": {},
                 "dependencies": tomlkit.aot(),
+                "linkfiles": tomlkit.aot(),
+                "copyfiles": tomlkit.aot(),
             }
             data.update(as_dict(self))
         for key, value in data.items():
@@ -836,6 +934,20 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
 
+        # linkfíles
+        example = ManifestSpec(linkfiles=[FileRef(src="file-in-main-clone.txt", dest="link-in-workspace.txt")])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
+        doc.add("linkfiles", tomlkit.aot())
+        doc.add(tomlkit.nl())
+        doc.add(tomlkit.nl())
+
+        # copyfíles
+        example = ManifestSpec(copyfiles=[FileRef(src="file-in-main-clone.txt", dest="file-in-workspace.txt")])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
+        doc.add("copyfiles", tomlkit.aot())
+        doc.add(tomlkit.nl())
+        doc.add(tomlkit.nl())
+
         # Remotes
         example = ManifestSpec(remotes=[Remote(name="myremote", url_base="https://github.com/myuser")])
         add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
@@ -866,6 +978,14 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
                     path="mydir",
                     manifest_path="git-ws.toml",
                     groups=("group",),
+                    linkfiles=[
+                        FileRef(src="file0-in-mydir.txt", dest="link0-in-workspace.txt"),
+                        FileRef(src="file1-in-mydir.txt", dest="link1-in-workspace.txt"),
+                    ],
+                    copyfiles=[
+                        FileRef(src="file0-in-mydir.txt", dest="file0-in-workspace.txt"),
+                        FileRef(src="file1-in-mydir.txt", dest="file1-in-workspace.txt"),
+                    ],
                 )
             ]
         )
@@ -882,6 +1002,14 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
                     path="mydir",
                     manifest_path="git-ws.toml",
                     groups=("group",),
+                    linkfiles=[
+                        FileRef(src="file0-in-mydir.txt", dest="link0-in-workspace.txt"),
+                        FileRef(src="file1-in-mydir.txt", dest="link1-in-workspace.txt"),
+                    ],
+                    copyfiles=[
+                        FileRef(src="file0-in-mydir.txt", dest="file0-in-workspace.txt"),
+                        FileRef(src="file1-in-mydir.txt", dest="file1-in-workspace.txt"),
+                    ],
                 )
             ]
         )

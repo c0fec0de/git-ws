@@ -24,7 +24,7 @@ def test_cli_nogit(tmp_path):
     main_path = tmp_path / "main"
     main_path.mkdir(parents=True)
     with chdir(main_path):
-        assert cli(["init"], exit_code=1) == [
+        assert cli(["init", "."], exit_code=1) == [
             "Error: git clone has not been found or initialized yet. Change to your existing git clone or try:",
             "",
             "    git init",
@@ -157,7 +157,7 @@ def test_cli_init_exists(tmp_path):
         (tmp_path / "something").touch()
 
         assert cli(["init"], tmp_path=tmp_path, exit_code=1) == [
-            "Error: Workspace '..' is not an empty directory.",
+            "Error: Workspace '..' is not an empty directory. It contains: TMP/something.",
             "",
             "Choose an empty directory or use '--force'",
             "",

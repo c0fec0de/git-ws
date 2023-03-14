@@ -15,10 +15,11 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Set of URL Helper Functions."""
+from typing import Optional
 from urllib import parse
 
 
-def urljoin(base, url):
+def urljoin(base: Optional[str], url: str) -> str:
     """
     Resolve a ``url`` relative to ``base``.
 
@@ -59,7 +60,7 @@ def urljoin(base, url):
     return parse.urlunparse((baseparsed.scheme,) + joinedparsed[1:])
 
 
-def urlsub(base, name):
+def urlsub(base: Optional[str], name: str) -> str:
     """
     Create sub-url for ``name`` with suffix of ``base``.
 
@@ -87,7 +88,13 @@ def urlsub(base, name):
     return f"{name}.{bsuffix}"
 
 
-def strip_user_password(url):
+def is_urlabs(url: str) -> bool:
+    """Is URL absolute."""
+    urlparsed = parse.urlparse(url)
+    return bool(urlparsed.scheme)
+
+
+def strip_user_password(url: str) -> str:
     """
     Strip User and/or Password.
 

@@ -17,7 +17,18 @@
 """Manifest Testing."""
 from pytest import raises
 
-from gitws import Defaults, Groups, GroupSelect, GroupSelects, Manifest, ManifestSpec, Project, ProjectSpec, Remote
+from gitws import (
+    Defaults,
+    FileRef,
+    Groups,
+    GroupSelect,
+    GroupSelects,
+    Manifest,
+    ManifestSpec,
+    Project,
+    ProjectSpec,
+    Remote,
+)
 
 from .common import MANIFEST_DEFAULT
 
@@ -108,6 +119,9 @@ def test_project():
     assert project.manifest_path == "git-ws.toml"
     assert project.groups == Groups()
     assert project.with_groups == Groups()
+    assert project.submodules is True
+    assert project.linkfiles == tuple()
+    assert project.copyfiles == tuple()
     assert project.info == "name (path='path')"
 
     # Immutable
@@ -120,13 +134,25 @@ def test_project():
     with raises(ValueError):
         Project(name="name", path="path", with_groups=("-foo",))
 
-    project = Project(name="name", path="path", url="url", is_main=True, groups=("a", "b"), with_groups=("c", "d"))
+    project = Project(
+        name="name",
+        path="path",
+        url="url",
+        is_main=True,
+        groups=("a", "b"),
+        with_groups=("c", "d"),
+        submodules=True,
+        linkfiles=[{"src": "src0", "dest": "dest0"}, {"src": "src1", "dest": "dest1"}],
+        copyfiles=[{"src": "src2", "dest": "dest2"}, {"src": "src3", "dest": "dest3"}],
+    )
     assert project.name == "name"
     assert project.url == "url"
     assert project.revision is None
     assert project.manifest_path == "git-ws.toml"
     assert project.groups == Groups(("a", "b"))
     assert project.with_groups == Groups(("c", "d"))
+    assert project.linkfiles == (FileRef(src="src0", dest="dest0"), FileRef(src="src1", dest="dest1"))
+    assert project.copyfiles == (FileRef(src="src2", dest="dest2"), FileRef(src="src3", dest="dest3"))
     assert project.info == "name (MAIN path='path', groups='a,b')"
 
 
@@ -142,6 +168,9 @@ def test_project_spec():
     assert project_spec.manifest_path == "git-ws.toml"
     assert project_spec.groups == Groups()
     assert project_spec.with_groups == Groups()
+    assert project_spec.submodules is None
+    assert project_spec.copyfiles == tuple()
+    assert project_spec.linkfiles == tuple()
 
     with raises(ValueError):
         ProjectSpec(name="name", remote="remote", url="url")
@@ -203,7 +232,19 @@ def test_manifest_spec_save(tmp_path):
         remotes=[Remote(name="remote")],
         group_filters=("+test",),
         defaults=Defaults(remote="remote"),
-        dependencies=(ProjectSpec(name="dep"),),
+        dependencies=(
+            ProjectSpec(
+                name="dep",
+                linkfiles=(
+                    FileRef(src="src0", dest="subdir/dest0"),
+                    FileRef(src="src1", dest="subdir/dest1"),
+                ),
+                copyfiles=(
+                    FileRef(src="src2", dest="subdir/dest2"),
+                    FileRef(src="src3", dest="subdir/dest3"),
+                ),
+            ),
+        ),
     )
     filepath = tmp_path / "manifest.toml"
     manifest_spec.save(filepath)
@@ -220,6 +261,16 @@ version = "1.1"
 group-filters = ["+test"]
 
 
+# [[linkfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "link-in-workspace.txt"
+
+
+# [[copyfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "file-in-workspace.txt"
+
+
 # [[remotes]]
 # name = "myremote"
 # url-base = "https://github.com/myuser"
@@ -234,6 +285,22 @@ name = "remote"
 
 [[dependencies]]
 name = "dep"
+
+[[dependencies.linkfiles]]
+src = "src0"
+dest = "subdir/dest0"
+
+[[dependencies.linkfiles]]
+src = "src1"
+dest = "subdir/dest1"
+
+[[dependencies.copyfiles]]
+src = "src2"
+dest = "subdir/dest2"
+
+[[dependencies.copyfiles]]
+src = "src3"
+dest = "subdir/dest3"
 """
     assert filepath.read_text() == manifest
 
@@ -252,6 +319,22 @@ remote = "remote"
 
 [[dependencies]]
 name = "dep"
+
+[[dependencies.linkfiles]]
+src = "src0"
+dest = "subdir/dest0"
+
+[[dependencies.linkfiles]]
+src = "src1"
+dest = "subdir/dest1"
+
+[[dependencies.copyfiles]]
+src = "src2"
+dest = "subdir/dest2"
+
+[[dependencies.copyfiles]]
+src = "src3"
+dest = "subdir/dest3"
 """
     assert filepath.read_text() == empty
 
@@ -269,6 +352,16 @@ version = "1.1"
 
 # group-filters = ["+test", "-doc", "+feature@path"]
 group-filters = ["+test"]
+
+
+# [[linkfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "link-in-workspace.txt"
+
+
+# [[copyfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "file-in-workspace.txt"
 
 
 # [[remotes]]
@@ -295,6 +388,22 @@ remote = "remote"
 # revision = "main"
 # path = "mydir"
 # groups = ["group"]
+#
+# [[dependencies.linkfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "link0-in-workspace.txt"
+#
+# [[dependencies.linkfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "link1-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "file0-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "file1-in-workspace.txt"
 
 ## A full flavored dependency using a 'url':
 # [[dependencies]]
@@ -303,12 +412,44 @@ remote = "remote"
 # revision = "main"
 # path = "mydir"
 # groups = ["group"]
+#
+# [[dependencies.linkfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "link0-in-workspace.txt"
+#
+# [[dependencies.linkfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "link1-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file0-in-mydir.txt"
+# dest = "file0-in-workspace.txt"
+#
+# [[dependencies.copyfiles]]
+# src = "file1-in-mydir.txt"
+# dest = "file1-in-workspace.txt"
 
 ## A minimal dependency:
 # [[dependencies]]
 # name = "my"
 [[dependencies]]
 name = "dep"
+
+[[dependencies.linkfiles]]
+src = "src0"
+dest = "subdir/dest0"
+
+[[dependencies.linkfiles]]
+src = "src1"
+dest = "subdir/dest1"
+
+[[dependencies.copyfiles]]
+src = "src2"
+dest = "subdir/dest2"
+
+[[dependencies.copyfiles]]
+src = "src3"
+dest = "subdir/dest3"
 """
     assert filepath.read_text() == update
 
@@ -326,9 +467,20 @@ def test_manifest_spec_from_data(tmp_path):
         ],
         "group-filters": ["+foo", "-bar"],
         "dependencies": [
-            {"name": "dep1", "remote": "remote1", "groups": ["test", "foo"]},
+            {
+                "name": "dep1",
+                "remote": "remote1",
+                "groups": [
+                    "test",
+                    "foo",
+                ],
+                "linkfiles": [
+                    {"src": "s0", "dest": "d0"},
+                    {"src": "s1", "dest": "d1"},
+                ],
+            },
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
-            {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main"},
+            {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main", "submodules": False},
         ],
     }
     manifest_spec = ManifestSpec(**data)
@@ -339,9 +491,17 @@ def test_manifest_spec_from_data(tmp_path):
     )
     assert manifest_spec.group_filters == ("+foo", "-bar")
     assert manifest_spec.dependencies == (
-        ProjectSpec(name="dep1", remote="remote1", groups=("test", "foo")),
+        ProjectSpec(
+            name="dep1",
+            remote="remote1",
+            groups=("test", "foo"),
+            linkfiles=(
+                {"src": "s0", "dest": "d0"},
+                {"src": "s1", "dest": "d1"},
+            ),
+        ),
         ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
-        ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main"),
+        ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main", submodules=False),
     )
 
     filepath = tmp_path / "manifest.toml"
@@ -408,7 +568,23 @@ def test_manifest_from_spec():
         },
         "group-filters": ["-doc", "-bar"],
         "dependencies": [
-            {"name": "dep1", "remote": "remote2", "groups": ["test", "doc"]},
+            {
+                "name": "dep1",
+                "remote": "remote2",
+                "groups": ["test", "doc"],
+                "symlinks": [
+                    {"src": "ss0", "dest": "dd0"},
+                    {"src": "ss1", "dest": "dd1"},
+                ],
+                "linkfiles": [
+                    {"src": "ss0", "dest": "dd0"},
+                    {"src": "ss1", "dest": "dd1"},
+                ],
+                "copyfiles": [
+                    {"src": "ss2", "dest": "dd2"},
+                    {"src": "ss3", "dest": "dd3"},
+                ],
+            },
             {"name": "dep2", "path": "dep2dir", "url": "https://git.example.com/base3/dep2.git"},
             {"name": "dep3", "remote": "remote1", "sub-url": "sub.git", "revision": "main", "groups": ["test"]},
         ],
@@ -418,7 +594,20 @@ def test_manifest_from_spec():
     manifest = Manifest.from_spec(manifest_spec)
     assert manifest.group_filters == ("-doc", "-bar")
     assert manifest.dependencies == (
-        Project(name="dep1", path="dep1", url="file:///repos/url2/dep1", groups=("test", "doc")),
+        Project(
+            name="dep1",
+            path="dep1",
+            url="file:///repos/url2/dep1",
+            groups=("test", "doc"),
+            linkfiles=(
+                {"src": "ss0", "dest": "dd0"},
+                {"src": "ss1", "dest": "dd1"},
+            ),
+            copyfiles=(
+                {"src": "ss2", "dest": "dd2"},
+                {"src": "ss3", "dest": "dd3"},
+            ),
+        ),
         Project(name="dep2", path="dep2dir", url="https://git.example.com/base3/dep2.git"),
         Project(name="dep3", path="dep3", url="file:///repos/url1/sub.git", revision="main", groups=("test",)),
     )

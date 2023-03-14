@@ -50,18 +50,35 @@ def run(cmd, cwd=None, capture_output=False, check=True, secho=None):
 def no_echo(text: str, err=False, **kwargs):
     """Just suppress ``text``."""
     if err:
-        print(err, file=sys.stderr)
+        print(text, file=sys.stderr)
 
 
 def resolve_relative(path: Path, base: Optional[Path] = None) -> Path:
     """
     Return resolved ``path`` relative to ``base``.
 
-    :param path (Path): Path
-    :param base (Path): Base Path. Current Working Directory by default.
+    Args:
+        path: Path
+
+    Keyword Args:
+        base: Base Path. Current Working Directory by default.
     """
     base = (base or Path.cwd()).resolve()
     path = (base / path).resolve()
+    return relative(path, base)
+
+
+def relative(path: Path, base: Optional[Path] = None) -> Path:
+    """
+    Return ``path`` relative to ``base``.
+
+    Args:
+        path: Path
+
+    Keyword Args:
+        base: Base Path. Current Working Directory by default.
+    """
+    base = base or Path.cwd()
     try:
         return path.relative_to(base)
     except ValueError:

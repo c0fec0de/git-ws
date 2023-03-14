@@ -72,6 +72,8 @@ def test_git_revisions(git):
 
     git.commit("initial")
 
+    assert git.get_tags() == tuple()
+
     sha0 = git.get_sha()
     git.tag("mytag")
 
@@ -83,6 +85,7 @@ def test_git_revisions(git):
 
     assert git.get_branch() == "main"
     assert git.get_tag() is None
+    assert git.get_tags() == ("mytag",)
     assert is_sha(sha1)
     assert git.get_revision() == "main"
 
@@ -97,6 +100,7 @@ def test_git_revisions(git):
 
     assert git.get_branch() is None
     assert git.get_tag() == "mytag"
+    assert git.get_tags() == ("mytag",)
     assert git.get_sha() == sha0
     assert git.get_revision() == "mytag"
 
@@ -280,3 +284,11 @@ def test_cache_modified(tmp_path, repos):
     git.checkout("1-feature")
     assert (git.path / "data.txt").read_text() == "dep2-feature"
     assert not (git.path / "new.txt").exists()
+
+
+def test_empty(tmp_path):
+    """Test is_empty()."""
+    Git.init(tmp_path)
+    git = Git(tmp_path)
+    assert git.is_empty()
+    assert tuple(git.diffstat()) == tuple()

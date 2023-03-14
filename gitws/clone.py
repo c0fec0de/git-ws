@@ -55,14 +55,13 @@ class Clone:
         git = Git(project_path, clone_cache=clone_cache, secho=secho)
         return Clone(project, git)
 
-    def check(self, exists=True, diff=True, no_revision=True):
+    def check(self, exists=True, diff=True):
         """
         Check Clone.
 
         Keyword Args:
             exists: Check if cloned.
             diff: Check if revisions differ
-            no_revision: No revision specification.
         """
         if exists:
             self.git.check()
@@ -77,8 +76,7 @@ class Clone:
                 if clonerev and projectrev != clonerev:
                     _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
         elif not project.is_main:
-            if no_revision:
-                _LOGGER.warning("Clone %s has no revision!", project.info)
+            _LOGGER.warning("Clone %s has no revision!", project.info)
 
     def __repr__(self):
         return get_repr(self, (self.project, self.git))
