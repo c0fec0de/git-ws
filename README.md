@@ -64,7 +64,7 @@ revision = "v2.3.4"
 
 The project will be searched via a relative path (which is either `../mylib` or `../mylib.git` depending on the main repository's URL). Relative paths are in general useful as they allow to use the same protocol for the main repository as well as any of its dependencies.
 
-See the [Manifest Documentation](https://git-ws.readthedocs.io/en/latest/manual/manifest.html) for any further details.
+See the [Manifest Documentation](https://git-ws.readthedocs.io/en/latest/manual/manifest.html) for any further details on available options.
 
 #### The Initial Clone
 
@@ -91,7 +91,7 @@ mylib
 
 As you can see, besides the two repositories we wanted, there is also a hidden `.git-ws` folder where the tool stores the needed configuration data.
 
-See the [`git ws clone` documentation](https://git-ws.readthedocs.io/en/latest/manual/command-line-interface/workspace-management.html#git-ws-clone) for any further details.
+The [`git ws clone` documentation](https://git-ws.readthedocs.io/en/latest/manual/command-line-interface/workspace-management.html#git-ws-clone) describes all options.
 
 #### Initialization
 
@@ -103,6 +103,9 @@ git ws init --update
 ```
 
 👉 As with `git ws clone`, without the `--update`, no dependencies will be fetched.
+
+This command initializes the workspace and just needs to run once.
+Changes on the manifest require an update operation (see next section) but no re-initialization.
 
 #### Updating
 
@@ -119,13 +122,12 @@ git ws update --rebase
 #### Non-Git Main Projects
 
 `git ws` can leave the manifest version control to any other version control system (Subversion, VCS, DesignSync, etc.).
-
-* Just manage the manifest file `git-ws.toml` within the version control system of your choice.
-* Run `git ws init --update` or `git ws init --update -M path/to/git-ws.toml` in the intended workspace directory.
+Just manage the manifest file `git-ws.toml` within the version control system of your choice.
+Run `git ws init --update` or `git ws init --update -M path/to/git-ws.toml` in the intended workspace directory.
 
 👉 As before, without the `--update`, no dependencies will be fetched.
 
-As soon as `git ws init` runs **inside** a git clone, this git project becomes the *main project* of the workspace.
+**Inside** a git clone `git ws init` uses the actual git project as the *main project* of the workspace.
 **Outside** a git clone `git ws init` initializes a workspace *without* a *main project*.
 
 👉 There are just two drawbacks of a workspace without a main project:
