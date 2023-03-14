@@ -9,11 +9,11 @@
 
 # Git Workspace - Multi Repository Management Tool
 
-* [Installation](#-installation)
-* [Usage](#-usage)
-* [Cheat-Sheet](#-cheat-sheet)
-* [Python API](#-api)
-* [Alternatives](#-alternatives)
+* [Installation](https://github.com/c0fec0de/git-ws#-installation)
+* [Usage](https://github.com/c0fec0de/git-ws#-usage)
+* [Cheat-Sheet](https://github.com/c0fec0de/git-ws#-cheat-sheet)
+* [Python API](https://github.com/c0fec0de/git-ws#-api)
+* [Alternatives](https://github.com/c0fec0de/git-ws#-alternatives)
 
 Git Workspace is a lightweight tool for creating and managing *workspaces* consisting of several interdependent `git` repositories. Starting from a *main repository*, Git Workspace discovers dependencies specified in a *manifest file*, fetching any specified required repositories and assembling them into a single workspace.
 
