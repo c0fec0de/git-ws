@@ -346,7 +346,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
     """Dependency Groups."""
 
     with_groups: Groups = Field(Groups(), alias="with-groups")
-    """Group Selection for refered project."""
+    """Group Selection for referred project."""
 
     submodules: bool = True
     """Initialize and Update `git submodules`."""
