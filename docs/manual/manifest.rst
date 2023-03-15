@@ -40,3 +40,15 @@ The ``remotes`` section
 
 The ``group-filters`` section
 -----------------------------
+
+
+.. _manifest_copyfiles:
+
+The ``copyfiles`` section
+-----------------------------
+
+
+.. _manifest_linkfilkes:
+
+The ``linkfiles`` section
+-----------------------------
