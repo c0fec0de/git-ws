@@ -64,7 +64,7 @@ class ManifestExistError(RuntimeError):
 
 
 class OutsideWorkspaceError(RuntimeError):
-    """Reference to Outside Of Workspace."""
+    """Reference To Outside Of Workspace."""
 
     def __init__(self, workspace_path, path, what):
         super().__init__(f"{what} {str(path)!r} is refers outside of workspace ({str(workspace_path)!r}).")
@@ -108,7 +108,7 @@ class InvalidConfigurationLocationError(RuntimeError):
 
 
 class InvalidConfigurationValueError(RuntimeError):
-    """An invalid configuration value has been passed to the application."""
+    """An Invalid Configuration Value Has Been Passed To The Application."""
 
     def __init__(self, key: str, value):
         super().__init__(f"Invalid value {value} has been passed to option {key}")
@@ -117,7 +117,7 @@ class InvalidConfigurationValueError(RuntimeError):
 
 
 class InvalidConfigurationOptionError(RuntimeError):
-    """An invalid configuration option has been passed to the applicaiton."""
+    """An Invalid Configuration Option Has Been Passed To The Applicaiton."""
 
     def __init__(self, key):
         super().__init__(f"Unknown configuration option {key}")
@@ -141,7 +141,7 @@ class GitCloneNotCleanError(RuntimeError):
 
 
 class GitCloneMissingOriginError(RuntimeError):
-    """Git Clone has no remote 'origin'."""
+    """Git Clone Has No Remote ``Origin``."""
 
     def __init__(self, project_path, remote="origin"):
         super().__init__(f"Git Clone {str(project_path)!r} has not remote '{remote}'.")
@@ -151,7 +151,7 @@ class GitCloneMissingOriginError(RuntimeError):
 
 class GitTagExistsError(RuntimeError):
 
-    """Git Tag already exists."""
+    """Git Tag Already Exists."""
 
     def __init__(self, tag):
         super().__init__(f"tag {tag} already exists")
@@ -166,7 +166,7 @@ class NoMainError(RuntimeError):
 
 
 class NoAbsUrlError(RuntimeError):
-    """No Relative URL Possible."""
+    """No Relative Url Possible."""
 
     def __init__(self, project_name: str):
         super().__init__(

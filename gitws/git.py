@@ -14,7 +14,15 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
-"""Git Utilities."""
+"""
+Our Git Helper.
+
+We know, that there are libraries for that.
+But we just want to have a lean programmatic interface to git.
+Just with the functionality **we** need. Not more.
+
+We currently do NOT check the git version and try to use the common subset.
+"""
 import hashlib
 import logging
 import os
@@ -68,10 +76,10 @@ class State(Enum):
 
 
 class Status(BaseModel):
-    """Status (One `git status` line."""
+    """Status (One ``git status`` line)."""
 
     def with_path(self, path: Path) -> "Status":
-        """Return :any:`Status` with ``path``."""
+        """Return :any:`Status` with ``path`` as prefix."""
         raise NotImplementedError()
 
     def has_work_changes(self) -> Optional[bool]:
@@ -128,13 +136,13 @@ class FileStatus(Status):
 
     @staticmethod
     def from_str(line) -> "FileStatus":
-        """Create v1 porcelain output."""
+        """Create from ``git status --porcelain`` Output."""
         mat = _RE_STATUS.match(line)
         assert mat, f"Invalid pattern {line}"
         return FileStatus(**mat.groupdict())
 
     def with_path(self, path: Path) -> "FileStatus":
-        """Return :any:`FileStatus` with ``path``."""
+        """Return :any:`FileStatus` with ``path`` as prefix."""
         if self.orig_path:
             return self.update(path=path / self.path, orig_path=path / self.orig_path)
         return self.update(path=path / self.path)
@@ -151,7 +159,7 @@ class FileStatus(Status):
 class BranchStatus(Status):
 
     """
-    Branch Status.
+    Branch Status Line From ``git status`` command.
 
     >>> branchstatus = BranchStatus.from_str('main...origin/main')
     >>> branchstatus
@@ -161,18 +169,18 @@ class BranchStatus(Status):
     """
 
     info: str
-    """Info."""
+    """Branch Status String."""
 
     def __str__(self):
         return self.info
 
     @staticmethod
     def from_str(line) -> "BranchStatus":
-        """Create from v1 porcelain output."""
+        """Create from ``git status --porcelain`` Output."""
         return BranchStatus(info=line)
 
     def with_path(self, path: Path) -> "BranchStatus":
-        """Return :any:`BranchStatus` with ``path``."""
+        """Return :any:`BranchStatus` with ``path`` as prefix."""
         # pylint: disable=unused-argument
         return self
 
@@ -180,7 +188,7 @@ class BranchStatus(Status):
 class DiffStat(BaseModel):
 
     """
-    Diff Status.
+    Diff Status Line From ``git diff --stat`` command.
 
     >>> diffstat = DiffStat.from_str(' path/file.txt | 16 ++++++++--------')
     >>> diffstat
@@ -192,23 +200,23 @@ class DiffStat(BaseModel):
     """
 
     path: Path
-    """Path."""
+    """File Path."""
 
     stat: str
-    """Diff Status."""
+    """Diff Status Line."""
 
     def __str__(self):
         return f" {self.path} | {self.stat}"
 
     @staticmethod
     def from_str(line) -> "DiffStat":
-        """Create from `diff --stat` output."""
+        """Create from ``git diff --stat`` Output."""
         mat = _RE_DIFFSTAT.match(line)
         assert mat, f"Invalid pattern {line}"
         return DiffStat(**mat.groupdict())
 
     def with_path(self, path: Path) -> "DiffStat":
-        """Return :any:`DiffStat` with ``path``."""
+        """Return :any:`DiffStat` with ``path`` as prefix."""
         return self.update(path=path / self.path)
 
 
@@ -216,12 +224,6 @@ class Git:
 
     """
     Our Git REPO Helper.
-
-    We know, that there are libraries for that.
-    But we just want to have a lean programmatic interface to git.
-    Just with the functionality **we** need. Not more.
-
-    We currently do NOT check the git version and try to use the common subset.
 
     To initialize a git repository in the current working directory:
 
@@ -269,7 +271,7 @@ class Git:
         return Git(path=path, clone_cache=clone_cache, secho=secho)
 
     def is_cloned(self) -> bool:
-        """Return if clone already exists."""
+        """Determine if clone already exists."""
         if not self.path.exists() or not self.path.is_dir():
             return False
         result = self._run(("rev-parse", "--show-cdup"), capture_output=True, check=False)
@@ -283,11 +285,16 @@ class Git:
             raise GitCloneMissingError(self.path)
 
     def set_config(self, name, value):
-        """Set Git Configuration ``name`` to ``value``."""
+        """Set Git Configuration Variable ``name`` to ``value``."""
         self._run(("config", name, value))
 
     def clone(self, url, revision: Optional[str] = None):
-        """Clone ``url`` and checkout ``revision``."""
+        """
+        Clone ``url`` and checkout ``revision``.
+
+        The checkout is done to ``self.path``.
+        If ``self.clone_cache`` directory path is set, the clone uses the given path as local filesystem cache.
+        """
         _LOGGER.info("Git(%r).clone(%r, revision=%r)", str(self.path), url, revision)
         assert not self.path.exists() or not any(self.path.iterdir())
         if self.clone_cache:
@@ -343,7 +350,7 @@ class Git:
         return branch
 
     def get_sha(self) -> Optional[str]:
-        """Get SHA."""
+        """Get Actual SHA."""
         sha = self._run2str(("rev-parse", "HEAD"), check=False) or None
         _LOGGER.info("Git(%r).get_sha() = %r", str(self.path), sha)
         return sha
@@ -362,7 +369,7 @@ class Git:
         return self.get_branch() or self.get_tag() or self.get_sha()
 
     def get_url(self) -> Optional[str]:
-        """Get Actual URL of 'origin'."""
+        """Get Actual URL of ``origin``."""
         url = self._run2str(("remote", "-v"), regex=_RE_URL, check=False)
         _LOGGER.info("Git(%r).get_url() = %r", str(self.path), url)
         return url
@@ -498,7 +505,7 @@ class Git:
         Git Status.
 
         Keyword Args:
-            branch: Show branch.
+            branch: Show branch too.
         """
         _LOGGER.info("Git(%r).status(paths=%r, branch=%r)", str(self.path), paths, branch)
         if branch:
@@ -568,6 +575,7 @@ class Git:
         Clone does not contain any changes.
 
         A clone is empty if there are:
+
         * no files changed
         * no commits which are not pushed yet
         * nothing stashed

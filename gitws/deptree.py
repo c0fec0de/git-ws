@@ -14,7 +14,15 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
-"""Dependency Tree."""
+"""
+Dependency Tree.
+
+Translate the dependencies into a human readable tree:
+
+* :any:`get_deptree()` creates a :any:`anytree.Node` tree.
+* :any:`anytree.RenderTree(deptree))` can translate print it.
+* :any:`DepDotExporter(deptree)` dumps a graphviz `dot` notation of the tree.
+"""
 
 import logging
 from typing import List, Tuple
@@ -41,7 +49,16 @@ class DepNode(NodeMixin):
 
 
 def get_deptree(workspace: Workspace, manifest: Manifest, primary: bool = False) -> DepNode:
-    """Calculate Dependency Tree."""
+    """
+    Calculate Dependency Tree.
+
+    Args:
+        workspace: The Workspace
+        manifest: The Manifest
+
+    Keyword Args:
+        primary: Reduce tree to primary dependencies only.
+    """
     main = str(workspace.info.main_path or "")
     main_node = DepNode(Project(name=main, path=main), is_primary=True)
     primaries: List[str] = []

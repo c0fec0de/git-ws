@@ -17,7 +17,7 @@
 """
 Workspace Handling.
 
-The :any:`Workspace` class represents the file system location containing all git clones.
+The :any:`Workspace` class represents the location containing all git clones.
 :any:`Info` is a helper.
 """
 import logging
@@ -58,11 +58,15 @@ class Info(BaseModel):
     project_linkfiles: ProjectFileRefsMutable = {}
     """
     Project Symlinks.
+
+    These symlinks have been created by GitWS and will be removed if not needed anymore.
     """
 
     project_copyfiles: ProjectFileRefsMutable = {}
     """
     Project File Copies.
+
+    These files have been copied by GitWS and will be removed if not needed anymore.
     """
 
     @staticmethod
@@ -119,7 +123,8 @@ class Workspace:
     Workspace.
 
     The workspace contains all git clones, but is *NOT* a git clone itself.
-    A workspace refers to a main git clone, which defines the workspace content (i.e. dependencies).
+    A workspace refers to a main git clone or a standalone manifest, which defines the workspace content
+    (i.e. dependencies).
 
     Args:
         path: Workspace Root Directory.
@@ -199,8 +204,7 @@ class Workspace:
         group_filters: Optional[GroupFilters] = None,
         force: bool = False,
     ) -> "Workspace":
-        """t
-
+        """
         Initialize new :any:`Workspace` at ``path``.
 
         Args:
@@ -208,7 +212,8 @@ class Workspace:
 
         Keyword Args:
             main_path:  Path to the main project. Relative to ``path``.
-            manifest_path:  Path to the manifest file. Relative to ``main_path``. Default is ``git-ws.toml``.
+            manifest_path:  Path to the manifest file. Relative to ``main_path`` or ``path``.
+                            Default is ``git-ws.toml``.
             group_filters: Group Filters.
             force: Ignore that the workspace exists.
 
@@ -284,17 +289,39 @@ class Workspace:
         return project_path
 
     def get_manifest_path(self, manifest_path: Optional[Path] = None) -> Path:
-        """Get Resolved Manifest Path."""
+        """
+        Get Resolved Manifest Path.
+
+        Keyword Args:
+            manifest_path: Absolute Or Relative (To ``self.base_path``) Manifest Path.
+
+        The manifest path is choosen according to the following list, the first matching wins:
+
+        * Explicit manifest path specified by ``manifest_path``.
+        * Path from configuration (set during ``init``, ``clone`` or later on).
+        * ``git-ws.toml`` (default)
+        """
         return self.base_path / (manifest_path or self.app_config.options.manifest_path or MANIFEST_PATH_DEFAULT)
 
     def get_group_filters(self, group_filters: Optional[GroupFilters] = None) -> GroupFilters:
-        """Get Group Selects."""
+        """
+        Get Group Filters.
+
+        Keyword Args:
+            group_filters: Group Filters.
+
+        The group filter is choosen according to the following list, the first matching wins:
+
+        * Explicit group filter specified by ``group_filters``.
+        * Path from configuration (set during ``init``, ``clone`` or later on).
+        * empty group filters.
+        """
         if group_filters is None:
             return self.app_config.options.group_filters or GroupFilters()
         return group_filters
 
     def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
-        """Yield obsolete paths except *used* ones."""
+        """Yield paths except *used* ones."""
         usemap: Dict[str, Any] = {GIT_WS_PATH.name: {}}
         for path in used:
             pathmap = usemap

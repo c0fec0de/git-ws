@@ -56,7 +56,7 @@ class GitWS:
     Multi Repository Management.
 
     Args:
-        workspace: workspace.
+        workspace: The Workspace Representation.
         manifest_path: Manifest File Path. **Resolved** Path.
         group_filters: Group Filters.
 
@@ -67,8 +67,8 @@ class GitWS:
 
     * :any:`GitWS.from_path()`: Create :any:`GitWS` for EXISTING workspace at ``path``.
     * :any:`GitWS.create()`: Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.
-    * :any:`GitWS.init()`: Initialize NEW Workspace for git clone at ``main_path``, return corresponding :any:`GitWS`.
-    * :any:`GitWS.clone()`: Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
+    * :any:`GitWS.init()`: Initialize NEW Workspace and return corresponding :any:`GitWS`.
+    * :any:`GitWS.clone()`: Clone git ``url``, initialize NEW Workspace and return corresponding :any:`GitWS`.
     """
 
     # pylint: disable=too-many-public-methods
@@ -114,7 +114,7 @@ class GitWS:
     @property
     def base_path(self) -> Path:
         """
-        GitWS Workspace Main Directory or GitWS Workspace Directory.
+        GitWS Workspace Main Directory (if the workspace has a main project) or GitWS Workspace Directory.
         """
         return self.workspace.base_path
 
@@ -216,19 +216,26 @@ class GitWS:
         secho=None,
     ) -> "GitWS":
         """
-        Initialize NEW Workspace for git clone at ``main_path`` and return corresponding :any:`GitWS`.
-
-        The parent directory of ``main_path`` becomes the workspace directory.
+        Initialize NEW Workspace and return corresponding :any:`GitWS`.
 
         Keyword Args:
-            path: Workspace Path. Parent directory of Git Clone Root Directory or Current Working Directory by default.
-            main_path: Main Project Path. Actual Git Clone Root Directory by default.
+            path: Workspace Path. Parent directory of the main git clone directory or current working
+                  directory by default.
+            main_path: Main Project Path.
             manifest_path: Manifest File Path. Relative to ``main_path``. Default is ``git-ws.toml``.
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
             force: Ignore that the workspace exists.
             secho: :any:`click.secho` like print method for verbose output.
+
+        This method has different modes depending on ``main_path`` and the current working directory:
+
+        * if ``main_path`` refers to a git clone, it is taken as main project.
+        * if ``main_path`` is ``None`` but the current working directory contains a git clone,
+          it is taken as main project
+        * if ``main_path`` is ``None`` and the current working directory does **not** contain a git clone,
+          the workspace is initialized **without** main project.
         """
         secho = secho or no_echo
         if main_path:
@@ -283,7 +290,15 @@ class GitWS:
 
     @staticmethod
     def check_manifest(manifest_path: Path):
-        """Check Manifest at ``manifest_path``"""
+        """
+        Check Manifest at ``manifest_path``.
+
+        Read in and evaluate.
+
+        Raises:
+            ManifestNotFoundError: If manifest does not exists.
+            ManifestError: If manifest is broken.
+        """
         manifest_spec = ManifestSpec.load(manifest_path)
         Manifest.from_spec(manifest_spec, path=str(manifest_path))
 
@@ -299,7 +314,7 @@ class GitWS:
         secho=None,
     ) -> "GitWS":
         """
-        Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
+        Clone git ``url``, initialize NEW Workspace and return corresponding :any:`GitWS`.
 
         Args:
             url: Main Project URL.
@@ -461,7 +476,9 @@ class GitWS:
         branch: bool = False,
     ) -> Generator[Status, None, None]:
         """
-        Enriched Git Status.
+        Enriched Git Status - aka ``git status``.
+
+        The given ``paths`` are automatically mapped to the corresponding git clones.
 
         Keyword Args:
             paths: Limit Git Status to ``paths`` only.
@@ -480,7 +497,7 @@ class GitWS:
 
     def diff(self, paths: Optional[Tuple[Path, ...]] = None):
         """
-        Enriched Git Diff.
+        Enriched Git Diff - aka ``git diff``.
 
         Keyword Args:
             paths: Limit Git Diff to ``paths`` only.
@@ -492,7 +509,7 @@ class GitWS:
 
     def diffstat(self, paths: Optional[Tuple[Path, ...]] = None) -> Generator[DiffStat, None, None]:
         """
-        Enriched Git Diff Status.
+        Enriched Git Diff Status - aka ``git diff --stat``.
 
         Keyword Args:
             paths: Limit Git Diff to ``paths`` only.
@@ -509,12 +526,13 @@ class GitWS:
 
     def checkout(self, paths: Optional[Tuple[Path, ...]] = None, force: bool = False):
         """
-        Enriched Git Checkout.
+        Enriched Git Checkout - aka ``git checkout``.
+
+        The given ``paths`` are automatically mapped to the corresponding git clones.
 
         Keyword Args:
             paths: Limit Checkout to ``paths`` only. Otherwise run checkout on all git clones.
             force: force checkout (throw away local modifications)
-
         """
         if paths:
             # Checkout specific files only
@@ -537,10 +555,12 @@ class GitWS:
 
     def add(self, paths: Tuple[Path, ...], force: bool = False, all_: bool = False):
         """
-        Add paths to index.
+        Add paths to index - aka ``git add``.
+
+        The given ``paths`` are automatically mapped to the corresponding git clones.
 
         Args:
-            paths: Paths to be added
+            paths: Paths to be added.
 
         Keyword Args:
             force: allow adding otherwise ignored files.
@@ -561,7 +581,9 @@ class GitWS:
     # pylint: disable=invalid-name
     def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
         """
-        Remove ``paths``.
+        Remove ``paths`` - aka ``git rm``
+
+        The given ``paths`` are automatically mapped to the corresponding git clones.
 
         Args:
             paths: Paths.
@@ -578,14 +600,20 @@ class GitWS:
             clone.git.rm(cpaths, cached=cached, force=force, recursive=recursive)
 
     def reset(self, paths: Tuple[Path, ...]):
-        """Reset ``paths``."""
+        """
+        Reset ``paths`` - aka ``git reset``.
+
+        The given ``paths`` are automatically mapped to the corresponding git clones.
+        """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             clone.git.check()
             clone.git.reset(cpaths)
 
     def commit(self, msg: str, paths: Tuple[Path, ...], all_: bool = False):
         """
-        Commit.
+        Commit - aka ``git commit``.
+
+        The given ``paths`` are automatically mapped to the corresponding git clones.
 
         Args:
             msg: Commit Message
@@ -668,6 +696,8 @@ class GitWS:
         """
         User Level Clone Iteration.
 
+        We are printing the a banner for each clone.
+
         Keyword Args:
             project_paths: Limit to projects only.
             resolve_url: Resolve URLs to absolute ones.
@@ -721,7 +751,7 @@ class GitWS:
 
     def projects(self, skip_main: bool = False, resolve_url: bool = False) -> Generator[Project, None, None]:
         """
-        Iterate over Projects.
+        Iterate over Projects in actual workspace.
 
         Keyword Args:
             skip_main: Skip Main Repository.
@@ -738,7 +768,9 @@ class GitWS:
     def manifests(
         self,
     ) -> Generator[Manifest, None, None]:
-        """Iterate over Manifests."""
+        """
+        Iterate Over Manifests In Actual Workspace.
+        """
         workspace = self.workspace
         manifest_path = self.manifest_path
         group_filters = self.group_filters
@@ -746,7 +778,7 @@ class GitWS:
 
     @staticmethod
     def create_manifest(manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
-        """Create Manifest File at `manifest_path`within ``project``."""
+        """Create Manifest File at ``manifest_path``."""
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
         manifest_spec = ManifestSpec()
@@ -754,7 +786,15 @@ class GitWS:
         return manifest_path
 
     def get_manifest_spec(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
-        """Get Manifest."""
+        """
+        Get Manifest Specification.
+
+        Read the manifest file with the manifest specification.
+
+        Keyword Args:
+            freeze: Determine actual SHA of each project and use it as revision.
+            resolve: Add project specification of all transient dependencies.
+        """
         workspace = self.workspace
         manifest_path = self.manifest_path
         manifest_spec = ManifestSpec.load(manifest_path)
@@ -773,13 +813,21 @@ class GitWS:
                 project_path = workspace.get_project_path(project)
                 git = Git(resolve_relative(project_path), secho=self.secho)
                 git.check()
-                revision = git.get_tag() or git.get_sha()
+                revision = git.get_sha()
                 fdeps.append(project_spec.update(revision=revision))
             manifest_spec = manifest_spec.update(dependencies=fdeps)
         return manifest_spec
 
     def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:
-        """Get Manifest."""
+        """
+        Get Manifest.
+
+        Read the manifest file with the manifest specification and translate to manifest.
+
+        Keyword Args:
+            freeze: Determine actual SHA of each project and use it as revision.
+            resolve: Add project specification of all transient dependencies.
+        """
         manifest_path = self.workspace.get_manifest_path()
         manifest_spec = self.get_manifest_spec(freeze=freeze, resolve=resolve)
         return Manifest.from_spec(manifest_spec, path=str(manifest_path))

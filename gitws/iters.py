@@ -14,7 +14,12 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
-""":any:`Manifest` and :any:`Project` Iterators."""
+"""
+Helpers to iterate over all :any:`Manifest` or :any:`Project` instances.
+
+Please note, these iterators require a :any:`Workspace` with existing manifest files within.
+The creation/cloning of missing project dependencies during the iteration is supported.
+"""
 import logging
 from fnmatch import fnmatchcase
 from pathlib import Path
@@ -35,7 +40,7 @@ class ManifestIter:
     """
     Iterate over all :any:`Manifest` s.
 
-    The iterator takes a ``workspace`` and the path to a manifest file (`manifest_path`) of the main project.
+    The iterator takes a :any:`Workspace` and the path to a manifest file (`manifest_path`) of the main project.
     The manifest is read (:any:`ManifestSpec`) and translated to a :any:`Manifest`, which is yielded.
     The manifest files of the dependencies are also read, translated to a :any:`Manifest` and yielded likewise,
     until all manifest files and their dependencies are read.
@@ -44,7 +49,7 @@ class ManifestIter:
 
     Args:
         workspace: The actual workspace
-        manifest_path: Path to the manifest file **in the main project**.
+        manifest_path: Path to the manifest file.
         group_filters: Group Filters.
 
     Yields:
@@ -112,7 +117,7 @@ class ProjectIter:
     """
     Iterate over all :any:`Project` s.
 
-    The iterator takes a ``workspace`` and the path to a manifest file (`manifest_path`) of the main project.
+    The iterator takes a :any:`Workspace` and the path to a manifest file (`manifest_path`) of the main project.
     The manifest is read (:any:`ManifestSpec`) and all dependencies are translated to :any:`Project` s, which are
     yielded.
     The manifest files of the dependencies are also read, translated to a :any:`Project` s and yielded likewise,
@@ -255,6 +260,8 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     False
     >>> groupfilter('dep', ('feature',))  # 'feature' is only selected for 'dep'
     True
+
+    The same, but with ``default=True``:
 
     >>> groupfilter = create_filter(group_selects, default=True)
     >>> groupfilter('sub', tuple())  # selected as there is no group
