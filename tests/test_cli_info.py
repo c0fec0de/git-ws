@@ -73,6 +73,19 @@ def test_dep_tree(tmp_path, gws):
     ]
 
 
+def test_dep_tree_primary(tmp_path, gws):
+    """Dependency Trees - Primary Only."""
+    # pylint: disable=unused-argument
+    assert cli(["info", "dep-tree", "--primary"], tmp_path=tmp_path) == [
+        "main",
+        "├── dep1",
+        "│   └── dep4 (revision='main')",
+        "└── dep2 (revision='1-feature', submodules=False)",
+        "    └── dep3 (revision='main', groups='test')",
+        "",
+    ]
+
+
 def test_dep_tree_dot(tmp_path, gws):
     """Dependency Trees - dot."""
     # pylint: disable=unused-argument

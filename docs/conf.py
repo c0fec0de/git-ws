@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "git-ws"
-copyright = "2022, c0fec0de"
+copyright = "2022-2023, c0fec0de"
 author = "c0fec0de"
 
 # -- General configuration ---------------------------------------------------
@@ -36,4 +36,5 @@ html_theme = "sphinx_rtd_theme"
 
 intersphinx_mapping = {
     "click": ("https://click.palletsprojects.com/en/latest/", None),
+    "anytree": ("https://anytree.readthedocs.com/en/latest/", None),
 }

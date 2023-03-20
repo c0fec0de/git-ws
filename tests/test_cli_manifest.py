@@ -197,6 +197,40 @@ def test_freeze(tmp_path, gws, repos):
         "submodules = true",
         "",
     ]
+    assert cli(["foreach", "git", "config", "advice.detachedHead", "false"]) == [
+        "===== main (MAIN 'main', revision='main') =====",
+        "===== dep1 ('dep1') =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+        "===== dep4 ('dep4', revision='main') =====",
+        "",
+    ]
+
+    # STDOUT
+    assert cli(["manifest", "freeze", "-G", "+test"], exit_code=1) == [
+        "Error: Git Clone 'dep3' is missing. Try:",
+        "",
+        "    git ws update",
+        "",
+        "",
+    ]
+
+    assert cli(["update", "-G", "+test"], tmp_path=tmp_path, repos_path=repos) == [
+        "===== main (MAIN 'main', revision='main') =====",
+        "Pulling branch 'main'.",
+        "===== dep1 ('dep1') =====",
+        "git-ws WARNING Clone dep1 has no revision!",
+        "Pulling branch 'main'.",
+        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+        "Pulling branch '1-feature'.",
+        "===== dep3 ('dep3', groups='test') =====",
+        "git-ws WARNING Clone dep3 (groups='test') has no revision!",
+        "Cloning 'REPOS/dep3'.",
+        "===== dep4 ('dep4', revision='main') =====",
+        "Pulling branch 'main'.",
+        "",
+    ]
+    sha3 = get_sha(gws.path / "dep3")
     withtest = [
         'version = "1.0"',
         "##",
@@ -302,7 +336,7 @@ def test_freeze(tmp_path, gws, repos):
         "[[dependencies]]",
         'name = "dep3"',
         'url = "../dep3"',
-        'revision = "v1.0"',
+        f'revision = "{sha3}"',
         'path = "dep3"',
         'groups = ["test"]',
         "submodules = true",
@@ -314,40 +348,6 @@ def test_freeze(tmp_path, gws, repos):
         'path = "dep4"',
         "submodules = true",
         "",
-        "",
-    ]
-
-    assert cli(["foreach", "git", "config", "advice.detachedHead", "false"]) == [
-        "===== main (MAIN 'main', revision='main') =====",
-        "===== dep1 ('dep1') =====",
-        "git-ws WARNING Clone dep1 has no revision!",
-        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "===== dep4 ('dep4', revision='main') =====",
-        "",
-    ]
-
-    # STDOUT
-    assert cli(["manifest", "freeze", "-G", "+test"], exit_code=1) == [
-        "Error: Git Clone 'dep3' is missing. Try:",
-        "",
-        "    git ws update",
-        "",
-        "",
-    ]
-
-    assert cli(["update", "-G", "+test"], tmp_path=tmp_path, repos_path=repos) == [
-        "===== main (MAIN 'main', revision='main') =====",
-        "Pulling branch 'main'.",
-        "===== dep1 ('dep1') =====",
-        "git-ws WARNING Clone dep1 has no revision!",
-        "Pulling branch 'main'.",
-        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "Pulling branch '1-feature'.",
-        "===== dep3 ('dep3', groups='test') =====",
-        "git-ws WARNING Clone dep3 (groups='test') has no revision!",
-        "Cloning 'REPOS/dep3'.",
-        "===== dep4 ('dep4', revision='main') =====",
-        "Pulling branch 'main'.",
         "",
     ]
     assert cli(["manifest", "freeze", "-G", "+test"]) == withtest

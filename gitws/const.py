@@ -22,7 +22,7 @@ GIT_WS_PATH = Path(".git-ws")
 """
 The sub-folder in which the tool stores workspace related data.
 
-This path is relative to the workspace folder or the main project root.
+This path is relative to the workspace folder.
 """
 
 MANIFESTS_PATH = GIT_WS_PATH / "manifests"

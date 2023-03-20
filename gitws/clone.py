@@ -15,7 +15,7 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """
-Clone.
+A Clone.
 
 A :any:`Clone` is just the assembly of a :any:`Project` and its corresponding git interface (:any:`Git`).
 """
@@ -36,11 +36,11 @@ _LOGGER = logging.getLogger("git-ws")
 class Clone:
 
     """
-    Clone - A Pair Of Project And Git Interface.
+    Clone - A Pair Of Project Definition And Git Interface.
 
     Args:
-        project: Project
-        git: Git.
+        project: Project Definition.
+        git: Git Interface.
     """
 
     def __init__(self, project: Project, git: Git):
@@ -57,7 +57,13 @@ class Clone:
 
     def check(self, exists=True, diff=True):
         """
-        Check Clone.
+        Check Clone And Emit Warnings On Logger.
+
+        The following checks are processed:
+
+        * Check that the git clone exists (if ``exists=True``).
+        * Check that the actual git clone revision matches the ``project.revision`` (if ``diff=True``).
+        * The revision check is skipped on the main project.
 
         Keyword Args:
             exists: Check if cloned.
@@ -85,6 +91,13 @@ class Clone:
     def info(self):
         """
         `repr`-like info string but more condensed.
+
+        >>> import gitws
+        >>> project = gitws.Project(name='pname', path='ppath', revision='prevision')
+        >>> git = gitws.Git('gpath')
+        >>> clone = gitws.Clone(project, git)
+        >>> clone.info
+        "gpath ('pname', revision='prevision')"
         """
         project = self.project
         path = str(self.git.path)
@@ -110,8 +123,8 @@ def map_paths(clones: Tuple[Clone, ...], paths: Optional[Tuple[Path, ...]]) -> G
 
     Associate the given ``paths`` to the corresponding ``clones``.
 
-    If ``paths`` is not empty, the corresponding clone and paths pairs are yielded.
-    If ``paths`` is empty, just all clones with an empty paths tuple are yielded.
+    * If ``paths`` is not empty, the corresponding clone and paths pairs are yielded.
+    * If ``paths`` is empty, just all clones with an empty paths tuple are yielded.
     """
     if paths:
         clonepaths: Tuple[Tuple[Clone, List[Path]], ...] = tuple((clone, []) for clone in clones)

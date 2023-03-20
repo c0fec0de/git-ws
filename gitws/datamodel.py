@@ -17,18 +17,18 @@
 """
 Central :any:`GitWS` Datamodel.
 
-* :any:`Group`: Dependency Group. A string.
+* :any:`Group`: Dependency Group. A string (i.e. 'test').
 * :any:`Groups`: Tuple of :any:`Group` instances.
-* :any:`GroupFilter`: Group Filter Specification. A string.
+* :any:`GroupFilter`: Group Filter Specification. A string (i.e. '+test@path').
 * :any:`GroupFilters`: Tuple of :any:`GroupFilter` instances.
 * :any:`GroupSelect`: Group Selection. A converted :any:`GroupFilter` as needed by :any:`GitWS`.
 * :any:`GroupSelects`: Tuple of :any:`GroupSelect` instances.
-* :any:`Remote`: Remote Alias.
-* :any:`Defaults`: Default Values.
-* :any:`ProjectSpec`: Dependency Specification from Manifest File.
-* :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.
-* :any:`ManifestSpec`: Specification of the actual project.
+* :any:`ManifestSpec`: Manifest specification for the actual project.
 * :any:`Manifest`: Manifest as needed by :any:`GitWS` derived from :any:`ManifestSpec`.
+* :any:`ProjectSpec`: Dependency Specification in :any:`ManifestSpec`.
+* :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.
+* :any:`Remote`: Remote Alias in :any:`ManifestSpec`.
+* :any:`Defaults`: Default Values in :any:`ManifestSpec`.
 * :any:`AppConfigData`: :any:`GitWS` Configuration.
 """
 
@@ -226,7 +226,7 @@ class GroupSelects(tuple):
 
 class Remote(BaseModel, allow_population_by_field_name=True):
     """
-    Remote Alias.
+    Remote Alias - Remote URL Helper.
 
     Args:
         name: Remote Name
@@ -268,12 +268,12 @@ class Defaults(BaseModel):
     """The ``with_groups`` if not specified by the dependency."""
 
     submodules: bool = True
-    """Initialize and Update `git submodules`."""
+    """Initialize and Update `git submodules`. `True` by default."""
 
 
 class FileRef(BaseModel):
     """
-    File Reference (Symbolic Link or File to Copy)
+    File Reference (Symbolic Link or File to Copy).
 
     File Reference to Workspace from Project.
 
@@ -307,11 +307,14 @@ class Project(BaseModel, allow_population_by_field_name=True):
         path: Project Filesystem Path. Relative to Workspace Root Directory.
 
     Keyword Args:
-        url: URL. Assembled from ``remote``s ``url_base``, ``sub_url`` and/or ``name``.
+        url: URL. Assembled from ``remote`` s ``url_base``, ``sub_url`` and/or ``name``.
         revision: Revision to be checked out. Tag, branch or SHA.
-        manifest_path: Path to manifest. Relative to Project Filesystem Path. ``git-ws.toml`` by default.
+        manifest_path: Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default.
         groups: Dependency Groups.
         with_groups: Group Selection for refered project.
+        submodules: initialize and update `git submodules`
+        linkfiles: symbolic links to be created in the Workspace
+        copyfiles: files to be created in the workspace
         is_main: Project is Main Project.
 
     The :any:`ProjectSpec` represents the User Interface. The options which can be specified in the manifest file.
@@ -334,13 +337,13 @@ class Project(BaseModel, allow_population_by_field_name=True):
     """Dependency Path. ``name`` will be used as default."""
 
     url: Optional[str] = None
-    """URL. Assembled from ``remote``s ``url_base``, ``sub_url`` and/or ``name``."""
+    """URL. Assembled from ``remote`` s ``url_base``, ``sub_url`` and/or ``name``."""
 
     revision: Optional[str] = None
     """Revision to be checked out. Tag, branch or SHA."""
 
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
-    """Path to the manifest file. Relative to ``path``."""
+    """Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default."""
 
     groups: Groups = Groups()
     """Dependency Groups."""
@@ -352,10 +355,10 @@ class Project(BaseModel, allow_population_by_field_name=True):
     """Initialize and Update `git submodules`."""
 
     linkfiles: Tuple[FileRef, ...] = tuple()
-    """Symbolic Links."""
+    """Symbolic Links To Be Created In The Workspace."""
 
     copyfiles: Tuple[FileRef, ...] = tuple()
-    """Copied Files."""
+    """Files To Be Created In The Workspace."""
 
     is_main: bool = False
     """Project is the main project."""
@@ -410,8 +413,11 @@ class Project(BaseModel, allow_population_by_field_name=True):
             spec: Base project to be resolved.
 
         Keyword Args:
-            refurl: Remote URL of the ``manifest_spec``. If specified, relative URLs are resolved.
+            refurl: Remote URL of the ``manifest_spec``.
             resolve_url: Resolve URLs to absolute ones.
+
+        Raises:
+            NoAbsUrlError: On ``resolve_url=True`` if ``refurl`` is ``None`` and project uses a relative URL.
 
         :any:`Project.from_spec()` resolves a :any:`ProjectSpec` into a :any:`Project`.
         :any:`ProjectSpec.from_project()` does the reverse.
@@ -468,14 +474,17 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         name: Name.
 
     Keyword Args:
-        remote: Remote Alias
+        remote: Remote Alias - Remote URL Helper
         sub_url: URL relative to :any:`Remote.url_base`.
         url: URL
         revision: Revision
         path: Project Filesystem Path. Relative to Workspace Root Directory.
-        manifest_path: Path to manifest. Relative to ProjectSpec Filesystem Path. ``git-ws.toml`` by default.
+        manifest_path: Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default.
         groups: Dependency Groups.
         with_groups: Group Selection for refered project.
+        submodules: initialize and update `git submodules`
+        linkfiles: symbolic links to be created in the Workspace
+        copyfiles: files to be created in the workspace
 
     Some parameters are restricted:
 
@@ -495,7 +504,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     """Remote Alias Name. The ``remote`` must have been defined previously."""
 
     sub_url: Optional[str] = Field(None, alias="sub-url")
-    """Relative URL to `remote`s ``url_base`` OR the URL of the manifest file."""
+    """Relative URL to ``remote`` s ``url_base`` OR the URL of the manifest file."""
 
     url: Optional[str] = None
     """Absolute URL."""
@@ -507,7 +516,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     """Path within workspace. ``name`` will be used as default."""
 
     manifest_path: Optional[str] = Field(str(MANIFEST_PATH_DEFAULT), alias="manifest-path")
-    """Path to the manifest file. Relative to ``path``."""
+    """Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default."""
 
     groups: Groups = Groups()
     """Dependency Groups."""
@@ -519,10 +528,10 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     """Initialize and Update `git submodules`."""
 
     linkfiles: Tuple[FileRef, ...] = tuple()
-    """Symbolic Links."""
+    """Symbolic Links To Be Created In The Workspace."""
 
     copyfiles: Tuple[FileRef, ...] = tuple()
-    """Copied Files."""
+    """Files To Be Created In The Workspace."""
 
     @root_validator(allow_reuse=True)
     def _remote_or_url(cls, values):
@@ -578,12 +587,14 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
 class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True):
 
     """
-    Manifest.
+    The Manifest.
 
     A manifest describes the actual project and its dependencies.
 
     Keyword Args:
         group_filters: Group Filtering.
+        linkfiles: symbolic links to be created in the Workspace
+        copyfiles: files to be created in the workspace
         dependencies: Dependency Projects.
         path: Filesystem Path. Relative to Workspace Root Directory.
 
@@ -595,16 +606,16 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     """
 
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
-    """Group Filtering."""
+    """Default Group Selection and Deselection."""
 
     linkfiles: Tuple[FileRef, ...] = tuple()
-    """Symbolic Links."""
+    """Symbolic Links To Be Created In The Workspace."""
 
     copyfiles: Tuple[FileRef, ...] = tuple()
-    """Copied Files."""
+    """Files To Be Created In The Workspace."""
 
     dependencies: Tuple[Project, ...] = tuple()
-    """Dependencies."""
+    """Dependencies - Other Projects To Be Cloned In The Workspace."""
 
     path: Optional[str] = None
     """Path to the manifest file, relative to project path."""
@@ -629,8 +640,8 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
             refurl: URL of the repository containing ``spec``.
             resolve_url: Convert relative to absolute URLs. Requires ``refurl``.
 
-        If ``refurl`` is specified, any relative URL in the :any:`ManifestSpec` and referred :any:`ProjectSpec` s
-        are resolved to a absolute URLs.
+        Raises:
+            NoAbsUrlError: On ``resolve_url=True`` if ``refurl`` is ``None`` and project uses a relative URL.
         """
         dependencies = [
             Project.from_spec(spec, project_spec, refurl=refurl, resolve_url=resolve_url)
@@ -660,6 +671,8 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         version: Version String. Actually 1.0.
         remotes: Remote Aliases.
         group_filters: Group Filtering.
+        linkfiles: symbolic links to be created in the Workspace
+        copyfiles: files to be created in the workspace
         defaults: Default settings.
         dependencies: Dependency Projects.
     """
@@ -670,23 +683,24 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
 
     Actual Version: ``1.0``.
     """
+
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
-    """Group Filtering."""
+    """Default Group Selection and Deselection."""
 
     linkfiles: Tuple[FileRef, ...] = tuple()
-    """Symbolic Links."""
+    """Symbolic Links To Be Created In The Workspace."""
 
     copyfiles: Tuple[FileRef, ...] = tuple()
-    """Copied Files."""
+    """Files To Be Created In The Workspace."""
 
     remotes: Tuple[Remote, ...] = tuple()
-    """Remotes."""
+    """Remotes - Helpers to Simplify URL Handling."""
 
     defaults: Defaults = Defaults()
     """Default Values."""
 
     dependencies: Tuple[ProjectSpec, ...] = tuple()
-    """Dependencies."""
+    """Dependencies - Other Projects To Be Cloned In The Workspace."""
 
     @root_validator(allow_reuse=True)
     def _remotes_unique(cls, values):
@@ -1067,8 +1081,8 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     """
     Clone Cache.
 
-    Initial cloning all dependencies takes a while. This consumes time, if you do this often (i.e. in CI/CD).
-    The local filesystem cache directory will be used, to re-use already cloned data.
+    Initial cloning all dependencies takes a while. This sums up if done often (i.e. in CI/CD).
+    This local filesystem cache directory will be used, to re-use already cloned data.
 
     This option can be overridden by specifying the ``GIT_WS_CLONE_CACHE`` environment variable.
     """

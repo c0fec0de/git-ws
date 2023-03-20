@@ -33,8 +33,8 @@ There are 4 ways to create a :any:`GitWS` instances in the different szenarios:
 
 * :any:`GitWS.from_path()`: Create :any:`GitWS` for EXISTING workspace at ``path``.
 * :any:`GitWS.create()`: Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.
-* :any:`GitWS.init()`: Initialize NEW Workspace for git clone at ``main_path``, return corresponding :any:`GitWS`.
-* :any:`GitWS.clone()`: Clone git `url`, initialize NEW Workspace and return corresponding :any:`GitWS`.
+* :any:`GitWS.init()`: Initialize NEW Workspace and return corresponding :any:`GitWS`.
+* :any:`GitWS.clone()`: Clone git ``url``, initialize NEW Workspace and return corresponding :any:`GitWS`.
 
 The python module is named `gitws`:
 
@@ -86,10 +86,10 @@ Overview
 * :any:`GitWS`: the central API to the main functionality.
 * :any:`Clone`: is the pair of Of :any:`Project` And :any:`Git` Interface.
 * :any:`Git`: provides a reduced API to ``git``.
-* :any:`ProjectSpec`: Dependency Specification from Manifest File.
-* :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.
-* :any:`ManifestSpec`: Specification of the actual project.
+* :any:`ManifestSpec`: Manifest specification for the actual project.
 * :any:`Manifest`: Manifest as needed by :any:`GitWS` derived from :any:`ManifestSpec`.
+* :any:`ProjectSpec`: Dependency Specification in :any:`ManifestSpec`.
+* :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.
 * :any:`Remote`: Remote Alias in :any:`ManifestSpec`.
 * :any:`Defaults`: Default Values in :any:`ManifestSpec`.
 * :any:`AppConfigData`: :any:`GitWS` Configuration.

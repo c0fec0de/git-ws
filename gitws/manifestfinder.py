@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
-"""Find proper manifest."""
+"""GIT Tag Related Manifest Finder."""
 
 from pathlib import Path
 from typing import Optional
@@ -24,7 +24,13 @@ from .git import Git
 
 
 def find_manifest(path: Path) -> Optional[Path]:
-    """Return Path to manifest if clone has been tagged before."""
+    """
+    Return Path to manifest if clone has been tagged before.
+
+    The git clone at ``path`` can be checked out to a tag, branch or SHA.
+    If the clone has been tagged by by :any:`GitWS` and this tag is currently checked out,
+    this function will return the path to the related manifest.
+    """
     if path.exists():
         git = Git(path=path)
         if not git.get_branch():
