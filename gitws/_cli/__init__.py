@@ -490,7 +490,7 @@ def submodule(context, command, projects=None, manifest_path=None, group_filters
 
 @main.command()
 @manifest_option(initial=True)
-@click.argument("name", type=click.Choice(tuple(Defaults.__fields__)))
+@click.argument("name", type=click.Choice(tuple(Defaults().dict(by_alias=True))))
 @click.argument("value")
 @pass_context
 def default(context, manifest_path, name, value):

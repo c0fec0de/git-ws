@@ -66,13 +66,13 @@ def test_cli_default_with_groups(tmp_path):
     with chdir(tmp_path):
         cli(("manifest", "create"))
 
-        cli(("default", "with_groups", "mygroup"))
+        cli(("default", "with-groups", "mygroup"))
         assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(with_groups=("mygroup",))
 
-        cli(("default", "with_groups", "mygroup, myfoo"))
+        cli(("default", "with-groups", "mygroup, myfoo"))
         assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(with_groups=("mygroup", "myfoo"))
 
-        cli(("default", "with_groups", ""))
+        cli(("default", "with-groups", ""))
         assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults()
 
 

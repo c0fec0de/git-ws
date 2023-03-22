@@ -28,18 +28,8 @@ version = "1.0"
 ##
 
 
-# group-filters = ["+test", "-doc", "+feature@path"]
+# group-filters = ["-doc", "-feature@path"]
 group-filters = []
-
-
-# [[linkfiles]]
-# src = "file-in-main-clone.txt"
-# dest = "link-in-workspace.txt"
-
-
-# [[copyfiles]]
-# src = "file-in-main-clone.txt"
-# dest = "file-in-workspace.txt"
 
 
 # [[remotes]]
@@ -51,8 +41,8 @@ group-filters = []
 
 # remote = "myserver"
 # revision = "main"
-# groups = ["+test"]
-# with_groups = ["doc"]
+# groups = ["test"]
+# with-groups = ["doc"]
 
 
 ## A full flavored dependency using a 'remote':
@@ -107,4 +97,14 @@ group-filters = []
 ## A minimal dependency:
 # [[dependencies]]
 # name = "my"
+
+
+# [[linkfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "link-in-workspace.txt"
+
+
+# [[copyfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "file-in-workspace.txt"
 """

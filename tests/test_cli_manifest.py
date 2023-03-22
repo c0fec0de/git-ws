@@ -96,18 +96,8 @@ def test_freeze(tmp_path, gws, repos):
         "##",
         "",
         "",
-        '# group-filters = ["+test", "-doc", "+feature@path"]',
+        '# group-filters = ["-doc", "-feature@path"]',
         'group-filters = ["-test"]',
-        "",
-        "",
-        "# [[linkfiles]]",
-        '# src = "file-in-main-clone.txt"',
-        '# dest = "link-in-workspace.txt"',
-        "",
-        "",
-        "# [[copyfiles]]",
-        '# src = "file-in-main-clone.txt"',
-        '# dest = "file-in-workspace.txt"',
         "",
         "",
         "# [[remotes]]",
@@ -119,8 +109,8 @@ def test_freeze(tmp_path, gws, repos):
         "",
         '# remote = "myserver"',
         '# revision = "main"',
-        '# groups = ["+test"]',
-        '# with_groups = ["doc"]',
+        '# groups = ["test"]',
+        '# with-groups = ["doc"]',
         "",
         "",
         "## A full flavored dependency using a 'remote':",
@@ -196,6 +186,16 @@ def test_freeze(tmp_path, gws, repos):
         'path = "dep4"',
         "submodules = true",
         "",
+        "",
+        "# [[linkfiles]]",
+        '# src = "file-in-main-clone.txt"',
+        '# dest = "link-in-workspace.txt"',
+        "",
+        "",
+        "# [[copyfiles]]",
+        '# src = "file-in-main-clone.txt"',
+        '# dest = "file-in-workspace.txt"',
+        "",
     ]
     assert cli(["foreach", "git", "config", "advice.detachedHead", "false"]) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -240,18 +240,8 @@ def test_freeze(tmp_path, gws, repos):
         "##",
         "",
         "",
-        '# group-filters = ["+test", "-doc", "+feature@path"]',
+        '# group-filters = ["-doc", "-feature@path"]',
         'group-filters = ["-test"]',
-        "",
-        "",
-        "# [[linkfiles]]",
-        '# src = "file-in-main-clone.txt"',
-        '# dest = "link-in-workspace.txt"',
-        "",
-        "",
-        "# [[copyfiles]]",
-        '# src = "file-in-main-clone.txt"',
-        '# dest = "file-in-workspace.txt"',
         "",
         "",
         "# [[remotes]]",
@@ -263,8 +253,8 @@ def test_freeze(tmp_path, gws, repos):
         "",
         '# remote = "myserver"',
         '# revision = "main"',
-        '# groups = ["+test"]',
-        '# with_groups = ["doc"]',
+        '# groups = ["test"]',
+        '# with-groups = ["doc"]',
         "",
         "",
         "## A full flavored dependency using a 'remote':",
@@ -349,6 +339,16 @@ def test_freeze(tmp_path, gws, repos):
         "submodules = true",
         "",
         "",
+        "# [[linkfiles]]",
+        '# src = "file-in-main-clone.txt"',
+        '# dest = "link-in-workspace.txt"',
+        "",
+        "",
+        "# [[copyfiles]]",
+        '# src = "file-in-main-clone.txt"',
+        '# dest = "file-in-workspace.txt"',
+        "",
+        "",
     ]
     assert cli(["manifest", "freeze", "-G", "+test"]) == withtest
 
@@ -404,18 +404,8 @@ def test_resolve(tmp_path, gws):
         "##",
         "",
         "",
-        '# group-filters = ["+test", "-doc", "+feature@path"]',
+        '# group-filters = ["-doc", "-feature@path"]',
         'group-filters = ["-test"]',
-        "",
-        "",
-        "# [[linkfiles]]",
-        '# src = "file-in-main-clone.txt"',
-        '# dest = "link-in-workspace.txt"',
-        "",
-        "",
-        "# [[copyfiles]]",
-        '# src = "file-in-main-clone.txt"',
-        '# dest = "file-in-workspace.txt"',
         "",
         "",
         "# [[remotes]]",
@@ -427,8 +417,8 @@ def test_resolve(tmp_path, gws):
         "",
         '# remote = "myserver"',
         '# revision = "main"',
-        '# groups = ["+test"]',
-        '# with_groups = ["doc"]',
+        '# groups = ["test"]',
+        '# with-groups = ["doc"]',
         "",
         "",
         "## A full flavored dependency using a 'remote':",
@@ -503,6 +493,16 @@ def test_resolve(tmp_path, gws):
         'path = "dep4"',
         "submodules = true",
         "",
+        "",
+        "# [[linkfiles]]",
+        '# src = "file-in-main-clone.txt"',
+        '# dest = "link-in-workspace.txt"',
+        "",
+        "",
+        "# [[copyfiles]]",
+        '# src = "file-in-main-clone.txt"',
+        '# dest = "file-in-workspace.txt"',
+        "",
     ]
 
     # STDOUT
@@ -557,18 +557,8 @@ remote = "myremote"
 ##
 
 
-# group-filters = ["+test", "-doc", "+feature@path"]
+# group-filters = ["-doc", "-feature@path"]
 group-filters = []
-
-
-# [[linkfiles]]
-# src = "file-in-main-clone.txt"
-# dest = "link-in-workspace.txt"
-
-
-# [[copyfiles]]
-# src = "file-in-main-clone.txt"
-# dest = "file-in-workspace.txt"
 
 
 # [[remotes]]
@@ -581,8 +571,8 @@ remote = "myremote"
 
 # remote = "myserver"
 # revision = "main"
-# groups = ["+test"]
-# with_groups = ["doc"]
+# groups = ["test"]
+# with-groups = ["doc"]
 
 
 ## A full flavored dependency using a 'remote':
@@ -637,6 +627,16 @@ remote = "myremote"
 ## A minimal dependency:
 # [[dependencies]]
 # name = "my"
+
+
+# [[linkfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "link-in-workspace.txt"
+
+
+# [[copyfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "file-in-workspace.txt"
 """
     )
 
@@ -676,18 +676,8 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
         "##",
         "",
         "",
-        '# group-filters = ["+test", "-doc", "+feature@path"]',
+        '# group-filters = ["-doc", "-feature@path"]',
         "group-filters = []",
-        "",
-        "",
-        "# [[linkfiles]]",
-        '# src = "file-in-main-clone.txt"',
-        '# dest = "link-in-workspace.txt"',
-        "",
-        "",
-        "# [[copyfiles]]",
-        '# src = "file-in-main-clone.txt"',
-        '# dest = "file-in-workspace.txt"',
         "",
         "",
         "# [[remotes]]",
@@ -699,8 +689,8 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
         "",
         '# remote = "myserver"',
         '# revision = "main"',
-        '# groups = ["+test"]',
-        '# with_groups = ["doc"]',
+        '# groups = ["test"]',
+        '# with-groups = ["doc"]',
         "",
         "",
         "## A full flavored dependency using a 'remote':",
@@ -782,6 +772,16 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
         f'revision = "{sha4}"',
         'path = "dep4"',
         "submodules = true",
+        "",
+        "",
+        "# [[linkfiles]]",
+        '# src = "file-in-main-clone.txt"',
+        '# dest = "link-in-workspace.txt"',
+        "",
+        "",
+        "# [[copyfiles]]",
+        '# src = "file-in-main-clone.txt"',
+        '# dest = "file-in-workspace.txt"',
         "",
     ]
 

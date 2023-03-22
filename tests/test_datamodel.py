@@ -84,11 +84,21 @@ def test_defaults():
     with raises(TypeError):
         defaults.remote = "other"
 
-    with raises(ValueError):
-        Defaults(groups="-foo")
+    with raises(ValueError) as exc:
+        Defaults(groups=("-foo",))
+    assert str(exc.value).split("\n") == [
+        "1 validation error for Defaults",
+        "groups",
+        "  Invalid group '-foo' (type=value_error)",
+    ]
 
-    with raises(ValueError):
-        Defaults(with_groups="-foo")
+    with raises(ValueError) as exc:
+        Defaults(with_groups=("-foo",))
+    assert str(exc.value).split("\n") == [
+        "1 validation error for Defaults",
+        "with-groups",
+        "  Invalid group '-foo' (type=value_error)",
+    ]
 
 
 def test_group_select():
@@ -183,11 +193,21 @@ def test_project_spec():
     with raises(TypeError):
         project_spec.name = "other"
 
-    with raises(ValueError):
-        ProjectSpec(name="name", groups="-foo")
+    with raises(ValueError) as exc:
+        ProjectSpec(name="name", groups=("-foo",))
+    assert str(exc.value).split("\n") == [
+        "1 validation error for ProjectSpec",
+        "groups",
+        "  Invalid group '-foo' (type=value_error)",
+    ]
 
-    with raises(ValueError):
-        ProjectSpec(name="name", with_groups="-foo")
+    with raises(ValueError) as exc:
+        ProjectSpec(name="name", with_groups=("-foo",))
+    assert str(exc.value).split("\n") == [
+        "1 validation error for ProjectSpec",
+        "with-groups",
+        "  Invalid group '-foo' (type=value_error)",
+    ]
 
 
 def test_manifest():
@@ -257,18 +277,8 @@ version = "1.1"
 ##
 
 
-# group-filters = ["+test", "-doc", "+feature@path"]
+# group-filters = ["-doc", "-feature@path"]
 group-filters = ["+test"]
-
-
-# [[linkfiles]]
-# src = "file-in-main-clone.txt"
-# dest = "link-in-workspace.txt"
-
-
-# [[copyfiles]]
-# src = "file-in-main-clone.txt"
-# dest = "file-in-workspace.txt"
 
 
 # [[remotes]]
@@ -350,18 +360,8 @@ version = "1.1"
 ##
 
 
-# group-filters = ["+test", "-doc", "+feature@path"]
+# group-filters = ["-doc", "-feature@path"]
 group-filters = ["+test"]
-
-
-# [[linkfiles]]
-# src = "file-in-main-clone.txt"
-# dest = "link-in-workspace.txt"
-
-
-# [[copyfiles]]
-# src = "file-in-main-clone.txt"
-# dest = "file-in-workspace.txt"
 
 
 # [[remotes]]
@@ -376,8 +376,8 @@ remote = "remote"
 
 # remote = "myserver"
 # revision = "main"
-# groups = ["+test"]
-# with_groups = ["doc"]
+# groups = ["test"]
+# with-groups = ["doc"]
 
 
 ## A full flavored dependency using a 'remote':
@@ -450,6 +450,16 @@ dest = "subdir/dest2"
 [[dependencies.copyfiles]]
 src = "src3"
 dest = "subdir/dest3"
+
+
+# [[linkfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "link-in-workspace.txt"
+
+
+# [[copyfiles]]
+# src = "file-in-main-clone.txt"
+# dest = "file-in-workspace.txt"
 """
     assert filepath.read_text() == update
 

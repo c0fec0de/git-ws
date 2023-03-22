@@ -23,6 +23,7 @@ use. The following chapters provide details and guide through the usage of the
    manual/dependency-resolution
    manual/group-filter
    manual/tagging
+   manual/fileref
    manual/command-line-interface/index
 
 

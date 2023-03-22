@@ -87,10 +87,15 @@ def add(
         manifest_spec.save(manifest_path)
 
 
+_DEP_ATTRIBUTES = tuple(
+    (item for item in ProjectSpec(name="dummy").dict(by_alias=True) if item not in ("linkfiles", "copyfiles"))
+)
+
+
 @dep.command(name="set")
 @manifest_option(initial=True)
 @click.argument("dep")
-@click.argument("attribute", type=click.Choice(tuple(ProjectSpec.__fields__)))
+@click.argument("attribute", type=click.Choice(_DEP_ATTRIBUTES))
 @click.argument("value")
 @pass_context
 def set_(context, manifest_path, dep, attribute, value):

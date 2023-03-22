@@ -165,6 +165,8 @@ class GroupSelect(BaseModel):
         GroupSelect(group='test', select=False)
         >>> GroupSelect.from_group_filter("-test@path")
         GroupSelect(group='test', select=False, path='path')
+        >>> GroupSelect.from_group_filter("-@path")
+        GroupSelect(select=False, path='path')
         >>> GroupSelect.from_group_filter("te-st")
         Traceback (most recent call last):
             ...
@@ -242,7 +244,7 @@ class Remote(BaseModel, allow_population_by_field_name=True):
     """URL to a directory of repositories."""
 
 
-class Defaults(BaseModel):
+class Defaults(BaseModel, allow_population_by_field_name=True):
     """
     Default Values.
 
@@ -262,13 +264,23 @@ class Defaults(BaseModel):
     """The revision if not specified by the dependency. Tag or Branch. SHA does not make sense here."""
 
     groups: Optional[Groups] = Groups()
-    """The ``groups`` if not specified by the dependency."""
+    """The ``groups`` attribute if not specified by the dependency."""
 
-    with_groups: Optional[Groups] = Groups()
-    """The ``with_groups`` if not specified by the dependency."""
+    with_groups: Optional[Groups] = Field(Groups(), alias="with-groups")
+    """The ``with_groups`` attribute if not specified by the dependency."""
 
     submodules: bool = True
     """Initialize and Update `git submodules`. `True` by default."""
+
+    @validator("groups", allow_reuse=True)
+    def _groups(cls, values):
+        # pylint: disable=no-self-argument
+        return Groups.validate(values)
+
+    @validator("with_groups", allow_reuse=True)
+    def _with_groups(cls, values):
+        # pylint: disable=no-self-argument
+        return Groups.validate(values)
 
 
 class FileRef(BaseModel):
@@ -313,7 +325,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         groups: Dependency Groups.
         with_groups: Group Selection for refered project.
         submodules: initialize and update `git submodules`
-        linkfiles: symbolic links to be created in the Workspace
+        linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
         is_main: Project is Main Project.
 
@@ -355,7 +367,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
     """Initialize and Update `git submodules`."""
 
     linkfiles: Tuple[FileRef, ...] = tuple()
-    """Symbolic Links To Be Created In The Workspace."""
+    """Symbolic Links To Be Created In The workspace."""
 
     copyfiles: Tuple[FileRef, ...] = tuple()
     """Files To Be Created In The Workspace."""
@@ -483,7 +495,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         groups: Dependency Groups.
         with_groups: Group Selection for refered project.
         submodules: initialize and update `git submodules`
-        linkfiles: symbolic links to be created in the Workspace
+        linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
 
     Some parameters are restricted:
@@ -593,7 +605,7 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
 
     Keyword Args:
         group_filters: Group Filtering.
-        linkfiles: symbolic links to be created in the Workspace
+        linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
         dependencies: Dependency Projects.
         path: Filesystem Path. Relative to Workspace Root Directory.
@@ -671,7 +683,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         version: Version String. Actually 1.0.
         remotes: Remote Aliases.
         group_filters: Group Filtering.
-        linkfiles: symbolic links to be created in the Workspace
+        linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
         defaults: Default settings.
         dependencies: Dependency Projects.
@@ -776,18 +788,8 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         ##
         <BLANKLINE>
         <BLANKLINE>
-        # group-filters = ["+test", "-doc", "+feature@path"]
+        # group-filters = ["-doc", "-feature@path"]
         group-filters = []
-        <BLANKLINE>
-        <BLANKLINE>
-        # [[linkfiles]]
-        # src = "file-in-main-clone.txt"
-        # dest = "link-in-workspace.txt"
-        <BLANKLINE>
-        <BLANKLINE>
-        # [[copyfiles]]
-        # src = "file-in-main-clone.txt"
-        # dest = "file-in-workspace.txt"
         <BLANKLINE>
         <BLANKLINE>
         # [[remotes]]
@@ -800,8 +802,8 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         <BLANKLINE>
         # remote = "myserver"
         # revision = "main"
-        # groups = ["+test"]
-        # with_groups = ["doc"]
+        # groups = ["test"]
+        # with-groups = ["doc"]
         <BLANKLINE>
         <BLANKLINE>
         ## A full flavored dependency using a 'remote':
@@ -858,6 +860,16 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         # name = "my"
         [[dependencies]]
         name = "mylib"
+        <BLANKLINE>
+        <BLANKLINE>
+        # [[linkfiles]]
+        # src = "file-in-main-clone.txt"
+        # dest = "link-in-workspace.txt"
+        <BLANKLINE>
+        <BLANKLINE>
+        # [[copyfiles]]
+        # src = "file-in-main-clone.txt"
+        # dest = "file-in-workspace.txt"
         <BLANKLINE>
         """
         assert not doc or not path, "'doc' and 'path' are mutually exclusive."
@@ -942,23 +954,9 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         doc.add(tomlkit.nl())
 
         # Group Filtering
-        example = ManifestSpec(group_filters=GroupFilters(("+test", "-doc", "+feature@path")))
+        example = ManifestSpec(group_filters=GroupFilters(("-doc", "-feature@path")))
         add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
         doc.add("group-filters", tomlkit.array())
-        doc.add(tomlkit.nl())
-        doc.add(tomlkit.nl())
-
-        # linkfíles
-        example = ManifestSpec(linkfiles=[FileRef(src="file-in-main-clone.txt", dest="link-in-workspace.txt")])
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
-        doc.add("linkfiles", tomlkit.aot())
-        doc.add(tomlkit.nl())
-        doc.add(tomlkit.nl())
-
-        # copyfíles
-        example = ManifestSpec(copyfiles=[FileRef(src="file-in-main-clone.txt", dest="file-in-workspace.txt")])
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
-        doc.add("copyfiles", tomlkit.aot())
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
 
@@ -973,7 +971,7 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         doc.add("defaults", as_dict(Defaults()))
         example = ManifestSpec(
             defaults=Defaults(
-                remote="myserver", revision="main", groups=("+test",), with_groups=("doc",), submodules=True
+                remote="myserver", revision="main", groups=("test",), with_groups=("doc",), submodules=True
             )
         )
         add_comment(doc, "\n".join(example.dump(doc=tomlkit.document(), minimal=True).split("\n")[1:-1]))
@@ -1035,6 +1033,20 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
 
         doc.add("dependencies", tomlkit.aot())
+        doc.add(tomlkit.nl())
+        doc.add(tomlkit.nl())
+
+        # linkfíles
+        example = ManifestSpec(linkfiles=[FileRef(src="file-in-main-clone.txt", dest="link-in-workspace.txt")])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
+        doc.add("linkfiles", tomlkit.aot())
+        doc.add(tomlkit.nl())
+        doc.add(tomlkit.nl())
+
+        # copyfíles
+        example = ManifestSpec(copyfiles=[FileRef(src="file-in-main-clone.txt", dest="file-in-workspace.txt")])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
+        doc.add("copyfiles", tomlkit.aot())
 
         # Done
         return doc
