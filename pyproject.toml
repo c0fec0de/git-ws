@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "git-ws"
-version = "0.11.0"
+version = "0.12.0"
 description = "Git Workspace - Multi Repository Management Tool"
 readme = "README.md"
 license = "LGPL-3.0-or-later"
