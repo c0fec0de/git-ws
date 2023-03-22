@@ -1,4 +1,4 @@
-# Copyright 2022 c0fec0de
+# Copyright 2022-2023 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -243,7 +243,7 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
         group_selects: Iterable with :any:`GroupSelect`.
         default: Default selection of all ``groups``.
 
-    >>> group_filters = ('+test', '+doc', '+feature@dep', '-doc')
+    >>> group_filters = ('-@special', '+test', '+doc', '+feature@dep', '-doc')
     >>> group_selects = GroupSelects.from_group_filters(group_filters)
     >>> groupfilter = create_filter(group_selects)
     >>> groupfilter('sub', tuple())  # selected as there is no group
@@ -259,6 +259,12 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     >>> groupfilter('sub', ('feature',))  # 'feature' is only selected for 'dep', but not 'sub'
     False
     >>> groupfilter('dep', ('feature',))  # 'feature' is only selected for 'dep'
+    True
+    >>> groupfilter('special', tuple())  # deselected, even without group
+    False
+    >>> groupfilter('special', ('foo', 'bar'))  # deselected
+    False
+    >>> groupfilter('special', ('test', 'bar'))  # deselected, but overwritten by '+test'
     True
 
     The same, but with ``default=True``:
@@ -278,6 +284,12 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     True
     >>> groupfilter('dep', ('feature',))  # 'feature' is only selected for 'dep'
     True
+    >>> groupfilter('special', tuple())  # deselected, even without group
+    False
+    >>> groupfilter('special', ('foo', 'bar'))  # deselected
+    False
+    >>> groupfilter('special', ('test', 'bar'))  # deselected, but overwritten by '+test'
+    True
     """
 
     if group_selects:
@@ -285,16 +297,21 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
         def filter_(path: str, groups: Groups):
             if groups:
                 selects = {group: default for group in groups}
-                for group_select in group_selects:
-                    if group_select.group not in selects:
-                        # not relevant group name
-                        continue
-                    if group_select.path and not fnmatchcase(path, group_select.path):
-                        # not relevant path
-                        continue
-                    selects[group_select.group] = group_select.select
-                return any(selects.values())
-            return True
+            else:
+                selects = {None: True}
+            for group_select in group_selects:
+                group = group_select.group
+                if group and group not in selects:
+                    # not relevant group name
+                    continue
+                if group_select.path and not fnmatchcase(path, group_select.path):
+                    # not relevant path
+                    continue
+                if group:
+                    selects[group] = group_select.select
+                else:
+                    selects = {group: group_select.select for group in selects}
+            return any(selects.values())
 
     else:
 

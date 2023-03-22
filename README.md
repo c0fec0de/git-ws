@@ -11,6 +11,7 @@
 
 * [Installation](https://github.com/c0fec0de/git-ws#-installation)
 * [Usage](https://github.com/c0fec0de/git-ws#-usage)
+* [Getting Started](https://github.com/c0fec0de/git-ws#-getting-started)
 * [Cheat-Sheet](https://github.com/c0fec0de/git-ws#-cheat-sheet)
 * [Python API](https://github.com/c0fec0de/git-ws#-api)
 * [Alternatives](https://github.com/c0fec0de/git-ws#-alternatives)
@@ -36,6 +37,12 @@ And that's it! Ideally, if your project also uses Python, we recommend adding Gi
 ```bash
 # Add Git Workspace as a development dependency:
 poetry add --group dev git-ws
+```
+
+For testing you can try:
+
+```bash
+git ws --version
 ```
 
 
@@ -143,6 +150,120 @@ url-base = "git@github.example.com:your-group"
 name = "dep1"
 remote = "main"
 ```
+
+## 👍 Getting Started
+
+Please ensure a proper [installation](https://github.com/c0fec0de/git-ws#-installation).
+
+Lets take a clone of an example project, which does not use ``git ws`` yet.
+
+```bash
+mkdir -p $HOME/Projects/Example-Workspace
+cd $HOME/Projects/Example-Workspace
+git clone https://github.com/c0fec0de/git-ws-example-one.git
+# Cloning into 'git-ws-example-one'...
+# remote: Enumerating objects: 3, done.
+# remote: Counting objects: 100% (3/3), done.
+# remote: Compressing objects: 100% (2/2), done.
+# remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+# Receiving objects: 100% (3/3), done.
+```
+
+Now you should have one git clone in your workspace directory. Let's use it as *main project*.
+At first, we need a manifest file ``git-ws.toml``.
+
+```bash
+cd git-ws-example-one
+git ws manifest create
+# Manifest 'git-ws.toml' created.
+git add git-ws.toml
+```
+
+Now, we need to initialize the workspace
+
+```bash
+git ws init
+# ===== . (MAIN 'git-ws-example-one') =====
+# Workspace initialized at '..'.
+# Please continue with:
+#
+#     git ws update
+#
+```
+
+The parent directory became the ``git ws`` *workspace directory* .
+The actual git clone is the *main project* now.
+``git ws`` suggests to run ``git ws update``.
+You can try, but nothing will happen yet, as the manifest is quite empty.
+
+Let's add our first dependency ``git-ws-example-lib``, which is located on the same git server.
+You can manually edit the manifest file ``git-ws.toml``, or you just run
+
+```bash
+git ws dep add git-ws-example-lib
+```
+
+Feel free to inspect the ``git-ws.toml`` file.
+``git ws update`` will now apply the manifest changes and pull the new dependency:
+
+
+```bash
+git ws update
+# ===== . (MAIN 'git-ws-example-one', revision='main') =====
+# Pulling branch 'main'.
+# Already up to date.
+# ===== ../git-ws-example-lib ('git-ws-example-lib') =====
+# git-ws WARNING Clone git-ws-example-lib has no revision!
+# Cloning 'https://github.com/c0fec0de/git-ws-example-lib.git'.
+# Cloning into '../git-ws-example-lib'...
+# remote: Enumerating objects: 3, done.
+# remote: Counting objects: 100% (3/3), done.
+# remote: Compressing objects: 100% (2/2), done.
+# remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+# Receiving objects: 100% (3/3), done.
+```
+
+Please note the warning:
+
+```bash
+# git-ws WARNING Clone git-ws-example-lib has no revision!
+```
+
+It is strongly recommended to specify a default revision for all dependencies. The command
+
+```bash
+git ws default revision main
+```
+
+solves that for you. Any successive ``git ws update`` is now free of this warning:
+
+```
+===== . (MAIN 'git-ws-example-one', revision='main') =====
+Pulling branch 'main'.
+Already up to date.
+===== ../git-ws-example-lib ('git-ws-example-lib', revision='main') =====
+Pulling branch 'main'.
+Already up to date.
+```
+
+Now you can add, commit and push your changes to the ``git-ws.toml`` file.
+Other colleagues should use now:
+
+```bash
+cd $HOME/Projects
+git ws clone YOUR-REPO-URL
+
+# OR
+
+cd $HOME/Projects/Workspace
+git clone YOUR-REPO-URL
+cd <directory>
+git ws init --update
+```
+
+``git ws status`` shows all changes within all git clones in the workspace.
+``git ws add`` runs likewise the ``git add`` operation in the associated git clones.
+Please see the next section for an overview of all commands.
 
 
 ## 🕹️ Cheat-Sheet

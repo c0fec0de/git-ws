@@ -112,3 +112,8 @@ Sometimes, controlling groups via the command line might not be convenient. Cons
 
 With this, everyone would - by default - also get the networking dependencies of ``PrintLib`` in their workspace (unless they override the group filter on the command line).
 
+
+Last Match Wins
++++++++++++++++
+
+TODO: group selected by general rule -test, but later activated +test@path

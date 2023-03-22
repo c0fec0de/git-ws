@@ -1,4 +1,4 @@
-# Copyright 2022 c0fec0de
+# Copyright 2022-2023 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -78,7 +78,7 @@ def test_cli_dep(tmp_path):
 
         cli(("dep", "set", "dep1", "url", "myurl.git"))
 
-        assert cli(("dep", "set", "dep3", "url", "myurl.git"), exit_code=1) == ["Error: Unknown dependency 'dep3'", ""]
+        assert cli(("dep", "set", "dep4", "url", "myurl.git"), exit_code=1) == ["Error: Unknown dependency 'dep4'", ""]
 
         assert cli(("dep", "list")) == [
             "[[dependencies]]",

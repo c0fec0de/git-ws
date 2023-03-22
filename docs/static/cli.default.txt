@@ -1,5 +1,5 @@
-Usage: git-ws default [OPTIONS]
-                      {remote|revision|groups|with_groups|submodules} VALUE
+Usage: git-ws default [OPTIONS] {remote|revision|groups|with-
+                      groups|submodules} VALUE
 
   Set DEFAULT in Manifest to VALUE.
 
