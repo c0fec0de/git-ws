@@ -494,7 +494,7 @@ def test_checkout(tmp_path, gws):
         "",
     ]
 
-    assert cli(("checkout")) == [
+    assert cli(("checkout",)) == [
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",

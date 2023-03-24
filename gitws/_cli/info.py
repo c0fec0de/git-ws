@@ -34,7 +34,7 @@ def info():
     """
 
 
-@info.command()
+@info.command(name="workspace-path")
 @pass_context
 def workspace_path(context):
     """
@@ -45,7 +45,7 @@ def workspace_path(context):
         click.echo(str(gws.path))
 
 
-@info.command()
+@info.command(name="main-path")
 @pass_context
 def main_path(context):
     """
@@ -59,7 +59,7 @@ def main_path(context):
         click.echo(str(main_path))
 
 
-@info.command()
+@info.command(name="project-paths")
 @manifest_option()
 @group_filters_option()
 @pass_context
@@ -74,7 +74,7 @@ def project_paths(context, manifest_path=None, group_filters=None):
             click.echo(project_path)
 
 
-@info.command()
+@info.command(name="dep-tree")
 @manifest_option()
 @group_filters_option()
 @click.option("--dot", "-d", "dot", is_flag=True, help="Export DOT Format to be forwarded to graphviz.")

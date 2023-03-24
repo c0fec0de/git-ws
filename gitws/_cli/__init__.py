@@ -512,7 +512,7 @@ def default(context, manifest_path, name, value):
         manifest_spec.save(manifest_path)
 
 
-@main.command()
+@main.command(name="group-filters")
 @manifest_option(initial=True)
 @click.argument("value")
 @pass_context
