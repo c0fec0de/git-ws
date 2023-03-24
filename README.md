@@ -12,8 +12,8 @@
 * [Installation](https://github.com/c0fec0de/git-ws#-installation)
 * [Usage](https://github.com/c0fec0de/git-ws#-usage)
 * [Getting Started](https://github.com/c0fec0de/git-ws#-getting-started)
-* [Cheat-Sheet](https://github.com/c0fec0de/git-ws#-cheat-sheet)
-* [Python API](https://github.com/c0fec0de/git-ws#-api)
+* [Cheat-Sheet](https://github.com/c0fec0de/git-ws#%EF%B8%8F-cheat-sheet)
+* [Python API](https://github.com/c0fec0de/git-ws#-python-api)
 * [Alternatives](https://github.com/c0fec0de/git-ws#-alternatives)
 
 Git Workspace is a lightweight tool for creating and managing *workspaces* consisting of several interdependent `git` repositories. Starting from a *main repository*, Git Workspace discovers dependencies specified in a *manifest file*, fetching any specified required repositories and assembling them into a single workspace.
@@ -251,7 +251,7 @@ Other colleagues should use now:
 
 ```bash
 cd $HOME/Projects
-git ws clone YOUR-REPO-URL
+git ws clone --update YOUR-REPO-URL
 
 # OR
 
