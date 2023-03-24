@@ -53,9 +53,16 @@ from .remote import remote
 _LOGGING_FORMAT = "%(name)s %(levelname)s %(message)s"
 
 
+def _version_option():  # pragma: no cover
+    # Add support for click 7.x.x and click 8.x.x
+    if click.version_option.__kwdefaults__ and "package_name" in click.version_option.__kwdefaults__:
+        return click.version_option(package_name="git-ws")
+    return click.version_option()
+
+
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option("-v", "--verbose", count=True)
-@click.version_option(package_name="git-ws")
+@_version_option()
 @click.pass_context
 def main(ctx=None, verbose=0):
     """
