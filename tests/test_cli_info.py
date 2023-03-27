@@ -40,6 +40,12 @@ def test_main_path(tmp_path, gws):
     assert cli(["info", "main-path"], tmp_path=tmp_path) == ["TMP/main/main", ""]
 
 
+def test_base_path(tmp_path, gws):
+    """Base Path."""
+    # pylint: disable=unused-argument
+    assert cli(["info", "base-path"], tmp_path=tmp_path) == ["TMP/main/main", ""]
+
+
 def test_workspace_path(tmp_path, gws):
     """Workspace Path."""
     # pylint: disable=unused-argument

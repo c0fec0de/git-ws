@@ -247,7 +247,7 @@ def test_update_missing_origin(tmp_path):
         run(("git", "remote", "remove", "origin"), cwd=gws.path / "dep4", check=True)
 
         # Update project
-        assert cli(["checkout"]) == [
+        assert cli(["checkout"], tmp_path=tmp_path) == [
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
@@ -255,21 +255,40 @@ def test_update_missing_origin(tmp_path):
             "Already on '1-feature'",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
+            "git-ws WARNING Clone dep4 (revision='main') has no remote origin but intends to be: 'TMP/repos/dep4'",
             "",
         ]
 
         run(("git", "remote", "remove", "origin"), cwd=gws.path / "dep2", check=True)
-        assert cli(["checkout"], exit_code=1) == [
+        assert cli(["checkout"], exit_code=1, tmp_path=tmp_path) == [
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
             "git-ws WARNING Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
+            "git-ws WARNING Clone dep2 (revision='1-feature', submodules=False) has no "
+            "remote origin but intends to be: 'TMP/repos/dep2'",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
+            "git-ws WARNING Clone dep4 (revision='main') has no remote origin but intends to be: 'TMP/repos/dep4'",
             "Error: Git Clone 'dep2' has not remote 'origin'. Try:",
             "",
             "    git remote add origin <URL>",
             "",
+            "",
+        ]
+
+        run(("git", "remote", "add", "origin", str(repos_path / "dep4")), cwd=gws.path / "dep4", check=True)
+        run(("git", "remote", "add", "origin", str(repos_path / "dep9")), cwd=gws.path / "dep2", check=True)
+        assert cli(["checkout"], tmp_path=tmp_path) == [
+            "===== main (MAIN 'main', revision='main') =====",
+            "===== dep1 ('dep1') =====",
+            "git-ws WARNING Clone dep1 has no revision!",
+            "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+            "Already on '1-feature'",
+            "git-ws WARNING Clone dep2 (revision='1-feature', submodules=False) "
+            "remote origin is 'TMP/repos/dep9' but intends to be: 'TMP/repos/dep2'",
+            "===== dep4 ('dep4', revision='main') =====",
+            "Already on 'main'",
             "",
         ]

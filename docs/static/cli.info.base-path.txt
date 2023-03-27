@@ -1,0 +1,9 @@
+Usage: git-ws info base-path [OPTIONS]
+
+  Print Path to Main Project Or Workspace.
+
+  Print path to main project on workspaces *with* main project. Print path to
+  workspace on workspaces *without* main project.
+
+Options:
+  -h, --help  Show this message and exit.

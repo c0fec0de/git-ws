@@ -21,6 +21,7 @@ A :any:`Clone` is just the assembly of a :any:`Project` and its corresponding gi
 """
 
 import logging
+from contextlib import suppress
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
@@ -69,20 +70,31 @@ class Clone:
             exists: Check if cloned.
             diff: Check if revisions differ
         """
+        # exists
         if exists:
             self.git.check()
         project = self.project
-        projectrev = project.revision
-        if projectrev:
+        info = project.info
+        # revision
+        if project.revision:
             if diff:
-                try:
+                clonerev = None
+                with suppress(FileNotFoundError):
                     clonerev = self.git.get_revision()
-                except FileNotFoundError:
-                    clonerev = None
-                if clonerev and projectrev != clonerev:
-                    _LOGGER.warning("Clone %s is on different revision: %r", project.info, clonerev)
+                if clonerev and project.revision != clonerev:
+                    _LOGGER.warning("Clone %s is on different revision: %r", info, clonerev)
         elif not project.is_main:
-            _LOGGER.warning("Clone %s has no revision!", project.info)
+            _LOGGER.warning("Clone %s has no revision!", info)
+        # URL
+        if diff and project.url:
+            cloneurl = None
+            with suppress(FileNotFoundError):
+                cloneurl = self.git.get_url()
+            if project.url != cloneurl:
+                if cloneurl:
+                    _LOGGER.warning("Clone %s remote origin is %r but intends to be: %r", info, cloneurl, project.url)
+                else:
+                    _LOGGER.warning("Clone %s has no remote origin but intends to be: %r", info, project.url)
 
     def __repr__(self):
         return get_repr(self, (self.project, self.git))

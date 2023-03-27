@@ -6,7 +6,8 @@ Options:
   -h, --help  Show this message and exit.
 
 Commands:
+  base-path       Print Path to Main Project Or Workspace.
   dep-tree        Print Dependency Tree.
-  main-path       Print Path to Main Git Clone.
+  main-path       Print Path to Main Project.
   project-paths   Print Paths to all git clones.
   workspace-path  Print Path to Workspace.

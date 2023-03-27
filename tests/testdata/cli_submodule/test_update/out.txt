@@ -13,23 +13,27 @@ git-ws DEBUG run(('git', 'submodule', 'update'), cwd='.') OK stdout=None stderr=
 git-ws DEBUG run(['git', 'remote', '-v'], cwd='.') OK stdout=b'origin\tREPOS/main (fetch)\norigin\tREPOS/main (push)\n' stderr=b''
 git-ws INFO Git('.').get_url() = 'REPOS/main'
 git-ws DEBUG ManifestSpec(group_filters=('-test',), dependencies=(ProjectSpec(name='dep1'),))
-git-ws DEBUG Project(name='dep1', path='dep1', url='../dep1')
+git-ws DEBUG Project(name='dep1', path='dep1', url='REPOS/dep1')
 ===== ../dep1 ('dep1') =====
 git-ws DEBUG run(['git', 'rev-parse', '--show-cdup'], cwd='../dep1') OK stdout=b'\n' stderr=b''
 git-ws INFO Git('../dep1').is_cloned() = True
 git-ws WARNING Clone dep1 has no revision!
+git-ws DEBUG run(['git', 'remote', '-v'], cwd='../dep1') OK stdout=b'origin\tREPOS/dep1 (fetch)\norigin\tREPOS/dep1 (push)\n' stderr=b''
+git-ws INFO Git('../dep1').get_url() = 'REPOS/dep1'
 git-ws DEBUG run(('git', 'submodule', 'update'), cwd='../dep1') OK stdout=None stderr=None
 git-ws DEBUG run(['git', 'branch'], cwd='../dep1') OK stdout=b'* main\n' stderr=b''
 git-ws INFO Git('TMP/main/dep1').get_branch() = 'main'
 git-ws DEBUG run(['git', 'remote', '-v'], cwd='../dep1') OK stdout=b'origin\tREPOS/dep1 (fetch)\norigin\tREPOS/dep1 (push)\n' stderr=b''
 git-ws INFO Git('../dep1').get_url() = 'REPOS/dep1'
 git-ws DEBUG ManifestSpec(dependencies=(ProjectSpec(name='dep2', revision='main'),))
-git-ws DEBUG Project(name='dep2', path='dep2', url='../dep2', revision='main')
+git-ws DEBUG Project(name='dep2', path='dep2', url='REPOS/dep2', revision='main')
 ===== ../dep2 ('dep2', revision='main') =====
 git-ws DEBUG run(['git', 'rev-parse', '--show-cdup'], cwd='../dep2') OK stdout=b'\n' stderr=b''
 git-ws INFO Git('../dep2').is_cloned() = True
 git-ws DEBUG run(['git', 'branch'], cwd='../dep2') OK stdout=b'* main\n' stderr=b''
 git-ws INFO Git('../dep2').get_branch() = 'main'
+git-ws DEBUG run(['git', 'remote', '-v'], cwd='../dep2') OK stdout=b'origin\tREPOS/dep2 (fetch)\norigin\tREPOS/dep2 (push)\n' stderr=b''
+git-ws INFO Git('../dep2').get_url() = 'REPOS/dep2'
 git-ws DEBUG run(('git', 'submodule', 'update'), cwd='../dep2') OK stdout=None stderr=None
 git-ws DEBUG run(['git', 'branch'], cwd='../dep2') OK stdout=b'* main\n' stderr=b''
 git-ws INFO Git('TMP/main/dep2').get_branch() = 'main'

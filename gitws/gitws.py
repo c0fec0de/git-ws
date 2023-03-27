@@ -568,12 +568,12 @@ class GitWS:
         """
         if paths:
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
-                clone.git.check()
+                clone.check()
                 clone.git.add(cpaths, force=force)
         else:
             if all_:
                 for clone in self.clones():
-                    clone.git.check()
+                    clone.check()
                     clone.git.add(all_=True, force=force)
             else:
                 raise ValueError("Nothing specified, nothing added.")
@@ -596,7 +596,7 @@ class GitWS:
         if not paths:
             raise ValueError("Nothing specified, nothing removed.")
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            clone.git.check()
+            clone.check()
             clone.git.rm(cpaths, cached=cached, force=force, recursive=recursive)
 
     def reset(self, paths: Tuple[Path, ...]):
@@ -606,7 +606,7 @@ class GitWS:
         The given ``paths`` are automatically mapped to the corresponding git clones.
         """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            clone.git.check()
+            clone.check()
             clone.git.reset(cpaths)
 
     def commit(self, msg: str, paths: Tuple[Path, ...], all_: bool = False):
@@ -691,7 +691,7 @@ class GitWS:
             run(command, cwd=clone.git.path)
 
     def foreach(
-        self, project_paths: Optional[ProjectPaths] = None, resolve_url: bool = False, reverse: bool = False
+        self, project_paths: Optional[ProjectPaths] = None, reverse: bool = False
     ) -> Generator[Clone, None, None]:
         """
         User Level Clone Iteration.
@@ -700,13 +700,12 @@ class GitWS:
 
         Keyword Args:
             project_paths: Limit to projects only.
-            resolve_url: Resolve URLs to absolute ones.
             reverse: Operate in reverse order.
 
         Yields:
             :any:`Clone`
         """
-        for clone in self._foreach(project_paths=project_paths, resolve_url=resolve_url, reverse=reverse):
+        for clone in self._foreach(project_paths=project_paths, resolve_url=True, reverse=reverse):
             clone.check()
             yield clone
 
@@ -728,7 +727,7 @@ class GitWS:
                 self.secho(f"===== SKIPPING {clone.info} =====", fg=_COLOR_SKIP)
 
     def clones(
-        self, skip_main: bool = False, resolve_url: bool = False, reverse: bool = False
+        self, skip_main: bool = False, resolve_url: bool = True, reverse: bool = False
     ) -> Generator[Clone, None, None]:
         """
         Iterate over Clones.
