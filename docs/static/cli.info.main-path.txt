@@ -1,6 +1,7 @@
 Usage: git-ws info main-path [OPTIONS]
 
-  Print Path to Main Git Clone.
+  Print Path to Main Project. This command fails on workspaces without main
+  project.
 
 Options:
   -h, --help  Show this message and exit.

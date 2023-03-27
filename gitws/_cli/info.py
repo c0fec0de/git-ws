@@ -49,7 +49,7 @@ def workspace_path(context):
 @pass_context
 def main_path(context):
     """
-    Print Path to Main Git Clone.
+    Print Path to Main Project. This command fails on workspaces without main project.
     """
     with exceptionhandling(context):
         gws = GitWS.from_path()
@@ -57,6 +57,21 @@ def main_path(context):
         if not main_path:
             raise NoMainError()
         click.echo(str(main_path))
+
+
+@info.command(name="base-path")
+@pass_context
+def base_path(context):
+    """
+    Print Path to Main Project Or Workspace.
+
+    Print path to main project on workspaces *with* main project.
+    Print path to workspace on workspaces *without* main project.
+    """
+    with exceptionhandling(context):
+        gws = GitWS.from_path()
+        base_path = gws.workspace.base_path
+        click.echo(str(base_path))
 
 
 @info.command(name="project-paths")

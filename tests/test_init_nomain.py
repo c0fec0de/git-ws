@@ -22,7 +22,7 @@ from gitws.const import CONFIG_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 
 from .common import MANIFEST_DEFAULT
 from .fixtures import create_repos
-from .util import chdir
+from .util import chdir, cli
 
 
 def test_nomain(tmp_path):
@@ -50,6 +50,8 @@ def test_nomain(tmp_path):
             'manifest_path = "git-ws.toml"',
             "",
         ]
+
+        assert cli(["info", "base-path"], tmp_path=tmp_path) == ["TMP/workspace", ""]
 
         with raises(InitializedError):
             GitWS.init(path=path)

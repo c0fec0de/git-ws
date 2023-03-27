@@ -141,6 +141,20 @@ Retrieve information about the workspace.
 
 This command has further sub-commands which can be used to get information about the workspace. In particular, these commands are the following:
 
+
+.. _git_ws_info_base_path:
+
+``git ws info base-path``
++++++++++++++++++++++++++
+
+Get the path to the main project (identical to :ref:`git_ws_info_main_path`)  on workspaces *with* a main project.
+The command returns the workspace path (identical to :ref:`git_ws_info_workspace_path`) on workspaces *without* a main project.
+
+.. literalinclude:: ../../static/cli.info.base-path.txt
+   :language: text
+
+
+
 .. _git_ws_info_dep_tree:
 
 ``git ws info dep-tree``

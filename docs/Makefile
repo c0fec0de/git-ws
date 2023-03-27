@@ -54,6 +54,7 @@ gen:
 	git-ws git --help > static/cli.git.txt
 	git-ws group-filters --help > static/cli.group-filters.txt
 	git-ws info --help > static/cli.info.txt
+	git-ws info base-path --help > static/cli.info.base-path.txt
 	git-ws info dep-tree --help > static/cli.info.dep-tree.txt
 	git-ws info main-path --help > static/cli.info.main-path.txt
 	git-ws info project-paths --help > static/cli.info.project-paths.txt
