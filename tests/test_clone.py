@@ -83,7 +83,7 @@ def test_clone(tmp_path, repos):
                 path=str(workspace / "dep2" / "git-ws.toml"),
             ),
         ]
-        assert list(str(item) for item in gws.clones()) == [
+        assert list(str(item) for item in gws.clones(resolve_url=False)) == [
             "Clone(Project(name='main', path='main', revision='main', is_main=True), Git(PosixPath('main/main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
             "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature', submodules=False), "
@@ -148,7 +148,7 @@ def test_clone_groups(tmp_path, repos):
                 path=str(workspace / "dep3" / "git-ws.toml"),
             ),
         ]
-        assert list(str(item) for item in gws.clones()) == [
+        assert list(str(item) for item in gws.clones(resolve_url=False)) == [
             "Clone(Project(name='main', path='main', revision='main', is_main=True), Git(PosixPath('main/main')))",
             "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
             "Clone(Project(name='dep2', path='dep2', url='../dep2', "

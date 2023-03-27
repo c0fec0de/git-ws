@@ -215,7 +215,7 @@ def test_workflow(tmp_path, gws):
         "",
     ]
 
-    assert cli(("add", "dep2/bb.txt", "dep1/foo.txt")) == [""]
+    assert cli(("add", "dep2/bb.txt", "dep1/foo.txt")) == ["git-ws WARNING Clone dep1 has no revision!", ""]
 
     assert cli(("status", "--banner")) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -284,7 +284,7 @@ def test_workflow(tmp_path, gws):
         ),
     )
 
-    assert cli(("reset", "dep1/foo.txt")) == [""]
+    assert cli(("reset", "dep1/foo.txt")) == ["git-ws WARNING Clone dep1 has no revision!", ""]
 
     (dep2 / "barbar.txt").touch()
 
@@ -319,7 +319,7 @@ def test_workflow(tmp_path, gws):
         "",
     ]
 
-    assert cli(("add", "dep1", "--all", "--force")) == [""]
+    assert cli(("add", "dep1", "--all", "--force")) == ["git-ws WARNING Clone dep1 has no revision!", ""]
 
     assert cli(("status", "--banner")) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -406,7 +406,10 @@ def test_workflow(tmp_path, gws):
         "",
     ]
 
-    assert cli(("rm", "dep1/foo.txt", "--force", "--cached", "-r")) == [""]
+    assert cli(("rm", "dep1/foo.txt", "--force", "--cached", "-r")) == [
+        "git-ws WARNING Clone dep1 has no revision!",
+        "",
+    ]
 
 
 def test_checkout_file(tmp_path, gws):
@@ -562,7 +565,7 @@ def test_add(tmp_path, gws):
         "Error: Nothing specified, nothing added.",
         "",
     ]
-    assert cli(("add", "--all")) == [""]
+    assert cli(("add", "--all")) == ["git-ws WARNING Clone dep1 has no revision!", ""]
     assert cli(("status", "--banner")) == [
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
@@ -586,7 +589,7 @@ def test_diff(tmp_path, gws):
     (dep2 / "data.txt").write_text("My Text")
     (dep4 / "data.txt").write_text("Other Text")
 
-    assert cli(("diff",)) == [
+    assert cli(("diff",), tmp_path=tmp_path) == [
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
