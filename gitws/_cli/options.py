@@ -60,18 +60,16 @@ def force_option():
 
 def group_filters_option(initial=False):
     """Group Filter Option."""
+    help_ = """\
+Group Filtering.
+All groups from the main manifest are enabled by default,
+unless deactivated by the `[group-filters]` section or this option.
+This option has the highest precedence and can be specified multiple times.
+"""
     if initial:
-        help_ = """\
-Group Filtering.
-TODO: more details.
-The setting becomes default for all successive runs.
-"""
+        help_ = f"{help_}The setting becomes default for all successive runs."
     else:
-        help_ = """\
-Group Filtering.
-TODO: more details.
-Initial clone/init filter settings by default.
-"""
+        help_ = f"{help_}Initial clone/init filter settings are used by default."
     return click.option("--group-filter", "-G", "group_filters", metavar="FILTER", multiple=True, help=help_)
 
 

@@ -7,8 +7,13 @@ Options:
                              This option can be specified multiple times.
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by
                              default.
-  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
-                             clone/init filter settings by default.
+  -G, --group-filter FILTER  Group Filtering. All groups from the main
+                             manifest are enabled by default, unless
+                             deactivated by the `[group-filters]` section or
+                             this option. This option has the highest
+                             precedence and can be specified multiple times.
+                             Initial clone/init filter settings are used by
+                             default.
   -S, --skip-main            Skip Main Repository
   --rebase                   Run 'git rebase' instead of 'git pull'
   --prune                    Remove obsolete git clones
