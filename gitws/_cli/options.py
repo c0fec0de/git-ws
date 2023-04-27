@@ -73,6 +73,11 @@ This option has the highest precedence and can be specified multiple times.
     return click.option("--group-filter", "-G", "group_filters", metavar="FILTER", multiple=True, help=help_)
 
 
+def unshallow_option():
+    """Convert To A Complete Repository."""
+    return click.option("--unshallow", is_flag=True, help="convert to a complete repository")
+
+
 def reverse_option():
     """Reverse Option."""
     help_ = "Operate in Reverse Order. Start with last dependency instead of main repository."
@@ -108,6 +113,11 @@ def ws_path_option(nomain: bool = False):
 def main_path_option():
     """Main Repository Path."""
     return click.argument("main_path", nargs=-1, type=click.UNPROCESSED)
+
+
+def depth_option():
+    """Depth Option."""
+    return click.option("--depth", type=int, help="Create clones shallow of that depth.")
 
 
 def process_main_path(value) -> Optional[Path]:

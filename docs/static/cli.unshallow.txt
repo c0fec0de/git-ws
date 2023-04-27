@@ -1,8 +1,10 @@
-Usage: git-ws fetch [OPTIONS] [COMMAND_OPTIONS]...
+Usage: git-ws unshallow [OPTIONS]
 
-  Run 'git fetch' on projects.
+  Convert Shallow Clones To Complete Ones.
 
-  This command is identical to `git ws foreach -- git fetch COMMAND_OPTIONS`.
+  Given projects are fetched and converted to complete clones with entire
+  history if not already. Without any given project, all existing clones will
+  be converted and any future clone will be complete too.
 
 Options:
   -P, --project DIRECTORY    Project path to operate on only. All by default.
@@ -16,5 +18,4 @@ Options:
                              precedence and can be specified multiple times.
                              Initial clone/init filter settings are used by
                              default.
-  --unshallow                convert to a complete repository
   -h, --help                 Show this message and exit.

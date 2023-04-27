@@ -16,6 +16,7 @@ Options:
                              The setting becomes default for all successive
                              runs.
   --revision TEXT            Revision to be checked out. Tag, Branch or SHA
+  --depth INTEGER            Create clones shallow of that depth.
   -U, --update               Run 'git ws update' too.
   -f, --force                Enfore operation.
   -h, --help                 Show this message and exit.

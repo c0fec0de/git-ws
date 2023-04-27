@@ -21,6 +21,7 @@ import os
 import re
 import shutil
 import subprocess
+from pathlib import Path, PosixPath
 
 # pylint: disable=unused-import
 from subprocess import run  # noqa
@@ -96,16 +97,27 @@ def cli(command, exit_code=0, tmp_path=None, repos_path=None):
     return output
 
 
-def check(workspace, name, path=None, content=None, exists=True):
+def check(workspace, name, path=None, content=None, exists=True, depth=None, branches=None):
     """Check."""
     path = path or name
     file_path = workspace / path / "data.txt"
     content = content or name
     if exists:
         assert file_path.exists()
-        assert file_path.read_text() == f"{content}"
+        data = file_path.read_text()
+        assert data == content, f"{data} == {content}"
     else:
         assert not file_path.exists()
+    if depth is not None:
+        result = run(("git", "log", "--pretty=%H"), cwd=(workspace / path), capture_output=True, check=True)
+        lines = result.stdout.decode("utf-8").rstrip().split("\n")
+        lines = [hash_ for hash_ in lines if hash_]
+        assert depth == len(lines), f"{depth} == len({lines})"
+    if branches is not None:
+        result = run(("git", "branch", "--all"), cwd=(workspace / path), capture_output=True, check=True)
+        lines = result.stdout.decode("utf-8").rstrip().split("\n")
+        lines = [hash_ for hash_ in lines if hash_]
+        assert branches == len(lines), f"{branches} == len({lines})"
 
 
 def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_path=None):
@@ -148,3 +160,14 @@ def assert_any(gen, refs):  # pragma: no cover
     else:
         # complain enriched
         assert gen == refs[0], gen
+
+
+def path2url(path: Path) -> str:
+    """
+    Convert ``path`` to URL.
+
+    >>> path2url(Path("/tmp/foo"))
+    'file:///tmp/foo'
+    """
+    path = PosixPath(path)
+    return f"file://{path}"

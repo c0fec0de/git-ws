@@ -117,6 +117,11 @@ def create_repos(repos_path):
         ).save(path / "git-ws.toml")
 
     with chdir(repos_path / "main"):
+        Path("other.txt").touch()
+        run(("git", "add", "other.txt"), check=True)
+        run(("git", "commit", "-m", "other"), check=True)
+
+    with chdir(repos_path / "main"):
         ManifestSpec(
             defaults=Defaults(revision="main"),
             group_filters=("+foo", "+bar", "-fast"),
@@ -136,6 +141,11 @@ def create_repos(repos_path):
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),
             ],
         ).save(path / "git-ws.toml")
+
+    with chdir(repos_path / "dep1"):
+        Path("other.txt").touch()
+        run(("git", "add", "other.txt"), check=True)
+        run(("git", "commit", "-m", "other"), check=True)
 
     with git_repo(repos_path / "dep2", commit="initial") as path:
         (path / "data.txt").write_text("dep2")

@@ -253,3 +253,13 @@ This command simply prints the path to the workspace folder like that:
     ## Should print something like
     # /home/User/Projects/my_workspace
 
+
+.. _git_ws_unshallow:
+
+``git ws unshallow``
+++++++++++++++++++++++++++++++
+
+TODO: git ws unshallow
+
+.. literalinclude:: ../../static/cli.unshallow.txt
+   :language: text

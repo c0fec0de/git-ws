@@ -151,6 +151,7 @@ class GitWS:
         main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
+        depth: Optional[int] = None,
         force: bool = False,
         secho=None,
     ) -> "GitWS":
@@ -167,6 +168,7 @@ class GitWS:
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
+            depth: Shallow Clone Depth.
             force: Ignore that the workspace exists.
             secho: :any:`click.secho` like print method for verbose output.
         """
@@ -198,6 +200,7 @@ class GitWS:
             main_path=main_path,
             manifest_path=manifest_path_rel,
             group_filters=group_filters or None,
+            depth=depth,
             force=force,
         )
         group_filters = workspace.get_group_filters(group_filters=group_filters)
@@ -212,6 +215,7 @@ class GitWS:
         main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
+        depth: Optional[int] = None,
         force: bool = False,
         secho=None,
     ) -> "GitWS":
@@ -226,6 +230,7 @@ class GitWS:
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
+            depth: Shallow Clone Depth.
             force: Ignore that the workspace exists.
             secho: :any:`click.secho` like print method for verbose output.
 
@@ -266,6 +271,7 @@ class GitWS:
             main_path=main_path,
             manifest_path=manifest_path,
             group_filters=group_filters,
+            depth=depth,
             force=force,
             secho=secho,
         )
@@ -309,6 +315,7 @@ class GitWS:
         main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
+        depth: Optional[int] = None,
         revision: Optional[str] = None,
         force: bool = False,
         secho=None,
@@ -326,6 +333,7 @@ class GitWS:
                            This value is written to the configuration.
             group_filters: Default Group Filters.
                            This value is written to the configuration.
+            depth: Shallow Clone Depth.
             revision: Revision instead of default one.
             force: Ignore that the workspace is not empty.
             secho: :any:`click.secho` like print method for verbose output.
@@ -344,14 +352,18 @@ class GitWS:
             Workspace.check_empty(path, main_path)
         secho(f"===== {main_path_rel} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
         secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
-        clone_cache = AppConfig().options.clone_cache
+        options = AppConfig().options
+        clone_cache = options.clone_cache
+        if depth is None:
+            depth = options.depth
         git = Git(main_path_rel, clone_cache=clone_cache, secho=secho)
-        git.clone(url, revision=revision)
+        git.clone(url, revision=revision, depth=depth)
         return GitWS.create(
             path,
             main_path=main_path,
             manifest_path=manifest_path,
             group_filters=group_filters,
+            depth=depth,
             secho=secho,
         )
 
@@ -381,6 +393,7 @@ class GitWS:
         # pylint: disable=too-many-locals
         workspace = self.workspace
         main_path = workspace.info.main_path
+        depth = workspace.app_config.options.depth
         used: List[Path] = []
         linkfileupdater = LinkFileUpdater(workspace.path, secho=self.secho)
         copyfileupdater = CopyFileUpdater(workspace.path, secho=self.secho)
@@ -388,7 +401,7 @@ class GitWS:
             project = clone.project
             used.append(Path(project.path))
             clone.check(diff=False, exists=False)
-            self._update(clone, rebase)
+            self._update(clone, rebase, depth)
             linkfileupdater.set(project.path, project.linkfiles)
             copyfileupdater.set(project.path, project.copyfiles)
         if main_path and not skip_main:
@@ -409,7 +422,7 @@ class GitWS:
                 linkfileupdater.update(info.project_linkfiles)
                 copyfileupdater.update(info.project_copyfiles)
 
-    def _update(self, clone: Clone, rebase: bool):
+    def _update(self, clone: Clone, rebase: bool, depth: Optional[int]):
         # Clone
         project = clone.project
         git = clone.git
@@ -418,41 +431,38 @@ class GitWS:
             tag = git.get_tag()
             branch = git.get_branch()
             sha = git.get_sha()
+            revision = branch or tag or sha
 
             if project.revision in (sha, tag) and not branch:
                 self.secho("Nothing to do.", fg=_COLOR_ACTION)
+            elif git.get_shallow():
+                self.secho("Fetching.", fg=_COLOR_ACTION)
+                git.fetch(shallow=project.revision or revision)
+                shallow_sha = git.get_sha(revision="FETCH_HEAD")
+                git.checkout(shallow_sha)
             else:
-                revision = branch or tag or sha
+                # Fetch
+                self.secho("Fetching.", fg=_COLOR_ACTION)
+                git.fetch()
 
                 # Checkout
-                fetched = False
                 if project.revision and revision != project.revision:
-                    self.secho("Fetching.", fg=_COLOR_ACTION)
-                    git.fetch()
-                    fetched = True
                     git.checkout(project.revision)
                     branch = git.get_branch()
                     revision = branch or tag or sha
 
-                # Pull or Rebase in case we are on a branch (or have switched to it.)
+                # Rebase / Merge
                 if branch:
                     if rebase:
-                        if not fetched:
-                            self.secho("Fetching.", fg=_COLOR_ACTION)
-                            git.fetch()
                         self.secho(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
                         git.rebase()
                     else:
-                        if not fetched:
-                            self.secho(f"Pulling branch {branch!r}.", fg=_COLOR_ACTION)
-                            git.pull()
-                        else:
-                            self.secho(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
-                            git.merge(f"origin/{branch}")
+                        self.secho(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
+                        git.merge(f"origin/{branch}")
 
         else:
             self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
-            git.clone(project.url, revision=project.revision)
+            git.clone(project.url, revision=project.revision, depth=depth)
 
         if project.submodules:
             git.submodule_update(init=True, recursive=True)
@@ -542,13 +552,14 @@ class GitWS:
                 clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
         else:
             # Checkout all clones
+            depth = self.workspace.app_config.options.depth
             for clone in self.clones(resolve_url=True):
                 self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 git = clone.git
                 project = clone.project
                 if not git.is_cloned():
                     self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
-                    git.clone(project.url, revision=project.revision)
+                    git.clone(project.url, revision=project.revision, depth=depth)
                 if project.revision and not project.is_main:
                     git.checkout(revision=project.revision, force=force)
                 clone.check(exists=False)

@@ -23,6 +23,7 @@ Options:
                              precedence and can be specified multiple times.
                              The setting becomes default for all successive
                              runs.
+  --depth INTEGER            Create clones shallow of that depth.
   -U, --update               Run 'git ws update' too.
   -f, --force                Enfore operation.
   -h, --help                 Show this message and exit.

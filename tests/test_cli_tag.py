@@ -108,7 +108,7 @@ def test_tag(tmp_path, repos):
         assert cli(("checkout",)) == [
             "===== main (MAIN 'main', revision='MYTAG') =====",
             f"===== dep1 ('dep1', revision='{dep1_sha}') " "=====",
-            f"HEAD is now at {dep1_shas} initial",
+            f"HEAD is now at {dep1_shas} other",
             f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
             f"HEAD is now at {dep2_shas} feature",
             f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
@@ -174,7 +174,7 @@ def test_tag(tmp_path, repos):
         assert cli(("checkout",)) == [
             "===== main (MAIN 'main', revision='MYTAG') =====",
             f"===== dep1 ('dep1', revision='{dep1_sha}') " "=====",
-            f"HEAD is now at {dep1_shas} initial",
+            f"HEAD is now at {dep1_shas} other",
             f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
             f"HEAD is now at {dep2_shas} feature",
             f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
@@ -257,7 +257,8 @@ def test_tag_dep(tmp_path, repos):
     with chdir(main_workspace):
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos) == [
             "===== main (MAIN 'main', revision='main') =====",
-            "Pulling branch 'main'.",
+            "Fetching.",
+            "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='DEP1TAG') =====",
             "Cloning 'REPOS/dep1'.",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",

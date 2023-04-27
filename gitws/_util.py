@@ -30,17 +30,17 @@ _LOGGER = logging.getLogger("git-ws")
 
 def run(cmd, cwd=None, capture_output=False, check=True, secho=None):
     """Simplified wrapper around :any:`subprocess.run`."""
-    cwdrel = resolve_relative(cwd) if cwd else None
+    cwdrelstr = str(resolve_relative(cwd)) if cwd else None
     # format errors in red
     stderr = None if capture_output or not secho else subprocess.PIPE
     try:
         result = subprocess.run(cmd, capture_output=capture_output, stderr=stderr, check=check, cwd=cwd)
-        _LOGGER.debug("run(%r, cwd='%s') OK stdout=%r stderr=%r", cmd, cwdrel, result.stdout, result.stderr)
+        _LOGGER.debug("run(%r, cwd=%r) OK stdout=%r stderr=%r", cmd, cwdrelstr, result.stdout, result.stderr)
         if stderr and result.stderr:
             secho(result.stderr.decode("utf-8").rstrip())
         return result
     except subprocess.CalledProcessError as error:
-        _LOGGER.debug("run(%r, cwd='%s') FAILED stdout=%r stderr=%r", cmd, cwdrel, error.stdout, error.stderr)
+        _LOGGER.debug("run(%r, cwd=%r) FAILED stdout=%r stderr=%r", cmd, cwdrelstr, error.stdout, error.stderr)
         if stderr and error.stderr:
             secho(error.stderr.decode("utf-8").rstrip(), fg="red", err=True)
         raise error
