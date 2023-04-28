@@ -60,19 +60,22 @@ def force_option():
 
 def group_filters_option(initial=False):
     """Group Filter Option."""
+    help_ = """\
+Group Filtering.
+All groups from the main manifest are enabled by default,
+unless deactivated by the `[group-filters]` section or this option.
+This option has the highest precedence and can be specified multiple times.
+"""
     if initial:
-        help_ = """\
-Group Filtering.
-TODO: more details.
-The setting becomes default for all successive runs.
-"""
+        help_ = f"{help_}The setting becomes default for all successive runs."
     else:
-        help_ = """\
-Group Filtering.
-TODO: more details.
-Initial clone/init filter settings by default.
-"""
+        help_ = f"{help_}Initial clone/init filter settings are used by default."
     return click.option("--group-filter", "-G", "group_filters", metavar="FILTER", multiple=True, help=help_)
+
+
+def unshallow_option():
+    """Convert To A Complete Repository."""
+    return click.option("--unshallow", is_flag=True, help="convert to a complete repository")
 
 
 def reverse_option():
@@ -110,6 +113,11 @@ def ws_path_option(nomain: bool = False):
 def main_path_option():
     """Main Repository Path."""
     return click.argument("main_path", nargs=-1, type=click.UNPROCESSED)
+
+
+def depth_option():
+    """Depth Option."""
+    return click.option("--depth", type=int, help="Create clones shallow of that depth.")
 
 
 def process_main_path(value) -> Optional[Path]:

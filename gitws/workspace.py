@@ -202,6 +202,7 @@ class Workspace:
         main_path: Optional[Path] = None,
         manifest_path: Optional[Path] = None,
         group_filters: Optional[GroupFilters] = None,
+        depth: Optional[int] = None,
         force: bool = False,
     ) -> "Workspace":
         """
@@ -215,6 +216,7 @@ class Workspace:
             manifest_path:  Path to the manifest file. Relative to ``main_path`` or ``path``.
                             Default is ``git-ws.toml``.
             group_filters: Group Filters.
+            depth: Shallow Clone Depth.
             force: Ignore that the workspace exists.
 
         Raises:
@@ -240,6 +242,7 @@ class Workspace:
         with workspace.app_config.edit(AppConfigLocation.WORKSPACE) as config:
             config.manifest_path = str(manifest_path or MANIFEST_PATH_DEFAULT)
             config.group_filters = group_filters
+            config.depth = depth
         _LOGGER.info("Workspace path=%s main=%s", path, info.main_path)
         _LOGGER.info("%r", workspace.config)
         return workspace

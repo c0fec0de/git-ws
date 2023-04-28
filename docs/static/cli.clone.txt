@@ -8,9 +8,15 @@ Options:
   -w, --ws-path DIRECTORY    Workspace Path. Parent directory of main project
                              by default.
   -M, --manifest FILE        Manifest file. 'git-ws.toml' by default.
-  -G, --group-filter FILTER  Group Filtering. TODO: more details. The setting
-                             becomes default for all successive runs.
+  -G, --group-filter FILTER  Group Filtering. All groups from the main
+                             manifest are enabled by default, unless
+                             deactivated by the `[group-filters]` section or
+                             this option. This option has the highest
+                             precedence and can be specified multiple times.
+                             The setting becomes default for all successive
+                             runs.
   --revision TEXT            Revision to be checked out. Tag, Branch or SHA
+  --depth INTEGER            Create clones shallow of that depth.
   -U, --update               Run 'git ws update' too.
   -f, --force                Enfore operation.
   -h, --help                 Show this message and exit.

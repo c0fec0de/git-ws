@@ -1,8 +1,14 @@
-Usage: git-ws reset [OPTIONS] [PATHS]...
+Usage: git-ws unshallow [OPTIONS]
 
-  Run 'git reset' on PATHS and choose the right git clone automatically.
+  Convert Shallow Clones To Complete Ones.
+
+  Given projects are fetched and converted to complete clones with entire
+  history if not already. Without any given project, all existing clones will
+  be converted and any future clone will be complete too.
 
 Options:
+  -P, --project DIRECTORY    Project path to operate on only. All by default.
+                             This option can be specified multiple times.
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by
                              default.
   -G, --group-filter FILTER  Group Filtering. All groups from the main

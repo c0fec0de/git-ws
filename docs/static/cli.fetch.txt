@@ -9,6 +9,12 @@ Options:
                              This option can be specified multiple times.
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by
                              default.
-  -G, --group-filter FILTER  Group Filtering. TODO: more details. Initial
-                             clone/init filter settings by default.
+  -G, --group-filter FILTER  Group Filtering. All groups from the main
+                             manifest are enabled by default, unless
+                             deactivated by the `[group-filters]` section or
+                             this option. This option has the highest
+                             precedence and can be specified multiple times.
+                             Initial clone/init filter settings are used by
+                             default.
+  --unshallow                convert to a complete repository
   -h, --help                 Show this message and exit.

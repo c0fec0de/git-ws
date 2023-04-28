@@ -1099,6 +1099,14 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     This option can be overridden by specifying the ``GIT_WS_CLONE_CACHE`` environment variable.
     """
 
+    depth: Optional[int] = Field(description="Default Clone Depth for New Clones")
+    """
+    Default Clone Depth.
+
+    New clones are created with the given depth.
+    0 deactivates shallow cloning.
+    """
+
     @staticmethod
     def defaults() -> Dict[str, Any]:
         """

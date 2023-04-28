@@ -33,4 +33,5 @@ Commands:
   status         Run 'git status' on PATHS or all files (displayed paths...
   submodule      Run git submodule COMMAND on projects.
   tag            Create git tag NAME on main repository.
+  unshallow      Convert Shallow Clones To Complete Ones.
   update         Create/update all dependent git clones.

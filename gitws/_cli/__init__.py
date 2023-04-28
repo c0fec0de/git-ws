@@ -21,7 +21,7 @@ from pathlib import Path
 import click
 import coloredlogs  # type: ignore
 
-from gitws import AppConfig, Defaults, GitWS, ManifestSpec
+from gitws import AppConfig, AppConfigLocation, Defaults, GitWS, ManifestSpec
 from gitws._util import resolve_relative
 from gitws.const import MANIFEST_PATH_DEFAULT
 from gitws.git import FileStatus, State
@@ -34,6 +34,7 @@ from .manifest import manifest
 from .options import (
     command_option,
     command_options_option,
+    depth_option,
     force_option,
     group_filters_option,
     main_path_option,
@@ -45,6 +46,7 @@ from .options import (
     process_paths,
     projects_option,
     reverse_option,
+    unshallow_option,
     update_option,
     ws_path_option,
 )
@@ -83,6 +85,7 @@ def main(ctx=None, verbose=0):
 @ws_path_option()
 @manifest_option(initial=True)
 @group_filters_option(initial=True)
+@depth_option()
 @update_option()
 @force_option()
 @pass_context
@@ -92,6 +95,7 @@ def init(
     main_path=None,
     manifest_path=None,
     group_filters=None,
+    depth=None,
     update: bool = False,
     force: bool = False,
 ):
@@ -115,6 +119,7 @@ def init(
             main_path=main_path,
             manifest_path=manifest_path,
             group_filters=group_filters,
+            depth=depth,
             force=force,
             secho=context.secho,
         )
@@ -146,6 +151,7 @@ def deinit(context, prune: bool = False, force: bool = False):
 @manifest_option(initial=True)
 @group_filters_option(initial=True)
 @click.option("--revision", help="Revision to be checked out. Tag, Branch or SHA")
+@depth_option()
 @update_option()
 @force_option()
 @pass_context
@@ -156,6 +162,7 @@ def clone(
     main_path=None,
     manifest_path=None,
     group_filters=None,
+    depth=None,
     revision=None,
     update: bool = False,
     force: bool = False,
@@ -174,6 +181,7 @@ def clone(
             manifest_path=manifest_path,
             group_filters=group_filters,
             revision=revision,
+            depth=depth,
             force=force,
             secho=context.secho,
         )
@@ -242,8 +250,9 @@ def git(context, command, projects=None, manifest_path=None, group_filters=None,
 @manifest_option()
 @group_filters_option()
 @command_options_option
+@unshallow_option()
 @pass_context
-def fetch(context, command_options=None, projects=None, manifest_path=None, group_filters=None):
+def fetch(context, command_options=None, projects=None, manifest_path=None, group_filters=None, unshallow=False):
     """
     Run 'git fetch' on projects.
 
@@ -252,7 +261,10 @@ def fetch(context, command_options=None, projects=None, manifest_path=None, grou
     with exceptionhandling(context):
         command_options = process_command_options(command_options)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        gws.run_foreach(("git", "fetch") + command_options, project_paths=projects)
+        base_cmd = ("git", "fetch")
+        if unshallow:
+            base_cmd = base_cmd + ("--unshallow",)
+        gws.run_foreach(base_cmd + command_options, project_paths=projects)
 
 
 @main.command()
@@ -527,6 +539,29 @@ def group_filters(context, manifest_path, value):
         manifest_spec = ManifestSpec.load(manifest_path)
         manifest_spec = manifest_spec.update_fromstr({"group-filters": value if value else None})
         manifest_spec.save(manifest_path)
+
+
+@main.command()
+@projects_option()
+@manifest_option()
+@group_filters_option()
+@pass_context
+def unshallow(context, projects=None, manifest_path=None, group_filters=None):
+    """
+    Convert Shallow Clones To Complete Ones.
+
+    Given projects are fetched and converted to complete clones with entire history if not already.
+    Without any given project, all existing clones will be converted and any future clone will be complete too.
+    """
+    with exceptionhandling(context):
+        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
+        if not projects:
+            with gws.workspace.app_config.edit(AppConfigLocation.WORKSPACE) as config:
+                config.depth = 0
+        for clone in gws.foreach(project_paths=projects):
+            git = clone.git
+            if git.get_shallow():
+                git.fetch(unshallow=True)
 
 
 main.add_command(config)

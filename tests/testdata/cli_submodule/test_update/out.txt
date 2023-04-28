@@ -1,5 +1,5 @@
 git-ws INFO Workspace path=TMP/main main=main
-git-ws INFO AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None, clone_cache=None)
+git-ws INFO AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None, clone_cache=None, depth=None)
 git-ws DEBUG run(['git', 'branch'], cwd='.') OK stdout=b'* main\n' stderr=b''
 git-ws INFO Git('TMP/main/main').get_branch() = 'main'
 git-ws DEBUG run(['git', 'branch'], cwd='.') OK stdout=b'* main\n' stderr=b''

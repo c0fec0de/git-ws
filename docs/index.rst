@@ -24,6 +24,7 @@ use. The following chapters provide details and guide through the usage of the
    manual/group-filter
    manual/tagging
    manual/fileref
+   manual/shallow
    manual/command-line-interface/index
 
 

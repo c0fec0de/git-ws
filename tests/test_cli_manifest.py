@@ -217,17 +217,21 @@ def test_freeze(tmp_path, gws, repos):
 
     assert cli(["update", "-G", "+test"], tmp_path=tmp_path, repos_path=repos) == [
         "===== main (MAIN 'main', revision='main') =====",
-        "Pulling branch 'main'.",
+        "Fetching.",
+        "Merging branch 'main'.",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
-        "Pulling branch 'main'.",
+        "Fetching.",
+        "Merging branch 'main'.",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "Pulling branch '1-feature'.",
+        "Fetching.",
+        "Merging branch '1-feature'.",
         "===== dep3 ('dep3', groups='test') =====",
         "git-ws WARNING Clone dep3 (groups='test') has no revision!",
         "Cloning 'REPOS/dep3'.",
         "===== dep4 ('dep4', revision='main') =====",
-        "Pulling branch 'main'.",
+        "Fetching.",
+        "Merging branch 'main'.",
         "",
     ]
     sha3 = get_sha(gws.path / "dep3")
@@ -362,10 +366,11 @@ def test_freeze(tmp_path, gws, repos):
 
     assert cli(["update", "--manifest", str(output_path)]) == [
         "===== main (MAIN 'main', revision='main') =====",
-        "Pulling branch 'main'.",
+        "Fetching.",
+        "Merging branch 'main'.",
         f"===== dep1 ('dep1', revision={sha1!r}) =====",
         "Fetching.",
-        f"HEAD is now at {sha1s} initial",
+        f"HEAD is now at {sha1s} other",
         f"===== dep2 ('dep2', revision={sha2!r}, submodules=False) =====",
         "Fetching.",
         f"HEAD is now at {sha2s} feature",
@@ -380,7 +385,8 @@ def test_freeze(tmp_path, gws, repos):
 
     assert cli(["update", "--manifest", str(output_path)]) == [
         "===== main (MAIN 'main', revision='main') =====",
-        "Pulling branch 'main'.",
+        "Fetching.",
+        "Merging branch 'main'.",
         f"===== dep1 ('dep1', revision={sha1!r}) =====",
         "Nothing to do.",
         f"===== dep2 ('dep2', revision={sha2!r}, submodules=False) =====",
@@ -804,7 +810,8 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
 
     assert cli(["update", "--manifest", str(output_path)]) == [
         "===== main (MAIN 'main', revision='main') =====",
-        "Pulling branch 'main'.",
+        "Fetching.",
+        "Merging branch 'main'.",
         f"===== dep1 ('dep1', revision='{sha1}') " "=====",
         "Fetching.",
         f"HEAD is now at {sha1s} initial",

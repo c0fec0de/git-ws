@@ -81,4 +81,5 @@ gen:
 	git-ws status --help > static/cli.status.txt
 	git-ws submodule --help > static/cli.submodule.txt
 	git-ws tag --help > static/cli.tag.txt
+	git-ws unshallow --help > static/cli.unshallow.txt
 	git-ws update --help > static/cli.update.txt

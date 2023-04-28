@@ -288,17 +288,30 @@ class Git:
         """Set Git Configuration Variable ``name`` to ``value``."""
         self._run(("config", name, value))
 
-    def clone(self, url, revision: Optional[str] = None):
+    def clone(self, url, revision: Optional[str] = None, depth: Optional[int] = None):
         """
         Clone ``url`` and checkout ``revision``.
 
         The checkout is done to ``self.path``.
         If ``self.clone_cache`` directory path is set, the clone uses the given path as local filesystem cache.
         """
-        _LOGGER.info("Git(%r).clone(%r, revision=%r)", str(self.path), url, revision)
+        _LOGGER.info("Git(%r).clone(%r, revision=%r, depth=%r)", str(self.path), url, revision, depth)
         assert not self.path.exists() or not any(self.path.iterdir())
+        # This is bad code, because:
+        # * `git clone` does have an option for SHA/tag/revision
+        # * we re-use a filesystem cache for clones.
         if self.clone_cache:
             self._clone_cache(url)
+            if depth:
+                # strip down clone copy to given depth
+                self._run(("fetch", "--depth", str(depth), "origin", revision or "HEAD"))
+        elif depth and revision:
+            self.path.mkdir(parents=True)
+            self._run(("init",), capture_output=True)
+            self._run(("remote", "add", "origin", str(url)))
+            self._run(("fetch", "--depth", str(depth), "origin", revision), capture_output=True)
+        elif depth:
+            run(("git", "clone", "--depth", str(depth), "--", str(url), str(self.path)))
         else:
             run(("git", "clone", "--", str(url), str(self.path)))
         if revision:
@@ -349,10 +362,10 @@ class Git:
         _LOGGER.info("Git(%r).get_branch() = %r", str(self.path), branch)
         return branch
 
-    def get_sha(self) -> Optional[str]:
+    def get_sha(self, revision: Optional[str] = None) -> Optional[str]:
         """Get Actual SHA."""
-        sha = self._run2str(("rev-parse", "HEAD"), check=False) or None
-        _LOGGER.info("Git(%r).get_sha() = %r", str(self.path), sha)
+        sha = self._run2str(("rev-parse", revision or "HEAD"), check=False) or None
+        _LOGGER.info("Git(%r).get_sha(%r) = %r", str(self.path), revision, sha)
         return sha
 
     def get_revision(self) -> Optional[str]:
@@ -391,20 +404,21 @@ class Git:
         self._run(args, paths=paths)
         _LOGGER.info("Git(%r).checkout(revision=%r, paths=%r, force=%r)", str(self.path), revision, paths, force)
 
-    def fetch(self):
+    def fetch(self, shallow: Optional[str] = None, unshallow: bool = False):
         """Fetch."""
-        _LOGGER.info("Git(%r).fetch()", str(self.path))
-        self._run(("fetch",))
+        _LOGGER.info("Git(%r).fetch(shallow=%r)", str(self.path), shallow)
+        assert not shallow or not unshallow, "shallow and unshallow are mutally exclusive"
+        if shallow:
+            self._run(("fetch", "origin", shallow))
+        elif unshallow:
+            self._run(("fetch", "--unshallow"))
+        else:
+            self._run(("fetch",))
 
     def merge(self, commit):
         """Merge."""
         _LOGGER.info("Git(%r).merge(%r)", str(self.path), commit)
         self._run(("merge", commit))
-
-    def pull(self):
-        """Pull."""
-        _LOGGER.info("Git(%r).pull()", str(self.path))
-        self._run(("pull",))
 
     def rebase(self):
         """Rebase."""
@@ -593,6 +607,13 @@ class Git:
         if not self.get_url():
             return False
         return True
+
+    def get_shallow(self) -> Optional[str]:
+        """Get Shallow."""
+        try:
+            return (self.path / ".git" / "shallow").read_text()
+        except FileNotFoundError:
+            return None
 
     def _run(
         self,

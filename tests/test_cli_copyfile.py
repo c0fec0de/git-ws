@@ -98,7 +98,8 @@ def test_update(tmp_path):
 
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
             "===== main (MAIN 'main', revision='main') =====",
-            "Pulling branch 'main'.",
+            "Fetching.",
+            "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='main') =====",
             "Cloning 'REPOS/dep1'.",
             "===== Update Files =====",
@@ -120,9 +121,11 @@ def test_update(tmp_path):
 
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
             "===== main (MAIN 'main', revision='main') =====",
-            "Pulling branch 'main'.",
+            "Fetching.",
+            "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='main') =====",
-            "Pulling branch 'main'.",
+            "Fetching.",
+            "Merging branch 'main'.",
             "===== Update Files =====",
             "git-ws WARNING Copy source 'main/data3.txt' does not exists!",
             "git-ws WARNING Copy source 'dep1/data3.txt' does not exists!",
@@ -133,11 +136,13 @@ def test_update(tmp_path):
 
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
             "===== main (MAIN 'main', revision='main') =====",
-            "Pulling branch 'main'.",
+            "Fetching.",
             "From REPOS/main",
             f"   {sha_initial}..{sha_update}  main       -> origin/main",
+            "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='main') =====",
-            "Pulling branch 'main'.",
+            "Fetching.",
+            "Merging branch 'main'.",
             "===== Update Files =====",
             "Removing 'build/main-data1.txt'",
             "Removing 'main-data3.txt'",
