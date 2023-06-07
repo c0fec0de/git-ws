@@ -3,4 +3,6 @@
 Shallow Clone Support
 =====================
 
-TODO
+Implemented
+
+TODO: Documentation

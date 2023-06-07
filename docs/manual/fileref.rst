@@ -3,5 +3,7 @@
 File Linking and Copying
 ========================
 
-TODO
+Implemented
+
+TODO: Documentation
 
