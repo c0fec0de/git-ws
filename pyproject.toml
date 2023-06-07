@@ -109,7 +109,7 @@ setenv =
     LANGUAGE=en_US
 
 commands =
-    poetry install --with=dev --with=doc
+    poetry install --with=test --with=doc
     poetry run black .
     poetry run isort .
     poetry run coverage run --source=gitws --branch -m pytest --doctest-glob=docs/*.rst --doctest-modules --ignore-glob=tests/testdata* --ignore=docs/conf.py --log-level=DEBUG -vv --junitxml=report.xml
@@ -123,7 +123,7 @@ commands =
 [testenv:py-min]
 allowlist_externals = *
 commands =
-    poetry install --without=dev --without=doc
+    poetry install --without=test --without=doc
     poetry run python -c 'import gitws'
     poetry run git-ws --version
     poetry run python -m gitws --version
