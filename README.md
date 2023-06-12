@@ -1,5 +1,4 @@
 [![PyPI Version](https://badge.fury.io/py/git-ws.svg)](https://badge.fury.io/py/git-ws)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/git-ws.svg?label=pypi%20downloads)](https://pypi.python.org/pypi/git-ws)
 [![Python Build](https://github.com/c0fec0de/git-ws/actions/workflows/main.yml/badge.svg)](https://github.com/c0fec0de/git-ws/actions/workflows/main.yml)
 [![Documentation](https://readthedocs.org/projects/git-ws/badge/?version=latest)](https://git-ws.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/c0fec0de/git-ws/badge.svg?branch=main)](https://coveralls.io/github/c0fec0de/git-ws?branch=main)
