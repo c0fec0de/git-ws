@@ -6,9 +6,9 @@
 [![pylint](https://img.shields.io/badge/linter-pylint-%231674b1?style=flat)](https://www.pylint.org/)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Links: [Documentation](https://git-ws.readthedocs.io/en/latest/)
-[PyPI](https://pypi.org/project/git-ws/)
-[Sources](https://github.com/c0fec0de/git-ws)
+[Documentation](https://git-ws.readthedocs.io/en/latest/) -
+[PyPI](https://pypi.org/project/git-ws/) -
+[Sources](https://github.com/c0fec0de/git-ws) -
 [Issues](https://github.com/c0fec0de/git-ws/issues)
 
 # Git Workspace - Multi Repository Management Tool
