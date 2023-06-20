@@ -12,6 +12,14 @@ Git Workspace is integrated as git subcommand ``git ws`` - this is what users mo
 use. The following chapters provide details and guide through the usage of the
 ``git ws`` tool:
 
+Links
+-----
+
+- `PyPI - Python Package Index <https://pypi.org/project/git-ws/>`_
+- `Source Code <https://github.com/c0fec0de/git-ws>`_
+- `Issues <https://github.com/c0fec0de/git-ws/issues>`_
+
+
 .. toctree::
    :maxdepth: 2
    :caption: User Manual:
