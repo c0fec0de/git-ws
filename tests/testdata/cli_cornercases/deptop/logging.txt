@@ -1,6 +1,6 @@
 INFO    git-ws Git('top/top').clone('REPOS/top', revision=None, depth=None)
 DEBUG   git-ws run(('git', 'clone', '--', 'REPOS/top', 'top/top'), cwd=None) OK stdout=None stderr=None
-DEBUG   git-ws GitWS.create('TMP/top', main_path='TMP/top/top', manifest_path='None', group-filters=None)
+DEBUG   git-ws GitWS.create('TMP/top', main_path='TMP/top/top', manifest_path=None, group-filters=None)
 INFO    git-ws Workspace path=TMP/top main=top
 INFO    git-ws AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None, clone_cache=None, depth=None)
 DEBUG   git-ws run(['git', 'branch'], cwd='top/top') OK stdout=b'* main\n' stderr=b''

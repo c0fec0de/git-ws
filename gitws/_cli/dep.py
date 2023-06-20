@@ -15,8 +15,6 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Dependency Commands."""
-from pathlib import Path
-
 import click
 import tomlkit
 
@@ -65,7 +63,6 @@ def add(
     Add Dependency NAME.
     """
     with exceptionhandling(context):
-        manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
         dependencies = list(manifest_spec.dependencies)
         dependencies.append(
@@ -103,7 +100,6 @@ def set_(context, manifest_path, dep, attribute, value):
     Set ATTRIBUTE For Dependency DEP to VALUE.
     """
     with exceptionhandling(context):
-        manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
         dependencies = list(manifest_spec.dependencies)
         for idx, dependency in enumerate(dependencies):
@@ -124,7 +120,6 @@ def list_(context, manifest_path):
     List Dependencies.
     """
     with exceptionhandling(context):
-        manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
         doc = tomlkit.document()
         doc.add("dependencies", as_dict(manifest_spec)["dependencies"])
@@ -140,7 +135,6 @@ def delete(context, name, manifest_path):
     Delete Dependency NAME.
     """
     with exceptionhandling(context):
-        manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
         dependencies = list(manifest_spec.dependencies)
         for idx, dep in enumerate(manifest_spec.dependencies):

@@ -44,7 +44,12 @@ def manifest_option(initial=False):
         help_ = "Manifest file. Initial/Configuration settings by default."
         default = None
     return click.option(
-        "--manifest", "-M", "manifest_path", type=click.Path(dir_okay=False), default=default, help=help_
+        "--manifest",
+        "-M",
+        "manifest_path",
+        type=click.Path(dir_okay=False, path_type=Path),
+        default=default,
+        help=help_,
     )
 
 
@@ -90,7 +95,7 @@ def output_option():
         "--output",
         "-O",
         "output",
-        type=click.Path(dir_okay=False),
+        type=click.Path(dir_okay=False, path_type=Path),
         help="Write Manifest to file instead of STDOUT.",
     )
 
@@ -105,7 +110,7 @@ def ws_path_option(nomain: bool = False):
         "--ws-path",
         "-w",
         "ws_path",
-        type=click.Path(file_okay=False),
+        type=click.Path(file_okay=False, path_type=Path),
         help=descr,
     )
 

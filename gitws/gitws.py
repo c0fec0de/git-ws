@@ -174,9 +174,9 @@ class GitWS:
         """
         _LOGGER.debug(
             "GitWS.create(%r, main_path=%r, manifest_path=%r, group-filters=%r)",
-            str(path),
-            str(main_path),
-            str(manifest_path),
+            str(path) if path else None,
+            str(main_path) if main_path else None,
+            str(manifest_path) if manifest_path else None,
             group_filters,
         )
         # Relative to main_path if given, or workspace path as fallback

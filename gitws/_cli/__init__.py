@@ -517,7 +517,6 @@ def default(context, manifest_path, name, value):
     Set DEFAULT in Manifest to VALUE.
     """
     with exceptionhandling(context):
-        manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
         defaults = manifest_spec.defaults.update_fromstr({name: value if value else None})
         manifest_spec = manifest_spec.update(defaults=defaults)
@@ -535,7 +534,6 @@ def group_filters(context, manifest_path, value):
     The group filter selects/deselects dependencies based on their path and/or groups.
     """
     with exceptionhandling(context):
-        manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
         manifest_spec = manifest_spec.update_fromstr({"group-filters": value if value else None})
         manifest_spec.save(manifest_path)

@@ -16,6 +16,7 @@
 
 """Clone Testing."""
 import os
+from pathlib import Path
 from shutil import rmtree
 from unittest import mock
 
@@ -165,7 +166,7 @@ def test_clone_other(tmp_path, repos):
 
     with chdir(tmp_path):
         main_path = repos / "main"
-        gws = GitWS.clone(str(main_path), manifest_path="other.toml")
+        gws = GitWS.clone(str(main_path), manifest_path=Path("other.toml"))
         assert gws.path == workspace
         gws.update()
         assert gws.get_manifest().path == str(workspace / "main" / "other.toml")

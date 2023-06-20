@@ -15,6 +15,8 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Initialization Tests."""
+from pathlib import Path
+
 from .common import MANIFEST_DEFAULT
 from .util import chdir, cli, run
 
@@ -194,3 +196,56 @@ def test_cli_git_update(tmp_path):
             "Workspace initialized at '..'.",
             "",
         ]
+
+
+def test_cli_workspace(tmp_path):
+    """Init with GIT repo and workspace path."""
+    with chdir(tmp_path):
+        (tmp_path / "workspace").mkdir()
+        manifest = Path("workspace") / "git-ws.toml"
+        assert cli(["manifest", "create", "-M", str(manifest)]) == [f"Manifest '{manifest!s}' created.", ""]
+        assert cli(["init", "-w", "workspace"]) == [
+            "Workspace initialized at 'workspace'.",
+            "Please continue with:",
+            "",
+            "    git ws update",
+            "",
+            "",
+        ]
+        assert (tmp_path / "workspace" / ".git-ws").exists()
+
+
+def test_cli_workspace_manifest(tmp_path):
+    """Init with GIT repo and workspace path."""
+    with chdir(tmp_path):
+        (tmp_path / "workspace").mkdir()
+        manifest = "git-ws.toml"
+
+        assert cli(["manifest", "create", "-M", manifest]) == [f"Manifest '{manifest!s}' created.", ""]
+        assert cli(["init", "-w", "workspace", "-M", Path("..") / "git-ws.toml"]) == [
+            "Workspace initialized at 'workspace'.",
+            "Please continue with:",
+            "",
+            "    git ws update",
+            "",
+            "",
+        ]
+        assert (tmp_path / "workspace" / ".git-ws").exists()
+
+
+def test_cli_workspace_sub(tmp_path):
+    """Init with GIT repo and workspace path."""
+    ws_path = tmp_path / "workspace"
+    ws_path.mkdir()
+    with chdir(tmp_path):
+        assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
+    with chdir(ws_path):
+        assert cli(["init", "-M", Path("..") / "git-ws.toml"]) == [
+            "Workspace initialized at '.'.",
+            "Please continue with:",
+            "",
+            "    git ws update",
+            "",
+            "",
+        ]
+        assert (ws_path / ".git-ws").exists()

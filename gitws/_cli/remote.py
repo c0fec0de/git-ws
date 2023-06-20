@@ -43,7 +43,6 @@ def add(context, name, url_base, manifest_path):
     Add Remote NAME with URL_BASE.
     """
     with exceptionhandling(context):
-        manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
         remotes = list(manifest_spec.remotes)
         remotes.append(Remote(name=name, url_base=url_base))
@@ -74,7 +73,6 @@ def delete(context, name, manifest_path):
     Delete Remote NAME.
     """
     with exceptionhandling(context):
-        manifest_path = Path(manifest_path)
         manifest_spec = ManifestSpec.load(manifest_path)
         remotes = list(manifest_spec.remotes)
         for idx, remote in enumerate(manifest_spec.remotes):
