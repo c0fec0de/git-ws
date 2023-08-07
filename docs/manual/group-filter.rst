@@ -91,7 +91,7 @@ So in more prose:
 
 * A group filter expression always starts with a ``+`` (to select) or a ``-`` (to deselect) a group.
 * It is followed by a group name, where group names are valid identifier names.
-* Optionally, there can be an ``@`` character, followed by a path. In this case, the filter is applied only to the project specified by the path. 
+* Optionally, there can be an ``@`` character, followed by a path. In this case, the filter is applied only to the project specified by the path.
 
 
 Here are some examples:
@@ -116,4 +116,33 @@ With this, everyone would - by default - also get the networking dependencies of
 Last Match Wins
 +++++++++++++++
 
-TODO: group selected by general rule -test, but later activated +test@path
+As we've seen, group filters can be set in various locations: In the main repo's
+manifest, in manifest files of dependent repositories itself but also "manually"
+on the command line.
+
+Naturally, such filters might *conflict* - so it is important to understand
+which takes precedence and how the evaluation works.
+
+A group filter is - basically - a list of instructions turning individual groups
+of repositories on or off. The initial filter is build from the main
+repo's manifest. While evaluating the dependency tree, we'll *append*
+filter expressions of dependencies to that list of filters. Before
+actually evaluating a filter on a repository, the filter set on the
+command line is appended to the list.
+
+What happens technically is, that the *last matching expression* in this
+sequence takes precedence. In other words: If ``git-ws`` has to decide for a
+given repository if it needs to be included in the workspace or not, it will
+evaluate the list of filter expressions in order. The decision (include or
+exclude) of the last matching expression will be used to determine if this
+particular repository will be included or not.
+
+This has some handy implications:
+
+- We can always specify group filters on the command line. They'll
+  override filters set in the manifests.
+- We can specify *sane defaults* for group filters in the main repo. However,
+  to aid encapsulation of information, if a dependency absolutely needs some
+  peer repositories next to it, it can define a group filter to pull them in -
+  even if the main repo excluded the specific group these dependencies belong
+  to.

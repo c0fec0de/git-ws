@@ -257,9 +257,18 @@ This command simply prints the path to the workspace folder like that:
 .. _git_ws_unshallow:
 
 ``git ws unshallow``
-++++++++++++++++++++++++++++++
+--------------------
 
-TODO: git ws unshallow
+Convert a shallow workspace into a full one.
 
 .. literalinclude:: ../../static/cli.unshallow.txt
    :language: text
+
+You can run this command in a workspace that has been created using the
+shallow option to *unshallow* any repository in it. Shallow git clones
+have certain disadvantages (after all, they only contain part of the overall
+history, which can make certain operations impossible or will lead to
+unexpected side effects when e.g. scripts are used to extract
+historic information). If you started with a shallow workspace to speed up
+clone times but you realize you need a full workspace instead, use this command
+to *upgrade* the existing workspace.
