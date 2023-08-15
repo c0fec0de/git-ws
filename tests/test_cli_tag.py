@@ -33,14 +33,16 @@ def repos():
     with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
         repos_path = Path(tmpdir)
 
-        create_repos(repos_path)
+        create_repos(repos_path, add_dep5=True, add_dep6=True)
 
         yield repos_path
 
 
 def test_tag(tmp_path, repos):
     """Create Tag."""
+    # pylint: disable=too-many-locals
     workspace = tmp_path / "main"
+    dep6_sha_repo = Git(repos / "dep6").get_sha(revision="HEAD^")
 
     with chdir(tmp_path):
         assert cli(["clone", str(repos / "main"), "--update"], tmp_path=tmp_path, repos_path=repos) == [
@@ -51,6 +53,10 @@ def test_tag(tmp_path, repos):
             "Cloning 'REPOS/dep1'.",
             "===== main/dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Cloning 'REPOS/dep2'.",
+            "===== main/dep5 ('dep5', revision='final2') =====",
+            "Cloning 'REPOS/dep5'.",
+            f"===== main/dep6 ('dep6', revision='{dep6_sha_repo}') =====",
+            "Cloning 'REPOS/dep6'.",
             "===== main/dep4 ('dep4', revision='main') =====",
             "Cloning 'REPOS/dep4'.",
             "",
@@ -62,9 +68,15 @@ def test_tag(tmp_path, repos):
     dep1_sha = Git(workspace / "dep1").get_sha()
     dep2_sha = Git(workspace / "dep2").get_sha()
     dep4_sha = Git(workspace / "dep4").get_sha()
+    dep5_sha = Git(workspace / "dep5").get_sha()
+    dep6_sha = Git(workspace / "dep6").get_sha()
     dep1_shas = dep1_sha[:7]
     dep2_shas = dep2_sha[:7]
     dep4_shas = dep4_sha[:7]
+    dep5_shas = dep5_sha[:7]
+    dep6_shas = dep6_sha[:7]
+
+    assert dep6_sha == dep6_sha_repo
 
     with chdir(workspace):
         main_git.tag("OTHERTAG")
@@ -92,6 +104,10 @@ def test_tag(tmp_path, repos):
             "git-ws WARNING Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
+            "===== dep5 ('dep5', revision='final2') =====",
+            f"HEAD is now at {dep5_shas} initial",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
+            f"HEAD is now at {dep6_shas} initial",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
             "",
@@ -111,6 +127,10 @@ def test_tag(tmp_path, repos):
             f"HEAD is now at {dep1_shas} other",
             f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
             f"HEAD is now at {dep2_shas} feature",
+            f"===== dep5 ('dep5', revision='{dep5_sha}') " "=====",
+            f"HEAD is now at {dep5_shas} initial",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"HEAD is now at {dep6_shas} initial",
             f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
             f"HEAD is now at {dep4_shas} initial",
             "",
@@ -124,6 +144,10 @@ def test_tag(tmp_path, repos):
             "git-ws WARNING Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Switched to branch '1-feature'",
+            "===== dep5 ('dep5', revision='final2') =====",
+            f"HEAD is now at {dep5_shas} initial",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"HEAD is now at {dep6_shas} initial",
             "===== dep4 ('dep4', revision='main') =====",
             "Switched to branch 'main'",
             "",
@@ -137,6 +161,10 @@ def test_tag(tmp_path, repos):
             "git-ws WARNING Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
+            "===== dep5 ('dep5', revision='final2') =====",
+            f"HEAD is now at {dep5_shas} initial",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"HEAD is now at {dep6_shas} initial",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
             "",
@@ -162,6 +190,10 @@ def test_tag(tmp_path, repos):
             "Cloning 'REPOS/dep1'.",
             "===== other/dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Cloning 'REPOS/dep2'.",
+            "===== other/dep5 ('dep5', revision='final2') =====",
+            "Cloning 'REPOS/dep5'.",
+            f"===== other/dep6 ('dep6', revision='{dep6_sha}') =====",
+            "Cloning 'REPOS/dep6'.",
             "===== other/dep4 ('dep4', revision='main') =====",
             "Cloning 'REPOS/dep4'.",
             "",
@@ -177,6 +209,10 @@ def test_tag(tmp_path, repos):
             f"HEAD is now at {dep1_shas} other",
             f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
             f"HEAD is now at {dep2_shas} feature",
+            f"===== dep5 ('dep5', revision='{dep5_sha}') =====",
+            f"HEAD is now at {dep5_shas} initial",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
+            f"HEAD is now at {dep6_shas} initial",
             f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
             f"HEAD is now at {dep4_shas} initial",
             "",
@@ -188,6 +224,10 @@ def test_tag(tmp_path, repos):
             "git-ws WARNING Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Switched to branch '1-feature'",
+            "===== dep5 ('dep5', revision='final2') =====",
+            f"HEAD is now at {dep5_shas} initial",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"HEAD is now at {dep6_shas} initial",
             "===== dep4 ('dep4', revision='main') =====",
             "Switched to branch 'main'",
             "",
@@ -205,6 +245,7 @@ def test_tag_dep(tmp_path, repos):
     """Create Tag."""
     main_workspace = tmp_path / "main"
     dep1_workspace = tmp_path / "dep1"
+    dep6_sha = Git(repos / "dep6").get_sha(revision="HEAD^")
 
     with chdir(tmp_path):
         assert cli(["clone", str(repos / "dep1"), "--update"], tmp_path=tmp_path, repos_path=repos) == [
@@ -263,6 +304,10 @@ def test_tag_dep(tmp_path, repos):
             "Cloning 'REPOS/dep1'.",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Cloning 'REPOS/dep2'.",
+            "===== dep5 ('dep5', revision='final2') =====",
+            "Cloning 'REPOS/dep5'.",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
+            "Cloning 'REPOS/dep6'.",
             f"===== dep4 ('dep4', revision='{sha4}') =====",
             "Cloning 'REPOS/dep4'.",
             "",
@@ -278,6 +323,7 @@ def test_tag_dep(tmp_path, repos):
 
 def test_tag_overwrite(tmp_path, repos):
     """Create Tag."""
+    # pylint: disable=too-many-locals
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
@@ -288,9 +334,13 @@ def test_tag_overwrite(tmp_path, repos):
     dep1_sha = Git(workspace / "dep1").get_sha()
     dep2_sha = Git(workspace / "dep2").get_sha()
     dep4_sha = Git(workspace / "dep4").get_sha()
+    dep5_sha = Git(workspace / "dep5").get_sha()
+    dep6_sha = Git(workspace / "dep6").get_sha()
     dep1_shas = dep1_sha[:7]
     dep2_shas = dep2_sha[:7]
     dep4_shas = dep4_sha[:7]
+    dep5_shas = dep5_sha[:7]
+    dep6_shas = dep6_sha[:7]
 
     with chdir(workspace):
         # shorten output
@@ -335,6 +385,10 @@ def test_tag_overwrite(tmp_path, repos):
             f"HEAD is now at {dep1_shas} change",
             f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
             f"HEAD is now at {dep2_shas} feature",
+            f"===== dep5 ('dep5', revision='{dep5_sha}') " "=====",
+            f"HEAD is now at {dep5_shas} initial",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"HEAD is now at {dep6_shas} initial",
             f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
             f"HEAD is now at {dep4_shas} initial",
             "",

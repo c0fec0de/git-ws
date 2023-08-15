@@ -70,31 +70,48 @@ class Clone:
             exists: Check if cloned.
             diff: Check if revisions differ
         """
+        git = self.git
         # exists
         if exists:
-            self.git.check()
+            git.check()
         project = self.project
         info = project.info
         # revision
         if project.revision:
             if diff:
-                clonerev = None
-                with suppress(FileNotFoundError):
-                    clonerev = self.git.get_revision()
-                if clonerev and project.revision != clonerev:
-                    _LOGGER.warning("Clone %s is on different revision: %r", info, clonerev)
+                self._check_revision()
         elif not project.is_main:
             _LOGGER.warning("Clone %s has no revision!", info)
         # URL
         if diff and project.url:
             cloneurl = None
             with suppress(FileNotFoundError):
-                cloneurl = self.git.get_url()
+                cloneurl = git.get_url()
             if project.url != cloneurl:
                 if cloneurl:
                     _LOGGER.warning("Clone %s remote origin is %r but intends to be: %r", info, cloneurl, project.url)
                 else:
                     _LOGGER.warning("Clone %s has no remote origin but intends to be: %r", info, project.url)
+
+    def _check_revision(self):
+        git = self.git
+        project = self.project
+        revs: Tuple[str, ...] = tuple()
+        with suppress(FileNotFoundError):
+            # We cannot determine if we checked out a tag or SHA, so we need to be careful here
+            branch = git.get_branch()
+            if branch:
+                revs = (branch,)
+            else:
+                tag = git.get_tag()
+                sha = git.get_sha()
+                if tag:
+                    revs = (tag, sha)
+                else:
+                    revs = (sha,)
+        if revs and project.revision not in revs:
+            akas = " aka ".join(repr(rev) for rev in revs)
+            _LOGGER.warning("Clone %s is on different revision: %s", project.info, akas)
 
     def __repr__(self):
         return get_repr(self, (self.project, self.git))

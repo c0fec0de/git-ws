@@ -22,6 +22,7 @@ from pathlib import Path
 from pytest import fixture
 
 from gitws.datamodel import Defaults, ManifestSpec, ProjectSpec
+from gitws.git import Git
 
 from .util import chdir, run
 
@@ -103,17 +104,35 @@ def repos_dotgit():
         yield repos_path
 
 
-def create_repos(repos_path):
+def create_repos(repos_path, add_dep5=False, add_dep6=False):
     """Create Test Repos."""
+    # pylint: disable=too-many-statements
+
+    with git_repo(repos_path / "dep6", commit="initial") as path:
+        (path / "data.txt").write_text("dep6")
+
+    dep6_sha = Git(repos_path / "dep6").get_sha()
+
+    with chdir(repos_path / "dep6"):
+        Path("other.txt").touch()
+        run(("git", "add", "other.txt"), check=True)
+        run(("git", "commit", "-m", "other"), check=True)
+
     with git_repo(repos_path / "main", commit="initial") as path:
         (path / "data.txt").write_text("main")
+        dependencies = [
+            ProjectSpec(name="dep1", url="../dep1"),
+            ProjectSpec(name="dep2", url="../dep2", revision="1-feature", submodules=False),
+            ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
+        ]
+        if add_dep5:
+            dependencies.append(ProjectSpec(name="dep5", revision="final2"))
+        if add_dep6:
+            dependencies.append(ProjectSpec(name="dep6", revision=dep6_sha))
+
         ManifestSpec(
             group_filters=("-test",),
-            dependencies=[
-                ProjectSpec(name="dep1", url="../dep1"),
-                ProjectSpec(name="dep2", url="../dep2", revision="1-feature", submodules=False),
-                ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
-            ],
+            dependencies=dependencies,
         ).save(path / "git-ws.toml")
 
     with chdir(repos_path / "main"):
@@ -187,6 +206,4 @@ def create_repos(repos_path):
 
     with git_repo(repos_path / "dep5", commit="initial") as path:
         (path / "data.txt").write_text("dep5")
-
-    with git_repo(repos_path / "dep6", commit="initial") as path:
-        (path / "data.txt").write_text("dep6")
+    run(("git", "tag", "final2"), check=True, cwd=repos_path / "dep5")
