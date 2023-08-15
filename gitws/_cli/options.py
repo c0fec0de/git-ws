@@ -89,6 +89,12 @@ def reverse_option():
     return click.option("--reverse", "-R", "reverse", is_flag=True, help=help_)
 
 
+def on_branch_option():
+    """On Branch Option."""
+    help_ = "Limit operation to clones on branches only. Detached HEAD clones (on tag or SHA) are ignored."
+    return click.option("--on-branch", "-b", "on_branch", is_flag=True, help=help_)
+
+
 def output_option():
     """Manifest Output Option."""
     return click.option(

@@ -2,7 +2,8 @@ Usage: git-ws pull [OPTIONS] [COMMAND_OPTIONS]...
 
   Run 'git pull' on projects.
 
-  This command is identical to `git ws foreach -- git pull COMMAND_OPTIONS`.
+  This command is identical to `git ws foreach --on-branch -- git pull
+  COMMAND_OPTIONS`.
 
 Options:
   -P, --project DIRECTORY    Project path to operate on only. All by default.

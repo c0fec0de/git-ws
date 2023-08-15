@@ -65,13 +65,17 @@ def format_output(result, tmp_path=None, repos_path=None):
     return lines
 
 
-def format_logs(caplog, tmp_path=None, repos_path=None):
+def format_logs(caplog, tmp_path=None, repos_path=None, replacements=None):
     """Format Logs."""
+    # Feel free to improve performance
+    replacements = replacements or {}
     lines = [f"{record.levelname:7s} {record.name} {record.message}" for record in caplog.records]
     if repos_path:
         lines = [replace_path(line, repos_path, "REPOS") for line in lines]
     if tmp_path:  # pragma: no cover
         lines = [replace_path(line, tmp_path, "TMP") for line in lines]
+    for key, value in replacements.items():
+        lines = [line.replace(key, value) for line in lines]
     return lines
 
 
@@ -120,7 +124,7 @@ def check(workspace, name, path=None, content=None, exists=True, depth=None, bra
         assert branches == len(lines), f"{branches} == len({lines})"
 
 
-def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_path=None):
+def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_path=None, replacements=None):
     """Compare Generated Files Versus Reference."""
     genpath.mkdir(parents=True, exist_ok=True)
     refpath.mkdir(parents=True, exist_ok=True)
@@ -138,7 +142,7 @@ def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_
         (genpath / "stderr.txt").write_text(err)
     if caplog:
         with open(genpath / "logging.txt", "wt", encoding="utf-8") as file:
-            for item in format_logs(caplog, tmp_path=tmp_path, repos_path=repos_path):
+            for item in format_logs(caplog, tmp_path=tmp_path, repos_path=repos_path, replacements=replacements):
                 file.write(f"{item}\n")
     if LEARN:  # pragma: no cover
         logging.getLogger(__name__).warning("LEARNING %s", refpath)

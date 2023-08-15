@@ -1,3 +1,7 @@
+DEBUG   git-ws run(['git', 'rev-parse', 'HEAD'], cwd='dep5') OK stdout=b'DEP5_SHA\n' stderr=b''
+INFO    git-ws Git('TMP/main/dep5').get_sha(None) = 'DEP5_SHA'
+DEBUG   git-ws run(['git', 'rev-parse', 'HEAD'], cwd='dep6') OK stdout=b'DEP6_SHA\n' stderr=b''
+INFO    git-ws Git('TMP/main/dep6').get_sha(None) = 'DEP6_SHA'
 INFO    git-ws Workspace path=TMP/main main=main
 INFO    git-ws AppConfigData(manifest_path='git-ws.toml', color_ui=False, group_filters=None, clone_cache=None, depth=None)
 DEBUG   git-ws run(['git', 'branch'], cwd='main') OK stdout=b'* main\n' stderr=b''
@@ -11,7 +15,7 @@ INFO    git-ws Git('main').get_branch() = 'main'
 DEBUG   git-ws run(('git', 'status'), cwd='main') OK stdout=None stderr=None
 DEBUG   git-ws run(['git', 'remote', '-v'], cwd='main') OK stdout=b'origin\tREPOS/main (fetch)\norigin\tREPOS/main (push)\n' stderr=b''
 INFO    git-ws Git('main').get_url() = 'REPOS/main'
-DEBUG   git-ws ManifestSpec(group_filters=('-test',), dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2', revision='1-feature', submodules=False), ProjectSpec(name='dep3', url='../dep3', groups=('test',))))
+DEBUG   git-ws ManifestSpec(group_filters=('-test',), dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2', revision='1-feature', submodules=False), ProjectSpec(name='dep3', url='../dep3', groups=('test',)), ProjectSpec(name='dep5', revision='final2'), ProjectSpec(name='dep6', revision='DEP6_SHA')))
 DEBUG   git-ws Project(name='dep1', path='dep1', url='REPOS/dep1')
 DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep1') OK stdout=b'\n' stderr=b''
 INFO    git-ws Git('dep1').is_cloned() = True
@@ -32,6 +36,38 @@ DEBUG   git-ws run(('git', 'status'), cwd='dep2') OK stdout=None stderr=None
 DEBUG   git-ws run(['git', 'branch'], cwd='dep2') OK stdout=b'* 1-feature\n  main\n' stderr=b''
 INFO    git-ws Git('TMP/main/dep2').get_branch() = '1-feature'
 DEBUG   git-ws FILTERED OUT Project(name='dep3', path='dep3', url='REPOS/dep3', groups=('test',))
+DEBUG   git-ws Project(name='dep5', path='dep5', url='REPOS/dep5', revision='final2')
+DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep5') OK stdout=b'\n' stderr=b''
+INFO    git-ws Git('dep5').is_cloned() = True
+DEBUG   git-ws run(['git', 'branch'], cwd='dep5') OK stdout=b'* (HEAD detached at final2)\n  main\n' stderr=b''
+INFO    git-ws Git('dep5').get_branch() = None
+DEBUG   git-ws run(['git', 'describe', '--exact-match', '--tags'], cwd='dep5') OK stdout=b'final2\n' stderr=b''
+INFO    git-ws Git('dep5').get_tag() = 'final2'
+DEBUG   git-ws run(['git', 'rev-parse', 'HEAD'], cwd='dep5') OK stdout=b'DEP5_SHA\n' stderr=b''
+INFO    git-ws Git('dep5').get_sha(None) = 'DEP5_SHA'
+DEBUG   git-ws run(['git', 'remote', '-v'], cwd='dep5') OK stdout=b'origin\tREPOS/dep5 (fetch)\norigin\tREPOS/dep5 (push)\n' stderr=b''
+INFO    git-ws Git('dep5').get_url() = 'REPOS/dep5'
+DEBUG   git-ws run(('git', 'status'), cwd='dep5') OK stdout=None stderr=None
+DEBUG   git-ws run(['git', 'branch'], cwd='dep5') OK stdout=b'* (HEAD detached at final2)\n  main\n' stderr=b''
+INFO    git-ws Git('TMP/main/dep5').get_branch() = None
+DEBUG   git-ws run(['git', 'describe', '--exact-match', '--tags'], cwd='dep5') OK stdout=b'final2\n' stderr=b''
+INFO    git-ws Git('TMP/main/dep5').get_tag() = 'final2'
+DEBUG   git-ws Project(name='dep6', path='dep6', url='REPOS/dep6', revision='DEP6_SHA')
+DEBUG   git-ws run(['git', 'rev-parse', '--show-cdup'], cwd='dep6') OK stdout=b'\n' stderr=b''
+INFO    git-ws Git('dep6').is_cloned() = True
+DEBUG   git-ws run(['git', 'branch'], cwd='dep6') OK stdout=b'* (HEAD detached at DEP6_SHAS)\n  main\n' stderr=b''
+INFO    git-ws Git('dep6').get_branch() = None
+DEBUG   git-ws run(['git', 'describe', '--exact-match', '--tags'], cwd='dep6') OK stdout=b'' stderr=b'fatal: No names found, cannot describe anything.\n'
+INFO    git-ws Git('dep6').get_tag() = None
+DEBUG   git-ws run(['git', 'rev-parse', 'HEAD'], cwd='dep6') OK stdout=b'DEP6_SHA\n' stderr=b''
+INFO    git-ws Git('dep6').get_sha(None) = 'DEP6_SHA'
+DEBUG   git-ws run(['git', 'remote', '-v'], cwd='dep6') OK stdout=b'origin\tREPOS/dep6 (fetch)\norigin\tREPOS/dep6 (push)\n' stderr=b''
+INFO    git-ws Git('dep6').get_url() = 'REPOS/dep6'
+DEBUG   git-ws run(('git', 'status'), cwd='dep6') OK stdout=None stderr=None
+DEBUG   git-ws run(['git', 'branch'], cwd='dep6') OK stdout=b'* (HEAD detached at DEP6_SHAS)\n  main\n' stderr=b''
+INFO    git-ws Git('TMP/main/dep6').get_branch() = None
+DEBUG   git-ws run(['git', 'describe', '--exact-match', '--tags'], cwd='dep6') OK stdout=b'' stderr=b'fatal: No names found, cannot describe anything.\n'
+INFO    git-ws Git('TMP/main/dep6').get_tag() = None
 DEBUG   git-ws run(['git', 'remote', '-v'], cwd='dep1') OK stdout=b'origin\tREPOS/dep1 (fetch)\norigin\tREPOS/dep1 (push)\n' stderr=b''
 INFO    git-ws Git('dep1').get_url() = 'REPOS/dep1'
 DEBUG   git-ws ManifestSpec(dependencies=(ProjectSpec(name='dep4', url='../dep4', revision='main'),))

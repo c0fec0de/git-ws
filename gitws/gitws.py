@@ -687,6 +687,7 @@ class GitWS:
         command,
         project_paths: Optional[ProjectPaths] = None,
         reverse: bool = False,
+        filter_=None,
     ):
         """
         Run ``command`` on each clone.
@@ -697,12 +698,16 @@ class GitWS:
         Keyword Args:
             project_paths: Limit to projects only.
             reverse: Operate in reverse order.
+            filter_: Filter Function
         """
-        for clone in self.foreach(project_paths=project_paths, reverse=reverse):
+        for clone in self.foreach(project_paths=project_paths, reverse=reverse, filter_=filter_):
             run(command, cwd=clone.git.path)
 
     def foreach(
-        self, project_paths: Optional[ProjectPaths] = None, reverse: bool = False
+        self,
+        project_paths: Optional[ProjectPaths] = None,
+        reverse: bool = False,
+        filter_=None,
     ) -> Generator[Clone, None, None]:
         """
         User Level Clone Iteration.
@@ -712,11 +717,12 @@ class GitWS:
         Keyword Args:
             project_paths: Limit to projects only.
             reverse: Operate in reverse order.
+            filter_: Filter Function
 
         Yields:
             :any:`Clone`
         """
-        for clone in self._foreach(project_paths=project_paths, resolve_url=True, reverse=reverse):
+        for clone in self._foreach(project_paths=project_paths, resolve_url=True, reverse=reverse, filter_=filter_):
             clone.check()
             yield clone
 
@@ -726,12 +732,13 @@ class GitWS:
         skip_main: bool = False,
         resolve_url: bool = False,
         reverse: bool = False,
+        filter_=None,
     ) -> Generator[Clone, None, None]:
         project_paths_filter = self._create_project_paths_filter(project_paths)
         clones = self.clones(skip_main=skip_main, resolve_url=resolve_url, reverse=reverse)
         for clone in clones:
             project = clone.project
-            if project_paths_filter(project):
+            if project_paths_filter(project) and (not filter_ or filter_(clone)):
                 self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
                 yield clone
             else:

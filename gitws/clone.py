@@ -23,7 +23,7 @@ A :any:`Clone` is just the assembly of a :any:`Project` and its corresponding gi
 import logging
 from contextlib import suppress
 from pathlib import Path
-from typing import Generator, List, Optional, Tuple
+from typing import Callable, Generator, List, Optional, Tuple
 
 from ._util import get_repr
 from .appconfig import AppConfig
@@ -190,3 +190,11 @@ def map_paths(clones: Tuple[Clone, ...], paths: Optional[Tuple[Path, ...]]) -> G
         nopaths: Tuple[Path, ...] = tuple()
         for clone in clones:
             yield clone, nopaths
+
+
+CloneFilter = Callable[[Clone], bool]
+
+
+def filter_clone_on_branch(clone: Clone) -> bool:
+    """Return `True` on branches"""
+    return bool(clone.git.get_branch())

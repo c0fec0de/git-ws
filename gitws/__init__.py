@@ -99,7 +99,7 @@ Overview
 import logging
 
 from .appconfig import AppConfig, AppConfigLocation
-from .clone import Clone, map_paths
+from .clone import Clone, CloneFilter, filter_clone_on_branch, map_paths
 from .datamodel import (
     AppConfigData,
     Defaults,

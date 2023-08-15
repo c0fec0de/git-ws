@@ -15,17 +15,30 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+import tempfile
+from pathlib import Path
 from shutil import rmtree
 
 from pytest import fixture
 
-from gitws import GitWS
+from gitws import Git, GitWS
 
 from .common import TESTDATA_PATH
 
 # pylint: disable=unused-import
-from .fixtures import repos
-from .util import assert_gen, chdir, cli, format_logs
+from .fixtures import create_repos
+from .util import assert_gen, chdir, cli
+
+
+@fixture()
+def repos():
+    """Fixture with main and four depedency repos."""
+    with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
+        repos_path = Path(tmpdir)
+
+        create_repos(repos_path, add_dep5=True, add_dep6=True)
+
+        yield repos_path
 
 
 @fixture
@@ -43,14 +56,17 @@ def gws(tmp_path, repos):
 
 def test_pull(tmp_path, gws):
     """Test pull."""
-    _test_foreach(tmp_path, gws, "pull")
+    _test_foreach(tmp_path, gws, "pull", on_branch=True)
 
 
 def test_push(tmp_path, gws):
     """Test push."""
     # pylint: disable=unused-argument
+    dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(("push",)) == [
         "===== dep4 ('dep4', revision='main') =====",
+        f"===== SKIPPING dep6 ('dep6', revision='{dep6_sha}') =====",
+        "===== SKIPPING dep5 ('dep5', revision='final2') =====",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
@@ -66,7 +82,7 @@ def test_fetch(tmp_path, gws):
 
 def test_rebase(tmp_path, gws):
     """Test rebase."""
-    _test_foreach(tmp_path, gws, "rebase")
+    _test_foreach(tmp_path, gws, "rebase", on_branch=True)
 
 
 def test_diff(tmp_path, gws):
@@ -109,6 +125,10 @@ def test_deinit_prune(tmp_path, gws):
         "Removing 'dep2'.",
         "===== dep4 (OBSOLETE) =====",
         "Removing 'dep4'.",
+        "===== dep5 (OBSOLETE) =====",
+        "Removing 'dep5'.",
+        "===== dep6 (OBSOLETE) =====",
+        "Removing 'dep6'.",
         "===== main (OBSOLETE) =====",
         "Removing 'main'.",
         "Workspace deinitialized at '.'.",
@@ -138,11 +158,14 @@ def test_deinit_prune(tmp_path, gws):
 def test_git(tmp_path, gws):
     """Test git."""
     # pylint: disable=unused-argument
+    dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(["git", "status"]) == [
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+        "===== dep5 ('dep5', revision='final2') =====",
+        f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
@@ -151,6 +174,8 @@ def test_git(tmp_path, gws):
         "===== SKIPPING main (MAIN 'main', revision='main') =====",
         "===== SKIPPING dep1 ('dep1') =====",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+        "===== SKIPPING dep5 ('dep5', revision='final2') =====",
+        f"===== SKIPPING dep6 ('dep6', revision='{dep6_sha}') =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
@@ -159,16 +184,30 @@ def test_git(tmp_path, gws):
 def test_foreach(tmp_path, gws, caplog, repos):
     """Test foreach."""
     # pylint: disable=unused-argument
+    dep5_sha = Git(gws.path / "dep5").get_sha()
+    dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(["foreach", "git", "status"]) == [
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+        "===== dep5 ('dep5', revision='final2') =====",
+        f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
     assert_gen(
-        tmp_path / "gen", TESTDATA_PATH / "cli_basic" / "foreach", caplog=caplog, tmp_path=tmp_path, repos_path=repos
+        tmp_path / "gen",
+        TESTDATA_PATH / "cli_basic" / "foreach",
+        caplog=caplog,
+        tmp_path=tmp_path,
+        repos_path=repos,
+        replacements={
+            dep5_sha: "DEP5_SHA",
+            dep5_sha[:7]: "DEP5_SHAS",
+            dep6_sha: "DEP6_SHA",
+            dep6_sha[:7]: "DEP6_SHAS",
+        },
     )
 
 
@@ -216,27 +255,47 @@ def test_outside(tmp_path, gws):
         ]
 
 
-def _test_foreach(tmp_path, gws, *command):
+def _test_foreach(tmp_path, gws, *command, on_branch=False):
     # pylint: disable=unused-argument
-    assert cli(command) == [
-        "===== main (MAIN 'main', revision='main') =====",
-        "===== dep1 ('dep1') =====",
-        "git-ws WARNING Clone dep1 has no revision!",
-        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "===== dep4 ('dep4', revision='main') =====",
-        "",
-    ]
+    dep6_sha = Git(gws.path / "dep6").get_sha()
+    if on_branch:
+        output = [
+            "===== main (MAIN 'main', revision='main') =====",
+            "===== dep1 ('dep1') =====",
+            "git-ws WARNING Clone dep1 has no revision!",
+            "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+            "===== SKIPPING dep5 ('dep5', revision='final2') =====",
+            f"===== SKIPPING dep6 ('dep6', revision='{dep6_sha}') =====",
+            "===== dep4 ('dep4', revision='main') =====",
+            "",
+        ]
+    else:
+        output = [
+            "===== main (MAIN 'main', revision='main') =====",
+            "===== dep1 ('dep1') =====",
+            "git-ws WARNING Clone dep1 has no revision!",
+            "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+            "===== dep5 ('dep5', revision='final2') =====",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
+            "===== dep4 ('dep4', revision='main') =====",
+            "",
+        ]
+    assert cli(command) == output
 
 
 def test_git_no_color(tmp_path, gws, caplog, repos):
     """Test git."""
     # pylint: disable=unused-argument
+    dep5_sha = Git(gws.path / "dep5").get_sha()
+    dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(["config", "set", "color_ui", "False"]) == [""]
     assert cli(["git", "status"]) == [
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "git-ws WARNING Clone dep1 has no revision!",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
+        "===== dep5 ('dep5', revision='final2') =====",
+        f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
@@ -246,6 +305,12 @@ def test_git_no_color(tmp_path, gws, caplog, repos):
         caplog=caplog,
         tmp_path=tmp_path,
         repos_path=repos,
+        replacements={
+            dep5_sha: "DEP5_SHA",
+            dep5_sha[:7]: "DEP5_SHAS",
+            dep6_sha: "DEP6_SHA",
+            dep6_sha[:7]: "DEP6_SHAS",
+        },
     )
 
 

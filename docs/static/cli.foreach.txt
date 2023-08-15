@@ -19,4 +19,6 @@ Options:
                              default.
   -R, --reverse              Operate in Reverse Order. Start with last
                              dependency instead of main repository.
+  -b, --on-branch            Limit operation to clones on branches only.
+                             Detached HEAD clones (on tag or SHA) are ignored.
   -h, --help                 Show this message and exit.

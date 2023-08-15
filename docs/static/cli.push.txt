@@ -2,8 +2,8 @@ Usage: git-ws push [OPTIONS] [COMMAND_OPTIONS]...
 
   Run 'git push' on projects (in reverse order).
 
-  This command is identical to `git ws foreach --reverse -- git push
-  COMMAND_OPTIONS`.
+  This command is identical to `git ws foreach --reverse --on-branch -- git
+  push COMMAND_OPTIONS`.
 
 Options:
   -P, --project DIRECTORY    Project path to operate on only. All by default.
