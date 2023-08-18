@@ -242,6 +242,11 @@ class Git:
         self.clone_cache = clone_cache
         self.secho = secho or no_echo
 
+    def __eq__(self, other):
+        if isinstance(other, Git):
+            return (self.path, self.clone_cache, self.secho) == (other.path, other.clone_cache, other.secho)
+        return NotImplemented
+
     def __repr__(self):
         return get_repr(self, (self.path,))
 

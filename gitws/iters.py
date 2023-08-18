@@ -171,6 +171,7 @@ class ProjectIter:
             yield Project(
                 name=main_path.name,
                 path=main_path_rel,
+                level=0,
                 revision=revision,
                 linkfiles=manifest_spec.linkfiles,
                 copyfiles=manifest_spec.copyfiles,
@@ -180,10 +181,10 @@ class ProjectIter:
             group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
             group_selects = GroupSelects.from_group_filters(group_filters)
             filter_ = create_filter(group_selects, default=True)
-            yield from self.__iter(main_path, manifest_spec, filter_)
+            yield from self.__iter(1, main_path, manifest_spec, filter_)
 
     def __iter(
-        self, project_path: Optional[Path], manifest_spec: ManifestSpec, filter_: FilterFunc
+        self, level: int, project_path: Optional[Path], manifest_spec: ManifestSpec, filter_: FilterFunc
     ) -> Generator[Project, None, None]:
         # pylint: disable=too-many-locals
         deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
@@ -199,7 +200,7 @@ class ProjectIter:
         _LOGGER.debug("%r", manifest_spec)
 
         for spec in manifest_spec.dependencies:
-            dep_project = Project.from_spec(manifest_spec, spec, refurl=refurl, resolve_url=self.resolve_url)
+            dep_project = Project.from_spec(manifest_spec, spec, level, refurl=refurl, resolve_url=self.resolve_url)
 
             # Update every path just once
             if dep_project.path in done:
@@ -226,9 +227,10 @@ class ProjectIter:
                 deps.append((dep_project_path, dep_manifest, group_selects))
 
         # We resolve all dependencies in a second iteration to prioritize the manifest
+        sublevel = level + 1
         for dep_project_path, dep_manifest, dep_group_selects in deps:
             dep_filter = create_filter(dep_group_selects)
-            yield from self.__iter(dep_project_path, dep_manifest, dep_filter)
+            yield from self.__iter(sublevel, dep_project_path, dep_manifest, dep_filter)
 
 
 def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterFunc:

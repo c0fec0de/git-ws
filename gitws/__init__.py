@@ -77,7 +77,7 @@ For more advanced operations, the :any:`GitWS.clones` iterates over all clones, 
 ...     clone.project
 ...     clone.git
 === main (MAIN 'main') ===
-Project(name='main', path='main', is_main=True)
+Project(name='main', path='main', level=0, is_main=True)
 Git(...)
 
 Overview

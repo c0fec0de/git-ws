@@ -319,6 +319,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         path: Project Filesystem Path. Relative to Workspace Root Directory.
 
     Keyword Args:
+        level: Dependency Tree Level.
         url: URL. Assembled from ``remote`` s ``url_base``, ``sub_url`` and/or ``name``.
         revision: Revision to be checked out. Tag, branch or SHA.
         manifest_path: Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default.
@@ -347,6 +348,9 @@ class Project(BaseModel, allow_population_by_field_name=True):
 
     path: str
     """Dependency Path. ``name`` will be used as default."""
+
+    level: Optional[int] = None
+    """Dependency Tree Level."""
 
     url: Optional[str] = None
     """URL. Assembled from ``remote`` s ``url_base``, ``sub_url`` and/or ``name``."""
@@ -415,7 +419,11 @@ class Project(BaseModel, allow_population_by_field_name=True):
 
     @staticmethod
     def from_spec(
-        manifest_spec: "ManifestSpec", spec: "ProjectSpec", refurl: Optional[str] = None, resolve_url: bool = False
+        manifest_spec: "ManifestSpec",
+        spec: "ProjectSpec",
+        level: int,
+        refurl: Optional[str] = None,
+        resolve_url: bool = False,
     ) -> "Project":
         """
         Create :any:`Project` from ``manifest_spec`` and ``spec``.
@@ -423,6 +431,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         Args:
             manifest_spec: Manifest Specification.
             spec: Base project to be resolved.
+            level: Dependency tree level.
 
         Keyword Args:
             refurl: Remote URL of the ``manifest_spec``.
@@ -464,6 +473,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         # Create
         return Project(
             name=spec.name,
+            level=level,
             path=spec.path or spec.name,
             url=url,
             revision=spec.revision or defaults.revision,
@@ -656,7 +666,7 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
             NoAbsUrlError: On ``resolve_url=True`` if ``refurl`` is ``None`` and project uses a relative URL.
         """
         dependencies = [
-            Project.from_spec(spec, project_spec, refurl=refurl, resolve_url=resolve_url)
+            Project.from_spec(spec, project_spec, 1, refurl=refurl, resolve_url=resolve_url)
             for project_spec in spec.dependencies
         ]
         return Manifest(

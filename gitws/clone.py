@@ -113,6 +113,11 @@ class Clone:
             akas = " aka ".join(repr(rev) for rev in revs)
             _LOGGER.warning("Clone %s is on different revision: %s", project.info, akas)
 
+    def __eq__(self, other):
+        if isinstance(other, Clone):
+            return (self.project, self.git) == (other.project, other.git)
+        return NotImplemented
+
     def __repr__(self):
         return get_repr(self, (self.project, self.git))
 
@@ -122,7 +127,7 @@ class Clone:
         `repr`-like info string but more condensed.
 
         >>> import gitws
-        >>> project = gitws.Project(name='pname', path='ppath', revision='prevision')
+        >>> project = gitws.Project(name='pname', level=0, path='ppath', revision='prevision')
         >>> git = gitws.Git('gpath')
         >>> clone = gitws.Clone(project, git)
         >>> clone.info
