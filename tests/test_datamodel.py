@@ -546,7 +546,7 @@ def test_manifest_spec_not_remote():
     """Determine ManifestSpec from Other Data."""
     remotes = (Remote(name="remote2", url_base="foo"),)
     manifest_spec = ManifestSpec(remotes=remotes)
-    project = Project.from_spec(manifest_spec, spec=ProjectSpec(name="foo"))
+    project = Project.from_spec(manifest_spec, ProjectSpec(name="foo"), 0)
     assert project.name == "foo"
     assert project.url == "../foo"
 
@@ -556,7 +556,7 @@ def test_manifest_spec_missing_remote():
     remotes = (Remote(name="remote2", url_base="foo"),)
     manifest_spec = ManifestSpec(remotes=remotes)
     with raises(ValueError) as exc:
-        Project.from_spec(manifest_spec, spec=ProjectSpec(name="foo", remote="remote1"))
+        Project.from_spec(manifest_spec, ProjectSpec(name="foo", remote="remote1"), 0)
     assert str(exc.value) == "Unknown remote remote1 for project foo"
 
 
@@ -606,6 +606,7 @@ def test_manifest_from_spec():
     assert manifest.dependencies == (
         Project(
             name="dep1",
+            level=1,
             path="dep1",
             url="file:///repos/url2/dep1",
             groups=("test", "doc"),
@@ -618,8 +619,8 @@ def test_manifest_from_spec():
                 {"src": "ss3", "dest": "dd3"},
             ),
         ),
-        Project(name="dep2", path="dep2dir", url="https://git.example.com/base3/dep2.git"),
-        Project(name="dep3", path="dep3", url="file:///repos/url1/sub.git", revision="main", groups=("test",)),
+        Project(name="dep2", path="dep2dir", level=1, url="https://git.example.com/base3/dep2.git"),
+        Project(name="dep3", path="dep3", level=1, url="file:///repos/url1/sub.git", revision="main", groups=("test",)),
     )
     assert manifest.path is None
 
@@ -645,8 +646,8 @@ def test_default_url():
     manifest = Manifest.from_spec(manifest_spec)
     assert not manifest.group_filters
     assert manifest.dependencies == (
-        Project(name="dep1", path="dep1", url="../dep1"),
-        Project(name="dep2", path="dep2", url="../dep2"),
+        Project(name="dep1", path="dep1", level=1, url="../dep1"),
+        Project(name="dep2", path="dep2", level=1, url="../dep2"),
     )
     assert manifest.path is None
 
@@ -655,40 +656,40 @@ def test_default_url():
     )
     assert not manifest.group_filters
     assert manifest.dependencies == (
-        Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1"),
-        Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2"),
+        Project(name="dep1", path="dep1", level=1, url="https://my.domain.com/repos/dep1"),
+        Project(name="dep2", path="dep2", level=1, url="https://my.domain.com/repos/dep2"),
     )
     assert manifest.path == "foo"
 
     manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main", path="foo")
     assert not manifest.group_filters
     assert manifest.dependencies == (
-        Project(name="dep1", path="dep1", url="../dep1"),
-        Project(name="dep2", path="dep2", url="../dep2"),
+        Project(name="dep1", path="dep1", level=1, url="../dep1"),
+        Project(name="dep2", path="dep2", level=1, url="../dep2"),
     )
     assert manifest.path == "foo"
 
     manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.git", resolve_url=True)
     assert not manifest.group_filters
     assert manifest.dependencies == (
-        Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1.git"),
-        Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2.git"),
+        Project(name="dep1", path="dep1", level=1, url="https://my.domain.com/repos/dep1.git"),
+        Project(name="dep2", path="dep2", level=1, url="https://my.domain.com/repos/dep2.git"),
     )
     assert manifest.path is None
 
     manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.suffix", resolve_url=True)
     assert not manifest.group_filters
     assert manifest.dependencies == (
-        Project(name="dep1", path="dep1", url="https://my.domain.com/repos/dep1.suffix"),
-        Project(name="dep2", path="dep2", url="https://my.domain.com/repos/dep2.suffix"),
+        Project(name="dep1", path="dep1", level=1, url="https://my.domain.com/repos/dep1.suffix"),
+        Project(name="dep2", path="dep2", level=1, url="https://my.domain.com/repos/dep2.suffix"),
     )
     assert manifest.path is None
 
     manifest = Manifest.from_spec(manifest_spec, refurl="https://my.domain.com/repos/main.suffix")
     assert not manifest.group_filters
     assert manifest.dependencies == (
-        Project(name="dep1", path="dep1", url="../dep1.suffix"),
-        Project(name="dep2", path="dep2", url="../dep2.suffix"),
+        Project(name="dep1", path="dep1", level=1, url="../dep1.suffix"),
+        Project(name="dep2", path="dep2", level=1, url="../dep2.suffix"),
     )
     assert manifest.path is None
 

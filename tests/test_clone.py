@@ -22,7 +22,7 @@ from unittest import mock
 
 from pytest import raises
 
-from gitws import GitCloneNotCleanError, GitWS, Manifest, Project
+from gitws import Clone, Git, GitCloneNotCleanError, GitWS, Manifest, Project
 
 # pylint: disable=unused-import
 from .fixtures import repos
@@ -56,40 +56,42 @@ def test_clone(tmp_path, repos):
             assert gws == rrepo
 
         assert list(gws.projects()) == [
-            Project(name="main", path="main", revision="main", is_main=True),
-            Project(name="dep1", path="dep1", url="../dep1"),
-            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature", submodules=False),
-            Project(name="dep4", path="dep4", url="../dep4", revision="main"),
+            Project(name="main", path="main", level=0, revision="main", is_main=True),
+            Project(name="dep1", path="dep1", level=1, url="../dep1"),
+            Project(name="dep2", path="dep2", level=1, url="../dep2", revision="1-feature", submodules=False),
+            Project(name="dep4", path="dep4", level=2, url="../dep4", revision="main"),
         ]
         assert list(gws.manifests()) == [
             Manifest(
                 group_filters=("-test",),
                 dependencies=(
-                    Project(name="dep1", path="dep1", url="../dep1"),
-                    Project(name="dep2", path="dep2", url="../dep2", revision="1-feature", submodules=False),
-                    Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
+                    Project(name="dep1", path="dep1", level=1, url="../dep1"),
+                    Project(name="dep2", path="dep2", level=1, url="../dep2", revision="1-feature", submodules=False),
+                    Project(name="dep3", path="dep3", level=1, url="../dep3", groups=("test",)),
                 ),
                 path=str(workspace / "main" / "git-ws.toml"),
             ),
             Manifest(
-                dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
+                dependencies=(Project(name="dep4", path="dep4", level=1, url="../dep4", revision="main"),),
                 path=str(workspace / "dep1" / "git-ws.toml"),
             ),
             Manifest(
                 group_filters=("-test",),
                 dependencies=(
-                    Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=("test",)),
-                    Project(name="dep4", path="dep4", url="../dep4", revision="main"),
+                    Project(name="dep3", path="dep3", level=1, url="../dep3", revision="main", groups=("test",)),
+                    Project(name="dep4", path="dep4", level=1, url="../dep4", revision="main"),
                 ),
                 path=str(workspace / "dep2" / "git-ws.toml"),
             ),
         ]
-        assert list(str(item) for item in gws.clones(resolve_url=False)) == [
-            "Clone(Project(name='main', path='main', revision='main', is_main=True), Git(PosixPath('main/main')))",
-            "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
-            "Clone(Project(name='dep2', path='dep2', url='../dep2', revision='1-feature', submodules=False), "
-            "Git(PosixPath('main/dep2')))",
-            "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('main/dep4')))",
+        assert list(gws.clones(resolve_url=False)) == [
+            Clone(Project(name="main", path="main", level=0, revision="main", is_main=True), Git(Path("main/main"))),
+            Clone(Project(name="dep1", path="dep1", level=1, url="../dep1"), Git(Path("main/dep1"))),
+            Clone(
+                Project(name="dep2", path="dep2", level=1, url="../dep2", revision="1-feature", submodules=False),
+                Git(Path("main/dep2")),
+            ),
+            Clone(Project(name="dep4", path="dep4", level=2, url="../dep4", revision="main"), Git(Path("main/dep4"))),
         ]
 
 
@@ -116,46 +118,48 @@ def test_clone_groups(tmp_path, repos):
             assert gws == rrepo
 
         assert list(gws.projects()) == [
-            Project(name="main", path="main", revision="main", is_main=True),
-            Project(name="dep1", path="dep1", url="../dep1"),
-            Project(name="dep2", path="dep2", url="../dep2", revision="1-feature", submodules=False),
-            Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
-            Project(name="dep4", path="dep4", url="../dep4", revision="main"),
+            Project(name="main", path="main", level=0, revision="main", is_main=True),
+            Project(name="dep1", path="dep1", level=1, url="../dep1"),
+            Project(name="dep2", path="dep2", level=1, url="../dep2", revision="1-feature", submodules=False),
+            Project(name="dep3", path="dep3", level=1, url="../dep3", groups=("test",)),
+            Project(name="dep4", path="dep4", level=2, url="../dep4", revision="main"),
         ]
         assert list(gws.manifests()) == [
             Manifest(
                 group_filters=("-test",),
                 dependencies=(
-                    Project(name="dep1", path="dep1", url="../dep1"),
-                    Project(name="dep2", path="dep2", url="../dep2", revision="1-feature", submodules=False),
-                    Project(name="dep3", path="dep3", url="../dep3", groups=("test",)),
+                    Project(name="dep1", path="dep1", level=1, url="../dep1"),
+                    Project(name="dep2", path="dep2", level=1, url="../dep2", revision="1-feature", submodules=False),
+                    Project(name="dep3", path="dep3", level=1, url="../dep3", groups=("test",)),
                 ),
                 path=str(workspace / "main" / "git-ws.toml"),
             ),
             Manifest(
-                dependencies=(Project(name="dep4", path="dep4", url="../dep4", revision="main"),),
+                dependencies=(Project(name="dep4", path="dep4", level=1, url="../dep4", revision="main"),),
                 path=str(workspace / "dep1" / "git-ws.toml"),
             ),
             Manifest(
                 group_filters=("-test",),
                 dependencies=(
-                    Project(name="dep3", path="dep3", url="../dep3", revision="main", groups=("test",)),
-                    Project(name="dep4", path="dep4", url="../dep4", revision="main"),
+                    Project(name="dep3", path="dep3", level=1, url="../dep3", revision="main", groups=("test",)),
+                    Project(name="dep4", path="dep4", level=1, url="../dep4", revision="main"),
                 ),
                 path=str(workspace / "dep2" / "git-ws.toml"),
             ),
             Manifest(
-                dependencies=(Project(name="dep2", path="dep2", url="../dep2"),),
+                dependencies=(Project(name="dep2", path="dep2", level=1, url="../dep2"),),
                 path=str(workspace / "dep3" / "git-ws.toml"),
             ),
         ]
-        assert list(str(item) for item in gws.clones(resolve_url=False)) == [
-            "Clone(Project(name='main', path='main', revision='main', is_main=True), Git(PosixPath('main/main')))",
-            "Clone(Project(name='dep1', path='dep1', url='../dep1'), Git(PosixPath('main/dep1')))",
-            "Clone(Project(name='dep2', path='dep2', url='../dep2', "
-            "revision='1-feature', submodules=False), Git(PosixPath('main/dep2')))",
-            "Clone(Project(name='dep3', path='dep3', url='../dep3', groups=('test',)), Git(PosixPath('main/dep3')))",
-            "Clone(Project(name='dep4', path='dep4', url='../dep4', revision='main'), Git(PosixPath('main/dep4')))",
+        assert list(gws.clones(resolve_url=False)) == [
+            Clone(Project(name="main", path="main", level=0, revision="main", is_main=True), Git(Path("main/main"))),
+            Clone(Project(name="dep1", path="dep1", level=1, url="../dep1"), Git(Path("main/dep1"))),
+            Clone(
+                Project(name="dep2", path="dep2", level=1, url="../dep2", revision="1-feature", submodules=False),
+                Git(Path("main/dep2")),
+            ),
+            Clone(Project(name="dep3", path="dep3", level=1, url="../dep3", groups=("test",)), Git(Path("main/dep3"))),
+            Clone(Project(name="dep4", path="dep4", level=2, url="../dep4", revision="main"), Git(Path("main/dep4"))),
         ]
 
 

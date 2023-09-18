@@ -79,6 +79,7 @@ def modify_repos(repos_path) -> str:
                 ),
             ],
         ).save(Path("git-ws.toml"))
+        Path("data0.txt").write_text("main-0 - update", encoding="utf-8")
         git = Git(Path("."))
         git.commit("update", all_=True)
         return git.get_sha()[:7]
@@ -102,13 +103,13 @@ def test_update(tmp_path):
             "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='main') =====",
             "Cloning 'REPOS/dep1'.",
-            "===== Update Files =====",
+            "===== Update Referenced Files =====",
             "Copying 'main/data0.txt' -> 'main-data0.txt'",
             "Copying 'main/data1.txt' -> 'build/main-data1.txt'",
-            "git-ws WARNING Copy source 'main/data3.txt' does not exists!",
+            "git-ws ERROR Cannot update: source file 'main/data3.txt' does not exists!",
             "Copying 'dep1/data0.txt' -> 'dep1-data0.txt'",
             "Copying 'dep1/data1.txt' -> 'build/dep1-data1.txt'",
-            "git-ws WARNING Copy source 'dep1/data3.txt' does not exists!",
+            "git-ws ERROR Cannot update: source file 'dep1/data3.txt' does not exists!",
             "",
         ]
 
@@ -117,7 +118,7 @@ def test_update(tmp_path):
         assert not Path("main-data2.txt").exists()
         assert Path("dep1-data0.txt").read_text(encoding="utf-8") == "dep1-0"
         assert Path("build/dep1-data1.txt").read_text(encoding="utf-8") == "dep1-1"
-        assert not Path("dep-data2.txt").exists()
+        assert not Path("dep1-data2.txt").exists()
 
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
             "===== main (MAIN 'main', revision='main') =====",
@@ -126,13 +127,15 @@ def test_update(tmp_path):
             "===== dep1 ('dep1', revision='main') =====",
             "Fetching.",
             "Merging branch 'main'.",
-            "===== Update Files =====",
-            "git-ws WARNING Copy source 'main/data3.txt' does not exists!",
-            "git-ws WARNING Copy source 'dep1/data3.txt' does not exists!",
+            "===== Update Referenced Files =====",
+            "git-ws ERROR Cannot update: source file 'main/data3.txt' does not exists!",
+            "git-ws ERROR Cannot update: source file 'dep1/data3.txt' does not exists!",
             "",
         ]
 
         sha_update = modify_repos(repos_path)
+
+        assert not Path("build/main-data1.txt").unlink()
 
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
             "===== main (MAIN 'main', revision='main') =====",
@@ -143,10 +146,29 @@ def test_update(tmp_path):
             "===== dep1 ('dep1', revision='main') =====",
             "Fetching.",
             "Merging branch 'main'.",
-            "===== Update Files =====",
-            "Removing 'build/main-data1.txt'",
-            "Removing 'main-data3.txt'",
+            "===== Update Referenced Files =====",
+            "Removing 'build/dep1-data1.txt'",
+            "Removing 'main-data0.txt'",
+            "Copying 'main/data0.txt' -> 'main-data0.txt'",
             "Copying 'main/data2.txt' -> 'main-data2.txt'",
-            "git-ws WARNING Copy source 'dep1/data3.txt' does not exists!",
+            "Copying 'dep1/data2.txt' -> 'dep1-data2.txt'",
+            "",
+        ]
+
+        assert Path("main-data0.txt").read_text(encoding="utf-8") == "main-0 - update"
+        assert not Path("build/main-data1.txt").exists()
+        assert Path("main-data2.txt").read_text(encoding="utf-8") == "main-2"
+        assert Path("dep1-data0.txt").read_text(encoding="utf-8") == "dep1-0"
+        assert not Path("build/dep1-data1.txt").exists()
+        assert Path("dep1-data2.txt").read_text(encoding="utf-8") == "dep1-2"
+
+        assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
+            "===== main (MAIN 'main', revision='main') =====",
+            "Fetching.",
+            "Merging branch 'main'.",
+            "===== dep1 ('dep1', revision='main') =====",
+            "Fetching.",
+            "Merging branch 'main'.",
+            "===== Update Referenced Files =====",
             "",
         ]

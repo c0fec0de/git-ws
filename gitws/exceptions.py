@@ -67,7 +67,7 @@ class OutsideWorkspaceError(RuntimeError):
     """Reference To Outside Of Workspace."""
 
     def __init__(self, workspace_path, path, what):
-        super().__init__(f"{what} {str(path)!r} is refers outside of workspace ({str(workspace_path)!r}).")
+        super().__init__(f"{what} {str(path)!r} refers outside of workspace ({str(workspace_path)!r}).")
         self.workspace_path = workspace_path
         self.path = path
 
@@ -169,7 +169,29 @@ class NoAbsUrlError(RuntimeError):
     """No Relative Url Possible."""
 
     def __init__(self, project_name: str):
-        super().__init__(
-            "Absolute URL required. Please specify an absolute 'url' or a 'sub_url'"
-            f" with a 'remote' for {project_name!r}."
+        msg = (
+            "Absolute URL required. Please specify an absolute "
+            f"'url' or a 'sub_url' with a 'remote' for {project_name!r}."
         )
+        super().__init__(msg)
+
+
+class FileRefConflict(RuntimeError):
+    """File Reference Conflict."""
+
+    def __init__(self, dest: Path, existing: Path, conflict: Path):
+        msg = f"File {str(dest)!r} reference from {str(conflict)!r} already referenced from {str(existing)!r}"
+        super().__init__(msg)
+        self.dest = dest
+        self.existing = existing
+        self.conflict = conflict
+
+
+class FileRefModifiedError(RuntimeError):
+    """File Reference Got Modified"""
+
+    def __init__(self, dest: Path, src: Path):
+        msg = f"File {str(dest)!r} got manipulated. (Originally from {str(src)!r})"
+        super().__init__(msg)
+        self.dest = dest
+        self.src = src

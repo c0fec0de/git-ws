@@ -34,6 +34,7 @@ Central :any:`GitWS` Datamodel.
 
 # pylint: disable=too-many-lines
 
+import enum
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -285,26 +286,63 @@ class Defaults(BaseModel, allow_population_by_field_name=True):
 
 class FileRef(BaseModel):
     """
-    File Reference (Symbolic Link or File to Copy).
+    File Reference Specification.
 
-    File Reference to Workspace from Project.
+    The main project and first level dependencies might specify symbolic-links or files-to-copy.
 
-    Keyword Args:
-        src: Source - relative path to the project directory.
+    Args:
+        src: Source - path relative to the project directory.
         dest: Destination - relative path to the workspace directory.
     """
 
     src: str
-    """Source - relative path to the project directory."""
+    """Source - path relative to the project directory."""
 
     dest: str
     """Destination - relative path to the workspace directory."""
 
 
 FileRefs = Tuple[FileRef, ...]
-ProjectFileRefs = Dict[str, FileRefs]
-FileRefsMutable = List[FileRef]
-ProjectFileRefsMutable = Dict[str, FileRefsMutable]
+
+
+class FileRefType(enum.Enum):
+
+    """File Reference Type."""
+
+    LINK = "link"
+    COPY = "copy"
+
+
+class WorkspaceFileRef(BaseModel, allow_population_by_field_name=True):
+    """
+    Actual File Reference with Workspace.
+
+    Args:
+        project_path - Project Path.
+        src: Source - path relative to the project directory.
+        dest: Destination - relative path to the workspace directory.
+
+    Keyword Args:
+        hash_: Source File Hash for Copied Files.
+    """
+
+    type_: str
+    """File """
+
+    project_path: str
+    """Project Path."""
+
+    src: str
+    """Source - path relative to `project_path`."""
+
+    dest: str
+    """Destination - relative path to the workspace directory."""
+
+    hash_: Optional[int] = None
+    """Hash - Source File Hash for Copied Files."""
+
+
+WorkspaceFileRefs = List[WorkspaceFileRef]
 
 
 class Project(BaseModel, allow_population_by_field_name=True):
@@ -319,6 +357,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         path: Project Filesystem Path. Relative to Workspace Root Directory.
 
     Keyword Args:
+        level: Dependency Tree Level.
         url: URL. Assembled from ``remote`` s ``url_base``, ``sub_url`` and/or ``name``.
         revision: Revision to be checked out. Tag, branch or SHA.
         manifest_path: Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default.
@@ -348,6 +387,9 @@ class Project(BaseModel, allow_population_by_field_name=True):
     path: str
     """Dependency Path. ``name`` will be used as default."""
 
+    level: Optional[int] = None
+    """Dependency Tree Level."""
+
     url: Optional[str] = None
     """URL. Assembled from ``remote`` s ``url_base``, ``sub_url`` and/or ``name``."""
 
@@ -366,10 +408,10 @@ class Project(BaseModel, allow_population_by_field_name=True):
     submodules: bool = True
     """Initialize and Update `git submodules`."""
 
-    linkfiles: Tuple[FileRef, ...] = tuple()
+    linkfiles: FileRefs = tuple()
     """Symbolic Links To Be Created In The workspace."""
 
-    copyfiles: Tuple[FileRef, ...] = tuple()
+    copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     is_main: bool = False
@@ -415,7 +457,11 @@ class Project(BaseModel, allow_population_by_field_name=True):
 
     @staticmethod
     def from_spec(
-        manifest_spec: "ManifestSpec", spec: "ProjectSpec", refurl: Optional[str] = None, resolve_url: bool = False
+        manifest_spec: "ManifestSpec",
+        spec: "ProjectSpec",
+        level: int,
+        refurl: Optional[str] = None,
+        resolve_url: bool = False,
     ) -> "Project":
         """
         Create :any:`Project` from ``manifest_spec`` and ``spec``.
@@ -423,6 +469,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         Args:
             manifest_spec: Manifest Specification.
             spec: Base project to be resolved.
+            level: Dependency tree level.
 
         Keyword Args:
             refurl: Remote URL of the ``manifest_spec``.
@@ -464,6 +511,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         # Create
         return Project(
             name=spec.name,
+            level=level,
             path=spec.path or spec.name,
             url=url,
             revision=spec.revision or defaults.revision,
@@ -539,10 +587,10 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     submodules: Optional[bool] = None
     """Initialize and Update `git submodules`."""
 
-    linkfiles: Tuple[FileRef, ...] = tuple()
+    linkfiles: FileRefs = tuple()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: Tuple[FileRef, ...] = tuple()
+    copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     @root_validator(allow_reuse=True)
@@ -620,10 +668,10 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
     """Default Group Selection and Deselection."""
 
-    linkfiles: Tuple[FileRef, ...] = tuple()
+    linkfiles: FileRefs = tuple()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: Tuple[FileRef, ...] = tuple()
+    copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     dependencies: Tuple[Project, ...] = tuple()
@@ -656,7 +704,7 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
             NoAbsUrlError: On ``resolve_url=True`` if ``refurl`` is ``None`` and project uses a relative URL.
         """
         dependencies = [
-            Project.from_spec(spec, project_spec, refurl=refurl, resolve_url=resolve_url)
+            Project.from_spec(spec, project_spec, 1, refurl=refurl, resolve_url=resolve_url)
             for project_spec in spec.dependencies
         ]
         return Manifest(
@@ -699,10 +747,10 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
     """Default Group Selection and Deselection."""
 
-    linkfiles: Tuple[FileRef, ...] = tuple()
+    linkfiles: FileRefs = tuple()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: Tuple[FileRef, ...] = tuple()
+    copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     remotes: Tuple[Remote, ...] = tuple()
