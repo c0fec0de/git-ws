@@ -102,22 +102,22 @@ def test_update(tmp_path):
             "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='main') =====",
             "Cloning 'REPOS/dep1'.",
-            "===== Update Files =====",
+            "===== Update Referenced Files =====",
             "Linking 'main/data0.txt' -> 'main-data0.txt'",
             "Linking 'main/data1.txt' -> 'build/main-data1.txt'",
-            "git-ws WARNING Link source 'main/data3.txt' does not exists!",
+            "git-ws ERROR Cannot update: source file 'main/data3.txt' does not exists!",
             "Linking 'dep1/data0.txt' -> 'dep1-data0.txt'",
             "Linking 'dep1/data1.txt' -> 'build/dep1-data1.txt'",
-            "git-ws WARNING Link source 'dep1/data3.txt' does not exists!",
+            "git-ws ERROR Cannot update: source file 'dep1/data3.txt' does not exists!",
             "",
         ]
 
-        assert Path("main-data0.txt").read_text(encoding="utf-8") == "main-0"
+        assert Path("main-data0.txt").resolve().read_text(encoding="utf-8") == "main-0"
         assert Path("build/main-data1.txt").read_text(encoding="utf-8") == "main-1"
         assert not Path("main-data2.txt").exists()
         assert Path("dep1-data0.txt").read_text(encoding="utf-8") == "dep1-0"
         assert Path("build/dep1-data1.txt").read_text(encoding="utf-8") == "dep1-1"
-        assert not Path("dep-data2.txt").exists()
+        assert not Path("dep1-data2.txt").exists()
 
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
             "===== main (MAIN 'main', revision='main') =====",
@@ -126,13 +126,15 @@ def test_update(tmp_path):
             "===== dep1 ('dep1', revision='main') =====",
             "Fetching.",
             "Merging branch 'main'.",
-            "===== Update Files =====",
-            "git-ws WARNING Link source 'main/data3.txt' does not exists!",
-            "git-ws WARNING Link source 'dep1/data3.txt' does not exists!",
+            "===== Update Referenced Files =====",
+            "git-ws ERROR Cannot update: source file 'main/data3.txt' does not exists!",
+            "git-ws ERROR Cannot update: source file 'dep1/data3.txt' does not exists!",
             "",
         ]
 
         sha_update = modify_repos(repos_path)
+
+        assert not Path("build/main-data1.txt").unlink()
 
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
             "===== main (MAIN 'main', revision='main') =====",
@@ -143,10 +145,17 @@ def test_update(tmp_path):
             "===== dep1 ('dep1', revision='main') =====",
             "Fetching.",
             "Merging branch 'main'.",
-            "===== Update Files =====",
+            "===== Update Referenced Files =====",
             "Removing 'build/main-data1.txt'",
-            "Removing 'main-data3.txt'",
+            "Removing 'build/dep1-data1.txt'",
             "Linking 'main/data2.txt' -> 'main-data2.txt'",
-            "git-ws WARNING Link source 'dep1/data3.txt' does not exists!",
+            "Linking 'dep1/data2.txt' -> 'dep1-data2.txt'",
             "",
         ]
+
+        assert Path("main-data0.txt").read_text(encoding="utf-8") == "main-0"
+        assert not Path("build/main-data1.txt").exists()
+        assert Path("main-data2.txt").read_text(encoding="utf-8") == "main-2"
+        assert Path("dep1-data0.txt").read_text(encoding="utf-8") == "dep1-0"
+        assert not Path("build/dep1-data1.txt").exists()
+        assert Path("dep1-data2.txt").read_text(encoding="utf-8") == "dep1-2"

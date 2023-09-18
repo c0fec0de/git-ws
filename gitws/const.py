@@ -56,3 +56,8 @@ WORKSPACE_CONFIG_PATH_ENV_NAME = "GIT_WS_CONFIG_WORKSPACE_DIR"
 
 BLOCK_APP_CONFIG_FROM_ENV_ENV_NAME = "GIT_WS_ENV_NO_LOAD"
 """If this environment variable is set, do not evaluate environment variables when loading the app config."""
+
+
+COLOR_BANNER = "green"
+COLOR_ACTION = "magenta"
+COLOR_SKIP = "blue"

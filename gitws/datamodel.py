@@ -34,6 +34,7 @@ Central :any:`GitWS` Datamodel.
 
 # pylint: disable=too-many-lines
 
+import enum
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -285,26 +286,63 @@ class Defaults(BaseModel, allow_population_by_field_name=True):
 
 class FileRef(BaseModel):
     """
-    File Reference (Symbolic Link or File to Copy).
+    File Reference Specification.
 
-    File Reference to Workspace from Project.
+    The main project and first level dependencies might specify symbolic-links or files-to-copy.
 
-    Keyword Args:
-        src: Source - relative path to the project directory.
+    Args:
+        src: Source - path relative to the project directory.
         dest: Destination - relative path to the workspace directory.
     """
 
     src: str
-    """Source - relative path to the project directory."""
+    """Source - path relative to the project directory."""
 
     dest: str
     """Destination - relative path to the workspace directory."""
 
 
 FileRefs = Tuple[FileRef, ...]
-ProjectFileRefs = Dict[str, FileRefs]
-FileRefsMutable = List[FileRef]
-ProjectFileRefsMutable = Dict[str, FileRefsMutable]
+
+
+class FileRefType(enum.Enum):
+
+    """File Reference Type."""
+
+    LINK = "link"
+    COPY = "copy"
+
+
+class WorkspaceFileRef(BaseModel, allow_population_by_field_name=True):
+    """
+    Actual File Reference with Workspace.
+
+    Args:
+        project_path - Project Path.
+        src: Source - path relative to the project directory.
+        dest: Destination - relative path to the workspace directory.
+
+    Keyword Args:
+        hash_: Source File Hash for Copied Files.
+    """
+
+    type_: str
+    """File """
+
+    project_path: str
+    """Project Path."""
+
+    src: str
+    """Source - path relative to `project_path`."""
+
+    dest: str
+    """Destination - relative path to the workspace directory."""
+
+    hash_: Optional[int] = None
+    """Hash - Source File Hash for Copied Files."""
+
+
+WorkspaceFileRefs = List[WorkspaceFileRef]
 
 
 class Project(BaseModel, allow_population_by_field_name=True):
@@ -370,10 +408,10 @@ class Project(BaseModel, allow_population_by_field_name=True):
     submodules: bool = True
     """Initialize and Update `git submodules`."""
 
-    linkfiles: Tuple[FileRef, ...] = tuple()
+    linkfiles: FileRefs = tuple()
     """Symbolic Links To Be Created In The workspace."""
 
-    copyfiles: Tuple[FileRef, ...] = tuple()
+    copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     is_main: bool = False
@@ -549,10 +587,10 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     submodules: Optional[bool] = None
     """Initialize and Update `git submodules`."""
 
-    linkfiles: Tuple[FileRef, ...] = tuple()
+    linkfiles: FileRefs = tuple()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: Tuple[FileRef, ...] = tuple()
+    copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     @root_validator(allow_reuse=True)
@@ -630,10 +668,10 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
     """Default Group Selection and Deselection."""
 
-    linkfiles: Tuple[FileRef, ...] = tuple()
+    linkfiles: FileRefs = tuple()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: Tuple[FileRef, ...] = tuple()
+    copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     dependencies: Tuple[Project, ...] = tuple()
@@ -709,10 +747,10 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
     """Default Group Selection and Deselection."""
 
-    linkfiles: Tuple[FileRef, ...] = tuple()
+    linkfiles: FileRefs = tuple()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: Tuple[FileRef, ...] = tuple()
+    copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     remotes: Tuple[Remote, ...] = tuple()

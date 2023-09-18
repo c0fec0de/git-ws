@@ -19,36 +19,22 @@ Multi Repository Management.
 
 The :any:`GitWS` class provides a simple facade to all Git Workspace functionality.
 """
-import logging
-import shutil
 import urllib
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
-from ._filerefupdater import CopyFileUpdater, LinkFileUpdater
-from ._util import get_repr, no_echo, removesuffix, resolve_relative, run
+from ._util import LOGGER, get_repr, no_echo, removesuffix, resolve_relative, run
+from ._workspacemanager import WorkspaceManager
 from .appconfig import AppConfig
 from .clone import Clone, map_paths
-from .const import MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
+from .const import COLOR_ACTION, COLOR_BANNER, COLOR_SKIP, MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
 from .datamodel import GroupFilters, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
 from .deptree import DepNode, get_deptree
-from .exceptions import (
-    GitCloneNotCleanError,
-    GitTagExistsError,
-    InitializedError,
-    ManifestExistError,
-    NoGitError,
-    NoMainError,
-)
+from .exceptions import GitTagExistsError, InitializedError, ManifestExistError, NoGitError, NoMainError
 from .git import DiffStat, Git, Status
 from .iters import ManifestIter, ProjectIter
 from .manifestfinder import find_manifest
 from .workspace import Workspace
-
-_LOGGER = logging.getLogger("git-ws")
-_COLOR_BANNER = "green"
-_COLOR_ACTION = "magenta"
-_COLOR_SKIP = "blue"
 
 
 class GitWS:
@@ -172,7 +158,7 @@ class GitWS:
             force: Ignore that the workspace exists.
             secho: :any:`click.secho` like print method for verbose output.
         """
-        _LOGGER.debug(
+        LOGGER.debug(
             "GitWS.create(%r, main_path=%r, manifest_path=%r, group-filters=%r)",
             str(path) if path else None,
             str(main_path) if main_path else None,
@@ -265,7 +251,7 @@ class GitWS:
                 Workspace.check_empty(path, main_path)
         if main_path:
             name = main_path.name
-            secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
+            secho(f"===== {resolve_relative(main_path)} (MAIN {name!r}) =====", fg=COLOR_BANNER)
         return GitWS.create(
             path,
             main_path=main_path,
@@ -291,7 +277,8 @@ class GitWS:
             force: Enforce to prune repositories with changes.
         """
         if prune:
-            self._prune(self.workspace, force=force)
+            mngr = WorkspaceManager(self.workspace, secho=self.secho)
+            mngr.prune(force=force)
         return self.workspace.deinit()
 
     @staticmethod
@@ -350,8 +337,8 @@ class GitWS:
         path = path or main_path.parent
         if not force:
             Workspace.check_empty(path, main_path)
-        secho(f"===== {main_path_rel} (MAIN {name!r}) =====", fg=_COLOR_BANNER)
-        secho(f"Cloning {url!r}.", fg=_COLOR_ACTION)
+        secho(f"===== {main_path_rel} (MAIN {name!r}) =====", fg=COLOR_BANNER)
+        secho(f"Cloning {url!r}.", fg=COLOR_ACTION)
         options = AppConfig().options
         clone_cache = options.clone_cache
         if depth is None:
@@ -392,35 +379,25 @@ class GitWS:
         """
         # pylint: disable=too-many-locals
         workspace = self.workspace
-        main_path = workspace.info.main_path
         depth = workspace.app_config.options.depth
-        used: List[Path] = []
-        linkfileupdater = LinkFileUpdater(workspace.path, secho=self.secho)
-        copyfileupdater = CopyFileUpdater(workspace.path, secho=self.secho)
+
+        # Update Clones
         for clone in self._foreach(project_paths=project_paths, skip_main=skip_main, resolve_url=True):
-            project = clone.project
-            used.append(Path(project.path))
             clone.check(diff=False, exists=False)
             self._update(clone, rebase, depth)
-            linkfileupdater.set(project.path, project.linkfiles)
-            copyfileupdater.set(project.path, project.copyfiles)
-        if main_path and not skip_main:
-            used.append(main_path)
-            manifest_spec = self.get_manifest_spec()
-            main_path_str = str(workspace.info.main_path)
-            linkfileupdater.set(main_path_str, manifest_spec.linkfiles)
-            copyfileupdater.set(main_path_str, manifest_spec.copyfiles)
+
+        # Update Workspace
+        mngr = WorkspaceManager(workspace, secho=self.secho)
+        for project in self.projects():
+            if project.level is not None and project.level <= 1:
+                mngr.add(project.path, linkfiles=project.linkfiles, copyfiles=project.copyfiles)
+            else:
+                mngr.add(project.path)
         if prune:
-            self._prune(workspace, used, force=force)
-        if workspace.info.project_linkfiles or workspace.info.project_copyfiles or linkfileupdater or copyfileupdater:
-            # Update Links/Copies
-            self.secho("===== Update Files =====", fg=_COLOR_BANNER)
-            with workspace.edit_info() as info:
-                # Remove all obsolete files first, to all re-map without issues
-                linkfileupdater.remove(info.project_linkfiles)
-                copyfileupdater.remove(info.project_copyfiles)
-                linkfileupdater.update(info.project_linkfiles)
-                copyfileupdater.update(info.project_copyfiles)
+            mngr.prune(force=force)
+        if mngr.is_outdated():
+            self.secho("===== Update Referenced Files =====", fg=COLOR_BANNER)
+            mngr.update(force=force)
 
     def _update(self, clone: Clone, rebase: bool, depth: Optional[int]):
         # Clone
@@ -434,50 +411,37 @@ class GitWS:
             revision = branch or tag or sha
 
             if project.revision in (sha, tag) and not branch:
-                self.secho("Nothing to do.", fg=_COLOR_ACTION)
+                self.secho("Nothing to do.", fg=COLOR_ACTION)
             elif git.get_shallow():
-                self.secho("Fetching.", fg=_COLOR_ACTION)
+                self.secho("Fetching.", fg=COLOR_ACTION)
                 git.fetch(shallow=project.revision or revision)
                 shallow_sha = git.get_sha(revision="FETCH_HEAD")
                 git.checkout(shallow_sha)
             else:
                 # Fetch
-                self.secho("Fetching.", fg=_COLOR_ACTION)
+                self.secho("Fetching.", fg=COLOR_ACTION)
                 git.fetch()
 
                 # Checkout
                 if project.revision and revision != project.revision:
                     git.checkout(project.revision)
                     branch = git.get_branch()
-                    revision = branch or tag or sha
 
                 # Rebase / Merge
                 if branch:
                     if rebase:
-                        self.secho(f"Rebasing branch {branch!r}.", fg=_COLOR_ACTION)
+                        self.secho(f"Rebasing branch {branch!r}.", fg=COLOR_ACTION)
                         git.rebase()
                     else:
-                        self.secho(f"Merging branch {branch!r}.", fg=_COLOR_ACTION)
+                        self.secho(f"Merging branch {branch!r}.", fg=COLOR_ACTION)
                         git.merge(f"origin/{branch}")
 
         else:
-            self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+            self.secho(f"Cloning {project.url!r}.", fg=COLOR_ACTION)
             git.clone(project.url, revision=project.revision, depth=depth)
 
         if project.submodules:
             git.submodule_update(init=True, recursive=True)
-
-    def _prune(self, workspace: Workspace, used: Optional[List[Path]] = None, force: bool = False):
-        used = used or []
-        for obsolete_path in workspace.iter_obsoletes(used):
-            rel_path = resolve_relative(obsolete_path)
-            self.secho(f"===== {rel_path} (OBSOLETE) =====", fg=_COLOR_BANNER)
-            self.secho(f"Removing {str(rel_path)!r}.", fg=_COLOR_ACTION)
-            git = Git(obsolete_path, secho=self.secho)
-            if force or not git.is_cloned() or git.is_empty():
-                shutil.rmtree(obsolete_path, ignore_errors=True)
-            else:
-                raise GitCloneNotCleanError(resolve_relative(rel_path))
 
     def status(
         self,
@@ -499,7 +463,7 @@ class GitWS:
         """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
             if banner:
-                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
             clone.check()
             path = clone.git.path
             for status in clone.git.status(paths=cpaths, branch=branch):
@@ -513,7 +477,7 @@ class GitWS:
             paths: Limit Git Diff to ``paths`` only.
         """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+            self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
             clone.check()
             clone.git.diff(paths=cpaths, prefix=Path(clone.project.path))
 
@@ -528,7 +492,7 @@ class GitWS:
             :any:`DiffStat`
         """
         for clone, cpaths in map_paths(tuple(self.clones()), paths):
-            self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+            self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
             clone.check()
             path = clone.git.path
             for diffstat in clone.git.diffstat(paths=cpaths):
@@ -547,18 +511,18 @@ class GitWS:
         if paths:
             # Checkout specific files only
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
-                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
                 clone.check()
                 clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
         else:
             # Checkout all clones
             depth = self.workspace.app_config.options.depth
             for clone in self.clones(resolve_url=True):
-                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
                 git = clone.git
                 project = clone.project
                 if not git.is_cloned():
-                    self.secho(f"Cloning {project.url!r}.", fg=_COLOR_ACTION)
+                    self.secho(f"Cloning {project.url!r}.", fg=COLOR_ACTION)
                     git.clone(project.url, revision=project.revision, depth=depth)
                 if project.revision and not project.is_main:
                     git.checkout(revision=project.revision, force=force)
@@ -636,7 +600,7 @@ class GitWS:
         if paths:
             # clone file specific commit
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
-                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
                 clone.check()
                 clone.git.commit(msg, paths=cpaths, all_=all_)
         else:
@@ -646,7 +610,7 @@ class GitWS:
             else:
                 clones = [clone for clone in self.clones() if clone.git.has_index_changes()]
             for clone in clones:
-                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
                 clone.check()
                 clone.git.commit(msg, all_=all_)
 
@@ -664,7 +628,7 @@ class GitWS:
         if not main_path:
             raise NoMainError()
         clone = Clone.from_project(self.workspace, next(self.projects()), secho=self.secho)
-        self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+        self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
         git = clone.git
         # check
         if not force and git.get_tags(name):
@@ -739,10 +703,10 @@ class GitWS:
         for clone in clones:
             project = clone.project
             if project_paths_filter(project) and (not filter_ or filter_(clone)):
-                self.secho(f"===== {clone.info} =====", fg=_COLOR_BANNER)
+                self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
                 yield clone
             else:
-                self.secho(f"===== SKIPPING {clone.info} =====", fg=_COLOR_SKIP)
+                self.secho(f"===== SKIPPING {clone.info} =====", fg=COLOR_SKIP)
 
     def clones(
         self, skip_main: bool = False, resolve_url: bool = True, reverse: bool = False

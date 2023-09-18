@@ -115,6 +115,8 @@ from .datamodel import (
     Project,
     ProjectSpec,
     Remote,
+    WorkspaceFileRef,
+    WorkspaceFileRefs,
 )
 from .exceptions import (
     GitCloneMissingError,

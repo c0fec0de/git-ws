@@ -19,12 +19,13 @@ import logging
 import os
 import subprocess
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 
 import tomlkit
 
-_LOGGER = logging.getLogger("git-ws")
+LOGGER = logging.getLogger("git-ws")
 # Dependencies to any gitws module are forbidden here!
 
 
@@ -35,12 +36,12 @@ def run(cmd, cwd=None, capture_output=False, check=True, secho=None):
     stderr = None if capture_output or not secho else subprocess.PIPE
     try:
         result = subprocess.run(cmd, capture_output=capture_output, stderr=stderr, check=check, cwd=cwd)
-        _LOGGER.debug("run(%r, cwd=%r) OK stdout=%r stderr=%r", cmd, cwdrelstr, result.stdout, result.stderr)
+        LOGGER.debug("run(%r, cwd=%r) OK stdout=%r stderr=%r", cmd, cwdrelstr, result.stdout, result.stderr)
         if stderr and result.stderr:
             secho(result.stderr.decode("utf-8").rstrip())
         return result
     except subprocess.CalledProcessError as error:
-        _LOGGER.debug("run(%r, cwd=%r) FAILED stdout=%r stderr=%r", cmd, cwdrelstr, error.stdout, error.stderr)
+        LOGGER.debug("run(%r, cwd=%r) FAILED stdout=%r stderr=%r", cmd, cwdrelstr, error.stdout, error.stderr)
         if stderr and error.stderr:
             secho(error.stderr.decode("utf-8").rstrip(), fg="red", err=True)
         raise error
@@ -136,3 +137,13 @@ def add_comment(doc: tomlkit.TOMLDocument, text):
 def as_dict(obj, exclude_defaults: bool = True):
     """Transform to dictionary."""
     return obj.dict(by_alias=True, exclude_none=True, exclude_defaults=exclude_defaults)
+
+
+@contextmanager
+def exception2logging(info: Optional[str] = ""):
+    """Capture Exception and Report as Error to logging."""
+
+    try:
+        yield
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        LOGGER.error("%s%s", info, exc)

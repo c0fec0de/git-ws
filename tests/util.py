@@ -70,12 +70,12 @@ def format_logs(caplog, tmp_path=None, repos_path=None, replacements=None):
     # Feel free to improve performance
     replacements = replacements or {}
     lines = [f"{record.levelname:7s} {record.name} {record.message}" for record in caplog.records]
+    for key, value in replacements.items():
+        lines = [line.replace(str(key), value) for line in lines]
     if repos_path:
         lines = [replace_path(line, repos_path, "REPOS") for line in lines]
     if tmp_path:  # pragma: no cover
         lines = [replace_path(line, tmp_path, "TMP") for line in lines]
-    for key, value in replacements.items():
-        lines = [line.replace(key, value) for line in lines]
     return lines
 
 

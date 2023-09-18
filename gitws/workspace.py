@@ -24,7 +24,7 @@ import logging
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional
+from typing import Generator, Optional
 
 import tomlkit
 
@@ -32,7 +32,7 @@ from ._basemodel import BaseModel
 from ._util import resolve_relative
 from .appconfig import AppConfig, AppConfigData, AppConfigLocation
 from .const import GIT_WS_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
-from .datamodel import GroupFilters, Project, ProjectFileRefsMutable
+from .datamodel import GroupFilters, Project, WorkspaceFileRefs
 from .exceptions import InitializedError, OutsideWorkspaceError, UninitializedError, WorkspaceNotEmptyError
 from .workspacefinder import find_workspace
 
@@ -55,18 +55,11 @@ class Info(BaseModel):
     Path to main project. Relative to workspace root directory.
     """
 
-    project_linkfiles: ProjectFileRefsMutable = {}
+    filerefs: WorkspaceFileRefs = []
     """
-    Project Symlinks.
+    File References.
 
-    These symlinks have been created by GitWS and will be removed if not needed anymore.
-    """
-
-    project_copyfiles: ProjectFileRefsMutable = {}
-    """
-    Project File Copies.
-
-    These files have been copied by GitWS and will be removed if not needed anymore.
+    These copied files and symbolic links have been created by GitWS and will be removed if not needed anymore.
     """
 
     @staticmethod
@@ -83,8 +76,7 @@ class Info(BaseModel):
         doc = tomlkit.parse(infopath.read_text())
         return Info(
             main_path=doc.get("main_path", None),
-            project_linkfiles=doc.get("project_linkfiles", {}),
-            project_copyfiles=doc.get("project_copyfiles", {}),
+            filerefs=doc.get("filerefs", []),
         )
 
     def save(self, path: Path):
@@ -323,16 +315,6 @@ class Workspace:
             return self.app_config.options.group_filters or GroupFilters()
         return group_filters
 
-    def iter_obsoletes(self, used: List[Path]) -> Generator[Path, None, None]:
-        """Yield paths except *used* ones."""
-        usemap: Dict[str, Any] = {GIT_WS_PATH.name: {}}
-        for path in used:
-            pathmap = usemap
-            for part in path.parts:
-                pathmap[part] = {}
-                pathmap = pathmap[part]
-        yield from _iter_obsoletes(self.path, usemap)
-
     @contextmanager
     def edit_info(self) -> Generator[Info, None, None]:
         """Yield Contextmanager to edit :any:`Info` and write back changes."""
@@ -340,13 +322,3 @@ class Workspace:
             yield self.info
         finally:
             self.info.save(self.path)
-
-
-def _iter_obsoletes(path, usemap):
-    for sub in sorted(path.iterdir()):
-        if sub.name in usemap:
-            subusemap = usemap[sub.name]
-            if subusemap:
-                yield from _iter_obsoletes(sub, subusemap)
-        elif sub.is_dir():
-            yield sub
