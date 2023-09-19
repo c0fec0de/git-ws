@@ -29,6 +29,20 @@ from .fixtures import repos
 from .util import chdir, check
 
 
+def test_clone_basic():
+    """Basic Tests."""
+    project = Project(name="main", path="main", level=0, revision="main", is_main=True)
+    git = Git(Path("main/main"))
+    clone = Clone(project, git)
+
+    assert clone.project is project
+    assert clone.git is git
+
+    ident = f"Clone({project!r}, {git!r})"
+    assert str(clone) == ident
+    assert repr(clone) == ident
+
+
 def test_clone(tmp_path, repos):
     """Test Cloning."""
 
