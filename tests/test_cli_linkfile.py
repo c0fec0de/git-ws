@@ -134,7 +134,7 @@ def test_update(tmp_path):
 
         sha_update = modify_repos(repos_path)
 
-        assert not Path("build/main-data1.txt").unlink()
+        Path("build/main-data1.txt").unlink()
 
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
             "===== main (MAIN 'main', revision='main') =====",
@@ -146,7 +146,6 @@ def test_update(tmp_path):
             "Fetching.",
             "Merging branch 'main'.",
             "===== Update Referenced Files =====",
-            "Removing 'build/main-data1.txt'",
             "Removing 'build/dep1-data1.txt'",
             "Linking 'main/data2.txt' -> 'main-data2.txt'",
             "Linking 'dep1/data2.txt' -> 'dep1-data2.txt'",

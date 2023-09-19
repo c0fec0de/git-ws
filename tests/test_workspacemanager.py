@@ -15,6 +15,9 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Workspace Manager Testing."""
+from os import readlink
+from pathlib import Path
+
 from pytest import fixture
 
 from gitws._util import relative
@@ -68,17 +71,25 @@ def test_conflict(caplog, mgr, tmp_path):
 def test_outside(caplog, mgr, tmp_path):
     """Try to escape workspace."""
     outside = tmp_path / "outside"
+    outside.mkdir()
+    workspace_path = mgr.workspace.path
+    main_path = workspace_path / "main"
+    main_path.mkdir()
+    (outside / "src0.txt").touch()
+    (main_path / "src1.txt").touch()
+    (outside / "src2.txt").touch()
+    (main_path / "src3.txt").touch()
     mgr.add(
-        "bar",
+        "main",
         linkfiles=[
             FileRef(src=str(outside / "src0.txt"), dest="dest0.txt"),
             FileRef(src="src1.txt", dest=str(outside / "dest0.txt")),
-            FileRef(src="link.txt", dest="bar-link.txt"),
+            FileRef(src="link.txt", dest="main-link.txt"),
         ],
         copyfiles=[
             FileRef(src=str(outside / "src2.txt"), dest="dest2.txt"),
             FileRef(src="src3.txt", dest=str(outside / "dest3.txt")),
-            FileRef(src="copy.txt", dest="bar-copy.txt"),
+            FileRef(src="copy.txt", dest="main-copy.txt"),
         ],
     )
     mgr.update()
@@ -87,10 +98,10 @@ def test_outside(caplog, mgr, tmp_path):
     ) == [
         "ERROR   git-ws Cannot update: source 'TMP/outside/src0.txt' refers outside of workspace ('WS').",
         "ERROR   git-ws Cannot update: destination 'TMP/outside/dest0.txt' refers outside of workspace ('WS').",
-        "ERROR   git-ws Cannot update: source file 'W/bar/link.txt' does not exists!",
+        "ERROR   git-ws Cannot update: source file 'W/main/link.txt' does not exists!",
         "ERROR   git-ws Cannot update: source 'TMP/outside/src2.txt' refers outside of workspace ('WS').",
-        "ERROR   git-ws Cannot update: source file 'W/bar/src3.txt' does not exists!",
-        "ERROR   git-ws Cannot update: source file 'W/bar/copy.txt' does not exists!",
+        "ERROR   git-ws Cannot update: destination 'TMP/outside/dest3.txt' refers outside of workspace ('WS').",
+        "ERROR   git-ws Cannot update: source file 'W/main/copy.txt' does not exists!",
     ]
 
 
@@ -149,8 +160,8 @@ def test_modified(caplog, mgr, tmp_path):
     mgr.update()
 
     assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
-        "ERROR   git-ws Cannot update: File 'WSREL/main/copy.txt' got "
-        "manipulated. (Originally from 'WSREL/main-copy.txt')",
+        "ERROR   git-ws Cannot update: File 'WSREL/main-copy.txt' got "
+        "manipulated. (Originally 'WSREL/main/copy.txt')",
     ]
 
     assert (main_path / "link.txt").read_text() == "link-another-update"
@@ -262,3 +273,59 @@ def test_dest_dir(caplog, mgr, tmp_path):
         "ERROR   git-ws Cannot update: destination file 'WSREL/main-link.txt' is not a file!",
         "ERROR   git-ws Cannot update: destination file 'WSREL/main-copy.txt' is not a file!",
     ]
+
+
+def test_modified_symlink(caplog, mgr, tmp_path):
+    """Symlinkg got modified."""
+
+    workspace_path = mgr.workspace.path
+    main_path = workspace_path / "main"
+    main_path.mkdir(parents=True, exist_ok=True)
+    (main_path / "link.txt").write_text("link")
+    (main_path / "link2.txt").write_text("link2")
+    (main_path / "copy.txt").write_text("copy")
+    mgr.add(
+        "main",
+        linkfiles=[
+            FileRef(src="link.txt", dest="main-link.txt"),
+        ],
+        copyfiles=[
+            FileRef(src="copy.txt", dest="main-copy.txt"),
+        ],
+    )
+
+    mgr.update()
+
+    assert (workspace_path / "main-link.txt").is_symlink()
+    assert not (workspace_path / "main-copy.txt").is_symlink()
+    assert Path(readlink((workspace_path / "main-link.txt"))) == (main_path / "link.txt")
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == []
+
+    (workspace_path / "main-link.txt").unlink()
+    (workspace_path / "main-link.txt").symlink_to(main_path / "copy.txt")
+
+    mgr.update()
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == []
+
+    # update main-link
+    mgr.clear()
+    mgr.add(
+        "main",
+        linkfiles=[
+            FileRef(src="link2.txt", dest="main-link.txt"),
+        ],
+        copyfiles=[
+            FileRef(src="copy.txt", dest="main-copy.txt"),
+        ],
+    )
+    mgr.update()
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
+        "ERROR   git-ws Cannot update: File 'TMP/workspace/main-link.txt' got "
+        "manipulated. (Originally 'WSREL/main/link.txt')"
+    ]
+
+    assert Path(readlink((workspace_path / "main-link.txt"))) == (main_path / "copy.txt")
+
+    mgr.update(force=True)
+
+    assert Path(readlink((workspace_path / "main-link.txt"))) == (main_path / "link2.txt")

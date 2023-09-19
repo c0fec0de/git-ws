@@ -20,6 +20,7 @@ Workspace Management
 """
 import hashlib
 import shutil
+from os import readlink
 from pathlib import Path
 from shutil import copy2
 from typing import Any, Dict, Generator, List, Optional
@@ -51,6 +52,11 @@ class WorkspaceManager:
         assert workspace.path.is_absolute()
         self._knownpaths: List[Path] = []
         self._filerefmap: FileRefMap = {}
+
+    def clear(self):
+        """Clear."""
+        self._knownpaths.clear()
+        self._filerefmap.clear()
 
     def add(self, path: str, linkfiles: Optional[FileRefs] = None, copyfiles: Optional[FileRefs] = None):
         """
@@ -156,22 +162,26 @@ class WorkspaceManager:
         """Remove existing `fileref`."""
         workspace_path = self.workspace.path
         destabs = workspace_path / fileref.dest
-        try:
-            self.__check_path(destabs, "destination", is_file=True)
+        self.__check_path(destabs, "destination", is_file=True)
 
+        if destabs.exists():
             # Check for Modifications
-            if fileref.hash_ and not force:
-                desthash = _get_filehash(destabs)
-                if desthash != fileref.hash_:
-                    # create nice relative paths in exception message
+            if not force:
+                if fileref.hash_:
+                    desthash = _get_filehash(destabs)
+                    if desthash != fileref.hash_:
+                        # create nice relative paths in exception message
+                        srcabs = workspace_path / fileref.project_path / fileref.src
+                        raise FileRefModifiedError(relative(destabs), relative(srcabs))
+                if fileref.type_ == FileRefType.LINK.value and destabs.is_symlink():
                     srcabs = workspace_path / fileref.project_path / fileref.src
-                    raise FileRefModifiedError(relative(srcabs), relative(destabs))
+                    esrcabs = Path(readlink(destabs))
+                    if srcabs != esrcabs:
+                        raise FileRefModifiedError(relative(destabs), relative(srcabs))
 
             # Remove
             self.secho(f"Removing '{relative(destabs)!s}'")
             destabs.unlink()
-        except FileNotFoundError:
-            pass
 
     def __create_fileref(self, fileref: WorkspaceFileRef, force):
         """Create `fileref`."""
@@ -215,7 +225,7 @@ class WorkspaceManager:
             if is_file is True and not path.is_file():
                 raise RuntimeError(f"{what} file {str(relative(path))!r} is not a file!")
             if is_file is False and path.is_file():
-                raise RuntimeError(f"{what} file {str(relative(path))!r} is a file!")
+                raise RuntimeError(f"{what} file {str(relative(path))!r} is a file!")  # pragma: no cover
 
     def _iter_obsoletes(self) -> Generator[Path, None, None]:
         """Yield paths except *used* ones."""
