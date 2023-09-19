@@ -148,24 +148,25 @@ def test_modified(caplog, mgr, tmp_path):
 
     mgr.update()
 
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
+        "ERROR   git-ws Cannot update: File 'WSREL/main/copy.txt' got "
+        "manipulated. (Originally from 'WSREL/main-copy.txt')",
+    ]
+
     assert (main_path / "link.txt").read_text() == "link-another-update"
     assert (main_path / "copy.txt").read_text() == "copy-another-update"
     assert (workspace_path / "main-link.txt").read_text() == "link-another-update"
     assert (workspace_path / "main-copy.txt").read_text() == "copy-destroy"
 
     # Remove destroyed
-    (workspace_path / "main-copy.txt").unlink()
-    mgr.update()
+    mgr.update(force=True)
 
     assert (main_path / "link.txt").read_text() == "link-another-update"
     assert (main_path / "copy.txt").read_text() == "copy-another-update"
     assert (workspace_path / "main-link.txt").read_text() == "link-another-update"
     assert (workspace_path / "main-copy.txt").read_text() == "copy-another-update"
 
-    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
-        "ERROR   git-ws Cannot update: File 'WSREL/main/copy.txt' got "
-        "manipulated. (Originally from 'WSREL/main-copy.txt')",
-    ]
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == []
 
 
 def test_exists(caplog, mgr, tmp_path):
@@ -184,12 +185,80 @@ def test_exists(caplog, mgr, tmp_path):
             FileRef(src="copy.txt", dest="main-copy.txt"),
         ],
     )
-    (workspace_path / "main-link.txt").touch()
-    (workspace_path / "main-copy.txt").touch()
+    (workspace_path / "main-link.txt").write_text("link-avail")
+    (workspace_path / "main-copy.txt").write_text("copy-avail")
 
     mgr.update()
 
     assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
         "ERROR   git-ws Cannot update: destination file 'WSREL/main-link.txt' already exists!",
         "ERROR   git-ws Cannot update: destination file 'WSREL/main-copy.txt' already exists!",
+    ]
+
+    assert (workspace_path / "main-link.txt").read_text() == "link-avail"
+    assert (workspace_path / "main-copy.txt").read_text() == "copy-avail"
+
+    mgr.update(force=True)
+
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == []
+
+    assert (workspace_path / "main-link.txt").read_text() == "link"
+    assert (workspace_path / "main-copy.txt").read_text() == "copy"
+
+
+def test_src_dir(caplog, mgr, tmp_path):
+    """Source is Directory."""
+    workspace_path = mgr.workspace.path
+    main_path = workspace_path / "main"
+    main_path.mkdir(parents=True, exist_ok=True)
+    (main_path / "link.txt").mkdir()
+    (main_path / "copy.txt").mkdir()
+    mgr.add(
+        "main",
+        linkfiles=[
+            FileRef(src="link.txt", dest="main-link.txt"),
+        ],
+        copyfiles=[
+            FileRef(src="copy.txt", dest="main-copy.txt"),
+        ],
+    )
+    mgr.update()
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
+        "ERROR   git-ws Cannot update: source file 'WSREL/main/link.txt' is not a file!",
+        "ERROR   git-ws Cannot update: source file 'WSREL/main/copy.txt' is not a file!",
+    ]
+    mgr.update(force=True)
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
+        "ERROR   git-ws Cannot update: source file 'WSREL/main/link.txt' is not a file!",
+        "ERROR   git-ws Cannot update: source file 'WSREL/main/copy.txt' is not a file!",
+    ]
+
+
+def test_dest_dir(caplog, mgr, tmp_path):
+    """Destination is Directory."""
+    workspace_path = mgr.workspace.path
+    main_path = workspace_path / "main"
+    main_path.mkdir(parents=True, exist_ok=True)
+    (main_path / "link.txt").write_text("link")
+    (main_path / "copy.txt").write_text("copy")
+    (workspace_path / "main-link.txt").mkdir()
+    (workspace_path / "main-copy.txt").mkdir()
+    mgr.add(
+        "main",
+        linkfiles=[
+            FileRef(src="link.txt", dest="main-link.txt"),
+        ],
+        copyfiles=[
+            FileRef(src="copy.txt", dest="main-copy.txt"),
+        ],
+    )
+    mgr.update()
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
+        "ERROR   git-ws Cannot update: destination file 'WSREL/main-link.txt' already exists!",
+        "ERROR   git-ws Cannot update: destination file 'WSREL/main-copy.txt' already exists!",
+    ]
+    mgr.update(force=True)
+    assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
+        "ERROR   git-ws Cannot update: destination file 'WSREL/main-link.txt' is not a file!",
+        "ERROR   git-ws Cannot update: destination file 'WSREL/main-copy.txt' is not a file!",
     ]
