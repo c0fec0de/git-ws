@@ -20,6 +20,7 @@ Workspace Management
 """
 import hashlib
 import shutil
+from os import readlink
 from pathlib import Path
 from shutil import copy2
 from typing import Any, Dict, Generator, List, Optional
@@ -51,6 +52,11 @@ class WorkspaceManager:
         assert workspace.path.is_absolute()
         self._knownpaths: List[Path] = []
         self._filerefmap: FileRefMap = {}
+
+    def clear(self):
+        """Clear."""
+        self._knownpaths.clear()
+        self._filerefmap.clear()
 
     def add(self, path: str, linkfiles: Optional[FileRefs] = None, copyfiles: Optional[FileRefs] = None):
         """
@@ -132,7 +138,7 @@ class WorkspaceManager:
                 # calculate source hash on copied file
                 if fileref.type_ == FileRefType.COPY.value:
                     srcabs = workspace_path / fileref.project_path / fileref.src
-                    self.__check_path(srcabs, "source", exists=True)
+                    self.__check_path(srcabs, "source", exists=True, is_file=True)
                     hash_ = _get_filehash(srcabs)
                     fileref = fileref.update(hash_=hash_)
 
@@ -145,7 +151,7 @@ class WorkspaceManager:
                         existing.remove(efileref)
 
                     # create
-                    self.__create_fileref(fileref)
+                    self.__create_fileref(fileref, force)
                     existing.append(fileref)
                 else:
                     # update tracker (Move to the end, otherwise behaviour depends on update history)
@@ -156,33 +162,41 @@ class WorkspaceManager:
         """Remove existing `fileref`."""
         workspace_path = self.workspace.path
         destabs = workspace_path / fileref.dest
-        try:
-            self.__check_path(destabs, "destination")
+        self.__check_path(destabs, "destination", is_file=True)
 
+        if destabs.exists():
             # Check for Modifications
-            if fileref.hash_ and not force:
-                desthash = _get_filehash(destabs)
-                if desthash != fileref.hash_:
-                    # create nice relative paths in exception message
+            if not force:
+                if fileref.hash_:
+                    desthash = _get_filehash(destabs)
+                    if desthash != fileref.hash_:
+                        # create nice relative paths in exception message
+                        srcabs = workspace_path / fileref.project_path / fileref.src
+                        raise FileRefModifiedError(relative(destabs), relative(srcabs))
+                if fileref.type_ == FileRefType.LINK.value and destabs.is_symlink():
                     srcabs = workspace_path / fileref.project_path / fileref.src
-                    raise FileRefModifiedError(relative(srcabs), relative(destabs))
+                    esrcabs = Path(readlink(destabs))
+                    if srcabs != esrcabs:
+                        raise FileRefModifiedError(relative(destabs), relative(srcabs))
 
             # Remove
             self.secho(f"Removing '{relative(destabs)!s}'")
             destabs.unlink()
-        except FileNotFoundError:
-            pass
 
-    def __create_fileref(self, fileref: WorkspaceFileRef):
+    def __create_fileref(self, fileref: WorkspaceFileRef, force):
         """Create `fileref`."""
         workspace_path = self.workspace.path
         destabs = workspace_path / fileref.dest
-        self.__check_path(destabs, "destination", exists=False)
+        self.__check_path(destabs, "destination", exists=None if force else False, is_file=True)
         srcabs = workspace_path / fileref.project_path / fileref.src
-        self.__check_path(srcabs, "source", exists=True)
+        self.__check_path(srcabs, "source", exists=True, is_file=True)
 
         # Ensure parent folder exists
         destabs.parent.mkdir(parents=True, exist_ok=True)
+
+        # Remove existing file
+        if force and destabs.exists():
+            destabs.unlink()
 
         filereftype = fileref.type_
         if filereftype == FileRefType.COPY.value:
@@ -191,22 +205,27 @@ class WorkspaceManager:
         elif filereftype == FileRefType.LINK.value:
             self.secho(f"Linking '{relative(srcabs)!s}' -> '{relative(destabs)!s}'")
             destabs.symlink_to(srcabs)
-
         else:
             assert False  # pragma: no cover
 
-    def __check_path(self, path, what, exists=None):
+    def __check_path(self, path, what, exists=None, is_file=None):
         assert path.is_absolute()
         try:
             path.relative_to(self.workspace.path)
         except ValueError:
             raise OutsideWorkspaceError(self.workspace.path, path, what) from None
+        path_exists = path.exists()
         if exists is True:
-            if not path.exists():
+            if not path_exists:
                 raise FileNotFoundError(f"{what} file {str(relative(path))!r} does not exists!")
         elif exists is False:
-            if path.exists():
+            if path_exists:
                 raise RuntimeError(f"{what} file {str(relative(path))!r} already exists!")
+        if path_exists:
+            if is_file is True and not path.is_file():
+                raise RuntimeError(f"{what} file {str(relative(path))!r} is not a file!")
+            if is_file is False and path.is_file():
+                raise RuntimeError(f"{what} file {str(relative(path))!r} is a file!")  # pragma: no cover
 
     def _iter_obsoletes(self) -> Generator[Path, None, None]:
         """Yield paths except *used* ones."""

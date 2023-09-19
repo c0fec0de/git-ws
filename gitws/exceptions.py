@@ -191,7 +191,7 @@ class FileRefModifiedError(RuntimeError):
     """File Reference Got Modified"""
 
     def __init__(self, dest: Path, src: Path):
-        msg = f"File {str(dest)!r} got manipulated. (Originally from {str(src)!r})"
+        msg = f"File {str(dest)!r} got manipulated. (Originally {str(src)!r})"
         super().__init__(msg)
         self.dest = dest
         self.src = src
