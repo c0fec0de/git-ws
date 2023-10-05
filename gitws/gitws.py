@@ -28,11 +28,11 @@ from ._workspacemanager import WorkspaceManager
 from .appconfig import AppConfig
 from .clone import Clone, map_paths
 from .const import COLOR_ACTION, COLOR_BANNER, COLOR_SKIP, MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
-from .datamodel import GroupFilters, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
+from .datamodel import GroupFilters, GroupSelects, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
 from .deptree import DepNode, get_deptree
-from .exceptions import GitTagExistsError, InitializedError, ManifestExistError, NoGitError, NoMainError
+from .exceptions import GitTagExistsError, InitializedError, ManifestExistError, NoGitError, NoMainError, NotEmptyError
 from .git import DiffStat, Git, Status
-from .iters import ManifestIter, ProjectIter
+from .iters import ManifestIter, ProjectIter, create_filter
 from .manifestfinder import find_manifest
 from .workspace import Workspace
 
@@ -343,6 +343,8 @@ class GitWS:
         clone_cache = options.clone_cache
         if depth is None:
             depth = options.depth
+        if main_path.exists() and any(main_path.iterdir()):
+            raise NotEmptyError(main_path_rel)
         git = Git(main_path_rel, clone_cache=clone_cache, secho=secho)
         git.clone(url, revision=revision, depth=depth)
         return GitWS.create(
@@ -351,6 +353,7 @@ class GitWS:
             manifest_path=manifest_path,
             group_filters=group_filters,
             depth=depth,
+            force=force,
             secho=secho,
         )
 
@@ -388,8 +391,16 @@ class GitWS:
 
         # Update Workspace
         mngr = WorkspaceManager(workspace, secho=self.secho)
+        manifest_spec = ManifestSpec.load(self.manifest_path)
+        #   main
+        group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
+        groupfilter = create_filter(GroupSelects.from_group_filters(group_filters), default=True)
+        linkfiles = tuple(linkfile for linkfile in manifest_spec.linkfiles if groupfilter("", linkfile.groups))
+        copyfiles = tuple(copyfile for copyfile in manifest_spec.copyfiles if groupfilter("", copyfile.groups))
+        mngr.add(str(workspace.info.main_path or ""), linkfiles=linkfiles, copyfiles=copyfiles)
+        #   deps
         for project in self.projects():
-            if project.level is not None and project.level <= 1:
+            if project.level is not None and project.level == 1:
                 mngr.add(project.path, linkfiles=project.linkfiles, copyfiles=project.copyfiles)
             else:
                 mngr.add(project.path)

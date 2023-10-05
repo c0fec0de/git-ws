@@ -160,10 +160,6 @@ class ProjectIter:
         info = workspace.info
         main_path_rel = str(info.main_path or "")
         self.__done = [main_path_rel]
-        try:
-            manifest_spec = ManifestSpec.load(self.manifest_path)
-        except ManifestNotFoundError:
-            manifest_spec = ManifestSpec()
         main_path = workspace.main_path
         if main_path and not self.skip_main:
             main_git = Git(resolve_relative(main_path))
@@ -173,10 +169,12 @@ class ProjectIter:
                 path=main_path_rel,
                 level=0,
                 revision=revision,
-                linkfiles=manifest_spec.linkfiles,
-                copyfiles=manifest_spec.copyfiles,
                 is_main=True,
             )
+        try:
+            manifest_spec = ManifestSpec.load(self.manifest_path)
+        except ManifestNotFoundError:
+            manifest_spec = ManifestSpec()
         if manifest_spec.dependencies:
             group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
             group_selects = GroupSelects.from_group_filters(group_filters)

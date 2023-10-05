@@ -72,6 +72,14 @@ class OutsideWorkspaceError(RuntimeError):
         self.path = path
 
 
+class NotEmptyError(RuntimeError):
+    """Directory Is Not Empty."""
+
+    def __init__(self, path):
+        super().__init__(f"{str(path)!r} is not an empty directory.")
+        self.path = path
+
+
 class WorkspaceNotEmptyError(RuntimeError):
     """Workspace Is Not Empty."""
 

@@ -22,7 +22,7 @@ from unittest import mock
 
 from pytest import raises
 
-from gitws import Clone, Git, GitCloneNotCleanError, GitWS, Manifest, Project
+from gitws import Clone, Git, GitCloneNotCleanError, GitWS, Manifest, NotEmptyError, Project, WorkspaceNotEmptyError
 
 # pylint: disable=unused-import
 from .fixtures import repos
@@ -291,3 +291,51 @@ def test_clone_cached(tmp_path, repos):
             check(workspace, "dep3", exists=False)
             check(workspace, "dep4")
             check(workspace, "dep5", exists=False)
+
+
+def test_clone_force(tmp_path, repos):
+    """Test Cloning - force."""
+
+    workspace = tmp_path / "main"
+
+    with chdir(tmp_path):
+        gws = GitWS.clone(str(repos / "main"))
+        gws.update()
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)
+
+        with raises(WorkspaceNotEmptyError):
+            GitWS.clone(str(repos / "main"))
+
+        with raises(NotEmptyError):
+            GitWS.clone(str(repos / "main"), force=True)
+
+        # remove main and one dep
+        rmtree(workspace / "main")
+        rmtree(workspace / "dep4")
+
+        with raises(WorkspaceNotEmptyError):
+            GitWS.clone(str(repos / "main"))
+
+        gws = GitWS.clone(str(repos / "main"), force=True)
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4", exists=False)
+        check(workspace, "dep5", exists=False)
+
+        gws.update()
+
+        check(workspace, "main")
+        check(workspace, "dep1")
+        check(workspace, "dep2", content="dep2-feature")
+        check(workspace, "dep3", exists=False)
+        check(workspace, "dep4")
+        check(workspace, "dep5", exists=False)

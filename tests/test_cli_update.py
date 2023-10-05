@@ -22,7 +22,7 @@ from gitws.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import
 from .fixtures import create_repos
-from .util import chdir, cli, format_output, run
+from .util import chdir, check, cli, run
 
 
 def test_update(tmp_path):
@@ -308,3 +308,46 @@ def test_update_missing_origin(tmp_path):
             "Already on 'main'",
             "",
         ]
+
+
+def test_update_manifest(tmp_path):
+    """Test update manifest."""
+    # pylint: disable=unused-argument
+
+    repos_path = tmp_path / "repos"
+    create_repos(repos_path)
+
+    with chdir(tmp_path):
+        gws = GitWS.clone(str(repos_path / "main"))
+        gws.update()
+
+        check(gws.path, "main")
+        check(gws.path, "dep1")
+        check(gws.path, "dep2", content="dep2-feature")
+        check(gws.path, "dep3", exists=False)
+        check(gws.path, "dep4")
+        check(gws.path, "dep5", exists=False)
+
+        # Update Manifest in Remote
+        main_repo = repos_path / "main"
+        ManifestSpec(
+            group_filters=("-test",),
+            dependencies=[
+                ProjectSpec(name="dep1", url="../dep1"),
+                ProjectSpec(name="dep2", url="../dep2", revision="main"),
+                ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
+            ],
+        ).save(main_repo / "git-ws.toml")
+        main = Git(main_repo)
+        main.add((Path("git-ws.toml"),))
+        main.commit("update")
+
+        # Update
+        gws.update()
+
+        check(gws.path, "main")
+        check(gws.path, "dep1")
+        check(gws.path, "dep2")
+        check(gws.path, "dep3", exists=False)
+        check(gws.path, "dep4")
+        check(gws.path, "dep5", exists=False)

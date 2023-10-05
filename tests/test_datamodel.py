@@ -23,6 +23,7 @@ from gitws import (
     Groups,
     GroupSelect,
     GroupSelects,
+    MainFileRef,
     Manifest,
     ManifestSpec,
     Project,
@@ -215,6 +216,8 @@ def test_manifest():
     manifest = Manifest()
     assert not manifest.group_filters
     assert not manifest.dependencies
+    assert not manifest.linkfiles
+    assert not manifest.copyfiles
 
     # Immutable
     with raises(TypeError):
@@ -231,6 +234,8 @@ def test_manifest_spec():
     assert not manifest_spec.remotes
     assert not manifest_spec.group_filters
     assert manifest_spec.defaults == Defaults()
+    assert not manifest_spec.linkfiles
+    assert not manifest_spec.copyfiles
     assert not manifest_spec.dependencies
 
     # Immutable
@@ -252,6 +257,16 @@ def test_manifest_spec_save(tmp_path):
         remotes=[Remote(name="remote")],
         group_filters=("+test",),
         defaults=Defaults(remote="remote"),
+        linkfiles=[
+            MainFileRef(src="l0", dest="s/l0"),
+            MainFileRef(src="l1", dest="s/l1"),
+            MainFileRef(src="l2", dest="s/l2", groups=["ab", "cd"]),
+        ],
+        copyfiles=[
+            MainFileRef(src="l0", dest="s/l0"),
+            MainFileRef(src="l1", dest="s/l1"),
+            MainFileRef(src="l2", dest="s/l2", groups=["ab", "cd"]),
+        ],
         dependencies=(
             ProjectSpec(
                 name="dep",
@@ -311,6 +326,32 @@ dest = "subdir/dest2"
 [[dependencies.copyfiles]]
 src = "src3"
 dest = "subdir/dest3"
+
+[[linkfiles]]
+src = "l0"
+dest = "s/l0"
+
+[[linkfiles]]
+src = "l1"
+dest = "s/l1"
+
+[[linkfiles]]
+src = "l2"
+dest = "s/l2"
+groups = ["ab", "cd"]
+
+[[copyfiles]]
+src = "l0"
+dest = "s/l0"
+
+[[copyfiles]]
+src = "l1"
+dest = "s/l1"
+
+[[copyfiles]]
+src = "l2"
+dest = "s/l2"
+groups = ["ab", "cd"]
 """
     assert filepath.read_text() == manifest
 
@@ -345,6 +386,32 @@ dest = "subdir/dest2"
 [[dependencies.copyfiles]]
 src = "src3"
 dest = "subdir/dest3"
+
+[[linkfiles]]
+src = "l0"
+dest = "s/l0"
+
+[[linkfiles]]
+src = "l1"
+dest = "s/l1"
+
+[[linkfiles]]
+src = "l2"
+dest = "s/l2"
+groups = ["ab", "cd"]
+
+[[copyfiles]]
+src = "l0"
+dest = "s/l0"
+
+[[copyfiles]]
+src = "l1"
+dest = "s/l1"
+
+[[copyfiles]]
+src = "l2"
+dest = "s/l2"
+groups = ["ab", "cd"]
 """
     assert filepath.read_text() == empty
 
@@ -455,11 +522,35 @@ dest = "subdir/dest3"
 # [[linkfiles]]
 # src = "file-in-main-clone.txt"
 # dest = "link-in-workspace.txt"
+[[linkfiles]]
+src = "l0"
+dest = "s/l0"
+
+[[linkfiles]]
+src = "l1"
+dest = "s/l1"
+
+[[linkfiles]]
+src = "l2"
+dest = "s/l2"
+groups = ["ab", "cd"]
 
 
 # [[copyfiles]]
 # src = "file-in-main-clone.txt"
 # dest = "file-in-workspace.txt"
+[[copyfiles]]
+src = "l0"
+dest = "s/l0"
+
+[[copyfiles]]
+src = "l1"
+dest = "s/l1"
+
+[[copyfiles]]
+src = "l2"
+dest = "s/l2"
+groups = ["ab", "cd"]
 """
     assert filepath.read_text() == update
 
@@ -476,6 +567,14 @@ def test_manifest_spec_from_data(tmp_path):
             {"name": "remote1", "url-base": "https://git.example.com/base1"},
         ],
         "group-filters": ["+foo", "-bar"],
+        "linkfiles": [
+            {"src": "s0", "dest": "d0"},
+            {"src": "s1", "dest": "d1", "groups": ["ab", "c"]},
+        ],
+        "copyfiles": [
+            {"src": "c0", "dest": "e0"},
+            {"src": "c1", "dest": "e1", "groups": ["ab", "c"]},
+        ],
         "dependencies": [
             {
                 "name": "dep1",
@@ -512,6 +611,14 @@ def test_manifest_spec_from_data(tmp_path):
         ),
         ProjectSpec(name="dep2", url="https://git.example.com/base3/dep2.git", path="dep2dir"),
         ProjectSpec(name="dep3", remote="remote1", sub_url="sub.git", revision="main", submodules=False),
+    )
+    assert manifest_spec.linkfiles == (
+        MainFileRef(src="s0", dest="d0"),
+        MainFileRef(src="s1", dest="d1", groups=("ab", "c")),
+    )
+    assert manifest_spec.copyfiles == (
+        MainFileRef(src="c0", dest="e0"),
+        MainFileRef(src="c1", dest="e1", groups=("ab", "c")),
     )
 
     filepath = tmp_path / "manifest.toml"
@@ -577,6 +684,14 @@ def test_manifest_from_spec():
             "remote": "remote1",
         },
         "group-filters": ["-doc", "-bar"],
+        "linkfiles": [
+            {"src": "s0", "dest": "d0"},
+            {"src": "s1", "dest": "d1", "groups": ["ab", "c"]},
+        ],
+        "copyfiles": [
+            {"src": "c0", "dest": "e0"},
+            {"src": "c1", "dest": "e1", "groups": ["ab", "c"]},
+        ],
         "dependencies": [
             {
                 "name": "dep1",
@@ -623,6 +738,14 @@ def test_manifest_from_spec():
         Project(name="dep3", path="dep3", level=1, url="file:///repos/url1/sub.git", revision="main", groups=("test",)),
     )
     assert manifest.path is None
+    assert manifest.linkfiles == (
+        MainFileRef(src="s0", dest="d0"),
+        MainFileRef(src="s1", dest="d1", groups=("ab", "c")),
+    )
+    assert manifest.copyfiles == (
+        MainFileRef(src="c0", dest="e0"),
+        MainFileRef(src="c1", dest="e1", groups=("ab", "c")),
+    )
 
 
 def test_default_url():

@@ -18,7 +18,7 @@
 from pathlib import Path
 
 from gitws import Git, GitWS
-from gitws.datamodel import FileRef, ManifestSpec, ProjectSpec
+from gitws.datamodel import FileRef, MainFileRef, ManifestSpec, ProjectSpec
 
 from .fixtures import git_repo
 
@@ -34,9 +34,9 @@ def create_repos(repos_path) -> str:
         (path / "data2.txt").write_text("main-2")
         ManifestSpec(
             copyfiles=[
-                FileRef(src="data0.txt", dest="main-data0.txt"),
-                FileRef(src="data1.txt", dest="build/main-data1.txt"),
-                FileRef(src="data3.txt", dest="main-data3.txt"),
+                MainFileRef(src="data0.txt", dest="main-data0.txt"),
+                MainFileRef(src="data1.txt", dest="build/main-data1.txt"),
+                MainFileRef(src="data3.txt", dest="main-data3.txt"),
             ],
             dependencies=[
                 ProjectSpec(
@@ -65,8 +65,8 @@ def modify_repos(repos_path) -> str:
     with chdir(repos_path / "main"):
         ManifestSpec(
             copyfiles=[
-                FileRef(src="data0.txt", dest="main-data0.txt"),
-                FileRef(src="data2.txt", dest="main-data2.txt"),
+                MainFileRef(src="data0.txt", dest="main-data0.txt"),
+                MainFileRef(src="data2.txt", dest="main-data2.txt"),
             ],
             dependencies=[
                 ProjectSpec(
@@ -172,3 +172,56 @@ def test_update(tmp_path):
             "===== Update Referenced Files =====",
             "",
         ]
+
+
+def test_no_main(tmp_path):
+    """Copyfile without Main-Project"""
+
+    with chdir(tmp_path):
+        (tmp_path / "data0.txt").touch()
+        (tmp_path / "data2.txt").touch()
+        ManifestSpec(
+            copyfiles=[
+                MainFileRef(src="data0.txt", dest="main-data0.txt"),
+                MainFileRef(src="data2.txt", dest="main-data2.txt"),
+            ],
+        ).save(Path("git-ws.toml"))
+
+        gws = GitWS.init()
+
+        assert not (tmp_path / "main-data0.txt").exists()
+        assert not (tmp_path / "main-data2.txt").exists()
+
+        gws.update()
+
+        assert (tmp_path / "main-data0.txt").exists()
+        assert (tmp_path / "main-data2.txt").exists()
+
+
+def test_group(tmp_path):
+    """Groups Filtering."""
+
+    with chdir(tmp_path):
+        (tmp_path / "data0.txt").touch()
+        (tmp_path / "data1.txt").touch()
+        (tmp_path / "data2.txt").touch()
+        ManifestSpec(
+            group_filters=["-grp"],
+            copyfiles=[
+                MainFileRef(src="data0.txt", dest="main-data0.txt"),
+                MainFileRef(src="data1.txt", dest="main-data1.txt", groups=["ab", "cd"]),
+                MainFileRef(src="data2.txt", dest="main-data2.txt", groups=["grp"]),
+            ],
+        ).save(Path("git-ws.toml"))
+
+        gws = GitWS.init()
+
+        assert not (tmp_path / "main-data0.txt").exists()
+        assert not (tmp_path / "main-data1.txt").exists()
+        assert not (tmp_path / "main-data2.txt").exists()
+
+        gws.update()
+
+        assert (tmp_path / "main-data0.txt").exists()
+        assert (tmp_path / "main-data1.txt").exists()
+        assert not (tmp_path / "main-data2.txt").exists()
