@@ -110,6 +110,7 @@ from .datamodel import (
     Groups,
     GroupSelect,
     GroupSelects,
+    MainFileRef,
     Manifest,
     ManifestSpec,
     Project,

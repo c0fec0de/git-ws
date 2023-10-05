@@ -305,6 +305,26 @@ class FileRef(BaseModel):
 FileRefs = Tuple[FileRef, ...]
 
 
+class MainFileRef(FileRef):
+
+    """
+    Main Project File Reference.
+
+    Args:
+        src: Source - path relative to the project directory.
+        dest: Destination - relative path to the workspace directory.
+
+    Keyword Args:
+        groups: Groups
+    """
+
+    groups: Groups = Groups()
+    """``groups`` specification."""
+
+
+MainFileRefs = Tuple[MainFileRef, ...]
+
+
 class FileRefType(enum.Enum):
 
     """File Reference Type."""
@@ -668,10 +688,10 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
     """Default Group Selection and Deselection."""
 
-    linkfiles: FileRefs = tuple()
+    linkfiles: MainFileRefs = tuple()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: FileRefs = tuple()
+    copyfiles: MainFileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     dependencies: Tuple[Project, ...] = tuple()
@@ -747,10 +767,10 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
     """Default Group Selection and Deselection."""
 
-    linkfiles: FileRefs = tuple()
+    linkfiles: MainFileRefs = tuple()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: FileRefs = tuple()
+    copyfiles: MainFileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
     remotes: Tuple[Remote, ...] = tuple()

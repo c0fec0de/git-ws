@@ -71,13 +71,19 @@ class WorkspaceManager:
         if linkfiles:
             for linkfile in linkfiles:
                 fileref = WorkspaceFileRef(
-                    type_=FileRefType.LINK.value, project_path=project_path, src=linkfile.src, dest=linkfile.dest
+                    type_=FileRefType.LINK.value,
+                    project_path=project_path,
+                    src=linkfile.src,
+                    dest=linkfile.dest,
                 )
                 self._add_fileref(fileref)
         if copyfiles:
             for copyfile in copyfiles:
                 fileref = WorkspaceFileRef(
-                    type_=FileRefType.COPY.value, project_path=project_path, src=copyfile.src, dest=copyfile.dest
+                    type_=FileRefType.COPY.value,
+                    project_path=project_path,
+                    src=copyfile.src,
+                    dest=copyfile.dest,
                 )
                 self._add_fileref(fileref)
 

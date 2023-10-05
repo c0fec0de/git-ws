@@ -93,10 +93,10 @@ class Clone:
                 else:
                     _LOGGER.warning("Clone %s has no remote origin but intends to be: %r", info, project.url)
 
-    def _check_revision(self):
+    def _check_revision(self) -> None:
         git = self.git
         project = self.project
-        revs: Tuple[str, ...] = tuple()
+        revs = tuple()  # type: ignore
         with suppress(FileNotFoundError):
             # We cannot determine if we checked out a tag or SHA, so we need to be careful here
             branch = git.get_branch()
