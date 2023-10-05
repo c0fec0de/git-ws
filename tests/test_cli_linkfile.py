@@ -158,3 +158,27 @@ def test_update(tmp_path):
         assert Path("dep1-data0.txt").read_text(encoding="utf-8") == "dep1-0"
         assert not Path("build/dep1-data1.txt").exists()
         assert Path("dep1-data2.txt").read_text(encoding="utf-8") == "dep1-2"
+
+
+def test_no_main(tmp_path):
+    """Linkfile without Main-Project"""
+
+    with chdir(tmp_path):
+        (tmp_path / "data0.txt").touch()
+        (tmp_path / "data2.txt").touch()
+        ManifestSpec(
+            linkfiles=[
+                FileRef(src="data0.txt", dest="main-data0.txt"),
+                FileRef(src="data2.txt", dest="main-data2.txt"),
+            ],
+        ).save(Path("git-ws.toml"))
+
+        gws = GitWS.init()
+
+        assert not (tmp_path / "main-data0.txt").exists()
+        assert not (tmp_path / "main-data2.txt").exists()
+
+        gws.update()
+
+        assert (tmp_path / "main-data0.txt").exists()
+        assert (tmp_path / "main-data2.txt").exists()

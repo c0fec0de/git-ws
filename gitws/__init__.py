@@ -132,6 +132,7 @@ from .exceptions import (
     NoAbsUrlError,
     NoGitError,
     NoMainError,
+    NotEmptyError,
     OutsideWorkspaceError,
     UninitializedError,
     WorkspaceNotEmptyError,

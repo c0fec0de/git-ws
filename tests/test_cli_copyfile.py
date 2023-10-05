@@ -172,3 +172,27 @@ def test_update(tmp_path):
             "===== Update Referenced Files =====",
             "",
         ]
+
+
+def test_no_main(tmp_path):
+    """Copyfile without Main-Project"""
+
+    with chdir(tmp_path):
+        (tmp_path / "data0.txt").touch()
+        (tmp_path / "data2.txt").touch()
+        ManifestSpec(
+            copyfiles=[
+                FileRef(src="data0.txt", dest="main-data0.txt"),
+                FileRef(src="data2.txt", dest="main-data2.txt"),
+            ],
+        ).save(Path("git-ws.toml"))
+
+        gws = GitWS.init()
+
+        assert not (tmp_path / "main-data0.txt").exists()
+        assert not (tmp_path / "main-data2.txt").exists()
+
+        gws.update()
+
+        assert (tmp_path / "main-data0.txt").exists()
+        assert (tmp_path / "main-data2.txt").exists()

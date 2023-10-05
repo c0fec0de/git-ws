@@ -58,24 +58,26 @@ class WorkspaceManager:
         self._knownpaths.clear()
         self._filerefmap.clear()
 
-    def add(self, path: str, linkfiles: Optional[FileRefs] = None, copyfiles: Optional[FileRefs] = None):
+    def add(self, path: Optional[str], linkfiles: Optional[FileRefs] = None, copyfiles: Optional[FileRefs] = None):
         """
         Add project to be tracked.
 
         Args:
             path: Project Path relative to workspace root directory.
         """
-        self._knownpaths.append(Path(path))
+        if path:
+            self._knownpaths.append(Path(path))
+        project_path = path or "."
         if linkfiles:
             for linkfile in linkfiles:
                 fileref = WorkspaceFileRef(
-                    type_=FileRefType.LINK.value, project_path=path, src=linkfile.src, dest=linkfile.dest
+                    type_=FileRefType.LINK.value, project_path=project_path, src=linkfile.src, dest=linkfile.dest
                 )
                 self._add_fileref(fileref)
         if copyfiles:
             for copyfile in copyfiles:
                 fileref = WorkspaceFileRef(
-                    type_=FileRefType.COPY.value, project_path=path, src=copyfile.src, dest=copyfile.dest
+                    type_=FileRefType.COPY.value, project_path=project_path, src=copyfile.src, dest=copyfile.dest
                 )
                 self._add_fileref(fileref)
 
