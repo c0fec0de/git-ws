@@ -47,7 +47,5 @@ git tag "${version}" -m "Release ${version}"
 git push
 git push --tags
 
-# Publish on pypi
-poetry publish --build
+# Publishing is handled by CI
 ```
-
