@@ -166,6 +166,12 @@ So, long story short: Here is a matrix of features vs the different tools we eva
       - |:heavy_minus_sign:|
       - |:heavy_minus_sign:|
       - |:white_check_mark:|
+    * - Symlink/Copyfile-Support
+      - |:heavy_minus_sign:|
+      - |:white_check_mark:|
+      - |:heavy_minus_sign:|
+      - |:heavy_minus_sign:|
+      - |:white_check_mark:|
 
 .. [#] ``git submodules`` tend to check out repositories at a fixed revision (which is their job). However, this means that each ``git submodule update --recursive`` would then cause the submodules to be switched to a *read-only* state, where the user then has to first switch back to a branch to continue editing. This is basically the same behavior that ``west`` implements.
 .. [#] ``git submodules`` can of course recurse - and via this, there is some *kind* of transitive dependencies. However, if there are two or more components that include the same transitive dependency, than that transitive dependency will be included several times in the workspace - and potentially checked out at different versions.

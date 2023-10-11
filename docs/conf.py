@@ -36,5 +36,5 @@ html_theme = "sphinx_rtd_theme"
 
 intersphinx_mapping = {
     "click": ("https://click.palletsprojects.com/en/latest/", None),
-    "anytree": ("https://anytree.readthedocs.com/en/latest/", None),
+    "anytree": ("https://anytree.readthedocs.io/en/latest/", None),
 }
