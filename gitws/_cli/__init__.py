@@ -19,17 +19,17 @@ import logging
 from pathlib import Path
 
 import click
-import coloredlogs  # type: ignore
 
 from gitws import AppConfig, AppConfigLocation, Defaults, GitWS, ManifestSpec, filter_clone_on_branch
 from gitws._util import resolve_relative
 from gitws.const import MANIFEST_PATH_DEFAULT
 from gitws.git import FileStatus, State
 
-from .common import COLOR_INFO, Context, Error, exceptionhandling, get_loglevel, pass_context
+from .common import COLOR_INFO, Context, Error, exceptionhandling, pass_context
 from .config import config
 from .dep import dep
 from .info import info
+from .logging import setup_logging
 from .manifest import manifest
 from .options import (
     command_option,
@@ -53,8 +53,6 @@ from .options import (
 )
 from .remote import remote
 
-_LOGGING_FORMAT = "%(name)s %(levelname)s %(message)s"
-
 
 def _version_option():  # pragma: no cover
     # Add support for click 7.x.x and click 8.x.x
@@ -71,14 +69,11 @@ def main(ctx=None, verbose=0):
     """
     Git Workspace - Multi Repository Management Tool.
     """
+    # note: there may be a more elegant solution. Feel free to issue a PR without adding a dependency.
     app_config = AppConfig()
-    level = get_loglevel(verbose)
     color = Error.color = app_config.options.color_ui
-    if color:
-        coloredlogs.install(level=level, fmt=_LOGGING_FORMAT)
-    else:
-        logging.basicConfig(level=level, format=_LOGGING_FORMAT)
-    ctx.obj = Context(verbose=verbose, color=color)
+    handler = setup_logging(color, verbose)
+    ctx.obj = Context(verbose=verbose, color=color, handler=handler)
 
 
 @main.command()

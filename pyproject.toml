@@ -30,7 +30,6 @@ python = '^3.7.2'
 anytree = "*"
 appdirs = "^1.4.4"
 click = '>=6.7.0,<9.0.0'
-coloredlogs = '^15.0.1'
 pydantic = '^1.10.0'
 tomlkit = '>=0.11.5,<1.0.0'
 
@@ -112,7 +111,7 @@ commands =
     poetry install --with=test --with=doc
     poetry run black .
     poetry run isort .
-    poetry run coverage run --source=gitws --branch -m pytest --doctest-glob=docs/*.rst --doctest-modules --ignore-glob=tests/testdata* --ignore=docs/conf.py --log-level=DEBUG -vv --junitxml=report.xml
+    poetry run coverage run --source=gitws --branch -m pytest --doctest-glob=docs/*.rst --doctest-modules --ignore-glob=tests/testdata* --ignore=docs/conf.py --log-level=DEBUG -vvx --junitxml=report.xml
     poetry run coverage report
     poetry run coverage html
     poetry run coverage xml

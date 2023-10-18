@@ -217,7 +217,7 @@ git ws update
 # Pulling branch 'main'.
 # Already up to date.
 # ===== ../git-ws-example-lib ('git-ws-example-lib') =====
-# git-ws WARNING Clone git-ws-example-lib has no revision!
+# WARNING: Clone git-ws-example-lib has no revision!
 # Cloning 'https://github.com/c0fec0de/git-ws-example-lib.git'.
 # Cloning into '../git-ws-example-lib'...
 # remote: Enumerating objects: 3, done.
@@ -230,7 +230,7 @@ git ws update
 Please note the warning:
 
 ```bash
-# git-ws WARNING Clone git-ws-example-lib has no revision!
+# WARNING: Clone git-ws-example-lib has no revision!
 ```
 
 It is strongly recommended to specify a default revision for all dependencies. The command

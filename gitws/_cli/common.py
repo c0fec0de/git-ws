@@ -15,11 +15,11 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface Utilities."""
-import logging
 import shlex
 import traceback
 from contextlib import contextmanager
 from subprocess import CalledProcessError
+from typing import Any
 
 import click
 from pydantic import BaseModel
@@ -38,24 +38,13 @@ from gitws import (
 COLOR_INFO = "blue"
 
 
-_LOGLEVELMAP = {
-    0: logging.WARNING,
-    1: logging.INFO,
-    2: logging.DEBUG,
-}
-
-
-def get_loglevel(verbose: int):
-    """Return ``logging.level`` according to verbosity."""
-    return _LOGLEVELMAP.get(verbose, logging.DEBUG)
-
-
 class Context(BaseModel):
 
     """Command Line Context."""
 
     verbose: int
     color: bool
+    handler: Any
 
     def secho(self, message, **kwargs):
         """Print with color support similar to :any:`click.secho()."""
@@ -129,6 +118,9 @@ def exceptionhandling(context: Context):
     except Exception as exc:
         _print_traceback(context)
         raise Error(f"{exc!s}") from None
+    if context.handler.has_errors:
+        context.secho("Aborted!", bold=True, fg="red")
+        raise click.exceptions.Exit(1)
 
 
 def _print_traceback(context: Context):

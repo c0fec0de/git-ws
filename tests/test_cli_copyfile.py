@@ -97,7 +97,7 @@ def test_update(tmp_path):
 
     with chdir(gws.path):
 
-        assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
+        assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path, exit_code=1) == [
             "===== main (MAIN 'main', revision='main') =====",
             "Fetching.",
             "Merging branch 'main'.",
@@ -106,10 +106,11 @@ def test_update(tmp_path):
             "===== Update Referenced Files =====",
             "Copying 'main/data0.txt' -> 'main-data0.txt'",
             "Copying 'main/data1.txt' -> 'build/main-data1.txt'",
-            "git-ws ERROR Cannot update: source file 'main/data3.txt' does not exists!",
+            "ERROR:   Cannot update: source file 'main/data3.txt' does not exists!",
             "Copying 'dep1/data0.txt' -> 'dep1-data0.txt'",
             "Copying 'dep1/data1.txt' -> 'build/dep1-data1.txt'",
-            "git-ws ERROR Cannot update: source file 'dep1/data3.txt' does not exists!",
+            "ERROR:   Cannot update: source file 'dep1/data3.txt' does not exists!",
+            "Aborted!",
             "",
         ]
 
@@ -120,7 +121,7 @@ def test_update(tmp_path):
         assert Path("build/dep1-data1.txt").read_text(encoding="utf-8") == "dep1-1"
         assert not Path("dep1-data2.txt").exists()
 
-        assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
+        assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path, exit_code=1) == [
             "===== main (MAIN 'main', revision='main') =====",
             "Fetching.",
             "Merging branch 'main'.",
@@ -128,8 +129,9 @@ def test_update(tmp_path):
             "Fetching.",
             "Merging branch 'main'.",
             "===== Update Referenced Files =====",
-            "git-ws ERROR Cannot update: source file 'main/data3.txt' does not exists!",
-            "git-ws ERROR Cannot update: source file 'dep1/data3.txt' does not exists!",
+            "ERROR:   Cannot update: source file 'main/data3.txt' does not exists!",
+            "ERROR:   Cannot update: source file 'dep1/data3.txt' does not exists!",
+            "Aborted!",
             "",
         ]
 

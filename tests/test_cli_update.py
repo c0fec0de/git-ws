@@ -68,7 +68,7 @@ def test_update(tmp_path):
             "Fetching.",
             "Merging branch 'main'.",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "Fetching.",
             "Merging branch 'main'.",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
@@ -80,7 +80,7 @@ def test_update(tmp_path):
             f"   {sha1}..{sha2}  main       -> origin/main",
             "Merging branch 'main'.",
             "===== dep5 ('dep5') =====",
-            "git-ws WARNING Clone dep5 has no revision!",
+            "WARNING: Clone dep5 has no revision!",
             "Cloning 'REPOS/dep5'.",
             "",
         ]
@@ -91,7 +91,7 @@ def test_update(tmp_path):
             "Fetching.",
             "Merging branch 'main'.",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "Fetching.",
             "Merging branch 'main'.",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
@@ -101,7 +101,7 @@ def test_update(tmp_path):
             "Fetching.",
             "Merging branch 'main'.",
             "===== dep5 ('dep5') =====",
-            "git-ws WARNING Clone dep5 has no revision!",
+            "WARNING: Clone dep5 has no revision!",
             "Fetching.",
             "Merging branch 'main'.",
             "",
@@ -187,7 +187,7 @@ def test_update_rebase(tmp_path):
             "Fetching.",
             "Rebasing branch 'main'.",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "Fetching.",
             "Rebasing branch 'main'.",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
@@ -200,7 +200,7 @@ def test_update_rebase(tmp_path):
             "Rebasing branch 'main'.",
             "Successfully rebased and updated refs/heads/main.",
             "===== dep5 ('dep5') =====",
-            "git-ws WARNING Clone dep5 has no revision!",
+            "WARNING: Clone dep5 has no revision!",
             "Cloning 'REPOS/dep5'.",
             "",
         ]
@@ -210,7 +210,7 @@ def test_update_rebase(tmp_path):
             "Fetching.",
             "Rebasing branch 'main'.",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "Fetching.",
             "Rebasing branch 'main'.",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
@@ -220,7 +220,7 @@ def test_update_rebase(tmp_path):
             "Fetching.",
             "Rebasing branch 'main'.",
             "===== dep5 ('dep5') =====",
-            "git-ws WARNING Clone dep5 has no revision!",
+            "WARNING: Clone dep5 has no revision!",
             "Fetching.",
             "Rebasing branch 'main'.",
             "",
@@ -243,8 +243,8 @@ def test_update_rebase(tmp_path):
         ]
 
         assert cli(["status"]) == [
-            "git-ws WARNING Clone dep1 has no revision!",
-            "git-ws WARNING Clone dep4 (revision='main') is on different revision: '4-feature'",
+            "WARNING: Clone dep1 has no revision!",
+            "WARNING: Clone dep4 (revision='main') is on different revision: '4-feature'",
             "",
         ]
 
@@ -266,12 +266,12 @@ def test_update_missing_origin(tmp_path):
         assert cli(["checkout"], tmp_path=tmp_path) == [
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
-            "git-ws WARNING Clone dep4 (revision='main') has no remote origin but intends to be: 'TMP/repos/dep4'",
+            "WARNING: Clone dep4 (revision='main') has no remote origin but intends to be: 'TMP/repos/dep4'",
             "",
         ]
 
@@ -279,14 +279,14 @@ def test_update_missing_origin(tmp_path):
         assert cli(["checkout"], exit_code=1, tmp_path=tmp_path) == [
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
-            "git-ws WARNING Clone dep2 (revision='1-feature', submodules=False) has no "
+            "WARNING: Clone dep2 (revision='1-feature', submodules=False) has no "
             "remote origin but intends to be: 'TMP/repos/dep2'",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
-            "git-ws WARNING Clone dep4 (revision='main') has no remote origin but intends to be: 'TMP/repos/dep4'",
+            "WARNING: Clone dep4 (revision='main') has no remote origin but intends to be: 'TMP/repos/dep4'",
             "Error: Git Clone 'dep2' has not remote 'origin'. Try:",
             "",
             "    git remote add origin <URL>",
@@ -299,10 +299,10 @@ def test_update_missing_origin(tmp_path):
         assert cli(["checkout"], tmp_path=tmp_path) == [
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
-            "git-ws WARNING Clone dep2 (revision='1-feature', submodules=False) "
+            "WARNING: Clone dep2 (revision='1-feature', submodules=False) "
             "remote origin is 'TMP/repos/dep9' but intends to be: 'TMP/repos/dep2'",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",

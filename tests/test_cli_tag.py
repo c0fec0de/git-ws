@@ -49,7 +49,7 @@ def test_tag(tmp_path, repos):
             "===== main/main (MAIN 'main') =====",
             "Cloning 'REPOS/main'.",
             "===== main/dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "Cloning 'REPOS/dep1'.",
             "===== main/dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Cloning 'REPOS/dep2'.",
@@ -101,7 +101,7 @@ def test_tag(tmp_path, repos):
         assert cli(("checkout",)) == [
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
             "===== dep5 ('dep5', revision='final2') =====",
@@ -141,7 +141,7 @@ def test_tag(tmp_path, repos):
         assert cli(("checkout",)) == [
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Switched to branch '1-feature'",
             "===== dep5 ('dep5', revision='final2') =====",
@@ -158,7 +158,7 @@ def test_tag(tmp_path, repos):
         assert cli(("checkout",)) == [
             "===== main (MAIN 'main', revision='OTHERTAG') =====",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
             "===== dep5 ('dep5', revision='final2') =====",
@@ -186,7 +186,7 @@ def test_tag(tmp_path, repos):
             "===== other/main (MAIN 'main') =====",
             "Cloning 'REPOS/main'.",
             "===== other/dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "Cloning 'REPOS/dep1'.",
             "===== other/dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Cloning 'REPOS/dep2'.",
@@ -221,7 +221,7 @@ def test_tag(tmp_path, repos):
         assert cli(("checkout",)) == [
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
-            "git-ws WARNING Clone dep1 has no revision!",
+            "WARNING: Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Switched to branch '1-feature'",
             "===== dep5 ('dep5', revision='final2') =====",
