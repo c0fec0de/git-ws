@@ -227,3 +227,72 @@ def test_group(tmp_path):
         assert (tmp_path / "main-data0.txt").exists()
         assert (tmp_path / "main-data1.txt").exists()
         assert not (tmp_path / "main-data2.txt").exists()
+
+
+def test_existing(tmp_path):
+    """Test Existing."""
+    # pylint: disable=unused-argument
+
+    repos_path = tmp_path / "repos"
+    create_repos(repos_path)
+
+    with chdir(tmp_path):
+        gws = GitWS.clone(str(repos_path / "main"))
+
+    with chdir(gws.path):
+
+        Path("build").mkdir()
+        Path("build/main-data1.txt").touch()
+
+        assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path, exit_code=1) == [
+            "===== main (MAIN 'main', revision='main') =====",
+            "Fetching.",
+            "Merging branch 'main'.",
+            "===== dep1 ('dep1', revision='main') =====",
+            "Cloning 'REPOS/dep1'.",
+            "===== Update Referenced Files =====",
+            "Copying 'main/data0.txt' -> 'main-data0.txt'",
+            "ERROR:   Cannot update: destination file 'build/main-data1.txt' already exists!",
+            "ERROR:   Cannot update: source file 'main/data3.txt' does not exists!",
+            "Copying 'dep1/data0.txt' -> 'dep1-data0.txt'",
+            "Copying 'dep1/data1.txt' -> 'build/dep1-data1.txt'",
+            "ERROR:   Cannot update: source file 'dep1/data3.txt' does not exists!",
+            "Aborted!",
+            "",
+        ]
+
+        assert Path("main-data0.txt").read_text(encoding="utf-8") == "main-0"
+        assert Path("build/main-data1.txt").read_text(encoding="utf-8") == ""
+        assert not Path("main-data2.txt").exists()
+        assert Path("dep1-data0.txt").read_text(encoding="utf-8") == "dep1-0"
+        assert Path("build/dep1-data1.txt").read_text(encoding="utf-8") == "dep1-1"
+        assert not Path("dep1-data2.txt").exists()
+
+        assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path, exit_code=1) == [
+            "===== main (MAIN 'main', revision='main') =====",
+            "Fetching.",
+            "Merging branch 'main'.",
+            "===== dep1 ('dep1', revision='main') =====",
+            "Fetching.",
+            "Merging branch 'main'.",
+            "===== Update Referenced Files =====",
+            "ERROR:   Cannot update: destination file 'build/main-data1.txt' already exists!",
+            "ERROR:   Cannot update: source file 'main/data3.txt' does not exists!",
+            "ERROR:   Cannot update: source file 'dep1/data3.txt' does not exists!",
+            "Aborted!",
+            "",
+        ]
+        assert cli(["update", "--force"], tmp_path=tmp_path, repos_path=repos_path, exit_code=1) == [
+            "===== main (MAIN 'main', revision='main') =====",
+            "Fetching.",
+            "Merging branch 'main'.",
+            "===== dep1 ('dep1', revision='main') =====",
+            "Fetching.",
+            "Merging branch 'main'.",
+            "===== Update Referenced Files =====",
+            "Copying 'main/data1.txt' -> 'build/main-data1.txt'",
+            "ERROR:   Cannot update: source file 'main/data3.txt' does not exists!",
+            "ERROR:   Cannot update: source file 'dep1/data3.txt' does not exists!",
+            "Aborted!",
+            "",
+        ]
