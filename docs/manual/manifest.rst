@@ -158,12 +158,12 @@ The following attributes provide all the freedom:
 | ``submodules``     | bool                       | Optional. Initialize ``git submodule`` s.
                                                   | ``True`` by default.
 | ``linkfiles``      | list of ``src``/``dest``   | Optional. List of links to be created.
-                                                  | ``src`` relative to ``path``.
-                                                  | ``dest`` relative to workspace.
+                                                  | ``src`` is relative to ``path``.
+                                                  | ``dest`` is relative to workspace.
                                                   | See :ref:`fileref` for more information
 | ``copyfiles``      | list of ``src``/``dest``   | Optional. List of files to be copied.
-                                                  | ``src`` relative to ``path``.
-                                                  | ``dest`` relative to workspace.
+                                                  | ``src`` is relative to ``path``.
+                                                  | ``dest`` is relative to workspace.
                                                   | See :ref:`fileref` for more information
 ===================  ===========================  ===================================================================
 
@@ -178,6 +178,8 @@ Please note:
   ``remote``, ``sub-url`` and ``url`` can be simply left blank.
 * A manifest file located outside a git clone does not support relative ``url`` s.
 * Local filesystem URLs **must** be prefixed by ``file://``.
+* ``linkfiles`` and ``copyfiles`` are only applied for dependencies in the main manifest.
+  ``linkfiles`` and ``copyfiles`` in manifests referenced in the dependencies section are ignored.
 
 A minimal dependency to a repo on the same server:
 
@@ -239,12 +241,13 @@ The ``linkfiles`` section lists files to be linked over from the main project - 
 
 ``linkfiles`` and ``copyfiles`` entries have two mandatory attributes:
 
-============  ======  =============================
-Attribute     Type    Description
-============  ======  =============================
-``src``       string  Mandatory. Source file path, relative to the main project root directory
-``dest``      string  Mandatory. Destination file path, relative to the workspace directory
-============  ======  =============================
+============  ===============  ==============================================================================
+Attribute     Type             Description
+============  ===============  ==============================================================================
+``src``       string           Mandatory. Source file path, relative to the main project root directory
+``dest``      string           Mandatory. Destination file path, relative to the workspace directory
+ ``groups``   list of strings  Optional. Categorization. Just create if the group is selected.
+============  ===============  ==============================================================================
 
 Multiple entries look like that:
 
@@ -257,8 +260,9 @@ Multiple entries look like that:
     [[linkfiles]]
     src = "file-in-main-clone1.txt"
     dest = "link-in-workspace1.txt"
+    groups = ['test']
 
 .. note::
 
-    ``linkfiles`` and ``copyfiles`` are ignored on standalone manifest files, where the workspace does not have a main project.
+    ``linkfiles`` and ``copyfiles`` are also supported on standalone manifest files. ``src`` is relative to the workspace directory then.
 

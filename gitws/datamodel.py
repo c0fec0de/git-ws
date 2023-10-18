@@ -874,6 +874,10 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         # with-groups = ["doc"]
         <BLANKLINE>
         <BLANKLINE>
+        ## A minimal dependency:
+        # [[dependencies]]
+        # name = "my"
+        <BLANKLINE>
         ## A full flavored dependency using a 'remote':
         # [[dependencies]]
         # name = "myname"
@@ -923,9 +927,6 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         # src = "file1-in-mydir.txt"
         # dest = "file1-in-workspace.txt"
         <BLANKLINE>
-        ## A minimal dependency:
-        # [[dependencies]]
-        # name = "my"
         [[dependencies]]
         name = "mylib"
         <BLANKLINE>
@@ -1046,6 +1047,11 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
 
+        add_info(doc, "A minimal dependency:")
+        example = ManifestSpec(dependencies=[ProjectSpec(name="my", submodules=None)])
+        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
+        doc.add(tomlkit.nl())
+
         # Dependencies
         add_info(doc, "A full flavored dependency using a 'remote':")
         example = ManifestSpec(
@@ -1095,10 +1101,6 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         )
         add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
         doc.add(tomlkit.nl())
-
-        add_info(doc, "A minimal dependency:")
-        example = ManifestSpec(dependencies=[ProjectSpec(name="my", submodules=None)])
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
 
         doc.add("dependencies", tomlkit.aot())
         doc.add(tomlkit.nl())

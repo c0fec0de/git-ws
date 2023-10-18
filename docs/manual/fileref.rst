@@ -19,11 +19,11 @@ directly within the workspace folder itself. For example:
 
 To aid this, ``git-ws`` provides two mechanisms: File linking and file copying.
 
-.. note:: Linking and Copying only works for the main repository
+.. note:: Linking and Copying only works for the main repository *and* all first level dependencies.
 
     Both mechanisms described here apply only to the main repo within a
-    workspace. Copy and link files defined by dependencies of the main
-    repo are ignored.
+    workspace and all its direct dependencies.
+    Copy and link files in the manifest files of the refered dependencies are ignored.
 
 
 File Linking
@@ -89,3 +89,55 @@ With this, the resulting workspace would rather look like this:
 Note that this time, ``copy-in-workspace.txt`` is a copy of the actual file
 in the main repository. That also means that editing it will keep the original
 file unchanged.
+
+.. note:: Copied files are monitored for modification!
+
+    Any modification of a copied file is noticed.
+
+    ``git ws update`` updates copied files.
+    But it denies overwritting a copied file, which has changed at the destination since last update.
+
+
+Group Filtering
++++++++++++++++
+
+Some file links or copies might only make sense in case of a specific group setup.
+``linkfiles`` and ``copyfiles`` of the **main** project support group filtering:
+
+.. code-block:: toml
+
+    [[linkfiles]]
+    src = "file-in-main-repo.txt"
+    dest = "link-in-workspace.txt"
+    groups = ['test']
+
+    [[copyfiles]]
+    src = "file-in-main-repo.txt"
+    dest = "copy-in-workspace.txt"
+    groups = ['dev']
+
+File Linking and Copying from Dependencies
+++++++++++++++++++++++++++++++++++++++++++
+
+Next to the main project, file linking and copying is supported for all first level dependencies.
+All dependencies in the main repo's manifest may specify ``linkfiles`` and ``copyfiles`` and get
+applied as soon as the dependency is included (i.e. selected/deselected by ``groups``).
+``groups`` are only supported per dependency, but **not** per ``linkfiles`` and ``copyfiles`` entry.
+
+.. code-block:: toml
+
+    [[dependencies]]
+    name = "my"
+    groups = ["group"]
+
+    [[dependencies.linkfiles]]
+    src = "file-in-mydir.txt"
+    dest = "link-in-workspace.txt"
+
+    [[dependencies.copyfiles]]
+    src = "file-in-mydir.txt"
+    dest = "file-in-workspace.txt"
+
+
+``linkfiles`` and ``copyfiles`` in the manifest files of the referenced dependencies are **ignored**.
+If you need ``linkfiles`` and ``copyfiles`` from a second or higher level dependency, add it to the main manifest.

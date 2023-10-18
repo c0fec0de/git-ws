@@ -113,6 +113,10 @@ def test_freeze(tmp_path, gws, repos):
         '# with-groups = ["doc"]',
         "",
         "",
+        "## A minimal dependency:",
+        "# [[dependencies]]",
+        '# name = "my"',
+        "",
         "## A full flavored dependency using a 'remote':",
         "# [[dependencies]]",
         '# name = "myname"',
@@ -162,9 +166,6 @@ def test_freeze(tmp_path, gws, repos):
         '# src = "file1-in-mydir.txt"',
         '# dest = "file1-in-workspace.txt"',
         "",
-        "## A minimal dependency:",
-        "# [[dependencies]]",
-        '# name = "my"',
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',
@@ -261,6 +262,10 @@ def test_freeze(tmp_path, gws, repos):
         '# with-groups = ["doc"]',
         "",
         "",
+        "## A minimal dependency:",
+        "# [[dependencies]]",
+        '# name = "my"',
+        "",
         "## A full flavored dependency using a 'remote':",
         "# [[dependencies]]",
         '# name = "myname"',
@@ -310,9 +315,6 @@ def test_freeze(tmp_path, gws, repos):
         '# src = "file1-in-mydir.txt"',
         '# dest = "file1-in-workspace.txt"',
         "",
-        "## A minimal dependency:",
-        "# [[dependencies]]",
-        '# name = "my"',
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',
@@ -427,6 +429,10 @@ def test_resolve(tmp_path, gws):
         '# with-groups = ["doc"]',
         "",
         "",
+        "## A minimal dependency:",
+        "# [[dependencies]]",
+        '# name = "my"',
+        "",
         "## A full flavored dependency using a 'remote':",
         "# [[dependencies]]",
         '# name = "myname"',
@@ -476,9 +482,6 @@ def test_resolve(tmp_path, gws):
         '# src = "file1-in-mydir.txt"',
         '# dest = "file1-in-workspace.txt"',
         "",
-        "## A minimal dependency:",
-        "# [[dependencies]]",
-        '# name = "my"',
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1"',
@@ -581,6 +584,10 @@ remote = "myremote"
 # with-groups = ["doc"]
 
 
+## A minimal dependency:
+# [[dependencies]]
+# name = "my"
+
 ## A full flavored dependency using a 'remote':
 # [[dependencies]]
 # name = "myname"
@@ -630,9 +637,6 @@ remote = "myremote"
 # src = "file1-in-mydir.txt"
 # dest = "file1-in-workspace.txt"
 
-## A minimal dependency:
-# [[dependencies]]
-# name = "my"
 
 
 # [[linkfiles]]
@@ -699,6 +703,10 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
         '# with-groups = ["doc"]',
         "",
         "",
+        "## A minimal dependency:",
+        "# [[dependencies]]",
+        '# name = "my"',
+        "",
         "## A full flavored dependency using a 'remote':",
         "# [[dependencies]]",
         '# name = "myname"',
@@ -748,9 +756,6 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
         '# src = "file1-in-mydir.txt"',
         '# dest = "file1-in-workspace.txt"',
         "",
-        "## A minimal dependency:",
-        "# [[dependencies]]",
-        '# name = "my"',
         "[[dependencies]]",
         'name = "dep1"',
         'url = "../dep1.git"',

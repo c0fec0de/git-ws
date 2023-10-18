@@ -45,6 +45,10 @@ group-filters = []
 # with-groups = ["doc"]
 
 
+## A minimal dependency:
+# [[dependencies]]
+# name = "my"
+
 ## A full flavored dependency using a 'remote':
 # [[dependencies]]
 # name = "myname"
@@ -94,9 +98,6 @@ group-filters = []
 # src = "file1-in-mydir.txt"
 # dest = "file1-in-workspace.txt"
 
-## A minimal dependency:
-# [[dependencies]]
-# name = "my"
 
 
 # [[linkfiles]]

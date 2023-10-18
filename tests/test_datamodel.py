@@ -447,6 +447,10 @@ remote = "remote"
 # with-groups = ["doc"]
 
 
+## A minimal dependency:
+# [[dependencies]]
+# name = "my"
+
 ## A full flavored dependency using a 'remote':
 # [[dependencies]]
 # name = "myname"
@@ -496,9 +500,6 @@ remote = "remote"
 # src = "file1-in-mydir.txt"
 # dest = "file1-in-workspace.txt"
 
-## A minimal dependency:
-# [[dependencies]]
-# name = "my"
 [[dependencies]]
 name = "dep"
 
