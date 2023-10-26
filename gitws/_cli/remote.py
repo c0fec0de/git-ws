@@ -46,7 +46,7 @@ def add(context, name, url_base, manifest_path):
         manifest_spec = ManifestSpec.load(manifest_path)
         remotes = list(manifest_spec.remotes)
         remotes.append(Remote(name=name, url_base=url_base))
-        manifest_spec = manifest_spec.update(remotes=remotes)
+        manifest_spec = manifest_spec.model_copy(update={"remotes": tuple(remotes)})
         manifest_spec.save(manifest_path)
 
 
@@ -81,5 +81,5 @@ def delete(context, name, manifest_path):
         else:
             raise ValueError(f"Unknown dependency {name!r}")
         remotes.pop(idx)
-        manifest_spec = manifest_spec.update(remotes=remotes)
+        manifest_spec = manifest_spec.model_copy(update={"remotes": tuple(remotes)})
         manifest_spec.save(manifest_path)

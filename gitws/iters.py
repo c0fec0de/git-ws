@@ -26,7 +26,16 @@ from pathlib import Path
 from typing import Callable, Generator, List, Optional, Tuple
 
 from ._util import resolve_relative
-from .datamodel import GroupFilters, Groups, GroupSelects, Manifest, ManifestSpec, Project
+from .datamodel import (
+    GroupFilters,
+    Groups,
+    GroupSelects,
+    Manifest,
+    ManifestSpec,
+    Project,
+    group_selects_from_filters,
+    group_selects_from_groups,
+)
 from .exceptions import GitCloneMissingOriginError, ManifestNotFoundError
 from .git import Git
 from .manifestfinder import find_manifest
@@ -71,7 +80,7 @@ class ManifestIter:
             pass
         else:
             group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
-            group_selects = GroupSelects.from_group_filters(group_filters)
+            group_selects = group_selects_from_filters(group_filters)
             filter_ = create_filter(group_selects, default=True)
             yield from self.__iter(self.manifest_path, manifest_spec, filter_)
 
@@ -104,7 +113,7 @@ class ManifestIter:
             except ManifestNotFoundError:
                 pass
             else:
-                group_selects = GroupSelects.from_groups(dep_project.with_groups)
+                group_selects = group_selects_from_groups(dep_project.with_groups)
                 deps.append((dep_manifest_path, dep_manifest_spec, group_selects))
 
         # We resolve all dependencies in a second iteration to prioritize the manifest
@@ -177,7 +186,7 @@ class ProjectIter:
             manifest_spec = ManifestSpec()
         if manifest_spec.dependencies:
             group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
-            group_selects = GroupSelects.from_group_filters(group_filters)
+            group_selects = group_selects_from_filters(group_filters)
             filter_ = create_filter(group_selects, default=True)
             yield from self.__iter(1, main_path, manifest_spec, filter_)
 
@@ -221,7 +230,7 @@ class ProjectIter:
             except ManifestNotFoundError:
                 pass
             else:
-                group_selects = GroupSelects.from_groups(dep_project.with_groups)
+                group_selects = group_selects_from_groups(dep_project.with_groups)
                 deps.append((dep_project_path, dep_manifest, group_selects))
 
         # We resolve all dependencies in a second iteration to prioritize the manifest
@@ -244,7 +253,7 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
         default: Default selection of all ``groups``.
 
     >>> group_filters = ('-@special', '+test', '+doc', '+feature@dep', '-doc')
-    >>> group_selects = GroupSelects.from_group_filters(group_filters)
+    >>> group_selects = group_selects_from_filters(group_filters)
     >>> groupfilter = create_filter(group_selects)
     >>> groupfilter('sub', tuple())  # selected as there is no group
     True
@@ -298,7 +307,7 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
             if groups:
                 selects = {group: default for group in groups}
             else:
-                selects = {None: True}
+                selects = {"": True}
             for group_select in group_selects:
                 group = group_select.group
                 if group and group not in selects:

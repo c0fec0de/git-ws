@@ -22,7 +22,7 @@ from subprocess import CalledProcessError
 from typing import Any
 
 import click
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from gitws import (
     GitCloneMissingError,
@@ -44,7 +44,7 @@ class Context(BaseModel):
 
     verbose: int
     color: bool
-    handler: Any
+    handler: Any = None
 
     def secho(self, message, **kwargs):
         """Print with color support similar to :any:`click.secho()."""
@@ -115,6 +115,9 @@ def exceptionhandling(context: Context):
         _print_traceback(context)
         cmd = shlex.join(exc.cmd)
         raise Error(f"{cmd!r} failed.") from None
+    except ValidationError as exc:
+        _print_traceback(context)
+        raise Error("\n".join([error["msg"] for error in exc.errors()])) from None
     except Exception as exc:
         _print_traceback(context)
         raise Error(f"{exc!s}") from None

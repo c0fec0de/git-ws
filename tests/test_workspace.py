@@ -21,7 +21,7 @@ from pytest import raises
 
 from gitws import InitializedError, OutsideWorkspaceError, UninitializedError
 from gitws.const import CONFIG_PATH, INFO_PATH
-from gitws.datamodel import FileRefType, WorkspaceFileRef
+from gitws.datamodel import WorkspaceFileRef
 from gitws.workspace import Info, Workspace
 
 from .common import TESTDATA_PATH
@@ -92,12 +92,8 @@ def test_edit_info(tmp_path):
         ]
 
         with workspace.edit_info() as info:
-            info.filerefs.append(
-                WorkspaceFileRef(type_=FileRefType.COPY.value, project_path="sub0/path", src="src0", dest="dest0")
-            )
-            info.filerefs.append(
-                WorkspaceFileRef(type_=FileRefType.LINK.value, project_path="sub0/path", src="src0", dest="dest1")
-            )
+            info.filerefs.append(WorkspaceFileRef(type_="copy", project_path="sub0/path", src="src0", dest="dest0"))
+            info.filerefs.append(WorkspaceFileRef(type_="link", project_path="sub0/path", src="src0", dest="dest1"))
         assert info_file.read_text().split("\n") == [
             "# Git Workspace System File. DO NOT EDIT.",
             "",

@@ -513,7 +513,7 @@ def submodule(context, command, projects=None, manifest_path=None, group_filters
 
 @main.command()
 @manifest_option(initial=True)
-@click.argument("name", type=click.Choice(tuple(Defaults().dict(by_alias=True))))
+@click.argument("name", type=click.Choice(tuple(Defaults().model_dump(by_alias=True))))
 @click.argument("value")
 @pass_context
 def default(context, manifest_path, name, value):
@@ -522,8 +522,13 @@ def default(context, manifest_path, name, value):
     """
     with exceptionhandling(context):
         manifest_spec = ManifestSpec.load(manifest_path)
-        defaults = manifest_spec.defaults.update_fromstr({name: value if value else None})
-        manifest_spec = manifest_spec.update(defaults=defaults)
+        defaults = manifest_spec.defaults
+        for fname, field in defaults.model_fields.items():  # pragma: no branch
+            if name == (field.alias or fname):
+                update = {fname: value}
+                defaults = defaults.model_copy_fromstr(update)
+                break
+        manifest_spec = manifest_spec.model_copy(update={"defaults": defaults})
         manifest_spec.save(manifest_path)
 
 
@@ -539,7 +544,7 @@ def group_filters(context, manifest_path, value):
     """
     with exceptionhandling(context):
         manifest_spec = ManifestSpec.load(manifest_path)
-        manifest_spec = manifest_spec.update_fromstr({"group-filters": value if value else None})
+        manifest_spec = manifest_spec.model_copy_fromstr({"group_filters": value})
         manifest_spec.save(manifest_path)
 
 

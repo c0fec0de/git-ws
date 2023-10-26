@@ -291,8 +291,11 @@ def test_tag_dep(tmp_path, repos):
         ]
         manifest_path = main_workspace / "main" / "git-ws.toml"
         manifest_spec = ManifestSpec.load(manifest_path)
-        deps = [(dep.update(revision="DEP1TAG") if dep.name == "dep1" else dep) for dep in manifest_spec.dependencies]
-        manifest_spec = manifest_spec.update(dependencies=deps)
+        deps = [
+            (dep.model_copy(update={"revision": "DEP1TAG"}) if dep.name == "dep1" else dep)
+            for dep in manifest_spec.dependencies
+        ]
+        manifest_spec = manifest_spec.model_copy(update={"dependencies": deps})
         manifest_spec.save(manifest_path)
 
     with chdir(main_workspace):

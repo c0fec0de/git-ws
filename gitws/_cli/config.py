@@ -114,10 +114,10 @@ def get(context, option, target, format_):
         else:
             options = config.options
         if format_ == Format.JSON:
-            doc = {option: options.dict().get(option)}
+            doc = {option: options.model_dump().get(option)}
             click.echo(json.dumps(doc))
         else:
-            click.echo(options.dict().get(option))
+            click.echo(options.model_dump().get(option))
 
 
 @config.command(name="set")
@@ -148,13 +148,13 @@ def set_(context, option, value, target, ignore_unknown):
             try:
                 doc = AppConfigData(**{option: value})
                 if not ignore_unknown:
-                    schema = doc.schema()
+                    schema = doc.model_json_schema()
                     props = schema.get("properties", {})
                     if option not in props:
                         raise InvalidConfigurationOptionError(option)
             except ValueError as value_error:
                 raise InvalidConfigurationValueError(option, value) from value_error
-            values = doc.dict(exclude_none=True)
+            values = doc.model_dump(exclude_none=True)
             for key, val in values.items():
                 setattr(options, key, val)
 
@@ -210,9 +210,9 @@ def _list(context, target, format_):
             options = config.load(target)
         else:
             options = config.options
-        data = options.dict()
+        data = options.model_dump()
         if format_ == Format.TEXT:
-            properties = options.schema().get("properties", {})
+            properties = options.model_json_schema().get("properties", {})
             for key, value in data.items():
                 description = properties.get(key, {}).get("description", "Unknown/user option")
                 click.echo(f"# {description}")
