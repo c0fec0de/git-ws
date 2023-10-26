@@ -18,11 +18,8 @@
 Central :any:`GitWS` Datamodel.
 
 * :any:`Group`: Dependency Group. A string (i.e. 'test').
-* :any:`Groups`: Tuple of :any:`Group` instances.
 * :any:`GroupFilter`: Group Filter Specification. A string (i.e. '+test@path').
-* :any:`GroupFilters`: Tuple of :any:`GroupFilter` instances.
 * :any:`GroupSelect`: Group Selection. A converted :any:`GroupFilter` as needed by :any:`GitWS`.
-* :any:`GroupSelects`: Tuple of :any:`GroupSelect` instances.
 * :any:`ManifestSpec`: Manifest specification for the actual project.
 * :any:`Manifest`: Manifest as needed by :any:`GitWS` derived from :any:`ManifestSpec`.
 * :any:`ProjectSpec`: Dependency Specification in :any:`ManifestSpec`.
@@ -34,13 +31,15 @@ Central :any:`GitWS` Datamodel.
 
 # pylint: disable=too-many-lines
 
-import enum
+
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import tomlkit
-from pydantic import BaseSettings, Extra, Field, root_validator, validator
+from pydantic import AfterValidator, ConfigDict, Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing_extensions import Annotated
 
 from ._basemodel import BaseModel
 from ._url import is_urlabs, urljoin, urlsub
@@ -50,11 +49,25 @@ from .exceptions import ManifestError, ManifestNotFoundError, NoAbsUrlError
 
 _RE_GROUP = re.compile(r"\A[a-zA-Z0-9_][a-zA-Z0-9_\-]*\Z")
 
-ProjectPaths = Tuple[
-    str,
-]
+ProjectPath = str
+"""Project Path."""
 
-Group = str
+ProjectPaths = Tuple[ProjectPath, ...]
+
+
+def _validate_group(group):
+    """
+    Validate Group.
+
+    Group is just a ``str`` for performance reasons. This function does the validation.
+    """
+    mat = _RE_GROUP.match(group)
+    if not mat:
+        raise ValueError(f"Invalid group {group!r}")
+    return group
+
+
+Group = Annotated[str, AfterValidator(_validate_group)]
 """
 Dependency Group.
 
@@ -64,37 +77,26 @@ Dashes are allowed. Except the first sign.
 Groups structure dependencies.
 """
 
-
-def validate_group(group):
-    """
-    Validate Group.
-
-    Group is just a ``str`` for performance reasons. This function does the validation.
-    """
-    mat = _RE_GROUP.match(group)
-    if not mat:
-        raise ValueError(f"Invalid group {group!r}")
-
-
-class Groups(tuple):
-
-    """Groups."""
-
-    @staticmethod
-    def validate(groups):
-        """
-        Validate Groups.
-
-        Groups are just a ``tuple`` of ``str`` for performance reasons. This function does the validation.
-        """
-        for group in groups:
-            validate_group(group)
-        return groups
+Groups = Tuple[Group, ...]
 
 
 _RE_GROUP_FILTER = re.compile(r"\A(?P<select>[\-\+])(?P<group>[a-zA-Z0-9_][a-zA-Z0-9_\-]*)?(@(?P<path>.+))?\Z")
 
-GroupFilter = str
+
+def _validate_group_filter(group_filter):
+    """
+    Groups Filter.
+
+    Group Filters are just a ``tuple`` of ``str`` for performance reasons. This function does the validation.
+    """
+    group_filter = str(group_filter)
+    mat = _RE_GROUP_FILTER.match(group_filter)
+    if not mat:
+        raise ValueError(f"Invalid group filter {group_filter!r}")
+    return group_filter
+
+
+GroupFilter = Annotated[str, AfterValidator(_validate_group_filter)]
 """
 Group Filter.
 
@@ -104,35 +106,12 @@ A group filter can have an optional path at the end.
 Any :any:`GroupFilter` is later-on converted to a :any:`GroupSelect`.
 """
 
+GroupFilters = Tuple[GroupFilter, ...]
+"""
+Groups Filter Specification from User.
 
-def validate_group_filter(group_filter):
-    """
-    Groups Filter.
-
-    Group Filters are just a ``tuple`` of ``str`` for performance reasons. This function does the validation.
-    """
-    mat = _RE_GROUP_FILTER.match(group_filter)
-    if not mat:
-        raise ValueError(f"Invalid group filter {group_filter!r}")
-
-
-class GroupFilters(tuple):
-    """
-    Groups Filter Specification from User.
-
-    Used by Config and Command Line Interface.
-    """
-
-    @staticmethod
-    def validate(group_filters):
-        """
-        Check Groups Filter.
-
-        Group Filters are just a ``tuple`` of ``str`` for performance reasons. This function does the validation.
-        """
-        for group_filter in group_filters:
-            validate_group_filter(group_filter)
-        return group_filters
+Used by Config and Command Line Interface.
+"""
 
 
 class GroupSelect(BaseModel):
@@ -148,6 +127,8 @@ class GroupSelect(BaseModel):
         path: Path.
     """
 
+    model_config = ConfigDict(frozen=True)
+
     group: Optional[Group] = None
     """Group."""
     select: bool
@@ -156,7 +137,17 @@ class GroupSelect(BaseModel):
     """Path."""
 
     @staticmethod
-    def from_group_filter(group_filter) -> "GroupSelect":
+    def from_group(group: Group) -> "GroupSelect":
+        """
+        Create :any:`GroupSelect` from ``group``.
+
+        >>> GroupSelect.from_group('test')
+        GroupSelect(group='test', select=True)
+        """
+        return GroupSelect(group=group, select=True)
+
+    @staticmethod
+    def from_group_filter(group_filter: GroupFilter) -> "GroupSelect":
         """
         Create Group Selection from ``group_filter``.
 
@@ -186,48 +177,20 @@ class GroupSelect(BaseModel):
         return f"{select}{self.group}{path}"
 
 
-class GroupSelects(tuple):
-
-    """Collection of :any:`GroupSelect`."""
-
-    @staticmethod
-    def from_group_filters(group_filters: Optional[GroupFilters] = None) -> "GroupSelects":
-        """
-        Create :any:`GroupSelects` from ``group_filters``.
-
-        >>> GroupSelects.from_group_filters()
-        ()
-        >>> GroupSelects.from_group_filters(('', ))
-        ()
-        >>> GroupSelects.from_group_filters(('+test', ))
-        (GroupSelect(group='test', select=True),)
-        >>> GroupSelects.from_group_filters(('+test', '-doc'))
-        (GroupSelect(group='test', select=True), GroupSelect(group='doc', select=False))
-        """
-        group_filters = group_filters or GroupFilters()
-        items = [item.strip() for item in group_filters]
-        return GroupSelects(GroupSelect.from_group_filter(item) for item in items if item)
-
-    @staticmethod
-    def from_groups(groups: Optional[Groups] = None) -> "GroupSelects":
-        """
-        Create :any:`GroupSelects` from ``group_filters``.
-
-        >>> GroupSelects.from_groups()
-        ()
-        >>> GroupSelects.from_groups(('', ))
-        ()
-        >>> GroupSelects.from_groups(('test', ))
-        (GroupSelect(group='test', select=True),)
-        >>> GroupSelects.from_groups(('test', 'doc'))
-        (GroupSelect(group='test', select=True), GroupSelect(group='doc', select=True))
-        """
-        groups = groups or Groups()
-        items = [item.strip() for item in groups]
-        return GroupSelects(GroupSelect(group=item, select=True) for item in items if item)
+GroupSelects = Tuple[GroupSelect, ...]
 
 
-class Remote(BaseModel, allow_population_by_field_name=True):
+def group_selects_from_groups(groups: Groups) -> GroupSelects:
+    """Create :any:`GroupSelects` from `GroupFilters`."""
+    return tuple(GroupSelect.from_group(group) for group in groups)
+
+
+def group_selects_from_filters(group_filters: GroupFilters) -> GroupSelects:
+    """Create :any:`GroupSelects` from `GroupFilters`."""
+    return tuple(GroupSelect.from_group_filter(group_filter) for group_filter in group_filters)
+
+
+class Remote(BaseModel):
     """
     Remote Alias - Remote URL Helper.
 
@@ -238,6 +201,8 @@ class Remote(BaseModel, allow_population_by_field_name=True):
         url_base: Base URL. Optional.
     """
 
+    model_config = ConfigDict(frozen=True, populate_by_name=True)
+
     name: str
     """The Name of the Remote. Must be unique within Manifest."""
 
@@ -245,7 +210,7 @@ class Remote(BaseModel, allow_population_by_field_name=True):
     """URL to a directory of repositories."""
 
 
-class Defaults(BaseModel, allow_population_by_field_name=True):
+class Defaults(BaseModel):
     """
     Default Values.
 
@@ -258,30 +223,22 @@ class Defaults(BaseModel, allow_population_by_field_name=True):
         with_groups: Group Selection for refered projects.
     """
 
+    model_config = ConfigDict(frozen=True, populate_by_name=True, arbitrary_types_allowed=True)
+
     remote: Optional[str] = None
     """Remote name if not specified by the dependency. The remote must have been defined previously."""
 
     revision: Optional[str] = None
     """The revision if not specified by the dependency. Tag or Branch. SHA does not make sense here."""
 
-    groups: Optional[Groups] = Groups()
+    groups: Optional[Groups] = tuple()
     """The ``groups`` attribute if not specified by the dependency."""
 
-    with_groups: Optional[Groups] = Field(Groups(), alias="with-groups")
+    with_groups: Optional[Groups] = Field(tuple(), alias="with-groups")
     """The ``with_groups`` attribute if not specified by the dependency."""
 
     submodules: bool = True
     """Initialize and Update `git submodules`. `True` by default."""
-
-    @validator("groups", allow_reuse=True)
-    def _groups(cls, values):
-        # pylint: disable=no-self-argument
-        return Groups.validate(values)
-
-    @validator("with_groups", allow_reuse=True)
-    def _with_groups(cls, values):
-        # pylint: disable=no-self-argument
-        return Groups.validate(values)
 
 
 class FileRef(BaseModel):
@@ -294,6 +251,8 @@ class FileRef(BaseModel):
         src: Source - path relative to the project directory.
         dest: Destination - relative path to the workspace directory.
     """
+
+    model_config = ConfigDict(frozen=True)
 
     src: str
     """Source - path relative to the project directory."""
@@ -318,22 +277,15 @@ class MainFileRef(FileRef):
         groups: Groups
     """
 
-    groups: Groups = Groups()
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+    groups: Groups = tuple()
     """``groups`` specification."""
 
 
 MainFileRefs = Tuple[MainFileRef, ...]
 
 
-class FileRefType(enum.Enum):
-
-    """File Reference Type."""
-
-    LINK = "link"
-    COPY = "copy"
-
-
-class WorkspaceFileRef(BaseModel, allow_population_by_field_name=True):
+class WorkspaceFileRef(BaseModel):
     """
     Actual File Reference with Workspace.
 
@@ -346,8 +298,10 @@ class WorkspaceFileRef(BaseModel, allow_population_by_field_name=True):
         hash_: Source File Hash for Copied Files.
     """
 
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, populate_by_name=True)
+
     type_: str
-    """File """
+    """File Type."""
 
     project_path: str
     """Project Path."""
@@ -365,7 +319,7 @@ class WorkspaceFileRef(BaseModel, allow_population_by_field_name=True):
 WorkspaceFileRefs = List[WorkspaceFileRef]
 
 
-class Project(BaseModel, allow_population_by_field_name=True):
+class Project(BaseModel):
 
     """
     Project.
@@ -401,6 +355,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         return the original project.
     """
 
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, populate_by_name=True)
     name: str
     """Dependency Name."""
 
@@ -419,10 +374,10 @@ class Project(BaseModel, allow_population_by_field_name=True):
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
     """Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default."""
 
-    groups: Groups = Groups()
+    groups: Groups = tuple()
     """Dependency Groups."""
 
-    with_groups: Groups = Field(Groups(), alias="with-groups")
+    with_groups: Groups = Field(tuple(), alias="with-groups")
     """Group Selection for referred project."""
 
     submodules: bool = True
@@ -436,16 +391,6 @@ class Project(BaseModel, allow_population_by_field_name=True):
 
     is_main: bool = False
     """Project is the main project."""
-
-    @validator("groups", allow_reuse=True)
-    def _groups(cls, values):
-        # pylint: disable=no-self-argument
-        return Groups.validate(values)
-
-    @validator("with_groups", allow_reuse=True)
-    def _with_groups(cls, values):
-        # pylint: disable=no-self-argument
-        return Groups.validate(values)
 
     @property
     def info(self):
@@ -544,7 +489,7 @@ class Project(BaseModel, allow_population_by_field_name=True):
         )
 
 
-class ProjectSpec(BaseModel, allow_population_by_field_name=True):
+class ProjectSpec(BaseModel):
     """
     Project Dependency Specification
 
@@ -577,6 +522,8 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     :any:`GitWS` to operate.
     """
 
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, populate_by_name=True)
+
     name: str
     """Dependency Name."""
 
@@ -598,10 +545,10 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     manifest_path: Optional[str] = Field(str(MANIFEST_PATH_DEFAULT), alias="manifest-path")
     """Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default."""
 
-    groups: Groups = Groups()
+    groups: Groups = tuple()
     """Dependency Groups."""
 
-    with_groups: Groups = Field(Groups(), alias="with-groups")
+    with_groups: Groups = Field(tuple(), alias="with-groups")
     """Group Selection for refered project."""
 
     submodules: Optional[bool] = None
@@ -613,29 +560,18 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
     copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
-    @root_validator(allow_reuse=True)
-    def _remote_or_url(cls, values):
-        # pylint: disable=no-self-argument
-        remote = values.get("remote", None)
-        sub_url = values.get("sub_url", None)
-        url = values.get("url", None)
+    @model_validator(mode="after")
+    def _remote_or_url(self):
+        remote = self.remote
+        sub_url = self.sub_url
+        url = self.url
         if remote and url:
             raise ValueError("'remote' and 'url' are mutually exclusive")
         if url and sub_url:
             raise ValueError("'url' and 'sub-url' are mutually exclusive")
         if sub_url and not remote:
             raise ValueError("'sub-url' requires 'remote'")
-        return values
-
-    @validator("groups", allow_reuse=True)
-    def _groups(cls, values):
-        # pylint: disable=no-self-argument
-        return Groups.validate(values)
-
-    @validator("with_groups", allow_reuse=True)
-    def _with_groups(cls, values):
-        # pylint: disable=no-self-argument
-        return Groups.validate(values)
+        return self
 
     @staticmethod
     def from_project(project: Project) -> "ProjectSpec":
@@ -664,7 +600,7 @@ class ProjectSpec(BaseModel, allow_population_by_field_name=True):
         )
 
 
-class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True):
+class Manifest(BaseModel):
 
     """
     The Manifest.
@@ -685,7 +621,9 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
     :any:`Manifest.from_spec()` resolves a :any:`ManifestSpec` into a :any:`Manifest`.
     """
 
-    group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, populate_by_name=True)
+
+    group_filters: GroupFilters = Field(tuple(), alias="group-filters")
     """Default Group Selection and Deselection."""
 
     linkfiles: MainFileRefs = tuple()
@@ -699,11 +637,6 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
 
     path: Optional[str] = None
     """Path to the manifest file, relative to project path."""
-
-    @validator("group_filters", allow_reuse=True)
-    def _group_filters(cls, values):
-        # pylint: disable=no-self-argument
-        return GroupFilters.validate(values)
 
     @staticmethod
     def from_spec(
@@ -736,7 +669,7 @@ class Manifest(BaseModel, extra=Extra.allow, allow_population_by_field_name=True
         )
 
 
-class ManifestSpec(BaseModel, allow_population_by_field_name=True):
+class ManifestSpec(BaseModel):
 
     """
     ManifestSpec.
@@ -757,6 +690,8 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
         dependencies: Dependency Projects.
     """
 
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, populate_by_name=True, extra="allow")
+
     version: str = Field(default="1.0")
     """
     Manifest Version Identifier.
@@ -764,7 +699,7 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     Actual Version: ``1.0``.
     """
 
-    group_filters: GroupFilters = Field(GroupFilters(), alias="group-filters")
+    group_filters: GroupFilters = Field(tuple(), alias="group-filters")
     """Default Group Selection and Deselection."""
 
     linkfiles: MainFileRefs = tuple()
@@ -782,34 +717,29 @@ class ManifestSpec(BaseModel, allow_population_by_field_name=True):
     dependencies: Tuple[ProjectSpec, ...] = tuple()
     """Dependencies - Other Projects To Be Cloned In The Workspace."""
 
-    @root_validator(allow_reuse=True)
-    def _remotes_unique(cls, values):
-        # pylint: disable=no-self-argument
+    @model_validator(mode="after")
+    def _validate_unique_remotes(self):
+        # unique remote names
         names = set()
-        for remote in values.get("remotes", None) or []:
+        for remote in self.remotes:
             name = remote.name
             if name not in names:
                 names.add(name)
             else:
                 raise ValueError(f"Remote name {name!r} is used more than once")
-        return values
+        return self
 
-    @root_validator(allow_reuse=True)
-    def _deps_unique(cls, values):
-        # pylint: disable=no-self-argument
+    @model_validator(mode="after")
+    def _validate_unique_deps(self):
+        # unique dependency names
         names = set()
-        for dep in values.get("dependencies", None) or []:
+        for dep in self.dependencies:
             name = dep.name
             if name not in names:
                 names.add(name)
             else:
                 raise ValueError(f"Dependency name {name!r} is used more than once")
-        return values
-
-    @validator("group_filters", allow_reuse=True)
-    def _group_filters(cls, values):
-        # pylint: disable=no-self-argument
-        return GroupFilters.validate(values)
+        return self
 
     @classmethod
     def load(cls, path: Path) -> "ManifestSpec":
@@ -1023,7 +953,7 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         doc.add(tomlkit.nl())
 
         # Group Filtering
-        example = ManifestSpec(group_filters=GroupFilters(("-doc", "-feature@path")))
+        example = ManifestSpec(group_filters=("-doc", "-feature@path"))
         add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
         doc.add("group-filters", tomlkit.array())
         doc.add(tomlkit.nl())
@@ -1107,14 +1037,14 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         doc.add(tomlkit.nl())
 
         # linkfíles
-        example = ManifestSpec(linkfiles=[FileRef(src="file-in-main-clone.txt", dest="link-in-workspace.txt")])
+        example = ManifestSpec(linkfiles=[MainFileRef(src="file-in-main-clone.txt", dest="link-in-workspace.txt")])
         add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
         doc.add("linkfiles", tomlkit.aot())
         doc.add(tomlkit.nl())
         doc.add(tomlkit.nl())
 
         # copyfíles
-        example = ManifestSpec(copyfiles=[FileRef(src="file-in-main-clone.txt", dest="file-in-workspace.txt")])
+        example = ManifestSpec(copyfiles=[MainFileRef(src="file-in-main-clone.txt", dest="file-in-workspace.txt")])
         add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
         doc.add("copyfiles", tomlkit.aot())
 
@@ -1122,7 +1052,7 @@ https://git-ws.readthedocs.io/en/latest/manual/manifest.html
         return doc
 
 
-class AppConfigData(BaseSettings, extra=Extra.allow):
+class AppConfigData(BaseSettings):
     """
     Configuration data of the application.
 
@@ -1130,8 +1060,10 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     The following values are defined:
     """
 
+    model_config = SettingsConfigDict(extra="allow")
+
     manifest_path: Optional[str] = Field(
-        description="The path (relative to the project's root folder) to the manifest file."
+        default=None, description="The path (relative to the project's root folder) to the manifest file."
     )
     """
     The path of the manifest file within a repository.
@@ -1141,7 +1073,9 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     This option can be overridden by specifying the ``GIT_WS_MANIFEST_PATH`` environment variable.
     """
 
-    color_ui: Optional[bool] = Field(description="If set to true, the output the tool generates will be colored.")
+    color_ui: Optional[bool] = Field(
+        default=None, description="If set to true, the output the tool generates will be colored."
+    )
     """
     Defines if outputs by the tool shall be colored.
 
@@ -1150,7 +1084,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     This option can be overridden by specifying the ``GIT_WS_COLOR_UI`` environment variable.
     """
 
-    group_filters: Optional[GroupFilters] = Field(description="The groups to operate on.")
+    group_filters: Optional[GroupFilters] = Field(default=None, description="The groups to operate on.")
     """
     The groups to operate on.
 
@@ -1159,7 +1093,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     This option can be overridden by specifying the ``GIT_WS_GROUP_FILTERS`` environment variable.
     """
 
-    clone_cache: Optional[Path] = Field(description="Local Cache for Git Clones.")
+    clone_cache: Optional[Path] = Field(default=None, description="Local Cache for Git Clones.")
     """
     Clone Cache.
 
@@ -1169,7 +1103,7 @@ class AppConfigData(BaseSettings, extra=Extra.allow):
     This option can be overridden by specifying the ``GIT_WS_CLONE_CACHE`` environment variable.
     """
 
-    depth: Optional[int] = Field(description="Default Clone Depth for New Clones")
+    depth: Optional[int] = Field(default=None, description="Default Clone Depth for New Clones")
     """
     Default Clone Depth.
 

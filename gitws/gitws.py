@@ -28,7 +28,15 @@ from ._workspacemanager import WorkspaceManager
 from .appconfig import AppConfig
 from .clone import Clone, map_paths
 from .const import COLOR_ACTION, COLOR_BANNER, COLOR_SKIP, MANIFEST_PATH_DEFAULT, MANIFESTS_PATH
-from .datamodel import GroupFilters, GroupSelects, Manifest, ManifestSpec, Project, ProjectPaths, ProjectSpec
+from .datamodel import (
+    GroupFilters,
+    Manifest,
+    ManifestSpec,
+    Project,
+    ProjectPaths,
+    ProjectSpec,
+    group_selects_from_filters,
+)
 from .deptree import DepNode, get_deptree
 from .exceptions import GitTagExistsError, InitializedError, ManifestExistError, NoGitError, NoMainError, NotEmptyError
 from .git import DiffStat, Git, Status
@@ -126,8 +134,6 @@ class GitWS:
             manifest_path = find_manifest(main_path)
         manifest_path = workspace.get_manifest_path(manifest_path=manifest_path)
         GitWS.check_manifest(manifest_path)
-        if group_filters:
-            GroupFilters.validate(group_filters)
         group_filters = workspace.get_group_filters(group_filters=group_filters or None)
         return GitWS(workspace, manifest_path, group_filters, secho=secho)
 
@@ -177,9 +183,6 @@ class GitWS:
             base_path = path
         # check manifest
         GitWS.check_manifest(base_path / manifest_path_rel)
-        # check group_filters
-        if group_filters:
-            GroupFilters.validate(group_filters)
         # Create Workspace
         workspace = Workspace.init(
             path,
@@ -394,7 +397,7 @@ class GitWS:
         manifest_spec = ManifestSpec.load(self.manifest_path)
         #   main
         group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
-        groupfilter = create_filter(GroupSelects.from_group_filters(group_filters), default=True)
+        groupfilter = create_filter(group_selects_from_filters(group_filters), default=True)
         linkfiles = tuple(linkfile for linkfile in manifest_spec.linkfiles if groupfilter("", linkfile.groups))
         copyfiles = tuple(copyfile for copyfile in manifest_spec.copyfiles if groupfilter("", copyfile.groups))
         mngr.add(str(workspace.info.main_path or ""), linkfiles=linkfiles, copyfiles=copyfiles)
@@ -795,9 +798,9 @@ class GitWS:
             for project in self.projects(skip_main=True):
                 project_spec = ProjectSpec.from_project(project)
                 rdeps.append(project_spec)
-            manifest_spec = manifest_spec.update(dependencies=rdeps)
+            manifest_spec = manifest_spec.model_copy(update={"dependencies": rdeps})
         else:
-            manifest_spec = manifest_spec.copy()
+            manifest_spec = manifest_spec.model_copy()
         if freeze:
             manifest = Manifest.from_spec(manifest_spec)
             fdeps: List[ProjectSpec] = []
@@ -806,8 +809,8 @@ class GitWS:
                 git = Git(resolve_relative(project_path), secho=self.secho)
                 git.check()
                 revision = git.get_sha()
-                fdeps.append(project_spec.update(revision=revision))
-            manifest_spec = manifest_spec.update(dependencies=fdeps)
+                fdeps.append(project_spec.model_copy(update={"revision": revision}))
+            manifest_spec = manifest_spec.model_copy(update={"dependencies": fdeps})
         return manifest_spec
 
     def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:

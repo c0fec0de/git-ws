@@ -213,12 +213,12 @@ class AppConfig:
             user_config = self.load(AppConfigLocation.USER)
             workspace_config = self.load(AppConfigLocation.WORKSPACE)
             merged_config_data: dict = {}
-            merged_config_data.update(sys_config.dict(exclude_none=True))
-            merged_config_data.update(user_config.dict(exclude_none=True))
-            merged_config_data.update(workspace_config.dict(exclude_none=True))
+            merged_config_data.update(sys_config.model_dump(exclude_none=True))
+            merged_config_data.update(user_config.model_dump(exclude_none=True))
+            merged_config_data.update(workspace_config.model_dump(exclude_none=True))
             if self._use_config_from_env and os.environ.get(BLOCK_APP_CONFIG_FROM_ENV_ENV_NAME) is None:
                 env_config = _EnvAppConfigData()
-                merged_config_data.update(env_config.dict(exclude_none=True))
+                merged_config_data.update(env_config.model_dump(exclude_none=True))
             self._merged_config = AppConfigData(**merged_config_data)
             self._fill_in_defaults(self._merged_config)
         return self._merged_config
@@ -286,7 +286,7 @@ class AppConfig:
             UninitializedError: Tried to save to a workspace configuration but we are not within a valid workspace.
         """
         doc = self._load(location)
-        values = config.dict()
+        values = config.model_dump()
 
         # Modify the document "in-place" to keep comments etc
         for key, value in values.items():

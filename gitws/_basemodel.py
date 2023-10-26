@@ -15,10 +15,14 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Refined :any:`pydantic.BaseModel`."""
+from typing import Any, Dict
+
 import pydantic
 
+from ._stringconverter import StringConverter
 
-class BaseModel(pydantic.BaseModel, allow_mutation=False):
+
+class BaseModel(pydantic.BaseModel):
     """
     Refined :any:`pydantic.BaseModel`.
 
@@ -27,38 +31,23 @@ class BaseModel(pydantic.BaseModel, allow_mutation=False):
     * A ``new`` implementation eases the creation of new instances with the same values.
     """
 
+    model_config = pydantic.ConfigDict(frozen=True)
+
     def __repr_args__(self: pydantic.BaseModel):
+        fields = self.model_fields
         return [
-            (key, value) for key, value in self.__dict__.items() if value != self.__fields__[key].field_info.default
+            (key, value) for key, value in self.__dict__.items() if key not in fields or value != fields[key].default
         ]
 
-    def update(self, **kwargs):
-        """Create new instance with updated arguments."""
-        return self.__update(kwargs)
+    def model_copy(self, *, update=None, **kwargs):
+        obj = super().model_copy(update=update, **kwargs)
+        obj.model_validate(obj)
+        return obj
 
-    def update_fromstr(self, kwargs):
+    def model_copy_fromstr(self, kwargs: Dict[str, Any]):
         """Create new instance with updated arguments."""
-        fields = self.schema()["properties"]
-        data = {}
+        converter = StringConverter(properties=self.model_json_schema(by_alias=False)["properties"])
+        update = {}
         for name, value in kwargs.items():
-            data[name] = self.__fromstr(fields[name]["type"], value)
-        return self.__update(data)
-
-    def __update(self, kwargs):
-        data = self.dict()
-        data.update(kwargs)
-        return self.__class__(**data)
-
-    @staticmethod
-    def __fromstr(type_, value):
-        if type_ == "string":
-            return value
-        if type_ == "array":
-            if value:
-                return tuple(item.strip() for item in value.split(","))
-            return tuple()
-        if type_ == "boolean":
-            if value:
-                return value.lower() in ("true", "1", "on")
-            return None
-        assert False, f"Unknown type {type_}"  # pragma: no cover
+            update[name] = converter(name, value)
+        return self.model_copy(update=update)

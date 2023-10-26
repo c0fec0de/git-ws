@@ -143,9 +143,12 @@ class FileStatus(Status):
 
     def with_path(self, path: Path) -> "FileStatus":
         """Return :any:`FileStatus` with ``path`` as prefix."""
+        update = {
+            "path": path / self.path,
+        }
         if self.orig_path:
-            return self.update(path=path / self.path, orig_path=path / self.orig_path)
-        return self.update(path=path / self.path)
+            update["orig_path"] = path / self.orig_path
+        return self.model_copy(update=update)
 
     def has_work_changes(self) -> bool:
         """Has Work Changes."""
@@ -217,7 +220,7 @@ class DiffStat(BaseModel):
 
     def with_path(self, path: Path) -> "DiffStat":
         """Return :any:`DiffStat` with ``path`` as prefix."""
-        return self.update(path=path / self.path)
+        return self.model_copy(update={"path": path / self.path})
 
 
 class Git:

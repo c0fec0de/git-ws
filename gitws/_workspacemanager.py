@@ -27,7 +27,7 @@ from typing import Any, Dict, Generator, List, Optional
 
 from ._util import exception2logging, no_echo, relative
 from .const import COLOR_ACTION, COLOR_BANNER, GIT_WS_PATH
-from .datamodel import FileRefs, FileRefType, WorkspaceFileRef, WorkspaceFileRefs
+from .datamodel import FileRefs, WorkspaceFileRef, WorkspaceFileRefs
 from .exceptions import FileRefConflict, FileRefModifiedError, GitCloneNotCleanError, OutsideWorkspaceError
 from .git import Git
 from .workspace import Workspace
@@ -71,7 +71,7 @@ class WorkspaceManager:
         if linkfiles:
             for linkfile in linkfiles:
                 fileref = WorkspaceFileRef(
-                    type_=FileRefType.LINK.value,
+                    type_="link",
                     project_path=project_path,
                     src=linkfile.src,
                     dest=linkfile.dest,
@@ -80,7 +80,7 @@ class WorkspaceManager:
         if copyfiles:
             for copyfile in copyfiles:
                 fileref = WorkspaceFileRef(
-                    type_=FileRefType.COPY.value,
+                    type_="copy",
                     project_path=project_path,
                     src=copyfile.src,
                     dest=copyfile.dest,
@@ -144,11 +144,11 @@ class WorkspaceManager:
         for dest, fileref in self._filerefmap.items():
             with exception2logging("Cannot update: "):
                 # calculate source hash on copied file
-                if fileref.type_ == FileRefType.COPY.value:
+                if fileref.type_ == "copy":
                     srcabs = workspace_path / fileref.project_path / fileref.src
                     self.__check_path(srcabs, "source", exists=True, is_file=True)
                     hash_ = _get_filehash(srcabs)
-                    fileref = fileref.update(hash_=hash_)
+                    fileref = fileref.model_copy(update={"hash_": hash_})
 
                 # existing file up-to-date?
                 efileref = efilerefmap.get(dest)
@@ -181,7 +181,7 @@ class WorkspaceManager:
                         # create nice relative paths in exception message
                         srcabs = workspace_path / fileref.project_path / fileref.src
                         raise FileRefModifiedError(relative(destabs), relative(srcabs))
-                if fileref.type_ == FileRefType.LINK.value and destabs.is_symlink():
+                if fileref.type_ == "link" and destabs.is_symlink():
                     srcabs = workspace_path / fileref.project_path / fileref.src
                     esrcabs = Path(readlink(destabs))
                     if srcabs != esrcabs:
@@ -207,10 +207,10 @@ class WorkspaceManager:
             destabs.unlink()
 
         filereftype = fileref.type_
-        if filereftype == FileRefType.COPY.value:
+        if filereftype == "copy":
             self.secho(f"Copying '{relative(srcabs)!s}' -> '{relative(destabs)!s}'")
             copy2(srcabs, destabs)
-        elif filereftype == FileRefType.LINK.value:
+        elif filereftype == "link":
             self.secho(f"Linking '{relative(srcabs)!s}' -> '{relative(destabs)!s}'")
             destabs.symlink_to(srcabs)
         else:

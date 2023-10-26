@@ -15,21 +15,10 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Manifest Testing."""
+from pydantic import ValidationError
 from pytest import raises
 
-from gitws import (
-    Defaults,
-    FileRef,
-    Groups,
-    GroupSelect,
-    GroupSelects,
-    MainFileRef,
-    Manifest,
-    ManifestSpec,
-    Project,
-    ProjectSpec,
-    Remote,
-)
+from gitws import Defaults, FileRef, GroupSelect, MainFileRef, Manifest, ManifestSpec, Project, ProjectSpec, Remote
 
 from .common import MANIFEST_DEFAULT
 
@@ -45,7 +34,7 @@ def test_remote():
     assert remote.url_base == "base"
 
     # Immutable
-    with raises(TypeError):
+    with raises(ValidationError):
         remote.name = "other"
 
 
@@ -82,43 +71,46 @@ def test_defaults():
     assert defaults.with_groups == ("test", "doc")
 
     # Immutable
-    with raises(TypeError):
+    with raises(ValidationError):
         defaults.remote = "other"
 
-    with raises(ValueError) as exc:
+    with raises(ValueError):
         Defaults(groups=("-foo",))
-    assert str(exc.value).split("\n") == [
-        "1 validation error for Defaults",
-        "groups",
-        "  Invalid group '-foo' (type=value_error)",
-    ]
 
-    with raises(ValueError) as exc:
+    with raises(ValueError):
         Defaults(with_groups=("-foo",))
-    assert str(exc.value).split("\n") == [
-        "1 validation error for Defaults",
-        "with-groups",
-        "  Invalid group '-foo' (type=value_error)",
-    ]
+
+
+def test_fileref():
+    """File Refs."""
+    ref = FileRef(src="src0", dest="dest1")
+    assert ref.src == "src0"
+    assert ref.dest == "dest1"
 
 
 def test_group_select():
     """Group Select."""
     group_select = GroupSelect(group="foo", select=True, path="path")
     assert group_select.group == "foo"
-    assert group_select.select
+    assert group_select.select is True
     assert group_select.path == "path"
     assert str(group_select) == "+foo@path"
 
     # Immutable
-    with raises(TypeError):
+    with raises(ValidationError):
         group_select.group = "blub"
 
+    group_select = GroupSelect.from_group_filter("+foo@path")
+    assert group_select.group == "foo"
+    assert group_select.select is True
+    assert group_select.path == "path"
+    assert str(group_select) == "+foo@path"
 
-def test_group_selects():
-    """Group Selects."""
-    group_selects = GroupSelects.from_group_filters(("-test", "+doc", "+feature@path"))
-    assert [str(group_select) for group_select in group_selects] == ["-test", "+doc", "+feature@path"]
+    group_select = GroupSelect.from_group("foo")
+    assert group_select.group == "foo"
+    assert group_select.select is True
+    assert group_select.path is None
+    assert str(group_select) == "+foo"
 
 
 def test_project():
@@ -128,15 +120,15 @@ def test_project():
     assert project.url is None
     assert project.revision is None
     assert project.manifest_path == "git-ws.toml"
-    assert project.groups == Groups()
-    assert project.with_groups == Groups()
+    assert project.groups == tuple()
+    assert project.with_groups == tuple()
     assert project.submodules is True
     assert project.linkfiles == tuple()
     assert project.copyfiles == tuple()
     assert project.info == "name (path='path')"
 
     # Immutable
-    with raises(TypeError):
+    with raises(ValidationError):
         project.name = "other"
 
     with raises(ValueError):
@@ -160,8 +152,8 @@ def test_project():
     assert project.url == "url"
     assert project.revision is None
     assert project.manifest_path == "git-ws.toml"
-    assert project.groups == Groups(("a", "b"))
-    assert project.with_groups == Groups(("c", "d"))
+    assert project.groups == ("a", "b")
+    assert project.with_groups == ("c", "d")
     assert project.linkfiles == (FileRef(src="src0", dest="dest0"), FileRef(src="src1", dest="dest1"))
     assert project.copyfiles == (FileRef(src="src2", dest="dest2"), FileRef(src="src3", dest="dest3"))
     assert project.info == "name (MAIN path='path', groups='a,b')"
@@ -177,8 +169,8 @@ def test_project_spec():
     assert project_spec.revision is None
     assert project_spec.path is None
     assert project_spec.manifest_path == "git-ws.toml"
-    assert project_spec.groups == Groups()
-    assert project_spec.with_groups == Groups()
+    assert project_spec.groups == tuple()
+    assert project_spec.with_groups == tuple()
     assert project_spec.submodules is None
     assert project_spec.copyfiles == tuple()
     assert project_spec.linkfiles == tuple()
@@ -191,24 +183,14 @@ def test_project_spec():
         ProjectSpec(name="name", sub_url="sub-url")
 
     # Immutable
-    with raises(TypeError):
+    with raises(ValidationError):
         project_spec.name = "other"
 
-    with raises(ValueError) as exc:
+    with raises(ValueError):
         ProjectSpec(name="name", groups=("-foo",))
-    assert str(exc.value).split("\n") == [
-        "1 validation error for ProjectSpec",
-        "groups",
-        "  Invalid group '-foo' (type=value_error)",
-    ]
 
-    with raises(ValueError) as exc:
+    with raises(ValueError):
         ProjectSpec(name="name", with_groups=("-foo",))
-    assert str(exc.value).split("\n") == [
-        "1 validation error for ProjectSpec",
-        "with-groups",
-        "  Invalid group '-foo' (type=value_error)",
-    ]
 
 
 def test_manifest():
@@ -220,7 +202,7 @@ def test_manifest():
     assert not manifest.copyfiles
 
     # Immutable
-    with raises(TypeError):
+    with raises(ValidationError):
         manifest.defaults = Defaults()
 
     with raises(ValueError):
@@ -231,15 +213,15 @@ def test_manifest_spec():
     """Test ManifestSpec."""
     manifest_spec = ManifestSpec()
     assert manifest_spec.version == "1.0"
-    assert not manifest_spec.remotes
-    assert not manifest_spec.group_filters
+    assert manifest_spec.remotes == tuple()
+    assert manifest_spec.group_filters == tuple()
     assert manifest_spec.defaults == Defaults()
-    assert not manifest_spec.linkfiles
-    assert not manifest_spec.copyfiles
-    assert not manifest_spec.dependencies
+    assert manifest_spec.linkfiles == tuple()
+    assert manifest_spec.copyfiles == tuple()
+    assert manifest_spec.dependencies == tuple()
 
     # Immutable
-    with raises(TypeError):
+    with raises(ValidationError):
         manifest_spec.defaults = Defaults()
 
     with raises(ValueError):

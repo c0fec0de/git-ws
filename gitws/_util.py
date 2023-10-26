@@ -136,7 +136,7 @@ def add_comment(doc: tomlkit.TOMLDocument, text):
 
 def as_dict(obj, exclude_defaults: bool = True):
     """Transform to dictionary."""
-    return obj.dict(by_alias=True, exclude_none=True, exclude_defaults=exclude_defaults)
+    return obj.model_dump(by_alias=True, exclude_none=True, exclude_defaults=exclude_defaults)
 
 
 @contextmanager

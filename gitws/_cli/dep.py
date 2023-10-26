@@ -66,26 +66,26 @@ def add(
         manifest_spec = ManifestSpec.load(manifest_path)
         dependencies = list(manifest_spec.dependencies)
         dependencies.append(
-            ProjectSpec(name=name).update_fromstr(
+            ProjectSpec(name=name).model_copy_fromstr(
                 {
                     "remote": remote,
-                    "sub-url": sub_url,
+                    "sub_url": sub_url,
                     "url": url,
                     "revision": revision,
                     "path": path,
-                    "manifest-path": dep_manifest_path,
+                    "manifest_path": dep_manifest_path,
                     "groups": groups,
-                    "with-groups": with_groups,
+                    "with_groups": with_groups,
                     "submodules": submodules,
                 }
             )
         )
-        manifest_spec = manifest_spec.update(dependencies=dependencies)
+        manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
         manifest_spec.save(manifest_path)
 
 
 _DEP_ATTRIBUTES = tuple(
-    (item for item in ProjectSpec(name="dummy").dict(by_alias=True) if item not in ("linkfiles", "copyfiles"))
+    (item for item in ProjectSpec(name="dummy").model_dump(by_alias=True) if item not in ("linkfiles", "copyfiles"))
 )
 
 
@@ -107,8 +107,8 @@ def set_(context, manifest_path, dep, attribute, value):
                 break
         else:
             raise ValueError(f"Unknown dependency {dep!r}")
-        dependencies[idx] = dependencies[idx].update_fromstr({attribute: value if value else None})
-        manifest_spec = manifest_spec.update(dependencies=dependencies)
+        dependencies[idx] = dependencies[idx].model_copy_fromstr({attribute: value})
+        manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
         manifest_spec.save(manifest_path)
 
 
@@ -143,5 +143,5 @@ def delete(context, name, manifest_path):
         else:
             raise ValueError(f"Unknown dependency {name!r}")
         dependencies.pop(idx)
-        manifest_spec = manifest_spec.update(dependencies=dependencies)
+        manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
         manifest_spec.save(manifest_path)

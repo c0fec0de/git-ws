@@ -98,7 +98,7 @@ class Info(BaseModel):
             doc.add(tomlkit.comment("Git Workspace System File. DO NOT EDIT."))
             doc.add(tomlkit.nl())
         # update
-        selfdict = self.dict(exclude_none=True)
+        selfdict = self.model_dump(exclude_none=True)
         selfdict["main_path"] = str(self.main_path) if self.main_path else None
         for name, value in selfdict.items():
             if value:
@@ -312,7 +312,7 @@ class Workspace:
         * empty group filters.
         """
         if group_filters is None:
-            return self.app_config.options.group_filters or GroupFilters()
+            return self.app_config.options.group_filters or tuple()
         return group_filters
 
     @contextmanager
