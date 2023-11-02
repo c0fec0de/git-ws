@@ -21,8 +21,9 @@ import tomlkit
 from gitws import ManifestSpec, ProjectSpec
 from gitws._util import as_dict
 
-from .common import exceptionhandling, pass_context
-from .options import manifest_option
+from ..common import exceptionhandling, pass_context
+from ..options import manifest_option
+from .update import update
 
 
 @click.group()
@@ -145,3 +146,6 @@ def delete(context, name, manifest_path):
         dependencies.pop(idx)
         manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
         manifest_spec.save(manifest_path)
+
+
+dep.add_command(update)
