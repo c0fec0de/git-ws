@@ -24,7 +24,8 @@ from gitws._util import run
 from gitws.git import Git
 
 # pylint: disable=unused-import
-from .fixtures import repos
+from .fixtures import git_repo, repos
+from .util import assert_gen
 
 
 def is_sha(sha):
@@ -292,3 +293,30 @@ def test_empty(tmp_path):
     git = Git(tmp_path)
     assert git.is_empty()
     assert tuple(git.diffstat()) == tuple()
+
+
+def test_cache_nomain(tmp_path):
+    """No Main."""
+    repos_path = tmp_path / "repos"
+
+    # Init Repo
+    with git_repo(repos_path / "main", commit="initial", branch="devel") as path:
+        (path / "data.txt").write_text("main")
+    cache_path = tmp_path / "cache"
+
+    # First Clone
+    git = Git(tmp_path / "main1", clone_cache=cache_path)
+    git.clone(str(repos_path / "main"))
+    assert (git.path / "data.txt").read_text() == "main"
+
+    cache_entry_path = next(cache_path.glob("*"))
+    marker_filepath = cache_entry_path / ".git" / ".marker"
+    marker_filepath.touch()
+    assert marker_filepath.exists()
+
+    # Second Clone
+    git = Git(tmp_path / "main2", clone_cache=cache_path)
+    git.clone(str(repos_path / "main"))
+    assert (git.path / "data.txt").read_text() == "main"
+
+    assert marker_filepath.exists()
