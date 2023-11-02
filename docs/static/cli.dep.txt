@@ -10,3 +10,4 @@ Commands:
   delete  Delete Dependency NAME.
   list    List Dependencies.
   set     Set ATTRIBUTE For Dependency DEP to VALUE.
+  update  Automatically Update Dependencies.

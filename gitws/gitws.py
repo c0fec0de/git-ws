@@ -844,3 +844,34 @@ class GitWS:
             return True
 
         return default_filter
+
+    def update_manifest(self, recursive: bool = False, revision: bool = False):
+        """
+        Update Manifest.
+
+        Keyword Args:
+            recursive: Update dependencies too.
+            revision: Update Revisions.
+        """
+        infos = {clone.project.path: {"revision": clone.git.get_revision()} for clone in self.clones()}
+        for manifest in self.manifests():
+            if not manifest.path:
+                continue
+            manifest_path = Path(manifest.path)
+            manifest_spec = ManifestSpec.load(manifest_path)
+            project_specs = {project_spec.name: project_spec for project_spec in manifest_spec.dependencies}
+            for project in manifest.dependencies:
+                info = infos.pop(project.path, None)
+                if info:
+                    project_update = {}
+                    clone_revision = info["revision"]
+                    if revision and project.revision != clone_revision:
+                        project_update["revision"] = clone_revision
+                    if project_update:
+                        project_specs[project.name] = project_specs[project.name].model_copy(update=project_update)
+            manifest_update = {"dependencies": tuple(project_specs.values())}
+            manifest_spec = manifest_spec.model_copy(update=manifest_update)
+            manifest_spec.save(manifest_path)
+
+            if not recursive:
+                break
