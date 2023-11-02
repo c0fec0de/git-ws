@@ -798,7 +798,7 @@ class GitWS:
             for project in self.projects(skip_main=True):
                 project_spec = ProjectSpec.from_project(project)
                 rdeps.append(project_spec)
-            manifest_spec = manifest_spec.model_copy(update={"dependencies": rdeps})
+            manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(rdeps)})
         else:
             manifest_spec = manifest_spec.model_copy()
         if freeze:
@@ -810,7 +810,7 @@ class GitWS:
                 git.check()
                 revision = git.get_sha()
                 fdeps.append(project_spec.model_copy(update={"revision": revision}))
-            manifest_spec = manifest_spec.model_copy(update={"dependencies": fdeps})
+            manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(fdeps)})
         return manifest_spec
 
     def get_manifest(self, freeze: bool = False, resolve: bool = False) -> Manifest:

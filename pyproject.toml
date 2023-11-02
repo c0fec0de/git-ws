@@ -74,6 +74,11 @@ exclude = '''
 profile = "black"
 line_length = 120
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+]
+
 [tool.coverage.report]
 exclude_lines = [
     'return NotImplemented',
