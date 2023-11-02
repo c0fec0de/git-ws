@@ -121,7 +121,7 @@ def init(
         )
         click.secho(f"Workspace initialized at {str(resolve_relative(gws.path))!r}.")
         if update:
-            gws.update(skip_main=True)
+            gws.update(skip_main=True, force=force)
         else:
             click.secho("Please continue with:\n\n    git ws update\n", fg=COLOR_INFO)
 
