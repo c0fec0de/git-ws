@@ -34,12 +34,12 @@ def set_meta(path=None):
 
 
 @contextmanager
-def git_repo(path, commit=None):
+def git_repo(path, commit=None, branch="main"):
     """Initialize Repo."""
     path.mkdir(parents=True, exist_ok=True)
     with chdir(path):
         run(("git", "init"), check=True)
-        run(("git", "checkout", "-b", "main"), check=True)
+        run(("git", "checkout", "-b", branch), check=True)
         set_meta()
         yield path
         run(("git", "add", "-A"), check=True)
