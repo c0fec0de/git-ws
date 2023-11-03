@@ -22,21 +22,44 @@ from gitws import GitWS
 
 from ..common import exceptionhandling, pass_context
 
+recursive_option = click.option(
+    "--recursive", "-r", is_flag=True, help="Update all manifests, not just the main manifest"
+)
 
-@click.group()
-def update():
+
+@click.group(invoke_without_command=True)
+@click.pass_context
+@pass_context
+@recursive_option
+def update(context, ctx, recursive):
     """
-    Automatically Update Dependencies.
+    Automatically Update Revision and URL of Dependencies.
     """
+    if not ctx.invoked_subcommand:
+        with exceptionhandling(context):
+            gws = GitWS.from_path()
+            gws.update_manifest(recursive=recursive, revision=True, url=True)
 
 
 @update.command()
 @pass_context
-@click.option("--recursive", "-r", is_flag=True, help="Update revisions in dependencies also")
+@recursive_option
 def revision(context, recursive):
     """
-    Update Revision.
+    Update Dependency Revisions.
     """
     with exceptionhandling(context):
         gws = GitWS.from_path()
         gws.update_manifest(recursive=recursive, revision=True)
+
+
+@update.command()
+@pass_context
+@recursive_option
+def url(context, recursive):
+    """
+    Update Dependency URLs.
+    """
+    with exceptionhandling(context):
+        gws = GitWS.from_path()
+        gws.update_manifest(recursive=recursive, url=True)

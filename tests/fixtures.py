@@ -123,7 +123,7 @@ def create_repos(repos_path, add_dep5=False, add_dep6=False):
         dependencies = [
             ProjectSpec(name="dep1", url="../dep1"),
             ProjectSpec(name="dep2", url="../dep2", revision="1-feature", submodules=False),
-            ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
+            ProjectSpec(name="dep3", groups=("test",)),
         ]
         if add_dep5:
             dependencies.append(ProjectSpec(name="dep5", revision="final2"))
@@ -172,7 +172,7 @@ def create_repos(repos_path, add_dep5=False, add_dep6=False):
             defaults=Defaults(revision="main"),
             group_filters=("-test",),
             dependencies=[
-                ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
+                ProjectSpec(name="dep3", groups=("test",)),
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),
             ],
         ).save(path / "git-ws.toml")

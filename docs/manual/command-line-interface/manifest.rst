@@ -289,6 +289,34 @@ This command can be used to update the properties of a property. It takes the na
     git ws dep set another-library revision v2.3.4
 
 
+.. _git_ws_dep_update:
+
+``git ws dep update``
++++++++++++++++++++++++
+
+Automatically update ``revision`` and ``url`` of dependencies.
+
+.. literalinclude:: ../../static/cli.dep.update.txt
+   :language: text
+
+Assume you have workspace and changed the checkout version of one or more dependencies.
+The following commands automatically updates the ``revision`` and/or ``url``
+in the main manifest file and optionally in all dependencies.
+
+.. code-block:: bash
+
+    # Update url and revision of main manifest dependencies
+    git ws dep update
+
+    # Update url and revision in *all* manifests
+    git ws dep update -r
+
+    # Update revision in *all* manifests
+    git ws dep update revision -r
+
+    # Update url in *all* manifests
+    git ws dep update url -r
+
 .. _git_ws_group_filters:
 
 ``git ws group-filters``

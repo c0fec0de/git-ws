@@ -48,6 +48,7 @@ gen:
 	git-ws dep delete --help > static/cli.dep.delete.txt
 	git-ws dep list --help > static/cli.dep.list.txt
 	git-ws dep set --help > static/cli.dep.set.txt
+	git-ws dep update --help > static/cli.dep.update.txt
 	git-ws diff --help > static/cli.diff.txt
 	git-ws fetch --help > static/cli.fetch.txt
 	git-ws foreach --help > static/cli.foreach.txt
