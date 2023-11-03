@@ -17,7 +17,10 @@
 """Command Line Interface."""
 from pathlib import Path
 
+from pytest import fixture
+
 from gitws import Git, ManifestSpec, ProjectSpec
+from gitws._util import run
 
 from .fixtures import create_repos
 from .util import chdir, cli, path2url
@@ -106,58 +109,201 @@ def test_cli_dep(tmp_path):
         assert cli(("dep", "delete", "dep3"), exit_code=1) == ["Error: Unknown dependency 'dep3'", ""]
 
 
-def _get_revisions(workspace_path):
+def _get_infos(workspace_path):
     for manifest_path in sorted(workspace_path.glob("*/git-ws.toml")):
 
         name = manifest_path.parent.name
         manifest_spec = ManifestSpec.load(manifest_path)
-        revisions = {project_spec.name: project_spec.revision for project_spec in manifest_spec.dependencies}
+        revisions = [
+            (project_spec.name, project_spec.revision, project_spec.url) for project_spec in manifest_spec.dependencies
+        ]
         yield name, revisions
 
 
-def test_cli_dep_update_revision(tmp_path):
-    """Test Update Revision."""
+@fixture
+def workspace_path(tmp_path):
+    """Workspace and Repos."""
     repos_path = tmp_path / "repos"
-    create_repos(repos_path, add_dep5=True)
-    workspace_path = tmp_path / "main"
+    for sub_path in (repos_path / "one", repos_path / "two"):
+        create_repos(sub_path, add_dep5=True)
+
     with chdir(tmp_path):
-        assert cli(["clone", path2url(repos_path / "main"), "--update"], tmp_path=tmp_path, repos_path=repos_path) == [
+        assert cli(
+            ["clone", path2url(repos_path / "one" / "main"), "--update"], tmp_path=tmp_path, repos_path=repos_path
+        ) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'file://REPOS/main'.",
+            "Cloning 'file://REPOS/one/main'.",
             "===== main/dep1 ('dep1') =====",
             "WARNING: Clone dep1 has no revision!",
-            "Cloning 'file://REPOS/dep1'.",
+            "Cloning 'file://REPOS/one/dep1'.",
             "===== main/dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "Cloning 'file://REPOS/dep2'.",
+            "Cloning 'file://REPOS/one/dep2'.",
             "===== main/dep5 ('dep5', revision='final2') =====",
-            "Cloning 'file://REPOS/dep5'.",
+            "Cloning 'file://REPOS/one/dep5'.",
             "===== main/dep4 ('dep4', revision='main') =====",
-            "Cloning 'file://REPOS/dep4'.",
+            "Cloning 'file://REPOS/one/dep4'.",
             "",
         ]
 
+    workspace_path = tmp_path / "main"
     with chdir(workspace_path):
-        assert tuple(_get_revisions(workspace_path)) == (
-            ("dep1", {"dep4": "main"}),
-            ("dep2", {"dep3": None, "dep4": "main"}),
-            ("main", {"dep1": None, "dep2": "1-feature", "dep3": None, "dep5": "final2"}),
+        yield workspace_path
+
+
+def test_cli_dep_update(tmp_path, workspace_path):
+    """Test Update."""
+    repos_path = workspace_path.parent / "repos"
+    assert tuple(_get_infos(workspace_path)) == (
+        ("dep1", [("dep4", "main", "../dep4")]),
+        ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+        (
+            "main",
+            [
+                ("dep1", None, "../dep1"),
+                ("dep2", "1-feature", "../dep2"),
+                ("dep3", None, None),
+                ("dep5", "final2", None),
+            ],
+        ),
+    )
+    Git(workspace_path / "dep2").checkout("main")
+    run(["git", "remote", "set-url", "origin", path2url(repos_path / "two" / "dep1")], cwd=workspace_path / "dep1")
+    Git(workspace_path / "dep4").checkout("4-feature")
+
+    for _ in range(2):
+        assert cli(["dep", "update"], tmp_path=tmp_path) == [""]
+        assert tuple(_get_infos(workspace_path)) == (
+            ("dep1", [("dep4", "main", "../dep4")]),
+            ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            (
+                "main",
+                [
+                    ("dep1", "main", "../../two/dep1"),
+                    ("dep2", "main", None),
+                    ("dep3", None, None),
+                    ("dep5", "final2", None),
+                ],
+            ),
         )
 
-        Git(workspace_path / "dep2").checkout("main")
-        Git(workspace_path / "dep4").checkout("4-feature")
+    for _ in range(2):
+        assert cli(["dep", "update", "--recursive"], tmp_path=tmp_path) == [""]
+        assert tuple(_get_infos(workspace_path)) == (
+            ("dep1", [("dep4", "4-feature", "../../one/dep4")]),
+            ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            (
+                "main",
+                [
+                    ("dep1", "main", "../../two/dep1"),
+                    ("dep2", "main", None),
+                    ("dep3", None, None),
+                    ("dep5", "final2", None),
+                ],
+            ),
+        )
 
-        for _ in range(2):
-            assert cli(["dep", "update", "revision"], tmp_path=tmp_path) == [""]
-            assert tuple(_get_revisions(workspace_path)) == (
-                ("dep1", {"dep4": "main"}),
-                ("dep2", {"dep3": None, "dep4": "main"}),
-                ("main", {"dep1": "main", "dep2": "main", "dep3": None, "dep5": "final2"}),
-            )
 
-        for _ in range(2):
-            assert cli(["dep", "update", "revision", "--recursive"], tmp_path=tmp_path) == [""]
-            assert tuple(_get_revisions(workspace_path)) == (
-                ("dep1", {"dep4": "4-feature"}),
-                ("dep2", {"dep3": None, "dep4": "main"}),
-                ("main", {"dep1": "main", "dep2": "main", "dep3": None, "dep5": "final2"}),
-            )
+def test_cli_dep_update_revision(tmp_path, workspace_path):
+    """Test Update Revision."""
+    repos_path = workspace_path.parent / "repos"
+    assert tuple(_get_infos(workspace_path)) == (
+        ("dep1", [("dep4", "main", "../dep4")]),
+        ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+        (
+            "main",
+            [
+                ("dep1", None, "../dep1"),
+                ("dep2", "1-feature", "../dep2"),
+                ("dep3", None, None),
+                ("dep5", "final2", None),
+            ],
+        ),
+    )
+    Git(workspace_path / "dep2").checkout("main")
+    run(["git", "remote", "set-url", "origin", path2url(repos_path / "two" / "dep1")], cwd=workspace_path / "dep1")
+    Git(workspace_path / "dep4").checkout("4-feature")
+
+    for _ in range(2):
+        assert cli(["dep", "update", "revision"], tmp_path=tmp_path) == [""]
+        assert tuple(_get_infos(workspace_path)) == (
+            ("dep1", [("dep4", "main", "../dep4")]),
+            ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            (
+                "main",
+                [
+                    ("dep1", "main", "../dep1"),
+                    ("dep2", "main", "../dep2"),
+                    ("dep3", None, None),
+                    ("dep5", "final2", None),
+                ],
+            ),
+        )
+
+    for _ in range(2):
+        assert cli(["dep", "update", "revision", "--recursive"], tmp_path=tmp_path) == [""]
+        assert tuple(_get_infos(workspace_path)) == (
+            ("dep1", [("dep4", "4-feature", "../dep4")]),
+            ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            (
+                "main",
+                [
+                    ("dep1", "main", "../dep1"),
+                    ("dep2", "main", "../dep2"),
+                    ("dep3", None, None),
+                    ("dep5", "final2", None),
+                ],
+            ),
+        )
+
+
+def test_cli_dep_update_url(tmp_path, workspace_path):
+    """Test Update URL."""
+    repos_path = workspace_path.parent / "repos"
+    assert tuple(_get_infos(workspace_path)) == (
+        ("dep1", [("dep4", "main", "../dep4")]),
+        ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+        (
+            "main",
+            [
+                ("dep1", None, "../dep1"),
+                ("dep2", "1-feature", "../dep2"),
+                ("dep3", None, None),
+                ("dep5", "final2", None),
+            ],
+        ),
+    )
+    Git(workspace_path / "dep2").checkout("main")
+    run(["git", "remote", "set-url", "origin", path2url(repos_path / "two" / "dep1")], cwd=workspace_path / "dep1")
+    Git(workspace_path / "dep4").checkout("4-feature")
+
+    for _ in range(2):
+        assert cli(["dep", "update", "url"], tmp_path=tmp_path) == [""]
+        assert tuple(_get_infos(workspace_path)) == (
+            ("dep1", [("dep4", "main", "../dep4")]),
+            ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            (
+                "main",
+                [
+                    ("dep1", None, "../../two/dep1"),
+                    ("dep2", "1-feature", None),
+                    ("dep3", None, None),
+                    ("dep5", "final2", None),
+                ],
+            ),
+        )
+
+    for _ in range(2):
+        assert cli(["dep", "update", "url", "--recursive"], tmp_path=tmp_path) == [""]
+        assert tuple(_get_infos(workspace_path)) == (
+            ("dep1", [("dep4", "main", "../../one/dep4")]),
+            ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            (
+                "main",
+                [
+                    ("dep1", None, "../../two/dep1"),
+                    ("dep2", "1-feature", None),
+                    ("dep3", None, None),
+                    ("dep5", "final2", None),
+                ],
+            ),
+        )

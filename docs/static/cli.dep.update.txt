@@ -1,0 +1,11 @@
+Usage: git-ws dep update [OPTIONS] COMMAND [ARGS]...
+
+  Automatically Update Revision and URL of Dependencies.
+
+Options:
+  -r, --recursive  Update all manifests, not just the main manifest
+  -h, --help       Show this message and exit.
+
+Commands:
+  revision  Update Dependency Revisions.
+  url       Update Dependency URLs.

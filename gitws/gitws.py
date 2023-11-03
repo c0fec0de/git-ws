@@ -23,6 +23,7 @@ import urllib
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
 
+from ._url import urlrel, urlsub
 from ._util import LOGGER, get_repr, no_echo, removesuffix, resolve_relative, run
 from ._workspacemanager import WorkspaceManager
 from .appconfig import AppConfig
@@ -845,7 +846,7 @@ class GitWS:
 
         return default_filter
 
-    def update_manifest(self, recursive: bool = False, revision: bool = False):
+    def update_manifest(self, recursive: bool = False, revision: bool = False, url: bool = False):
         """
         Update Manifest.
 
@@ -853,25 +854,56 @@ class GitWS:
             recursive: Update dependencies too.
             revision: Update Revisions.
         """
-        infos = {clone.project.path: {"revision": clone.git.get_revision()} for clone in self.clones()}
+        infos = {
+            clone.project.path: {"revision": clone.git.get_revision(), "url": clone.git.get_url()}
+            for clone in self.clones()
+        }
         for manifest in self.manifests():
             if not manifest.path:
                 continue
             manifest_path = Path(manifest.path)
             manifest_spec = ManifestSpec.load(manifest_path)
+            manifest_url = Git.from_path(manifest_path.parent).get_url()
             project_specs = {project_spec.name: project_spec for project_spec in manifest_spec.dependencies}
+
+            # update projects
             for project in manifest.dependencies:
-                info = infos.pop(project.path, None)
-                if info:
-                    project_update = {}
-                    clone_revision = info["revision"]
-                    if revision and project.revision != clone_revision:
-                        project_update["revision"] = clone_revision
-                    if project_update:
-                        project_specs[project.name] = project_specs[project.name].model_copy(update=project_update)
+                project_spec = project_specs[project.name]
+                project_spec = self._update_project(infos, manifest_url, project, project_spec, revision, url)
+                project_specs[project.name] = project_spec
+
+            # update manifest
             manifest_update = {"dependencies": tuple(project_specs.values())}
             manifest_spec = manifest_spec.model_copy(update=manifest_update)
             manifest_spec.save(manifest_path)
 
             if not recursive:
                 break
+
+    @staticmethod
+    def _update_project(
+        infos, manifest_url: Optional[str], project: Project, project_spec: ProjectSpec, revision: bool, url: bool
+    ):
+        info = infos.pop(project.path, None)
+        if info:
+            project_update = {}
+            # revision
+            clone_revision = info["revision"]
+            if revision and project.revision != clone_revision:
+                project_update["revision"] = clone_revision
+            # url
+            clone_url = info["url"]
+            if url and not project_spec.remote and project.url != clone_url:
+                if manifest_url:
+                    # try relative URL
+                    clone_url = urlrel(manifest_url, clone_url) or clone_url
+                    # ignore default URL
+                    name_url = urlsub(manifest_url, project.name)
+                    default_url = f"../{name_url}"
+                    if clone_url == default_url:
+                        clone_url = None
+                project_update["url"] = clone_url
+            # update project
+            if project_update:
+                return project_spec.model_copy(update=project_update)
+        return project_spec

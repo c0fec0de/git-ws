@@ -15,6 +15,7 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Set of URL Helper Functions."""
+from os.path import relpath
 from typing import Optional
 from urllib import parse
 
@@ -108,3 +109,25 @@ def strip_user_password(url: str) -> str:
     parsed = parse.urlparse(url)
     baseurl = parsed._replace(netloc=parsed.netloc.rsplit("@", 1)[-1])
     return parse.urlunparse(baseurl)
+
+
+def urlrel(base: str, url: str) -> str:
+    """
+    Return ``url`` relative to ``base``.
+
+    >>> urlrel('https://domain.com/base/repo1.git', 'https://domain.com/base/repo2.git')
+    '../repo2.git'
+    >>> urlrel('https://domain.com/base/repo1.git', 'https://domain.com/other/repo2.git')
+    '../../other/repo2.git'
+    >>> urlrel('ssh://domain.com/base/repo1.git', 'https://domain.com/base/repo2.git')
+    ''
+    >>> urlrel('https://domain.com/base/repo1.git', 'https://page.com/base/repo2.git')
+    ''
+    """
+    baseparsed = parse.urlparse(base)
+    urlparsed = parse.urlparse(url)
+    basecommon = baseparsed[:2] + baseparsed[3:]
+    urlcommon = urlparsed[:2] + urlparsed[3:]
+    if basecommon != urlcommon:
+        return ""
+    return relpath(urlparsed.path, baseparsed.path)

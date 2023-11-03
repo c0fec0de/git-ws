@@ -311,6 +311,7 @@ Please see the next section for an overview of all commands.
 
 | Command | Description |
 | --- | --- |
+| `git ws dep update -r`   | Update all manifest files, use actual checkout branch, tag or SHA as ``revision``, use actual remote ``origin`` as ``url``, try to use relative URLs. |
 | `git ws manifest freeze`   | Print The Resolved Manifest With SHAs For All Project Revisions. |
 | `git ws manifest path`     | Print Path to Main Manifest File. |
 | `git ws manifest paths`    | Print Paths to ALL Manifest Files. |
