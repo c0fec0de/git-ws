@@ -397,18 +397,28 @@ class Git:
         _LOGGER.info("Git(%r).get_url() = %r", str(self.path), url)
         return url
 
-    def checkout(self, revision: Optional[str] = None, paths: Optional[Paths] = None, force: bool = False):
+    def checkout(
+        self,
+        revision: Optional[str] = None,
+        paths: Optional[Paths] = None,
+        branch: Optional[str] = None,
+        force: bool = False,
+    ):
         """
         Checkout Revision.
 
         Keyword Args:
             revision: Revision to checkout.
             paths: File Paths to checkout, otherwise entire repo.
+            branch: Branch to be checked out.
             force: Overwrite local changes.
         """
         args = ["checkout"]
         if revision:
             args.append(revision)
+        if branch:
+            args.append("-b")
+            args.append(branch)
         if force:
             args.append("--force")
         self._run(args, paths=paths)
