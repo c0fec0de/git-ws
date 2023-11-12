@@ -513,7 +513,7 @@ class GitWS:
             for diffstat in clone.git.diffstat(paths=cpaths):
                 yield diffstat.with_path(path)
 
-    def checkout(self, paths: Optional[Tuple[Path, ...]] = None, force: bool = False):
+    def checkout(self, paths: Optional[Tuple[Path, ...]] = None, branch: Optional[str] = None, force: bool = False):
         """
         Enriched Git Checkout - aka ``git checkout``.
 
@@ -521,6 +521,7 @@ class GitWS:
 
         Keyword Args:
             paths: Limit Checkout to ``paths`` only. Otherwise run checkout on all git clones.
+            branch: Branch to be checked out.
             force: force checkout (throw away local modifications)
         """
         if paths:
@@ -528,7 +529,7 @@ class GitWS:
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
                 self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
                 clone.check()
-                clone.git.checkout(revision=clone.project.revision, paths=cpaths, force=force)
+                clone.git.checkout(revision=clone.project.revision, paths=cpaths, branch=branch, force=force)
         else:
             # Checkout all clones
             depth = self.workspace.app_config.options.depth
@@ -539,8 +540,8 @@ class GitWS:
                 if not git.is_cloned():
                     self.secho(f"Cloning {project.url!r}.", fg=COLOR_ACTION)
                     git.clone(project.url, revision=project.revision, depth=depth)
-                if project.revision and not project.is_main:
-                    git.checkout(revision=project.revision, force=force)
+                if (project.revision and not project.is_main) or branch:
+                    git.checkout(revision=project.revision, branch=branch, force=force)
                 clone.check(exists=False)
 
     def add(self, paths: Tuple[Path, ...], force: bool = False, all_: bool = False):

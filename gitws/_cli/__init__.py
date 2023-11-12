@@ -370,10 +370,11 @@ def diff(context, manifest_path=None, group_filters=None, paths=None, stat=False
 @main.command()
 @paths_argument()
 @force_option()
+@click.option("-b", "branch", help="create and checkout a new branch")
 @manifest_option()
 @group_filters_option()
 @pass_context
-def checkout(context, manifest_path=None, group_filters=None, paths=None, force: bool = False):
+def checkout(context, manifest_path=None, group_filters=None, paths=None, branch=None, force: bool = False):
     """
     Run 'git checkout' on PATHS and choose the right git clone and manifest revision automatically.
 
@@ -381,7 +382,7 @@ def checkout(context, manifest_path=None, group_filters=None, paths=None, force:
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        gws.checkout(process_paths(paths), force=force)
+        gws.checkout(process_paths(paths), branch=branch, force=force)
 
 
 @main.command()
