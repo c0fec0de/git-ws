@@ -15,14 +15,12 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface - Update Variants."""
-from pathlib import Path
 
-from gitws import Git, GitWS
-from gitws.datamodel import ManifestSpec, ProjectSpec
+from gitws import GitWS
 
 # pylint: disable=unused-import
 from .fixtures import create_repos
-from .util import chdir, check, cli, run
+from .util import chdir, cli
 
 
 def test_checkout(tmp_path):
@@ -53,7 +51,7 @@ def test_checkout(tmp_path):
         assert cli(["checkout", "-b", "new-feature"]) == [
             "===== main (MAIN 'main', revision='main') =====",
             "Switched to a new branch 'new-feature'",
-            "WARNING: Clone main (MAIN revision='main') is on different revision: " "'new-feature'",
+            "WARNING: Clone main (MAIN revision='main') is on different revision: 'new-feature'",
             "===== dep1 ('dep1') =====",
             "Switched to a new branch 'new-feature'",
             "WARNING: Clone dep1 has no revision!",
