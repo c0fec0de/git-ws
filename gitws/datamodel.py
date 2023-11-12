@@ -782,7 +782,7 @@ class ManifestSpec(BaseModel):
         ##
         ## Git Workspace's Manifest. Please see the documentation at:
         ##
-        ## https://git-ws.readthedocs.io/en/latest/manual/manifest.html
+        ## https://git-ws.readthedocs.io/en/stable/manual/manifest.html
         ##
         <BLANKLINE>
         <BLANKLINE>
@@ -946,7 +946,7 @@ class ManifestSpec(BaseModel):
             """
 Git Workspace's Manifest. Please see the documentation at:
 
-https://git-ws.readthedocs.io/en/latest/manual/manifest.html
+https://git-ws.readthedocs.io/en/stable/manual/manifest.html
 """,
         )
         doc.add(tomlkit.nl())

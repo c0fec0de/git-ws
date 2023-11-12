@@ -1,12 +1,12 @@
 [![PyPI Version](https://badge.fury.io/py/git-ws.svg)](https://badge.fury.io/py/git-ws)
 [![Python Build](https://github.com/c0fec0de/git-ws/actions/workflows/main.yml/badge.svg)](https://github.com/c0fec0de/git-ws/actions/workflows/main.yml)
-[![Documentation](https://readthedocs.org/projects/git-ws/badge/?version=latest)](https://git-ws.readthedocs.io/en/latest/?badge=latest)
+[![Documentation](https://readthedocs.org/projects/git-ws/badge/?version=stable)](https://git-ws.readthedocs.io/en/stable)
 [![Coverage Status](https://coveralls.io/repos/github/c0fec0de/git-ws/badge.svg?branch=main)](https://coveralls.io/github/c0fec0de/git-ws?branch=main)
 [![python-versions](https://img.shields.io/pypi/pyversions/git-ws.svg)](https://pypi.python.org/pypi/git-ws)
 [![pylint](https://img.shields.io/badge/linter-pylint-%231674b1?style=flat)](https://www.pylint.org/)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-[Documentation](https://git-ws.readthedocs.io/en/latest/) -
+[Documentation](https://git-ws.readthedocs.io/en/stable/) -
 [PyPI](https://pypi.org/project/git-ws/) -
 [Sources](https://github.com/c0fec0de/git-ws) -
 [Issues](https://github.com/c0fec0de/git-ws/issues)
@@ -24,7 +24,7 @@ Git Workspace is a lightweight tool for creating and managing *workspaces* consi
 
 ![Workspace](https://github.com/c0fec0de/git-ws/raw/main/docs/images/workspace.png)
 
-👉 You can read more about the used [nomenclature](https://git-ws.readthedocs.io/en/latest/manual/nomenclature.html) in the [documentation](https://git-ws.readthedocs.io/en/latest/index.html).
+👉 You can read more about the used [nomenclature](https://git-ws.readthedocs.io/en/stable/manual/nomenclature.html) in the [documentation](https://git-ws.readthedocs.io/en/stable/index.html).
 
 
 
@@ -75,7 +75,7 @@ revision = "v2.3.4"
 
 The project will be searched via a relative path (which is either `../mylib` or `../mylib.git` depending on the main repository's URL). Relative paths are in general useful as they allow using the same protocol for the main repository as well as any of its dependencies.
 
-See the [Manifest Documentation](https://git-ws.readthedocs.io/en/latest/manual/manifest.html) for any further details on available options.
+See the [Manifest Documentation](https://git-ws.readthedocs.io/en/stable/manual/manifest.html) for any further details on available options.
 
 #### The Initial Clone
 
@@ -102,7 +102,7 @@ mylib
 
 As you can see, besides the two repositories we wanted, there is also a hidden `.git-ws` folder where the tool stores the needed configuration data.
 
-The [`git ws clone` documentation](https://git-ws.readthedocs.io/en/latest/manual/command-line-interface/workspace-management.html#git-ws-clone) describes all options.
+The [`git ws clone` documentation](https://git-ws.readthedocs.io/en/stable/manual/command-line-interface/workspace-management.html#git-ws-clone) describes all options.
 
 #### Initialization
 
@@ -142,7 +142,7 @@ Run `git ws init --update` or `git ws init --update -M path/to/git-ws.toml` in t
 
 👉 There are just two drawbacks of a workspace without a main project:
 
-1. `git ws tag` has no main project to tag and will fail. Please use [`git ws manifest freeze`](https://git-ws.readthedocs.io/en/latest/manual/command-line-interface/manifest.html#git-ws-manifest-freeze).
+1. `git ws tag` has no main project to tag and will fail. Please use [`git ws manifest freeze`](https://git-ws.readthedocs.io/en/stable/manual/command-line-interface/manifest.html#git-ws-manifest-freeze).
 2. Relative URLs are not supported, as there is no URL to be relative to. Please use `remotes`:
 
 ```toml
@@ -325,12 +325,12 @@ Please see the next section for an overview of all commands.
 | `git ws info dep-tree --dot \| dot -Tpng > dep-tree.png` | Draw Dependency Diagramm (needs [graphviz](https://graphviz.org)) |
 
 
-See the [command-line interface documentation](https://git-ws.readthedocs.io/en/latest/manual/command-line-interface/index.html) for any further details.
+See the [command-line interface documentation](https://git-ws.readthedocs.io/en/stable/manual/command-line-interface/index.html) for any further details.
 
 
 ## 🐍 Python API
 
-Git Workspace is written in Python. Besides the `git ws` command line tool, there is also an API which you can use to further automate workspace creation and maintenance. If you are interested, have a look into the [API documentation](https://git-ws.readthedocs.io/en/latest/api/gitws.html).
+Git Workspace is written in Python. Besides the `git ws` command line tool, there is also an API which you can use to further automate workspace creation and maintenance. If you are interested, have a look into the [API documentation](https://git-ws.readthedocs.io/en/stable/api/gitws.html).
 
 
 ## 🤝 Alternatives
@@ -361,5 +361,5 @@ And that's what we did - Git Workspace is our tool for managing a large workspac
 
 👉 Please note that our view on the various features might be biased. As we did, always look at all the options available to you before deciding on one tool or the other. While the other tools in comparison did not model what we needed for our workflow, they might just be what you are looking for.
 
-If you want to learn more, have a look into [Why We Started Git Workspace](https://git-ws.readthedocs.io/en/latest/manual/why.html).
+If you want to learn more, have a look into [Why We Started Git Workspace](https://git-ws.readthedocs.io/en/stable/manual/why.html).
 

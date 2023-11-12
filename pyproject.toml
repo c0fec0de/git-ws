@@ -19,7 +19,7 @@ packages = [
 
 [project.urls]
 "Homepage" = "https://github.com/c0fec0de/git-ws"
-"Documentation" = "https://git-ws.readthedocs.io/en/latest/"
+"Documentation" = "https://git-ws.readthedocs.io/en/stable/"
 "Bug Tracker" = "https://github.com/c0fec0de/git-ws/issues"
 
 [tool.poetry.scripts]

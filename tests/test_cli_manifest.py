@@ -87,7 +87,7 @@ def test_freeze(tmp_path, gws, repos):
         "##",
         "## Git Workspace's Manifest. Please see the documentation at:",
         "##",
-        "## https://git-ws.readthedocs.io/en/latest/manual/manifest.html",
+        "## https://git-ws.readthedocs.io/en/stable/manual/manifest.html",
         "##",
         "",
         "",
@@ -236,7 +236,7 @@ def test_freeze(tmp_path, gws, repos):
         "##",
         "## Git Workspace's Manifest. Please see the documentation at:",
         "##",
-        "## https://git-ws.readthedocs.io/en/latest/manual/manifest.html",
+        "## https://git-ws.readthedocs.io/en/stable/manual/manifest.html",
         "##",
         "",
         "",
@@ -403,7 +403,7 @@ def test_resolve(tmp_path, gws):
         "##",
         "## Git Workspace's Manifest. Please see the documentation at:",
         "##",
-        "## https://git-ws.readthedocs.io/en/latest/manual/manifest.html",
+        "## https://git-ws.readthedocs.io/en/stable/manual/manifest.html",
         "##",
         "",
         "",
@@ -557,7 +557,7 @@ remote = "myremote"
 ##
 ## Git Workspace's Manifest. Please see the documentation at:
 ##
-## https://git-ws.readthedocs.io/en/latest/manual/manifest.html
+## https://git-ws.readthedocs.io/en/stable/manual/manifest.html
 ##
 
 
@@ -677,7 +677,7 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
         "##",
         "## Git Workspace's Manifest. Please see the documentation at:",
         "##",
-        "## https://git-ws.readthedocs.io/en/latest/manual/manifest.html",
+        "## https://git-ws.readthedocs.io/en/stable/manual/manifest.html",
         "##",
         "",
         "",

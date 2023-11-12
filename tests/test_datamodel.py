@@ -270,7 +270,7 @@ version = "1.1"
 ##
 ## Git Workspace's Manifest. Please see the documentation at:
 ##
-## https://git-ws.readthedocs.io/en/latest/manual/manifest.html
+## https://git-ws.readthedocs.io/en/stable/manual/manifest.html
 ##
 
 
@@ -405,7 +405,7 @@ version = "1.1"
 ##
 ## Git Workspace's Manifest. Please see the documentation at:
 ##
-## https://git-ws.readthedocs.io/en/latest/manual/manifest.html
+## https://git-ws.readthedocs.io/en/stable/manual/manifest.html
 ##
 
 
