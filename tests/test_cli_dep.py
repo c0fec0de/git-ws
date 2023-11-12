@@ -22,7 +22,7 @@ from pytest import fixture
 from gitws import Git, ManifestSpec, ProjectSpec
 from gitws._util import run
 
-from .fixtures import create_repos
+from .fixtures import create_repos, git_repo
 from .util import chdir, cli, path2url
 
 
@@ -129,7 +129,9 @@ def workspace_path(tmp_path):
 
     with chdir(tmp_path):
         assert cli(
-            ["clone", path2url(repos_path / "one" / "main"), "--update"], tmp_path=tmp_path, repos_path=repos_path
+            ["clone", path2url(repos_path / "one" / "main"), "--update", "-G", "+test"],
+            tmp_path=tmp_path,
+            repos_path=repos_path,
         ) == [
             "===== main/main (MAIN 'main') =====",
             "Cloning 'file://REPOS/one/main'.",
@@ -138,6 +140,9 @@ def workspace_path(tmp_path):
             "Cloning 'file://REPOS/one/dep1'.",
             "===== main/dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Cloning 'file://REPOS/one/dep2'.",
+            "===== main/dep3 ('dep3', groups='test') =====",
+            "WARNING: Clone dep3 (groups='test') has no revision!",
+            "Cloning 'file://REPOS/one/dep3'.",
             "===== main/dep5 ('dep5', revision='final2') =====",
             "Cloning 'file://REPOS/one/dep5'.",
             "===== main/dep4 ('dep4', revision='main') =====",
@@ -156,6 +161,7 @@ def test_cli_dep_update(tmp_path, workspace_path):
     assert tuple(_get_infos(workspace_path)) == (
         ("dep1", [("dep4", "main", "../dep4")]),
         ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+        ("dep3", [("dep2", None, "../dep2")]),
         (
             "main",
             [
@@ -175,12 +181,13 @@ def test_cli_dep_update(tmp_path, workspace_path):
         assert tuple(_get_infos(workspace_path)) == (
             ("dep1", [("dep4", "main", "../dep4")]),
             ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            ("dep3", [("dep2", None, "../dep2")]),
             (
                 "main",
                 [
                     ("dep1", "main", "../../two/dep1"),
                     ("dep2", "main", None),
-                    ("dep3", None, None),
+                    ("dep3", "main", None),
                     ("dep5", "final2", None),
                 ],
             ),
@@ -191,12 +198,13 @@ def test_cli_dep_update(tmp_path, workspace_path):
         assert tuple(_get_infos(workspace_path)) == (
             ("dep1", [("dep4", "4-feature", "../../one/dep4")]),
             ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            ("dep3", [("dep2", None, "../dep2")]),
             (
                 "main",
                 [
                     ("dep1", "main", "../../two/dep1"),
                     ("dep2", "main", None),
-                    ("dep3", None, None),
+                    ("dep3", "main", None),
                     ("dep5", "final2", None),
                 ],
             ),
@@ -209,6 +217,7 @@ def test_cli_dep_update_revision(tmp_path, workspace_path):
     assert tuple(_get_infos(workspace_path)) == (
         ("dep1", [("dep4", "main", "../dep4")]),
         ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+        ("dep3", [("dep2", None, "../dep2")]),
         (
             "main",
             [
@@ -228,12 +237,13 @@ def test_cli_dep_update_revision(tmp_path, workspace_path):
         assert tuple(_get_infos(workspace_path)) == (
             ("dep1", [("dep4", "main", "../dep4")]),
             ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            ("dep3", [("dep2", None, "../dep2")]),
             (
                 "main",
                 [
                     ("dep1", "main", "../dep1"),
                     ("dep2", "main", "../dep2"),
-                    ("dep3", None, None),
+                    ("dep3", "main", None),
                     ("dep5", "final2", None),
                 ],
             ),
@@ -244,12 +254,13 @@ def test_cli_dep_update_revision(tmp_path, workspace_path):
         assert tuple(_get_infos(workspace_path)) == (
             ("dep1", [("dep4", "4-feature", "../dep4")]),
             ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            ("dep3", [("dep2", None, "../dep2")]),
             (
                 "main",
                 [
                     ("dep1", "main", "../dep1"),
                     ("dep2", "main", "../dep2"),
-                    ("dep3", None, None),
+                    ("dep3", "main", None),
                     ("dep5", "final2", None),
                 ],
             ),
@@ -262,6 +273,7 @@ def test_cli_dep_update_url(tmp_path, workspace_path):
     assert tuple(_get_infos(workspace_path)) == (
         ("dep1", [("dep4", "main", "../dep4")]),
         ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+        ("dep3", [("dep2", None, "../dep2")]),
         (
             "main",
             [
@@ -281,6 +293,7 @@ def test_cli_dep_update_url(tmp_path, workspace_path):
         assert tuple(_get_infos(workspace_path)) == (
             ("dep1", [("dep4", "main", "../dep4")]),
             ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            ("dep3", [("dep2", None, "../dep2")]),
             (
                 "main",
                 [
@@ -297,6 +310,7 @@ def test_cli_dep_update_url(tmp_path, workspace_path):
         assert tuple(_get_infos(workspace_path)) == (
             ("dep1", [("dep4", "main", "../../one/dep4")]),
             ("dep2", [("dep3", None, None), ("dep4", "main", "../dep4")]),
+            ("dep3", [("dep2", None, "../dep2")]),
             (
                 "main",
                 [
@@ -307,3 +321,37 @@ def test_cli_dep_update_url(tmp_path, workspace_path):
                 ],
             ),
         )
+
+
+def test_cli_dep_update_revision_default(tmp_path):
+    """Update Revision to Default."""
+    repos_path = tmp_path / "repos"
+
+    with git_repo(repos_path / "main.git", commit="initial") as path:
+        (path / "data.txt").write_text("main")
+        ManifestSpec(
+            defaults={"revision": "main"},
+            dependencies=[
+                ProjectSpec(name="dep1", revision="main"),
+            ],
+        ).save(path / "git-ws.toml")
+    with git_repo(repos_path / "dep1.git", commit="initial") as path:
+        (path / "data.txt").write_text("dep")
+
+    # Clone
+    with chdir(tmp_path):
+        assert cli(["clone", path2url(repos_path / "main"), "--update"], tmp_path=tmp_path, repos_path=repos_path,) == [
+            "===== main/main (MAIN 'main') =====",
+            "Cloning 'file://REPOS/main'.",
+            "===== main/dep1 ('dep1', revision='main') =====",
+            "Cloning 'file://REPOS/dep1'.",
+            "",
+        ]
+        workspace_path = tmp_path / "main"
+
+    with chdir(workspace_path):
+        assert tuple(_get_infos(workspace_path)) == (("main", [("dep1", "main", None)]),)
+
+        assert cli(["dep", "update", "revision"], tmp_path=tmp_path) == [""]
+
+        assert tuple(_get_infos(workspace_path)) == (("main", [("dep1", None, None)]),)

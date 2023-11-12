@@ -21,7 +21,7 @@ The :any:`GitWS` class provides a simple facade to all Git Workspace functionali
 """
 import urllib
 from pathlib import Path
-from typing import Generator, List, Optional, Tuple
+from typing import Dict, Generator, List, Optional, Tuple
 
 from ._url import urlrel, urlsub
 from ._util import LOGGER, get_repr, no_echo, removesuffix, resolve_relative, run
@@ -869,7 +869,9 @@ class GitWS:
             # update projects
             for project in manifest.dependencies:
                 project_spec = project_specs[project.name]
-                project_spec = self._update_project(infos, manifest_url, project, project_spec, revision, url)
+                project_spec = self._update_project(
+                    infos, manifest_spec, manifest_url, project, project_spec, revision, url
+                )
                 project_specs[project.name] = project_spec
 
             # update manifest
@@ -882,27 +884,38 @@ class GitWS:
 
     @staticmethod
     def _update_project(
-        infos, manifest_url: Optional[str], project: Project, project_spec: ProjectSpec, revision: bool, url: bool
+        infos,
+        manifest_spec: ManifestSpec,
+        manifest_url: Optional[str],
+        project: Project,
+        project_spec: ProjectSpec,
+        revision: bool,
+        url: bool,
     ):
         info = infos.pop(project.path, None)
         if info:
-            project_update = {}
+            project_update: Dict[str, Optional[str]] = {}
             # revision
             clone_revision = info["revision"]
-            if revision and project.revision != clone_revision:
-                project_update["revision"] = clone_revision
+            if revision:
+                if clone_revision == manifest_spec.defaults.revision:
+                    project_update["revision"] = None
+                elif clone_revision != project.revision:
+                    project_update["revision"] = clone_revision
             # url
             clone_url = info["url"]
-            if url and not project_spec.remote and project.url != clone_url:
+            if url and not project_spec.remote:
+                default_url = None
                 if manifest_url:
                     # try relative URL
                     clone_url = urlrel(manifest_url, clone_url) or clone_url
                     # ignore default URL
                     name_url = urlsub(manifest_url, project.name)
                     default_url = f"../{name_url}"
-                    if clone_url == default_url:
-                        clone_url = None
-                project_update["url"] = clone_url
+                if default_url and clone_url == default_url:
+                    project_update["url"] = None
+                elif project.url != clone_url:
+                    project_update["url"] = clone_url
             # update project
             if project_update:
                 return project_spec.model_copy(update=project_update)
