@@ -7,7 +7,7 @@ Usage: git-ws checkout [OPTIONS] [PATHS]...
 
 Options:
   -f, --force                Enfore operation.
-  -b                         create and checkout a new branch
+  -b TEXT                    create and checkout a new branch
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by
                              default.
   -G, --group-filter FILTER  Group Filtering. All groups from the main
