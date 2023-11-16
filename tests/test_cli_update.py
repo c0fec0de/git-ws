@@ -351,3 +351,20 @@ def test_update_manifest(tmp_path):
         check(gws.path, "dep3", exists=False)
         check(gws.path, "dep4")
         check(gws.path, "dep5", exists=False)
+
+
+def test_update_missing_upstream(tmp_path):
+    """Test Update With Missing Upstream."""
+    # pylint: disable=unused-argument
+
+    repos_path = tmp_path / "repos"
+    create_repos(repos_path)
+
+    with chdir(tmp_path):
+        gws = GitWS.clone(str(repos_path / "main"))
+        gws.update()
+
+        Git(gws.path / "main").checkout(branch="90-new")
+        Git(gws.path / "dep4").checkout(branch="90-new")
+
+        gws.update()
