@@ -443,7 +443,7 @@ class GitWS:
                     branch = git.get_branch()
 
                 # Rebase / Merge
-                if branch:
+                if branch and git.get_upstream_branch():
                     if rebase:
                         self.secho(f"Rebasing branch {branch!r}.", fg=COLOR_ACTION)
                         git.rebase()

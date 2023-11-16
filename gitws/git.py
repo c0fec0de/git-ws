@@ -391,6 +391,12 @@ class Git:
         """
         return self.get_branch() or self.get_tag() or self.get_sha()
 
+    def get_upstream_branch(self) -> Optional[str]:
+        """Get Actual Upstream Branch."""
+        branch = self._run2str(("branch", "--format", "%(HEAD) %(upstream:short)"), regex=_RE_BRANCH)
+        _LOGGER.info("Git(%r).get_upstream_branch() = %r", str(self.path), branch)
+        return branch
+
     def get_url(self) -> Optional[str]:
         """Get Actual URL of ``origin``."""
         url = self._run2str(("remote", "-v"), regex=_RE_URL, check=False)
