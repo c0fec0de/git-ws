@@ -57,7 +57,7 @@ class ManifestIter:
     Means the first dependency (i.e. from the MAIN project) wins. Including the specified attributes (i.e. revision).
 
     Args:
-        workspace: The actual workspace
+        workspace: The current workspace
         manifest_path: Path to the manifest file.
         group_filters: Group Filters.
 
@@ -135,7 +135,7 @@ class ProjectIter:
     Means the first dependency (i.e. from the MAIN project) wins. Including the specified attributes (i.e. revision).
 
     Args:
-        workspace: The actual workspace
+        workspace: The current workspace
         manifest_path: Path to the manifest file **in the main project**.
         group_filters: Group Filters.
 

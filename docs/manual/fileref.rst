@@ -50,9 +50,9 @@ workspace might look somehow like this:
         └── file-in-main-repo.txt
 
 As you can see, the file ``link-in-workspace.txt`` is a symbolic link to the
-actual file in the main repository. This has some nice side effect: You can
+current file in the main repository. This has some nice side effect: You can
 easily open the file in e.g. a text editor and make changes - they'll go
-directly to the actual file (and hence, can be committed to version control
+directly to the current file (and hence, can be committed to version control
 easily).
 
 .. warning:: File Linking might not be supported by all operating systems
@@ -86,7 +86,7 @@ With this, the resulting workspace would rather look like this:
     └── main-project
         └── file-in-main-repo.txt
 
-Note that this time, ``copy-in-workspace.txt`` is a copy of the actual file
+Note that this time, ``copy-in-workspace.txt`` is a copy of the current file
 in the main repository. That also means that editing it will keep the original
 file unchanged.
 

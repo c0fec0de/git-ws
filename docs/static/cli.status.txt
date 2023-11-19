@@ -1,6 +1,6 @@
 Usage: git-ws status [OPTIONS] [PATHS]...
 
-  Run 'git status' on PATHS or all files (displayed paths include the actual
+  Run 'git status' on PATHS or all files (displayed paths include the current
   clone path).
 
 Options:

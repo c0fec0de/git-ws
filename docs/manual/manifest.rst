@@ -92,7 +92,7 @@ The command :ref:`git_ws_remote` manipulates this section.
 The ``defaults`` section
 ------------------------
 
-The ``defaults`` section defines default values for all dependencies within the actual manifest.
+The ``defaults`` section defines default values for all dependencies within the current manifest.
 If a dependency specifies the attribute explicitly the given value takes precedence and the default value
 is ignored.
 The following attributes are taken as default values in the ``[[dependencies]]`` section.
@@ -134,7 +134,7 @@ The ``dependencies`` section
 
 
 The ``dependencies`` section is the one, the one this is all about ---
-the listing of all other git clones you need, next to the actual git clone.
+the listing of all other git clones you need, next to the current git clone.
 The following attributes provide all the freedom:
 
 ===================  ===========================  ===================================================================
@@ -172,7 +172,7 @@ Please note:
 * ``remote`` and ``url`` are mutually exclusive. Do not specify both.
 * ``sub-url`` requires a ``remote`` and is always relative to ``remote.url_base``.
 * ``url`` can be absolute or relative.
-* A relative ``url`` is relative to the remote which contains the actual manifest file.
+* A relative ``url`` is relative to the remote which contains the current manifest file.
   More precise: it is relative to the url returned by ``git remote get-url origin`` in the git clone containing the manifest file
 * If the dependency is located on the same server in the same directory, ``name`` is the only required attribute.
   ``remote``, ``sub-url`` and ``url`` can be simply left blank.

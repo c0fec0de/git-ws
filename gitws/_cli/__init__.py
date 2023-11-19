@@ -98,7 +98,7 @@ def init(
     """
     Initialize Git Workspace *with* or *without* main project.
 
-    *with* main project: run `git ws init` in the directory of an actual git clone OR
+    *with* main project: run `git ws init` in the directory of an current git clone OR
     run `git ws init PATH_TO_MAIN_GIT_CLONE`. The git clone becomes the main project
     in both cases.
 
@@ -330,7 +330,7 @@ def rebase(context, command_options=None, projects=None, manifest_path=None, gro
 @pass_context
 def status(context, manifest_path=None, group_filters=None, paths=None, branch: bool = False, banner: bool = False):
     """
-    Run 'git status' on PATHS or all files (displayed paths include the actual clone path).
+    Run 'git status' on PATHS or all files (displayed paths include the current clone path).
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
@@ -356,7 +356,7 @@ def status(context, manifest_path=None, group_filters=None, paths=None, branch: 
 @pass_context
 def diff(context, manifest_path=None, group_filters=None, paths=None, stat=False):
     """
-    Run 'git diff' on PATHS or all files (displayed paths include the actual clone path).
+    Run 'git diff' on PATHS or all files (displayed paths include the current clone path).
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)

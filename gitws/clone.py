@@ -63,7 +63,7 @@ class Clone:
         The following checks are processed:
 
         * Check that the git clone exists (if ``exists=True``).
-        * Check that the actual git clone revision matches the ``project.revision`` (if ``diff=True``).
+        * Check that the current git clone revision matches the ``project.revision`` (if ``diff=True``).
         * The revision check is skipped on the main project.
 
         Keyword Args:

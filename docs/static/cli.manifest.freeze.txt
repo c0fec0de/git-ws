@@ -3,7 +3,7 @@ Usage: git-ws manifest freeze [OPTIONS]
   Print The Resolved Manifest With SHAs For All Project Revisions.
 
   The output is identical to resolve, a single manifest file with all
-  dependencies and their dependencies. Revisions are replaced by the actual
+  dependencies and their dependencies. Revisions are replaced by the current
   SHAs.
 
 Options:

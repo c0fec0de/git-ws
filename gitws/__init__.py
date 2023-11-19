@@ -86,7 +86,7 @@ Overview
 * :any:`GitWS`: the central API to the main functionality.
 * :any:`Clone`: is the pair of Of :any:`Project` And :any:`Git` Interface.
 * :any:`Git`: provides a reduced API to ``git``.
-* :any:`ManifestSpec`: Manifest specification for the actual project.
+* :any:`ManifestSpec`: Manifest specification for the current project.
 * :any:`Manifest`: Manifest as needed by :any:`GitWS` derived from :any:`ManifestSpec`.
 * :any:`ProjectSpec`: Dependency Specification in :any:`ManifestSpec`.
 * :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.

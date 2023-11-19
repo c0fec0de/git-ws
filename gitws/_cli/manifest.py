@@ -62,7 +62,7 @@ def freeze(context, manifest_path=None, group_filters=None, output=None):
     Print The Resolved Manifest With SHAs For All Project Revisions.
 
     The output is identical to resolve, a single manifest file with all dependencies and their dependencies.
-    Revisions are replaced by the actual SHAs.
+    Revisions are replaced by the current SHAs.
     """
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)

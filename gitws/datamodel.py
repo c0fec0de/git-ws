@@ -20,7 +20,7 @@ Central :any:`GitWS` Datamodel.
 * :any:`Group`: Dependency Group. A string (i.e. 'test').
 * :any:`GroupFilter`: Group Filter Specification. A string (i.e. '+test@path').
 * :any:`GroupSelect`: Group Selection. A converted :any:`GroupFilter` as needed by :any:`GitWS`.
-* :any:`ManifestSpec`: Manifest specification for the actual project.
+* :any:`ManifestSpec`: Manifest specification for the current project.
 * :any:`Manifest`: Manifest as needed by :any:`GitWS` derived from :any:`ManifestSpec`.
 * :any:`ProjectSpec`: Dependency Specification in :any:`ManifestSpec`.
 * :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.
@@ -287,7 +287,7 @@ MainFileRefs = Tuple[MainFileRef, ...]
 
 class WorkspaceFileRef(BaseModel):
     """
-    Actual File Reference with Workspace.
+    Current File Reference with Workspace.
 
     Args:
         project_path - Project Path.
@@ -605,7 +605,7 @@ class Manifest(BaseModel):
     """
     The Manifest.
 
-    A manifest describes the actual project and its dependencies.
+    A manifest describes the current project and its dependencies.
 
     Keyword Args:
         group_filters: Group Filtering.
@@ -674,14 +674,14 @@ class ManifestSpec(BaseModel):
     """
     ManifestSpec.
 
-    A manifest describes the actual project and its dependencies.
+    A manifest describes the current project and its dependencies.
 
     The :any:`ManifestSpec` represents the User Interface. The options which can be specified in the manifest file.
     The :any:`Manifest` is the resolved version of :any:`ManifestSpec` with all calculated information needed by
     :any:`GitWS` to operate.
 
     Keyword Args:
-        version: Version String. Actually 1.0.
+        version: Version String. Currently 1.0.
         remotes: Remote Aliases.
         group_filters: Group Filtering.
         linkfiles: symbolic links to be created in the workspace

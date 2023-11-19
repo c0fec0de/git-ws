@@ -137,7 +137,7 @@ Run `git ws init --update` or `git ws init --update -M path/to/git-ws.toml` in t
 
 👉 As before, without the `--update`, no dependencies will be fetched.
 
-**Inside** a git clone, `git ws init` uses the actual git project as the *main project* of the workspace.
+**Inside** a git clone, `git ws init` uses the current git project as the *main project* of the workspace.
 **Outside** a git clone, `git ws init` initializes a workspace *without* a *main project*.
 
 👉 There are just two drawbacks of a workspace without a main project:
@@ -196,7 +196,7 @@ git ws init
 ```
 
 The parent directory became the ``git ws`` *workspace directory* .
-The actual git clone is the *main project* now.
+The current git clone is the *main project* now.
 ``git ws`` suggests to run ``git ws update``.
 You can try, but nothing will happen yet, as the manifest is quite empty.
 
@@ -287,7 +287,7 @@ Please see the next section for an overview of all commands.
 | --- | --- |
 | `git ws update` | Pull latest changes on main repository and all dependent repositories (clone them if needed) |
 | `git ws update --rebase` | Same as above, but fetch and rebase instead of pull |
-| `git ws status` | Run `git status` on all repositories (displayed paths include the actual clone path) |
+| `git ws status` | Run `git status` on all repositories (displayed paths include the current clone path) |
 | `git ws add FILES` | Run `git add FILE` on `FILES` in the corresponding repositories |
 | `git ws reset FILES` | Run `git reset FILE` on `FILES` in the corresponding repositories. Undo `git add` |
 | `git ws commit FILES -m MESSAGE` | Run `git commit FILE` on `FILES` in the corresponding repositories |
@@ -311,7 +311,7 @@ Please see the next section for an overview of all commands.
 
 | Command | Description |
 | --- | --- |
-| `git ws dep update -r`   | Update all manifest files, use actual checkout branch, tag or SHA as ``revision``, use actual remote ``origin`` as ``url``, try to use relative URLs. |
+| `git ws dep update -r`   | Update all manifest files, use current checkout branch, tag or SHA as ``revision``, use current remote ``origin`` as ``url``, try to use relative URLs. |
 | `git ws manifest freeze`   | Print The Resolved Manifest With SHAs For All Project Revisions. |
 | `git ws manifest path`     | Print Path to Main Manifest File. |
 | `git ws manifest paths`    | Print Paths to ALL Manifest Files. |

@@ -1,6 +1,6 @@
 Usage: git-ws diff [OPTIONS] [PATHS]...
 
-  Run 'git diff' on PATHS or all files (displayed paths include the actual
+  Run 'git diff' on PATHS or all files (displayed paths include the current
   clone path).
 
 Options:

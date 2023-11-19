@@ -419,7 +419,7 @@ class GitWS:
         project = clone.project
         git = clone.git
         if git.is_cloned():
-            # Determine actual version
+            # Determine current version
             tag = git.get_tag()
             branch = git.get_branch()
             sha = git.get_sha()
@@ -748,7 +748,7 @@ class GitWS:
 
     def projects(self, skip_main: bool = False, resolve_url: bool = False) -> Generator[Project, None, None]:
         """
-        Iterate over Projects in actual workspace.
+        Iterate Over Projects In Current Workspace.
 
         Keyword Args:
             skip_main: Skip Main Repository.
@@ -766,7 +766,7 @@ class GitWS:
         self,
     ) -> Generator[Manifest, None, None]:
         """
-        Iterate Over Manifests In Actual Workspace.
+        Iterate Over Manifests In Current Workspace.
         """
         workspace = self.workspace
         manifest_path = self.manifest_path
@@ -789,7 +789,7 @@ class GitWS:
         Read the manifest file with the manifest specification.
 
         Keyword Args:
-            freeze: Determine actual SHA of each project and use it as revision.
+            freeze: Determine current SHA of each project and use it as revision.
             resolve: Add project specification of all transient dependencies.
         """
         workspace = self.workspace
@@ -822,7 +822,7 @@ class GitWS:
         Read the manifest file with the manifest specification and translate to manifest.
 
         Keyword Args:
-            freeze: Determine actual SHA of each project and use it as revision.
+            freeze: Determine current SHA of each project and use it as revision.
             resolve: Add project specification of all transient dependencies.
         """
         manifest_path = self.workspace.get_manifest_path()

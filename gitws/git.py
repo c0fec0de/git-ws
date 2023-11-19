@@ -52,7 +52,7 @@ Paths = Tuple[Path, ...]
 
 class State(Enum):
     """
-    Actual State (Part of `git status` line).
+    Current State (Part of `git status` line).
 
     >>> State(" ")
     <State.UNMODIFIED: ' '>
@@ -361,19 +361,19 @@ class Git:
         self._run(("remote", "remove", "origin"), cwd=cache)
 
     def get_tag(self) -> Optional[str]:
-        """Get Actual Tag."""
+        """Get Current Tag."""
         tag = self._run2str(("describe", "--exact-match", "--tags"), check=False) or None
         _LOGGER.info("Git(%r).get_tag() = %r", str(self.path), tag)
         return tag
 
     def get_branch(self) -> Optional[str]:
-        """Get Actual Branch."""
+        """Get Current Branch."""
         branch = self._run2str(("branch",), regex=_RE_BRANCH)
         _LOGGER.info("Git(%r).get_branch() = %r", str(self.path), branch)
         return branch
 
     def get_sha(self, revision: Optional[str] = None) -> Optional[str]:
-        """Get Actual SHA."""
+        """Get Current SHA."""
         sha = self._run2str(("rev-parse", revision or "HEAD"), check=False) or None
         _LOGGER.info("Git(%r).get_sha(%r) = %r", str(self.path), revision, sha)
         return sha
@@ -384,21 +384,21 @@ class Git:
 
         We try several things, the winner takes it all:
 
-        1. Get Actual Tag
-        2. Get Actual Branch
+        1. Get Current Tag
+        2. Get Current Branch
         3. Get SHA.
         4. ``None`` if empty repo.
         """
         return self.get_branch() or self.get_tag() or self.get_sha()
 
     def get_upstream_branch(self) -> Optional[str]:
-        """Get Actual Upstream Branch."""
+        """Get Current Upstream Branch."""
         branch = self._run2str(("branch", "--format", "%(HEAD) %(upstream:short)"), regex=_RE_BRANCH)
         _LOGGER.info("Git(%r).get_upstream_branch() = %r", str(self.path), branch)
         return branch
 
     def get_url(self) -> Optional[str]:
-        """Get Actual URL of ``origin``."""
+        """Get Current URL of ``origin``."""
         url = self._run2str(("remote", "-v"), regex=_RE_URL, check=False)
         _LOGGER.info("Git(%r).get_url() = %r", str(self.path), url)
         return url
