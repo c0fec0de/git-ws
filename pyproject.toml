@@ -22,6 +22,9 @@ packages = [
 "Documentation" = "https://git-ws.readthedocs.io/en/stable/"
 "Bug Tracker" = "https://github.com/c0fec0de/git-ws/issues"
 
+[tool.poetry.plugins.'gitws.manifestformat']
+GitWSManifestFormat = 'gitws.gitwsmanifestformat:GitWSManifestFormat'
+
 [tool.poetry.scripts]
 git-ws = 'gitws._cli:main'
 
@@ -93,6 +96,7 @@ max-line-length = 120
 extension-pkg-whitelist = "pydantic"
 disable = [
     'duplicate-code',
+    'fixme',
     'redefined-outer-name',
     'too-many-arguments',
 ]

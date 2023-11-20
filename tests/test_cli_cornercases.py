@@ -20,8 +20,7 @@ from pathlib import Path
 
 from pytest import fixture
 
-from gitws import GitWS
-from gitws.datamodel import ManifestSpec, ProjectSpec
+from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
 from .common import TESTDATA_PATH
 
@@ -39,37 +38,41 @@ def repos_deptop():
 
         with git_repo(repos_path / "top", commit="initial") as path:
             (path / "data.txt").write_text("top")
-            ManifestSpec(
+            manifest_spec = ManifestSpec(
                 dependencies=[
                     ProjectSpec(name="dep1", url="../dep1"),
                     ProjectSpec(name="dep2", url="../dep2"),
                 ],
-            ).save(path / "git-ws.toml")
+            )
+            save(manifest_spec, path / "git-ws.toml")
 
         with git_repo(repos_path / "dep1", commit="initial") as path:
             (path / "data.txt").write_text("dep1")
-            ManifestSpec(
+            manifest_spec = ManifestSpec(
                 dependencies=[
                     ProjectSpec(name="dep3", url="../dep3", revision="main"),
                     ProjectSpec(name="top", url="../top"),
                 ]
-            ).save(path / "git-ws.toml")
+            )
+            save(manifest_spec, path / "git-ws.toml")
 
         with git_repo(repos_path / "dep2", commit="initial") as path:
             (path / "data.txt").write_text("dep2")
-            ManifestSpec(
+            manifest_spec = ManifestSpec(
                 dependencies=[
                     ProjectSpec(name="dep3", url="../dep3", revision="main"),
                 ],
-            ).save(path / "git-ws.toml")
+            )
+            save(manifest_spec, path / "git-ws.toml")
 
         with git_repo(repos_path / "dep3", commit="initial") as path:
             (path / "data.txt").write_text("dep3")
-            ManifestSpec(
+            manifest_spec = ManifestSpec(
                 dependencies=[
                     ProjectSpec(name="top"),
                 ],
-            ).save(path / "git-ws.toml")
+            )
+            save(manifest_spec, path / "git-ws.toml")
 
         yield repos_path
 

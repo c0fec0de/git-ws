@@ -17,22 +17,33 @@
 """Iterator Testing."""
 from pathlib import Path
 
+from pytest import fixture
+
 from gitws import GroupFilters, ManifestIter, ProjectIter, Workspace
+from gitws._manifestformatmanager import ManifestFormatManager
+from gitws.gitwsmanifestformat import GitWSManifestFormat
 
 
-def test_empty_project_iter(tmp_path):
+@fixture
+def mngr():
+    mngr = ManifestFormatManager()
+    mngr.add(GitWSManifestFormat())
+    yield mngr
+
+
+def test_empty_project_iter(tmp_path, mngr):
     """Empty Project Iterator."""
     workspace = Workspace.init(tmp_path)
     manifest_path = Path("none.toml")
     group_filters: GroupFilters = []
-    project_iter = ProjectIter(workspace, manifest_path, group_filters)
+    project_iter = ProjectIter(workspace, mngr, manifest_path, group_filters)
     assert tuple(project_iter) == tuple()
 
 
-def test_empty_manifest_iter(tmp_path):
+def test_empty_manifest_iter(tmp_path, mngr):
     """Empty Manifest Iterator."""
     workspace = Workspace.init(tmp_path)
     manifest_path = Path("none.toml")
     group_filters: GroupFilters = []
-    manifest_iter = ManifestIter(workspace, manifest_path, group_filters)
+    manifest_iter = ManifestIter(workspace, mngr, manifest_path, group_filters)
     assert tuple(manifest_iter) == tuple()

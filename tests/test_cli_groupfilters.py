@@ -17,7 +17,7 @@
 """Command Line Interface."""
 from pathlib import Path
 
-from gitws import ManifestSpec
+from gitws import load
 
 from .util import chdir, cli
 
@@ -28,7 +28,7 @@ def test_cli_groupfilters_remote(tmp_path):
         cli(("manifest", "create"))
 
         cli(("group-filters", "+myfoo, -myboo"))
-        assert ManifestSpec.load(Path("git-ws.toml")).group_filters == ("+myfoo", "-myboo")
+        assert load(Path("git-ws.toml")).group_filters == ("+myfoo", "-myboo")
 
         cli(("group-filters", ""))
-        assert ManifestSpec.load(Path("git-ws.toml")).group_filters == tuple()
+        assert load(Path("git-ws.toml")).group_filters == tuple()

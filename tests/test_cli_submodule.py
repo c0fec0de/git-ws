@@ -20,8 +20,7 @@ from pathlib import Path
 
 from pytest import fixture
 
-from gitws import GitWS
-from gitws.datamodel import ManifestSpec, ProjectSpec
+from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
 from .common import TESTDATA_PATH
 
@@ -40,12 +39,13 @@ def repos_submodules():
 
         with git_repo(repos_path / "main", commit="initial") as path:
             (path / "data.txt").write_text("main")
-            ManifestSpec(
+            manifest_spec = ManifestSpec(
                 group_filters=("-test",),
                 dependencies=[
                     ProjectSpec(name="dep1"),
                 ],
-            ).save(path / "git-ws.toml")
+            )
+            save(manifest_spec, path / "git-ws.toml")
 
         with git_repo(repos_path / "sm1", commit="initial") as path:
             (path / "data.txt").write_text("sm1")
@@ -55,11 +55,12 @@ def repos_submodules():
 
         with git_repo(repos_path / "dep1", commit="initial") as path:
             (path / "data.txt").write_text("dep1")
-            ManifestSpec(
+            manifest_spec = ManifestSpec(
                 dependencies=[
                     ProjectSpec(name="dep2", revision="main"),
                 ],
-            ).save(path / "git-ws.toml")
+            )
+            save(manifest_spec, path / "git-ws.toml")
 
         # run(["git", "submodule", "add", "../sm1", "sm1"], cwd=(repos_path / "dep1"), check=True)
         # run(["git", "commit", "-am", "add-submodule"], cwd=(repos_path / "dep1"), check=True)

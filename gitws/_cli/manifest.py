@@ -19,7 +19,7 @@ from pathlib import Path
 
 import click
 
-from gitws import GitWS, ManifestSpec
+from gitws import GitWS, dump, save, upgrade
 
 from .common import COLOR_INFO, exceptionhandling, pass_context
 from .options import group_filters_option, manifest_option, output_option
@@ -47,9 +47,9 @@ def resolve(context, manifest_path=None, group_filters=None, output=None):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
         manifest = gws.get_manifest_spec(resolve=True)
         if output:
-            manifest.save(Path(output))
+            save(manifest, Path(output))
         else:
-            click.echo(manifest.dump())
+            click.echo(dump(manifest))
 
 
 @manifest.command()
@@ -68,9 +68,9 @@ def freeze(context, manifest_path=None, group_filters=None, output=None):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
         manifest_spec = gws.get_manifest_spec(freeze=True, resolve=True)
         if output:
-            manifest_spec.save(Path(output))
+            save(manifest_spec, Path(output))
         else:
-            click.echo(manifest_spec.dump())
+            click.echo(dump(manifest_spec))
 
 
 @manifest.command()
@@ -118,7 +118,7 @@ def paths(context, manifest_path=None, group_filters=None):
 def create(context, manifest_path):
     """Create Manifest."""
     with exceptionhandling(context):
-        path = GitWS.create_manifest(Path(manifest_path))
+        path = GitWS.create_manifest(manifest_path)
         click.secho(f"Manifest {str(path)!r} created.", fg=COLOR_INFO)
 
 
@@ -134,5 +134,5 @@ def upgrade(context, manifest_path):
     Comments are updated to the latest documentation.
     """
     with exceptionhandling(context):
-        ManifestSpec.upgrade(Path(manifest_path))
+        upgrade(manifest_path)
         click.secho(f"Manifest {str(manifest_path)!r} upgraded.", fg=COLOR_INFO)

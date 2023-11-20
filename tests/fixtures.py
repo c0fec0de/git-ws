@@ -21,8 +21,7 @@ from pathlib import Path
 
 from pytest import fixture
 
-from gitws.datamodel import Defaults, ManifestSpec, ProjectSpec
-from gitws.git import Git
+from gitws import Defaults, Git, ManifestSpec, ProjectSpec, save
 
 from .util import chdir, run
 
@@ -68,21 +67,23 @@ def repos_dotgit():
         # with .git
         with git_repo(repos_path / "main.git", commit="initial") as path:
             (path / "data.txt").write_text("main")
-            ManifestSpec(
+            manifest_spec = ManifestSpec(
                 dependencies=[
                     ProjectSpec(name="dep1", revision="main"),
                     ProjectSpec(name="dep3", url="../dep3", revision="main"),
                 ],
-            ).save(path / "git-ws.toml")
+            )
+            save(manifest_spec, path / "git-ws.toml")
 
         # with .git
         with git_repo(repos_path / "dep1.git", commit="initial") as path:
             (path / "data.txt").write_text("dep1")
-            ManifestSpec(
+            manifest_spec = ManifestSpec(
                 dependencies=[
                     ProjectSpec(name="dep2", revision="main"),
                 ],
-            ).save(path / "git-ws.toml")
+            )
+            save(manifest_spec, path / "git-ws.toml")
 
         # with .git
         with git_repo(repos_path / "dep2.git", commit="initial") as path:
@@ -91,11 +92,12 @@ def repos_dotgit():
         # non .git
         with git_repo(repos_path / "dep3", commit="initial") as path:
             (path / "data.txt").write_text("dep3")
-            ManifestSpec(
+            manifest_spec = ManifestSpec(
                 dependencies=[
                     ProjectSpec(name="dep4", revision="main"),  # refer to non .git
                 ],
-            ).save(path / "git-ws.toml")
+            )
+            save(manifest_spec, path / "git-ws.toml")
 
         # non .git
         with git_repo(repos_path / "dep4", commit="initial") as path:
@@ -130,10 +132,11 @@ def create_repos(repos_path, add_dep5=False, add_dep6=False):
         if add_dep6:
             dependencies.append(ProjectSpec(name="dep6", revision=dep6_sha))
 
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             group_filters=("-test",),
             dependencies=dependencies,
-        ).save(path / "git-ws.toml")
+        )
+        save(manifest_spec, path / "git-ws.toml")
 
     with chdir(repos_path / "main"):
         Path("other.txt").touch()
@@ -141,7 +144,7 @@ def create_repos(repos_path, add_dep5=False, add_dep6=False):
         run(("git", "commit", "-m", "other"), check=True)
 
     with chdir(repos_path / "main"):
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             defaults=Defaults(revision="main"),
             group_filters=("+foo", "+bar", "-fast"),
             dependencies=[
@@ -149,17 +152,19 @@ def create_repos(repos_path, add_dep5=False, add_dep6=False):
                 ProjectSpec(name="dep6", url="../dep6", path="sub/dep6", groups=["foo", "bar", "fast"]),
                 ProjectSpec(name="dep4", url="../dep4", revision="4-feature"),
             ],
-        ).save(path / "other.toml")
+        )
+        save(manifest_spec, path / "other.toml")
         run(("git", "add", "other.toml"), check=True)
         run(("git", "commit", "-m", "other"), check=True)
 
     with git_repo(repos_path / "dep1", commit="initial") as path:
         (path / "data.txt").write_text("dep1")
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),
             ],
-        ).save(path / "git-ws.toml")
+        )
+        save(manifest_spec, path / "git-ws.toml")
 
     with chdir(repos_path / "dep1"):
         Path("other.txt").touch()
@@ -168,14 +173,15 @@ def create_repos(repos_path, add_dep5=False, add_dep6=False):
 
     with git_repo(repos_path / "dep2", commit="initial") as path:
         (path / "data.txt").write_text("dep2")
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             defaults=Defaults(revision="main"),
             group_filters=("-test",),
             dependencies=[
                 ProjectSpec(name="dep3", groups=("test",)),
                 ProjectSpec(name="dep4", url="../dep4", revision="main"),
             ],
-        ).save(path / "git-ws.toml")
+        )
+        save(manifest_spec, path / "git-ws.toml")
 
     with chdir(repos_path / "dep2"):
         run(("git", "checkout", "-b", "1-feature"), check=True)
@@ -186,11 +192,12 @@ def create_repos(repos_path, add_dep5=False, add_dep6=False):
 
     with git_repo(repos_path / "dep3", commit="initial") as path:
         (path / "data.txt").write_text("dep3")
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep2", url="../dep2"),
             ],
-        ).save(path / "git-ws.toml")
+        )
+        save(manifest_spec, path / "git-ws.toml")
 
     run(("git", "tag", "v1.0"), check=True, cwd=repos_path / "dep3")
 

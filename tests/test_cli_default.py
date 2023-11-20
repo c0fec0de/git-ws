@@ -17,7 +17,7 @@
 """Command Line Interface."""
 from pathlib import Path
 
-from gitws import Defaults, ManifestSpec
+from gitws import Defaults, ManifestSpec, load
 
 from .util import chdir, cli
 
@@ -28,10 +28,10 @@ def test_cli_default_remote(tmp_path):
         cli(("manifest", "create"))
 
         cli(("default", "remote", "myremote"))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(remote="myremote")
+        assert load(Path("git-ws.toml")).defaults == Defaults(remote="myremote")
 
         cli(("default", "remote", ""))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults()
+        assert load(Path("git-ws.toml")).defaults == Defaults()
 
 
 def test_cli_default_revision(tmp_path):
@@ -40,10 +40,10 @@ def test_cli_default_revision(tmp_path):
         cli(("manifest", "create"))
 
         cli(("default", "revision", "myrev"))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(revision="myrev")
+        assert load(Path("git-ws.toml")).defaults == Defaults(revision="myrev")
 
         cli(("default", "revision", ""))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults()
+        assert load(Path("git-ws.toml")).defaults == Defaults()
 
 
 def test_cli_default_groups(tmp_path):
@@ -52,13 +52,13 @@ def test_cli_default_groups(tmp_path):
         cli(("manifest", "create"))
 
         cli(("default", "groups", "mygroup"))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(groups=("mygroup",))
+        assert load(Path("git-ws.toml")).defaults == Defaults(groups=("mygroup",))
 
         cli(("default", "groups", "mygroup, myfoo"))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(groups=("mygroup", "myfoo"))
+        assert load(Path("git-ws.toml")).defaults == Defaults(groups=("mygroup", "myfoo"))
 
         cli(("default", "groups", ""))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults()
+        assert load(Path("git-ws.toml")).defaults == Defaults()
 
 
 def test_cli_default_with_groups(tmp_path):
@@ -67,13 +67,13 @@ def test_cli_default_with_groups(tmp_path):
         cli(("manifest", "create"))
 
         cli(("default", "with-groups", "mygroup"))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(with_groups=("mygroup",))
+        assert load(Path("git-ws.toml")).defaults == Defaults(with_groups=("mygroup",))
 
         cli(("default", "with-groups", "mygroup, myfoo"))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(with_groups=("mygroup", "myfoo"))
+        assert load(Path("git-ws.toml")).defaults == Defaults(with_groups=("mygroup", "myfoo"))
 
         cli(("default", "with-groups", ""))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults()
+        assert load(Path("git-ws.toml")).defaults == Defaults()
 
 
 def test_cli_default_submodules(tmp_path):
@@ -82,10 +82,10 @@ def test_cli_default_submodules(tmp_path):
         cli(("manifest", "create"))
 
         cli(("default", "submodules", "true"))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(submodules=True)
+        assert load(Path("git-ws.toml")).defaults == Defaults(submodules=True)
 
         cli(("default", "submodules", "false"))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(submodules=False)
+        assert load(Path("git-ws.toml")).defaults == Defaults(submodules=False)
 
 
 def test_cli_defaults(tmp_path):
@@ -97,15 +97,15 @@ def test_cli_defaults(tmp_path):
         cli(("default", "revision", "myrev"))
         cli(("default", "submodules", "false"))
         cli(("default", "groups", "foo,bar"))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(
+        assert load(Path("git-ws.toml")).defaults == Defaults(
             remote="myremote", revision="myrev", groups=("foo", "bar"), submodules=False
         )
 
         cli(("default", "revision", ""))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(
+        assert load(Path("git-ws.toml")).defaults == Defaults(
             remote="myremote", groups=("foo", "bar"), submodules=False
         )
 
         cli(("default", "groups", ""))
         # cli(("default", "submodules", ""))
-        assert ManifestSpec.load(Path("git-ws.toml")).defaults == Defaults(remote="myremote", submodules=False)
+        assert load(Path("git-ws.toml")).defaults == Defaults(remote="myremote", submodules=False)

@@ -25,6 +25,7 @@ from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Callable, Generator, List, Optional, Tuple
 
+from ._manifestformatmanager import ManifestFormatManager
 from ._util import resolve_relative
 from .datamodel import (
     GroupFilters,
@@ -66,8 +67,15 @@ class ManifestIter:
     """
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, workspace: Workspace, manifest_path: Path, group_filters: GroupFilters):
+    def __init__(
+        self,
+        workspace: Workspace,
+        manifestformatmanager: ManifestFormatManager,
+        manifest_path: Path,
+        group_filters: GroupFilters,
+    ):
         self.workspace: Workspace = workspace
+        self.manifestformatmanager = manifestformatmanager
         self.manifest_path: Path = manifest_path
         self.group_filters: GroupFilters = group_filters
         self.__done: List[str] = []
@@ -75,7 +83,7 @@ class ManifestIter:
     def __iter__(self) -> Generator[Manifest, None, None]:
         self.__done.clear()
         try:
-            manifest_spec = ManifestSpec.load(self.manifest_path)
+            manifest_spec = self.manifestformatmanager.load(self.manifest_path)
         except ManifestNotFoundError:
             pass
         else:
@@ -109,7 +117,7 @@ class ManifestIter:
             dep_project_path = self.workspace.get_project_path(dep_project)
             dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
             try:
-                dep_manifest_spec = ManifestSpec.load(dep_manifest_path)
+                dep_manifest_spec = self.manifestformatmanager.load(dep_manifest_path)
             except ManifestNotFoundError:
                 pass
             else:
@@ -152,12 +160,14 @@ class ProjectIter:
     def __init__(
         self,
         workspace: Workspace,
+        manifestformatmanager: ManifestFormatManager,
         manifest_path: Path,
         group_filters: GroupFilters,
         skip_main: bool = False,
         resolve_url: bool = False,
     ):
         self.workspace: Workspace = workspace
+        self.manifestformatmanager: ManifestFormatManager = manifestformatmanager
         self.manifest_path: Path = manifest_path
         self.group_filters: GroupFilters = group_filters
         self.skip_main: bool = skip_main
@@ -181,7 +191,7 @@ class ProjectIter:
                 is_main=True,
             )
         try:
-            manifest_spec = ManifestSpec.load(self.manifest_path)
+            manifest_spec = self.manifestformatmanager.load(self.manifest_path)
         except ManifestNotFoundError:
             manifest_spec = ManifestSpec()
         if manifest_spec.dependencies:
@@ -226,7 +236,7 @@ class ProjectIter:
             dep_project_path = self.workspace.get_project_path(dep_project)
             dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
             try:
-                dep_manifest = ManifestSpec.load(dep_manifest_path)
+                dep_manifest = self.manifestformatmanager.load(dep_manifest_path)
             except ManifestNotFoundError:
                 pass
             else:

@@ -20,7 +20,7 @@ from pathlib import Path
 
 from pytest import fixture
 
-from gitws import Git, ManifestSpec
+from gitws import Git, load
 from gitws.const import CONFIG_PATH, INFO_PATH, MANIFESTS_PATH
 
 from .fixtures import create_repos, set_meta
@@ -290,7 +290,7 @@ def test_tag_dep(tmp_path, repos):
             "",
         ]
         manifest_path = main_workspace / "main" / "git-ws.toml"
-        manifest_spec = ManifestSpec.load(manifest_path)
+        manifest_spec = load(manifest_path)
         deps = [
             (dep.model_copy(update={"revision": "DEP1TAG"}) if dep.name == "dep1" else dep)
             for dep in manifest_spec.dependencies
