@@ -50,7 +50,7 @@ Git(...)
 Create a manifest:
 
 >>> manifest = gitws.ManifestSpec(defaults=gitws.Defaults(revision='main'))
->>> manifest.save(main_path / "git-ws.toml")
+>>> gitws.save(manifest, main_path / "git-ws.toml")
 
 Initialize Workspace
 
@@ -140,6 +140,8 @@ from .exceptions import (
 )
 from .git import Git
 from .gitws import GitWS
+from .gitwsmanifestformat import dump, load, save, upgrade
 from .iters import ManifestIter, ProjectIter
+from .manifestformat import AManifestFormat, IncompatibleFormat
 from .workspace import Workspace
 from .workspacefinder import find_workspace

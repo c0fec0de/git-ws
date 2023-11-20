@@ -18,7 +18,7 @@
 import click
 import tomlkit
 
-from gitws import ManifestSpec, ProjectSpec
+from gitws import GitWS, ManifestSpec, ProjectSpec
 from gitws._util import as_dict
 
 from ..common import exceptionhandling, pass_context
@@ -64,25 +64,26 @@ def add(
     Add Dependency NAME.
     """
     with exceptionhandling(context):
-        manifest_spec = ManifestSpec.load(manifest_path)
-        dependencies = list(manifest_spec.dependencies)
-        dependencies.append(
-            ProjectSpec(name=name).model_copy_fromstr(
-                {
-                    "remote": remote,
-                    "sub_url": sub_url,
-                    "url": url,
-                    "revision": revision,
-                    "path": path,
-                    "manifest_path": dep_manifest_path,
-                    "groups": groups,
-                    "with_groups": with_groups,
-                    "submodules": submodules,
-                }
+        with GitWS.manifestformatmanager.handle(manifest_path) as handler:
+            manifest_spec = handler.load()
+            dependencies = list(manifest_spec.dependencies)
+            dependencies.append(
+                ProjectSpec(name=name).model_copy_fromstr(
+                    {
+                        "remote": remote,
+                        "sub_url": sub_url,
+                        "url": url,
+                        "revision": revision,
+                        "path": path,
+                        "manifest_path": dep_manifest_path,
+                        "groups": groups,
+                        "with_groups": with_groups,
+                        "submodules": submodules,
+                    }
+                )
             )
-        )
-        manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
-        manifest_spec.save(manifest_path)
+            manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
+            handler.save(manifest_spec)
 
 
 _DEP_ATTRIBUTES = tuple(
@@ -101,16 +102,17 @@ def set_(context, manifest_path, dep, attribute, value):
     Set ATTRIBUTE For Dependency DEP to VALUE.
     """
     with exceptionhandling(context):
-        manifest_spec = ManifestSpec.load(manifest_path)
-        dependencies = list(manifest_spec.dependencies)
-        for idx, dependency in enumerate(dependencies):
-            if dependency.name == dep:
-                break
-        else:
-            raise ValueError(f"Unknown dependency {dep!r}")
-        dependencies[idx] = dependencies[idx].model_copy_fromstr({attribute: value})
-        manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
-        manifest_spec.save(manifest_path)
+        with GitWS.manifestformatmanager.handle(manifest_path) as handler:
+            manifest_spec = handler.load()
+            dependencies = list(manifest_spec.dependencies)
+            for idx, dependency in enumerate(dependencies):
+                if dependency.name == dep:
+                    break
+            else:
+                raise ValueError(f"Unknown dependency {dep!r}")
+            dependencies[idx] = dependencies[idx].model_copy_fromstr({attribute: value})
+            manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
+            handler.save(manifest_spec)
 
 
 @dep.command(name="list")
@@ -121,9 +123,10 @@ def list_(context, manifest_path):
     List Dependencies.
     """
     with exceptionhandling(context):
-        manifest_spec = ManifestSpec.load(manifest_path)
-        doc = tomlkit.document()
-        doc.add("dependencies", as_dict(manifest_spec)["dependencies"])
+        with GitWS.manifestformatmanager.handle(manifest_path) as handler:
+            manifest_spec = handler.load()
+            doc = tomlkit.document()
+            doc.add("dependencies", as_dict(manifest_spec)["dependencies"])
         click.echo(tomlkit.dumps(doc))
 
 
@@ -136,16 +139,17 @@ def delete(context, name, manifest_path):
     Delete Dependency NAME.
     """
     with exceptionhandling(context):
-        manifest_spec = ManifestSpec.load(manifest_path)
-        dependencies = list(manifest_spec.dependencies)
-        for idx, dep in enumerate(manifest_spec.dependencies):
-            if dep.name == name:
-                break
-        else:
-            raise ValueError(f"Unknown dependency {name!r}")
-        dependencies.pop(idx)
-        manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
-        manifest_spec.save(manifest_path)
+        with GitWS.manifestformatmanager.handle(manifest_path) as handler:
+            manifest_spec = handler.load()
+            dependencies = list(manifest_spec.dependencies)
+            for idx, dep in enumerate(manifest_spec.dependencies):
+                if dep.name == name:
+                    break
+            else:
+                raise ValueError(f"Unknown dependency {name!r}")
+            dependencies.pop(idx)
+            manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
+            handler.save(manifest_spec)
 
 
 dep.add_command(update)

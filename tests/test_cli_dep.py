@@ -19,7 +19,7 @@ from pathlib import Path
 
 from pytest import fixture
 
-from gitws import Git, ManifestSpec, ProjectSpec
+from gitws import Git, ManifestSpec, ProjectSpec, load, save
 from gitws._util import run
 
 from .fixtures import create_repos, git_repo
@@ -30,10 +30,10 @@ def test_cli_dep(tmp_path):
     """Add, List, Delete Dependencies."""
     with chdir(tmp_path):
         cli(("manifest", "create"))
-        assert ManifestSpec.load(Path("git-ws.toml")).dependencies == tuple()
+        assert load(Path("git-ws.toml")).dependencies == tuple()
 
         cli(("dep", "add", "dep1"))
-        assert ManifestSpec.load(Path("git-ws.toml")).dependencies == (ProjectSpec(name="dep1"),)
+        assert load(Path("git-ws.toml")).dependencies == (ProjectSpec(name="dep1"),)
 
         assert cli(("dep", "add", "dep1"), exit_code=1)
 
@@ -60,7 +60,7 @@ def test_cli_dep(tmp_path):
                 "false",
             )
         )
-        assert ManifestSpec.load(Path("git-ws.toml")).dependencies == (
+        assert load(Path("git-ws.toml")).dependencies == (
             ProjectSpec(name="dep1"),
             ProjectSpec(
                 name="dep2",
@@ -99,12 +99,12 @@ def test_cli_dep(tmp_path):
         ]
 
         cli(("dep", "delete", "dep2"))
-        assert ManifestSpec.load(Path("git-ws.toml")).dependencies == (ProjectSpec(name="dep1", url="myurl.git"),)
+        assert load(Path("git-ws.toml")).dependencies == (ProjectSpec(name="dep1", url="myurl.git"),)
 
         assert cli(("dep", "list")) == ["[[dependencies]]", 'name = "dep1"', 'url = "myurl.git"', "", ""]
 
         cli(("dep", "delete", "dep1"))
-        assert ManifestSpec.load(Path("git-ws.toml")).dependencies == tuple()
+        assert load(Path("git-ws.toml")).dependencies == tuple()
 
         assert cli(("dep", "delete", "dep3"), exit_code=1) == ["Error: Unknown dependency 'dep3'", ""]
 
@@ -113,7 +113,7 @@ def _get_infos(workspace_path):
     for manifest_path in sorted(workspace_path.glob("*/git-ws.toml")):
 
         name = manifest_path.parent.name
-        manifest_spec = ManifestSpec.load(manifest_path)
+        manifest_spec = load(manifest_path)
         revisions = [
             (project_spec.name, project_spec.revision, project_spec.url) for project_spec in manifest_spec.dependencies
         ]
@@ -329,12 +329,13 @@ def test_cli_dep_update_revision_default(tmp_path):
 
     with git_repo(repos_path / "main.git", commit="initial") as path:
         (path / "data.txt").write_text("main")
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             defaults={"revision": "main"},
             dependencies=[
                 ProjectSpec(name="dep1", revision="main"),
             ],
-        ).save(path / "git-ws.toml")
+        )
+        save(manifest_spec, path / "git-ws.toml")
     with git_repo(repos_path / "dep1.git", commit="initial") as path:
         (path / "data.txt").write_text("dep")
 
