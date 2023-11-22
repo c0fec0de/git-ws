@@ -20,6 +20,7 @@ from pathlib import Path
 import click
 
 import gitws
+from gitws._manifestformatmanager import get_manifest_format_manager
 
 from .common import COLOR_INFO, exceptionhandling, pass_context
 from .options import group_filters_option, manifest_option, output_option
@@ -147,7 +148,7 @@ def convert(context, manifest_path=None, output=None):
     Convert Any Supported Manifest Format To Git Workspace Manifest.
     """
     with exceptionhandling(context):
-        manifest_spec = gitws.GitWS.manifest_format_manager.load(manifest_path)
+        manifest_spec = get_manifest_format_manager().load(manifest_path)
         if output:
             gitws.save(manifest_spec, Path(output))
         else:

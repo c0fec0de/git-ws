@@ -74,13 +74,6 @@ class ManifestFormatManager(BaseModel):
 
     _manifest_formats: List[ManifestFormat] = PrivateAttr(default_factory=list)
 
-    @staticmethod
-    def from_env() -> "ManifestFormatManager":
-        """Create :any:`ManifestFormatManager` With All Loaded Plugins."""
-        mngr = ManifestFormatManager()
-        mngr.load_plugins()
-        return mngr
-
     def add(self, manifestformat: ManifestFormat):
         """Register Manifest format_."""
         self._manifest_formats.append(manifestformat)
@@ -123,3 +116,23 @@ class ManifestFormatManager(BaseModel):
         """
         with self.handle(path) as fmt:
             return fmt.load()
+
+
+_MANAGER: Optional[ManifestFormatManager] = None
+
+
+def get_manifest_format_manager() -> ManifestFormatManager:
+    """
+    Get Global Manifest Format Manager.
+
+    The manifest format manager supports a plugin mechanism.
+    Plugin loading takes time.
+    This method returns a cached global manifest format manager instance.
+    """
+    # pylint: disable=global-statement
+    global _MANAGER
+    if not _MANAGER:
+        _MANAGER = ManifestFormatManager()
+        _MANAGER.load_plugins()
+
+    return _MANAGER
