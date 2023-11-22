@@ -42,6 +42,7 @@ def repos_deptop():
                 dependencies=[
                     ProjectSpec(name="dep1", url="../dep1"),
                     ProjectSpec(name="dep2", url="../dep2"),
+                    ProjectSpec(name="sub/dep4"),
                 ],
             )
             save(manifest_spec, path / "git-ws.toml")
@@ -74,6 +75,18 @@ def repos_deptop():
             )
             save(manifest_spec, path / "git-ws.toml")
 
+        with git_repo(repos_path / "sub" / "dep4", commit="initial") as path:
+            (path / "data.txt").write_text("dep4")
+            manifest_spec = ManifestSpec(
+                dependencies=[
+                    ProjectSpec(name="dep5"),
+                ],
+            )
+            save(manifest_spec, path / "git-ws.toml")
+
+        with git_repo(repos_path / "sub" / "dep5", commit="initial") as path:
+            (path / "data.txt").write_text("dep5")
+
         yield repos_path
 
 
@@ -88,6 +101,10 @@ def test_deptop(tmp_path, repos_deptop, caplog, capsys):
         check(workspace, "dep1", exists=False)
         check(workspace, "dep2", exists=False)
         check(workspace, "dep3", exists=False)
+        check(workspace, "dep4", exists=False)
+        check(workspace, "dep5", exists=False)
+        check(workspace, "dep4", path="sub/dep4", exists=False)
+        check(workspace, "dep5", path="sub/dep5", exists=False)
 
         gws.update(skip_main=True)
 
@@ -95,6 +112,10 @@ def test_deptop(tmp_path, repos_deptop, caplog, capsys):
         check(workspace, "dep1")
         check(workspace, "dep2")
         check(workspace, "dep3")
+        check(workspace, "dep4", exists=False)
+        check(workspace, "dep5")
+        check(workspace, "dep4", path="sub/dep4")
+        check(workspace, "dep5", path="sub/dep5", exists=False)
 
     assert_gen(
         tmp_path / "gen",

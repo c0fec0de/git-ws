@@ -1,2 +1,4 @@
 WARNING: Clone dep1 has no revision!
 WARNING: Clone dep2 has no revision!
+WARNING: Clone sub/dep4 has no revision!
+WARNING: Clone dep5 has no revision!

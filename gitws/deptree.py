@@ -31,7 +31,7 @@ from anytree import NodeMixin
 from anytree.exporter import DotExporter
 
 from ._manifestformatmanager import ManifestFormatManager
-from .datamodel import Manifest, ManifestSpec, Project
+from .datamodel import Manifest, Project
 from .exceptions import ManifestNotFoundError
 from .workspace import Workspace
 
@@ -51,7 +51,7 @@ class DepNode(NodeMixin):
 
 def get_deptree(
     workspace: Workspace,
-    manifestformatmanager: ManifestFormatManager,
+    manifest_format_manager: ManifestFormatManager,
     manifest: Manifest,
     primary: bool = False,
 ) -> DepNode:
@@ -69,7 +69,7 @@ def get_deptree(
     main_node = DepNode(Project(name=main, path=main), is_primary=True)
     primaries: List[str] = []
     edges: List[Tuple[str, str]] = []
-    _build(primaries, edges, workspace, manifestformatmanager, main_node, manifest, primary=primary)
+    _build(primaries, edges, workspace, manifest_format_manager, main_node, manifest, primary=primary)
     return main_node
 
 
@@ -77,7 +77,7 @@ def _build(
     primaries: List,
     edges: List,
     workspace: Workspace,
-    manifestformatmanager: ManifestFormatManager,
+    manifest_format_manager: ManifestFormatManager,
     node: DepNode,
     manifest: Manifest,
     primary: bool = False,
@@ -96,12 +96,12 @@ def _build(
         project_node = DepNode(project, is_primary=is_primary, parent=node)
         manifest_path = workspace.get_project_path(project) / project.manifest_path
         try:
-            manifest_spec = manifestformatmanager.load(manifest_path)
+            manifest_spec = manifest_format_manager.load(manifest_path)
         except ManifestNotFoundError:
             continue
         manifest = Manifest.from_spec(manifest_spec)
         if is_primary:
-            _build(primaries, edges, workspace, manifestformatmanager, project_node, manifest, primary=primary)
+            _build(primaries, edges, workspace, manifest_format_manager, project_node, manifest, primary=primary)
 
 
 class DepDotExporter(DotExporter):

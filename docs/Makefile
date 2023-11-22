@@ -62,6 +62,7 @@ gen:
 	git-ws info workspace-path --help > static/cli.info.workspace-path.txt
 	git-ws init --help > static/cli.init.txt
 	git-ws manifest --help > static/cli.manifest.txt
+	git-ws manifest convert --help > static/cli.manifest.convert.txt
 	git-ws manifest create --help > static/cli.manifest.create.txt
 	git-ws manifest create -M static/git-ws.toml
 	git-ws manifest freeze --help > static/cli.manifest.freeze.txt

@@ -33,6 +33,10 @@ class StringConverter(BaseModel):
     >>> converter('name', 'NO')
     False
     >>> converter('empty', '')
+    >>> converter('empty', 'value')
+    Traceback (most recent call last):
+      ...
+    ValueError: 'empty': 'value'
     >>> converter('name', '')
     Traceback (most recent call last):
       ...

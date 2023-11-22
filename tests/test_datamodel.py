@@ -20,8 +20,6 @@ from pytest import raises
 
 from gitws import Defaults, FileRef, GroupSelect, MainFileRef, Manifest, ManifestSpec, Project, ProjectSpec, Remote
 
-from .common import MANIFEST_DEFAULT
-
 
 def test_remote():
     """Test Remotes."""
@@ -228,7 +226,7 @@ def test_manifest_spec():
         ManifestSpec(group_filters=("test",))
 
 
-def test_manifest_spec_from_data(tmp_path):
+def test_manifest_spec_from_data():
     """Determine ManifestSpec from Data."""
     data = {
         "defaults": {

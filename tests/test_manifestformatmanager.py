@@ -20,7 +20,7 @@ from pathlib import Path
 
 from pytest import raises
 
-from gitws import AManifestFormat, IncompatibleFormat
+from gitws import IncompatibleFormatError, ManifestFormat
 from gitws._manifestformatmanager import ManifestFormatManager
 
 
@@ -28,12 +28,12 @@ def test_mngr(tmp_path):
     """Basic Testing"""
     mngr = ManifestFormatManager()
     filepath = tmp_path / "manifest.toml"
-    with raises(IncompatibleFormat):
+    with raises(IncompatibleFormatError):
         with mngr.handle(filepath):
             pass
 
 
-class OneFormat(AManifestFormat):
+class OneFormat(ManifestFormat):
 
     """Just One Example Format."""
 
@@ -49,7 +49,7 @@ class AnotherOneFormat(OneFormat):
     """Another One Format."""
 
 
-class TwoFormat(AManifestFormat):
+class TwoFormat(ManifestFormat):
 
     """Just Another Example Format."""
 
@@ -60,7 +60,7 @@ class TwoFormat(AManifestFormat):
         return path.suffix == ".two"
 
 
-class AllFormat(AManifestFormat):
+class AllFormat(ManifestFormat):
 
     """Default Format Handler."""
 
@@ -82,11 +82,11 @@ def test_prio():
     mngr.add(two)
 
     with mngr.handle(Path("file.one")) as handler:
-        assert handler is one
+        assert handler.format_ is one
     with mngr.handle(Path("file.two")) as handler:
-        assert handler is two
+        assert handler.format_ is two
     with mngr.handle(Path("file.unknown")) as handler:
-        assert handler is all_
+        assert handler.format_ is all_
 
 
 def test_no_default():
@@ -101,10 +101,10 @@ def test_no_default():
     mngr.add(two)
 
     with mngr.handle(Path("file.one")) as handler:
-        assert handler is one
+        assert handler.format_ is one
     with mngr.handle(Path("file.two")) as handler:
-        assert handler is two
-    with raises(IncompatibleFormat):
+        assert handler.format_ is two
+    with raises(IncompatibleFormatError):
         with mngr.handle(Path("file.unknown")) as handler:
             pass
 

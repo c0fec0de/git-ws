@@ -522,7 +522,7 @@ def default(context, manifest_path, name, value):
     Set DEFAULT in Manifest to VALUE.
     """
     with exceptionhandling(context):
-        with GitWS.manifestformatmanager.handle(manifest_path) as handler:
+        with GitWS.manifest_format_manager.handle(manifest_path) as handler:
             manifest_spec = handler.load()
             defaults = manifest_spec.defaults
             for fname, field in defaults.model_fields.items():  # pragma: no branch
@@ -545,7 +545,7 @@ def group_filters(context, manifest_path, value):
     The group filter selects/deselects dependencies based on their path and/or groups.
     """
     with exceptionhandling(context):
-        with GitWS.manifestformatmanager.handle(manifest_path) as handler:
+        with GitWS.manifest_format_manager.handle(manifest_path) as handler:
             manifest_spec = handler.load()
             manifest_spec = manifest_spec.model_copy_fromstr({"group_filters": value})
             handler.save(manifest_spec)

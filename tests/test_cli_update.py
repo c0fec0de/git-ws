@@ -17,7 +17,7 @@
 """Command Line Interface - Update Variants."""
 from pathlib import Path
 
-from gitws import Git, GitWS
+from gitws import Git, GitWS, save
 from gitws.datamodel import ManifestSpec, ProjectSpec
 
 # pylint: disable=unused-import
@@ -40,11 +40,12 @@ def test_update(tmp_path):
 
         # Modify dep4
         path = repos_path / "dep4"
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep5", url="../dep5"),
             ]
-        ).save(path / "git-ws.toml")
+        )
+        save(manifest_spec, path / "git-ws.toml")
         git4 = Git(path)
         sha1 = git4.get_sha()[:7]
         git4.add(paths=(Path("git-ws.toml"),))
@@ -170,11 +171,12 @@ def test_update_rebase(tmp_path):
 
         # Modify dep4
         path = repos_path / "dep4"
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             dependencies=[
                 ProjectSpec(name="dep5", url="../dep5"),
             ]
-        ).save(path / "git-ws.toml")
+        )
+        save(manifest_spec, path / "git-ws.toml")
         git4 = Git(path)
         sha1 = git4.get_sha()[:7]
         git4.add(paths=(Path("git-ws.toml"),))
@@ -330,14 +332,15 @@ def test_update_manifest(tmp_path):
 
         # Update Manifest in Remote
         main_repo = repos_path / "main"
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             group_filters=("-test",),
             dependencies=[
                 ProjectSpec(name="dep1", url="../dep1"),
                 ProjectSpec(name="dep2", url="../dep2", revision="main"),
                 ProjectSpec(name="dep3", url="../dep3", groups=("test",)),
             ],
-        ).save(main_repo / "git-ws.toml")
+        )
+        save(manifest_spec, main_repo / "git-ws.toml")
         main = Git(main_repo)
         main.add((Path("git-ws.toml"),))
         main.commit("update")

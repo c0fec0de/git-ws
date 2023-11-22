@@ -16,11 +16,10 @@
 
 """Info Commands."""
 
-from pathlib import Path
 
 import click
 
-from gitws import GitWS, ManifestSpec, Remote
+from gitws import GitWS, Remote
 
 from .common import exceptionhandling, pass_context
 from .options import manifest_option
@@ -43,7 +42,7 @@ def add(context, name, url_base, manifest_path):
     Add Remote NAME with URL_BASE.
     """
     with exceptionhandling(context):
-        with GitWS.manifestformatmanager.handle(manifest_path) as handler:
+        with GitWS.manifest_format_manager.handle(manifest_path) as handler:
             manifest_spec = handler.load()
             remotes = list(manifest_spec.remotes)
             remotes.append(Remote(name=name, url_base=url_base))
@@ -59,7 +58,7 @@ def list_(context, manifest_path):
     List Remotes.
     """
     with exceptionhandling(context):
-        manifest_spec = GitWS.manifestformatmanager.load(manifest_path)
+        manifest_spec = GitWS.manifest_format_manager.load(manifest_path)
         for remote in manifest_spec.remotes:
             click.echo(f"{remote.name}: {remote.url_base}")
 
@@ -73,7 +72,7 @@ def delete(context, name, manifest_path):
     Delete Remote NAME.
     """
     with exceptionhandling(context):
-        with GitWS.manifestformatmanager.handle(manifest_path) as handler:
+        with GitWS.manifest_format_manager.handle(manifest_path) as handler:
             manifest_spec = handler.load()
             remotes = list(manifest_spec.remotes)
             for idx, remote in enumerate(manifest_spec.remotes):
