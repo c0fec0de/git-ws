@@ -18,7 +18,8 @@
 import click
 import tomlkit
 
-from gitws import GitWS, ManifestSpec, ProjectSpec
+from gitws import ProjectSpec
+from gitws._manifestformatmanager import get_manifest_format_manager
 from gitws._util import as_dict
 
 from ..common import exceptionhandling, pass_context
@@ -64,7 +65,7 @@ def add(
     Add Dependency NAME.
     """
     with exceptionhandling(context):
-        with GitWS.manifest_format_manager.handle(manifest_path) as handler:
+        with get_manifest_format_manager().handle(manifest_path) as handler:
             manifest_spec = handler.load()
             dependencies = list(manifest_spec.dependencies)
             dependencies.append(
@@ -102,7 +103,7 @@ def set_(context, manifest_path, dep, attribute, value):
     Set ATTRIBUTE For Dependency DEP to VALUE.
     """
     with exceptionhandling(context):
-        with GitWS.manifest_format_manager.handle(manifest_path) as handler:
+        with get_manifest_format_manager().handle(manifest_path) as handler:
             manifest_spec = handler.load()
             dependencies = list(manifest_spec.dependencies)
             for idx, dependency in enumerate(dependencies):
@@ -123,7 +124,7 @@ def list_(context, manifest_path):
     List Dependencies.
     """
     with exceptionhandling(context):
-        with GitWS.manifest_format_manager.handle(manifest_path) as handler:
+        with get_manifest_format_manager().handle(manifest_path) as handler:
             manifest_spec = handler.load()
             doc = tomlkit.document()
             doc.add("dependencies", as_dict(manifest_spec)["dependencies"])
@@ -139,7 +140,7 @@ def delete(context, name, manifest_path):
     Delete Dependency NAME.
     """
     with exceptionhandling(context):
-        with GitWS.manifest_format_manager.handle(manifest_path) as handler:
+        with get_manifest_format_manager().handle(manifest_path) as handler:
             manifest_spec = handler.load()
             dependencies = list(manifest_spec.dependencies)
             for idx, dep in enumerate(manifest_spec.dependencies):

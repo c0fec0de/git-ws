@@ -23,7 +23,7 @@ import urllib
 from pathlib import Path
 from typing import Dict, Generator, List, Optional, Tuple
 
-from ._manifestformatmanager import ManifestFormatManager
+from ._manifestformatmanager import ManifestFormatManager, get_manifest_format_manager
 from ._url import urlrel, urlsub
 from ._util import LOGGER, get_repr, no_echo, removesuffix, resolve_relative, run
 from ._workspacemanager import WorkspaceManager
@@ -70,19 +70,19 @@ class GitWS:
 
     # pylint: disable=too-many-public-methods
 
-    manifest_format_manager = ManifestFormatManager.from_env()
-
     def __init__(
         self,
         workspace: Workspace,
         manifest_path: Path,
         group_filters: GroupFilters,
         secho=None,
+        manifest_format_manager: Optional[ManifestFormatManager] = None,
     ):
         self.workspace = workspace
         self.manifest_path = manifest_path
         self.group_filters = group_filters
         self.secho = secho or no_echo
+        self.manifest_format_manager = manifest_format_manager or get_manifest_format_manager()
 
     def __eq__(self, other):
         if isinstance(other, GitWS):
@@ -289,8 +289,8 @@ class GitWS:
             mngr.prune(force=force)
         return self.workspace.deinit()
 
-    @classmethod
-    def check_manifest(cls, manifest_path: Path):
+    @staticmethod
+    def check_manifest(manifest_path: Path):
         """
         Check Manifest at ``manifest_path``.
 
@@ -300,7 +300,7 @@ class GitWS:
             ManifestNotFoundError: If manifest does not exists.
             ManifestError: If manifest is broken.
         """
-        manifest_spec = cls.manifest_format_manager.load(manifest_path)
+        manifest_spec = get_manifest_format_manager().load(manifest_path)
         Manifest.from_spec(manifest_spec, path=str(manifest_path))
 
     @staticmethod
