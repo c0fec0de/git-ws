@@ -113,4 +113,4 @@ def test_load_plugins():
     """Load Plugins."""
     mngr = ManifestFormatManager()
     mngr.load_plugins()
-    assert any(format.__class__ for format in mngr.formats)
+    assert any(format.__class__ for format in mngr.manifest_formats)

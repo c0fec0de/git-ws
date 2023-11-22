@@ -79,7 +79,7 @@ class ManifestFormatManager(BaseModel):
         self._manifest_formats.append(manifestformat)
 
     @property
-    def formats(self) -> Tuple[ManifestFormat, ...]:
+    def manifest_formats(self) -> Tuple[ManifestFormat, ...]:
         """Formats."""
         return tuple(self._manifest_formats)
 
