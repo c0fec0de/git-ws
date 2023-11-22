@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Generator, List, Optional, Tuple, Union
 
 from ._basemodel import BaseModel
+from ._pathlock import atomic_update_or_create_path
 from ._url import strip_user_password
 from ._util import get_repr, no_echo, run
 from .appconfig import AppConfig
@@ -226,7 +227,7 @@ class DiffStat(BaseModel):
 class Git:
 
     """
-    Our Git REPO Helper.
+    Work with git repositories.
 
     To initialize a git repository in the current working directory:
 
@@ -330,35 +331,39 @@ class Git:
         # cache index
         key = hashlib.sha256(baseurl.encode("utf-8")).hexdigest()
         cache = self.clone_cache / key
-        # Restore user/password credentials, repair corrupted cache
-        if cache.exists():
-            self.secho("Using clone-cache")
-            try:
-                self._run(("remote", "add", "origin", str(url)), capture_output=True, cwd=cache)
-                self._run(("reset", "--hard"), capture_output=True, cwd=cache)
-                self._run(("clean", "-xdf"), capture_output=True, cwd=cache)
-            except subprocess.CalledProcessError:  # pragma: no cover
-                _LOGGER.warning("Cache Entry %s is broken. Removing.", key)
-                shutil.rmtree(cache)  # broken
-        # Cache Update
-        if cache.exists():
-            self._run(("fetch", "origin"), capture_output=True, cwd=cache)
-            try:
-                branch = self._run2str(("branch",), regex=_RE_BRANCH, cwd=cache)
-                self._run(("branch", f"--set-upstream-to=origin/{branch}", branch), capture_output=True, cwd=cache)
-                self._run(("merge", f"origin/{branch}"), capture_output=True, cwd=cache)
-            except subprocess.CalledProcessError:  # pragma: no cover
-                _LOGGER.warning("Cache Entry %s is broken. Removing.", key)
-                shutil.rmtree(cache)  # broken
-        # (Re-)Init Cache
-        if not cache.exists():
-            self.secho("Initializing clone-cache")
-            cache.mkdir(parents=True)
-            run(("git", "clone", "--", str(url), str(cache)))
-        _LOGGER.debug("Copy %s to  %s)", cache, self.path)
-        shutil.copytree(cache, self.path)
-        # Remove user/password credentials from cache
-        self._run(("remote", "remove", "origin"), cwd=cache)
+
+        with atomic_update_or_create_path(cache) as tmp_cache:
+            # Restore user/password credentials, repair corrupted cache
+            if tmp_cache.exists():
+                self.secho("Using clone-cache")
+                try:
+                    self._run(("remote", "add", "origin", str(url)), capture_output=True, cwd=tmp_cache)
+                    self._run(("reset", "--hard"), capture_output=True, cwd=tmp_cache)
+                    self._run(("clean", "-xdf"), capture_output=True, cwd=tmp_cache)
+                except subprocess.CalledProcessError:  # pragma: no cover
+                    _LOGGER.warning("Cache Entry %s is broken. Removing.", key)
+                    shutil.rmtree(tmp_cache)  # broken
+            # Cache Update
+            if tmp_cache.exists():
+                self._run(("fetch", "origin"), capture_output=True, cwd=tmp_cache)
+                try:
+                    branch = self._run2str(("branch",), regex=_RE_BRANCH, cwd=tmp_cache)
+                    self._run(
+                        ("branch", f"--set-upstream-to=origin/{branch}", branch), capture_output=True, cwd=tmp_cache
+                    )
+                    self._run(("merge", f"origin/{branch}"), capture_output=True, cwd=tmp_cache)
+                except subprocess.CalledProcessError:  # pragma: no cover
+                    _LOGGER.warning("Cache Entry %s is broken. Removing.", key)
+                    shutil.rmtree(tmp_cache)  # broken
+            # (Re-)Init Cache
+            if not tmp_cache.exists():
+                self.secho("Initializing clone-cache")
+                tmp_cache.mkdir(parents=True)
+                run(("git", "clone", "--", str(url), str(tmp_cache)))
+            _LOGGER.debug("Copy %s to  %s)", tmp_cache, self.path)
+            shutil.copytree(tmp_cache, self.path)
+            # Remove user/password credentials from cache
+            self._run(("remote", "remove", "origin"), cwd=tmp_cache)
 
     def get_tag(self) -> Optional[str]:
         """Get Current Tag."""
