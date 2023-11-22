@@ -100,6 +100,8 @@ Overview
 
 import logging
 
+from pydantic import ValidationError
+
 from .appconfig import AppConfig, AppConfigLocation
 from .clone import Clone, CloneFilter, filter_clone_on_branch, map_paths
 from .datamodel import (
