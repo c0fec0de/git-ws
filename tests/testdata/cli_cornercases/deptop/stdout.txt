@@ -7,7 +7,7 @@ DEBUG:   run(['git', 'branch'], cwd='top/top') OK stdout=b'* main\n' stderr=b''
 INFO:    Git('TMP/top/top').get_branch() = 'main'
 DEBUG:   run(['git', 'remote', '-v'], cwd='top/top') OK stdout=b'origin\tREPOS/top (fetch)\norigin\tREPOS/top (push)\n' stderr=b''
 INFO:    Git('top/top').get_url() = 'REPOS/top'
-DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2')))
+DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2'), ProjectSpec(name='sub/dep4')))
 DEBUG:   Project(name='dep1', path='dep1', level=1, url='REPOS/dep1')
 INFO:    Git('top/dep1').clone('REPOS/dep1', revision=None, depth=None)
 DEBUG:   run(('git', 'clone', '--', 'REPOS/dep1', 'top/dep1'), cwd=None) OK stdout=None stderr=None
@@ -22,6 +22,13 @@ INFO:    Git('top/dep2').submodule_update(init=True, recursive=True)
 DEBUG:   run(['git', 'submodule', 'update', '--init', '--recursive'], cwd='top/dep2') OK stdout=None stderr=b''
 DEBUG:   run(['git', 'branch'], cwd='top/dep2') OK stdout=b'* main\n' stderr=b''
 INFO:    Git('TMP/top/dep2').get_branch() = 'main'
+DEBUG:   Project(name='sub/dep4', path='sub/dep4', level=1, url='REPOS/sub/dep4')
+INFO:    Git('top/sub/dep4').clone('REPOS/sub/dep4', revision=None, depth=None)
+DEBUG:   run(('git', 'clone', '--', 'REPOS/sub/dep4', 'top/sub/dep4'), cwd=None) OK stdout=None stderr=None
+INFO:    Git('top/sub/dep4').submodule_update(init=True, recursive=True)
+DEBUG:   run(['git', 'submodule', 'update', '--init', '--recursive'], cwd='top/sub/dep4') OK stdout=None stderr=b''
+DEBUG:   run(['git', 'branch'], cwd='top/sub/dep4') OK stdout=b'* main\n' stderr=b''
+INFO:    Git('TMP/top/sub/dep4').get_branch() = 'main'
 DEBUG:   run(['git', 'remote', '-v'], cwd='top/dep1') OK stdout=b'origin\tREPOS/dep1 (fetch)\norigin\tREPOS/dep1 (push)\n' stderr=b''
 INFO:    Git('top/dep1').get_url() = 'REPOS/dep1'
 DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep3', url='../dep3', revision='main'), ProjectSpec(name='top', url='../top')))
@@ -42,17 +49,30 @@ DEBUG:   run(['git', 'remote', '-v'], cwd='top/dep2') OK stdout=b'origin\tREPOS/
 INFO:    Git('top/dep2').get_url() = 'REPOS/dep2'
 DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep3', url='../dep3', revision='main'),))
 DEBUG:   DUPLICATE Project(name='dep3', path='dep3', level=2, url='REPOS/dep3', revision='main')
+DEBUG:   run(['git', 'remote', '-v'], cwd='top/sub/dep4') OK stdout=b'origin\tREPOS/sub/dep4 (fetch)\norigin\tREPOS/sub/dep4 (push)\n' stderr=b''
+INFO:    Git('top/sub/dep4').get_url() = 'REPOS/sub/dep4'
+DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep5'),))
+DEBUG:   Project(name='dep5', path='dep5', level=2, url='REPOS/sub/dep5')
+INFO:    Git('top/dep5').clone('REPOS/sub/dep5', revision=None, depth=None)
+DEBUG:   run(('git', 'clone', '--', 'REPOS/sub/dep5', 'top/dep5'), cwd=None) OK stdout=None stderr=None
+INFO:    Git('top/dep5').submodule_update(init=True, recursive=True)
+DEBUG:   run(['git', 'submodule', 'update', '--init', '--recursive'], cwd='top/dep5') OK stdout=None stderr=b''
+DEBUG:   run(['git', 'branch'], cwd='top/dep5') OK stdout=b'* main\n' stderr=b''
+INFO:    Git('TMP/top/dep5').get_branch() = 'main'
 DEBUG:   run(['git', 'branch'], cwd='top/top') OK stdout=b'* main\n' stderr=b''
 INFO:    Git('top/top').get_branch() = 'main'
 DEBUG:   run(['git', 'remote', '-v'], cwd='top/top') OK stdout=b'origin\tREPOS/top (fetch)\norigin\tREPOS/top (push)\n' stderr=b''
 INFO:    Git('top/top').get_url() = 'REPOS/top'
-DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2')))
+DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep1', url='../dep1'), ProjectSpec(name='dep2', url='../dep2'), ProjectSpec(name='sub/dep4')))
 DEBUG:   Project(name='dep1', path='dep1', level=1, url='../dep1')
 DEBUG:   run(['git', 'branch'], cwd='top/dep1') OK stdout=b'* main\n' stderr=b''
 INFO:    Git('TMP/top/dep1').get_branch() = 'main'
 DEBUG:   Project(name='dep2', path='dep2', level=1, url='../dep2')
 DEBUG:   run(['git', 'branch'], cwd='top/dep2') OK stdout=b'* main\n' stderr=b''
 INFO:    Git('TMP/top/dep2').get_branch() = 'main'
+DEBUG:   Project(name='sub/dep4', path='sub/dep4', level=1, url='../sub/dep4')
+DEBUG:   run(['git', 'branch'], cwd='top/sub/dep4') OK stdout=b'* main\n' stderr=b''
+INFO:    Git('TMP/top/sub/dep4').get_branch() = 'main'
 DEBUG:   run(['git', 'remote', '-v'], cwd='top/dep1') OK stdout=b'origin\tREPOS/dep1 (fetch)\norigin\tREPOS/dep1 (push)\n' stderr=b''
 INFO:    Git('top/dep1').get_url() = 'REPOS/dep1'
 DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep3', url='../dep3', revision='main'), ProjectSpec(name='top', url='../top')))
@@ -68,3 +88,9 @@ DEBUG:   run(['git', 'remote', '-v'], cwd='top/dep2') OK stdout=b'origin\tREPOS/
 INFO:    Git('top/dep2').get_url() = 'REPOS/dep2'
 DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep3', url='../dep3', revision='main'),))
 DEBUG:   DUPLICATE Project(name='dep3', path='dep3', level=2, url='../dep3', revision='main')
+DEBUG:   run(['git', 'remote', '-v'], cwd='top/sub/dep4') OK stdout=b'origin\tREPOS/sub/dep4 (fetch)\norigin\tREPOS/sub/dep4 (push)\n' stderr=b''
+INFO:    Git('top/sub/dep4').get_url() = 'REPOS/sub/dep4'
+DEBUG:   ManifestSpec(dependencies=(ProjectSpec(name='dep5'),))
+DEBUG:   Project(name='dep5', path='dep5', level=2, url='../dep5')
+DEBUG:   run(['git', 'branch'], cwd='top/dep5') OK stdout=b'* main\n' stderr=b''
+INFO:    Git('TMP/top/dep5').get_branch() = 'main'

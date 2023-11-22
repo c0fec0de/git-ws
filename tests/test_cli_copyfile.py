@@ -17,12 +17,12 @@
 """Command Line Interface - Update Variants."""
 from pathlib import Path
 
-from gitws import FileRef, Git, GitWS, MainFileRef, ManifestSpec, ProjectSpec, load, save
+from gitws import FileRef, Git, GitWS, MainFileRef, ManifestSpec, ProjectSpec, save
 
 from .fixtures import git_repo
 
 # pylint: disable=unused-import
-from .util import chdir, cli, format_output, run
+from .util import chdir, cli
 
 
 def create_repos(repos_path) -> str:

@@ -36,16 +36,15 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import tomlkit
 from pydantic import AfterValidator, ConfigDict, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Annotated
 
 from ._basemodel import BaseModel
 from ._url import is_urlabs, urljoin, urlsub
-from ._util import add_comment, add_info, as_dict, get_repr, resolve_relative
+from ._util import get_repr
 from .const import MANIFEST_PATH_DEFAULT
-from .exceptions import ManifestError, ManifestNotFoundError, NoAbsUrlError
+from .exceptions import NoAbsUrlError
 
 _RE_GROUP = re.compile(r"\A[a-zA-Z0-9_][a-zA-Z0-9_\-]*\Z")
 

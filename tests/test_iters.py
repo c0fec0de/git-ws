@@ -26,6 +26,7 @@ from gitws.gitwsmanifestformat import GitWSManifestFormat
 
 @fixture
 def mngr():
+    """Provide initialized"""
     mngr = ManifestFormatManager()
     mngr.add(GitWSManifestFormat())
     yield mngr

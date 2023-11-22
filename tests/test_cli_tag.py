@@ -20,7 +20,7 @@ from pathlib import Path
 
 from pytest import fixture
 
-from gitws import Git, load
+from gitws import Git, load, save
 from gitws.const import CONFIG_PATH, INFO_PATH, MANIFESTS_PATH
 
 from .fixtures import create_repos, set_meta
@@ -296,7 +296,7 @@ def test_tag_dep(tmp_path, repos):
             for dep in manifest_spec.dependencies
         ]
         manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(deps)})
-        manifest_spec.save(manifest_path)
+        save(manifest_spec, manifest_path)
 
     with chdir(main_workspace):
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos) == [
