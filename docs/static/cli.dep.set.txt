@@ -1,6 +1,6 @@
 Usage: git-ws dep set [OPTIONS] DEP {name|remote|sub-
                       url|url|revision|path|manifest-path|groups|with-
-                      groups|submodules} VALUE
+                      groups|submodules|recursive} VALUE
 
   Set ATTRIBUTE For Dependency DEP to VALUE.
 
