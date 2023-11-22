@@ -115,6 +115,9 @@ class ManifestIter:
                 _LOGGER.debug("FILTERED OUT %r", dep_project)
                 continue
 
+            if not dep_project.recursive:
+                continue
+
             # Recursive
             dep_project_path = self.workspace.get_project_path(dep_project)
             dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
@@ -235,6 +238,9 @@ class ProjectIter:
 
             _LOGGER.debug("%r", dep_project)
             yield dep_project
+
+            if not dep_project.recursive:
+                continue
 
             # Recursive
             dep_project_path = self.workspace.get_project_path(dep_project)

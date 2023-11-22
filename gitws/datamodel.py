@@ -339,6 +339,7 @@ class Project(BaseModel):
         submodules: initialize and update `git submodules`
         linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
+        recursive: integrate dependencies of this dependency
         is_main: Project is Main Project.
 
     The :any:`ProjectSpec` represents the User Interface. The options which can be specified in the manifest file.
@@ -387,6 +388,9 @@ class Project(BaseModel):
 
     copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
+
+    recursive: bool = True
+    """Integrate Dependencies of this dependency."""
 
     is_main: bool = False
     """Project is the main project."""
@@ -485,6 +489,7 @@ class Project(BaseModel):
             submodules=submodules,
             linkfiles=spec.linkfiles,
             copyfiles=spec.copyfiles,
+            recursive=spec.recursive,
         )
 
 
@@ -509,6 +514,7 @@ class ProjectSpec(BaseModel):
         submodules: initialize and update `git submodules`
         linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
+        recursive: integrate dependencies of this dependency
 
     Some parameters are restricted:
 
@@ -559,6 +565,9 @@ class ProjectSpec(BaseModel):
     copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
+    recursive: bool = True
+    """Integrate Dependencies of this dependency."""
+
     @model_validator(mode="after")
     def _remote_or_url(self):
         remote = self.remote
@@ -596,6 +605,7 @@ class ProjectSpec(BaseModel):
             submodules=project.submodules,
             linkfiles=project.linkfiles,
             copyfiles=project.copyfiles,
+            recursive=project.recursive,
         )
 
 
