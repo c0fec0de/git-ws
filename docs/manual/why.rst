@@ -112,7 +112,7 @@ The Birth of Git Workspace
 
 After doing our homework and checking if we simply can use another existing tool, we came to the conclusion that we had to invest some development effort and bring up our own tool. Git Workspace was born!
 
-If you carefully study the results of our research given above, you might find that we currently were pretty fond of ``west``. So it comes to no surprise that Git Workspace is built in a similar way and even tries to be compatible with ``west`` as far as possible. In fact, the manifest files of ``west`` are to some degree compatible with Git Workspace and we try to behave similarly where possible. However, we also want to close the gap and implement the features we think are missing in ``west``.
+If you carefully study the results of our research given above, you might find that we actually were pretty fond of ``west``. So it comes to no surprise that Git Workspace is built in a similar way and even tries to be compatible with ``west`` as far as possible. In fact, the manifest files of ``west`` are to some degree compatible with Git Workspace and we try to behave similarly where possible. However, we also want to close the gap and implement the features we think are missing in ``west``.
 
 
 Comparison Matrix

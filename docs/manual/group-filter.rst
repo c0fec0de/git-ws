@@ -127,7 +127,7 @@ A group filter is - basically - a list of instructions turning individual groups
 of repositories on or off. The initial filter is build from the main
 repo's manifest. While evaluating the dependency tree, we'll *append*
 filter expressions of dependencies to that list of filters. Before
-currently evaluating a filter on a repository, the filter set on the
+actually evaluating a filter on a repository, the filter set on the
 command line is appended to the list.
 
 What happens technically is, that the *last matching expression* in this
