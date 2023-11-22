@@ -17,19 +17,16 @@
 """
 Manifest Format.
 
-We support multiple manifest formats. The :any:`AManifestFormat` class describes the access interface.
+We support multiple manifest formats. The :any:`ManifestFormat` class describes the access interface.
 """
 from pathlib import Path
 from typing import Optional
 
 from .datamodel import ManifestSpec
+from .exceptions import IncompatibleFormatError
 
 
-class IncompatibleFormat(RuntimeError):
-    """Incompatibility Error."""
-
-
-class AManifestFormat:
+class ManifestFormat:
 
     """
     Manifest Format.
@@ -50,10 +47,10 @@ class AManifestFormat:
 
         Raises:
             ManifestNotFoundError: if file is not found
-            IncompatibleFormat: Not Supported File Format.
+            IncompatibleFormatError: Not Supported File Format.
             ManifestError: On Syntax Or Data Scheme Errors.
         """
-        raise IncompatibleFormat(path)
+        raise IncompatibleFormatError(path)
 
     def dump(self, spec: ManifestSpec, path: Optional[Path] = None) -> str:
         """
@@ -66,7 +63,7 @@ class AManifestFormat:
             doc: Existing Document To Be Updated.
             path: Path To Possibly Existing Document.
         """
-        raise IncompatibleFormat(path)
+        raise IncompatibleFormatError(path)
 
     def save(self, spec: ManifestSpec, path: Path, update: bool = True):
         """
@@ -84,4 +81,4 @@ class AManifestFormat:
 
     def upgrade(self, path: Path):
         """Upgrade :any:`ManifestSpec` at ``path`` To Latest Version Including Documentation."""
-        raise IncompatibleFormat(path)
+        raise IncompatibleFormatError(path)

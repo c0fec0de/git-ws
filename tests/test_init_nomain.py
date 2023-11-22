@@ -17,7 +17,7 @@
 """Initialization Tests without Main Repo."""
 from pytest import raises
 
-from gitws import Defaults, GitWS, InitializedError, ManifestSpec, NoAbsUrlError, NoMainError, ProjectSpec, Remote
+from gitws import Defaults, GitWS, InitializedError, ManifestSpec, NoAbsUrlError, NoMainError, ProjectSpec, Remote, save
 from gitws.const import CONFIG_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 
 from .common import MANIFEST_DEFAULT
@@ -80,7 +80,7 @@ def test_noabs(tmp_path):
             ProjectSpec(name="dep1"),
         ]
         manifest_spec = ManifestSpec(dependencies=dependencies)
-        manifest_spec.save(MANIFEST_PATH_DEFAULT)
+        save(manifest_spec, MANIFEST_PATH_DEFAULT)
 
         gws = GitWS.init(path=path)
         with raises(NoAbsUrlError):
@@ -103,7 +103,7 @@ def test_deps(tmp_path):
                 ProjectSpec(name="dep1", sub_url="dep1", remote="main"),
             ],
         )
-        manifest_spec.save(MANIFEST_PATH_DEFAULT)
+        save(manifest_spec, MANIFEST_PATH_DEFAULT)
         gws = GitWS.init(path=path)
         gws.update()
         assert (path / "dep1").exists()

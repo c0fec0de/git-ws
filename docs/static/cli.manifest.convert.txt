@@ -1,0 +1,8 @@
+Usage: git-ws manifest convert [OPTIONS]
+
+  Convert Any Supported Manifest Format To Git Workspace Manifest.
+
+Options:
+  -M, --manifest FILE  Manifest file. 'git-ws.toml' by default.
+  -O, --output FILE    Write Manifest to file instead of STDOUT.
+  -h, --help           Show this message and exit.

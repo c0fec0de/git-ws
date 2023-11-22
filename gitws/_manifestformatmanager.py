@@ -15,7 +15,7 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """
-Manifest Format Manager.
+Manifest format_ Manager.
 """
 import sys
 from contextlib import contextmanager
@@ -26,9 +26,10 @@ from pydantic import ConfigDict, PrivateAttr
 
 from ._basemodel import BaseModel
 from .datamodel import ManifestSpec
-from .manifestformat import AManifestFormat, IncompatibleFormat
+from .exceptions import IncompatibleFormatError
+from .manifestformat import ManifestFormat
 
-if sys.version_info < (3, 10):
+if sys.version_info < (3, 10):  # pragma: no cover
     from importlib_metadata import entry_points
 else:
     from importlib.metadata import entry_points
@@ -36,10 +37,12 @@ else:
 
 class Handler(BaseModel):
 
+    """format_ Handler."""
+
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
     path: Path
-    fmt: AManifestFormat
+    format_: ManifestFormat
 
     def load(self) -> ManifestSpec:
         """
@@ -47,10 +50,10 @@ class Handler(BaseModel):
 
         Raises:
             ManifestNotFoundError: if file is not found
-            IncompatibleFormat: Not Supported File Format.
+            IncompatibleFormatError: Not Supported File format_.
             ManifestError: On Syntax Or Data Scheme Errors.
         """
-        return self.fmt.load(self.path)
+        return self.format_.load(self.path)
 
     def save(self, spec: ManifestSpec, update: bool = True):
         """
@@ -60,16 +63,16 @@ class Handler(BaseModel):
             update: Additional Attributes And Comments Added By The User Are **Kept**.
                     Otherwise The File Is Just Overwritten.
         """
-        self.fmt.save(spec, self.path, update=update)
+        self.format_.save(spec, self.path, update=update)
 
 
 class ManifestFormatManager(BaseModel):
 
     """
-    Manifest Format Manager.
+    Manifest format_ Manager.
     """
 
-    _manifestformats: List[AManifestFormat] = PrivateAttr(default_factory=list)
+    _manifest_formats: List[ManifestFormat] = PrivateAttr(default_factory=list)
 
     @staticmethod
     def from_env() -> "ManifestFormatManager":
@@ -78,38 +81,36 @@ class ManifestFormatManager(BaseModel):
         mngr.load_plugins()
         return mngr
 
-    def add(self, manifestformat: AManifestFormat):
-        """Register Manifest Format."""
-        self._manifestformats.append(manifestformat)
+    def add(self, manifestformat: ManifestFormat):
+        """Register Manifest format_."""
+        self._manifest_formats.append(manifestformat)
 
     @property
-    def formats(self) -> Tuple[AManifestFormat, ...]:
+    def formats(self) -> Tuple[ManifestFormat, ...]:
         """Formats."""
-        return tuple(self._manifestformats)
+        return tuple(self._manifest_formats)
 
     def load_plugins(self):
         """
-        Load Manifest Format Plugins.
+        Load Manifest format_ Plugins.
         """
         for entry_point in entry_points(group="gitws.manifestformat"):
             cls = entry_point.load()
-            assert issubclass(cls, AManifestFormat), cls
+            assert issubclass(cls, ManifestFormat), cls
             self.add(cls())
-
-    # TODO: is there a better name than 'handle'?
 
     @contextmanager
     def handle(self, path: Path) -> Iterator[Handler]:
-        """Return Context With :any:`AManifestFormat`."""
-        fmt: Optional[AManifestFormat] = None
-        for manifestformat in self._manifestformats:
+        """Return Context With :any:`ManifestFormat`."""
+        format_: Optional[ManifestFormat] = None
+        for manifestformat in self._manifest_formats:
             if not manifestformat.is_compatible(path):
                 continue
-            if not fmt or manifestformat.prio > fmt.prio:
-                fmt = manifestformat
-        if not fmt:
-            raise IncompatibleFormat(path)
-        yield Handler(path=path, fmt=fmt)
+            if not format_ or manifestformat.prio > format_.prio:
+                format_ = manifestformat
+        if not format_:
+            raise IncompatibleFormatError(path)
+        yield Handler(path=path, format_=format_)
 
     def load(self, path: Path) -> ManifestSpec:
         """
@@ -117,19 +118,8 @@ class ManifestFormatManager(BaseModel):
 
         Raises:
             ManifestNotFoundError: if file is not found
-            IncompatibleFormat: Not Supported File Format.
+            IncompatibleFormatError: Not Supported File format_.
             ManifestError: On Syntax Or Data Scheme Errors.
         """
         with self.handle(path) as fmt:
             return fmt.load()
-
-    def save(self, spec: ManifestSpec, path: Path, update: bool = True):
-        """
-        Save ``spec`` At ``path``.
-
-        Keyword Args:
-            update: Additional Attributes And Comments Added By The User Are **Kept**.
-                    Otherwise The File Is Just Overwritten.
-        """
-        with self.handle(path) as fmt:
-            fmt.save(spec, update=update)

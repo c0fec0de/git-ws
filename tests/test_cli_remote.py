@@ -17,7 +17,7 @@
 """Command Line Interface."""
 from pathlib import Path
 
-from gitws import ManifestSpec, Remote, load
+from gitws import Remote, load
 
 from .util import chdir, cli
 

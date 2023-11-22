@@ -26,14 +26,12 @@ import tomlkit
 from ._util import add_comment, add_info, as_dict, resolve_relative
 from .datamodel import Defaults, FileRef, MainFileRef, ManifestSpec, ProjectSpec, Remote
 from .exceptions import ManifestError, ManifestNotFoundError
-from .manifestformat import AManifestFormat
+from .manifestformat import ManifestFormat
 
 
-class GitWSManifestFormat(AManifestFormat):
+class GitWSManifestFormat(ManifestFormat):
     """
-    Manifest Format.
-
-    Specific Implementations of this class, handle specific manifest formats.
+    Our Manifest Format.
     """
 
     prio: int = -1
@@ -48,7 +46,7 @@ class GitWSManifestFormat(AManifestFormat):
 
         Raises:
             ManifestNotFoundError: if file is not found
-            IncompatibleFormat: Not Supported File Format.
+            IncompatibleFormatError: Not Supported File Format.
             ManifestError: On Syntax Or Data Scheme Errors.
         """
         try:

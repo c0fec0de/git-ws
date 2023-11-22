@@ -19,6 +19,8 @@ from pytest import fixture
 
 from gitws import GitWS
 
+from .common import MANIFEST_DEFAULT
+
 # pylint: disable=unused-import
 from .fixtures import repos, repos_dotgit
 from .util import chdir, cli, get_sha
@@ -826,3 +828,16 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
         f"HEAD is now at {sha4s} initial",
         "",
     ]
+
+
+def test_convert(tmp_path):
+    """Convert."""
+    with chdir(tmp_path):
+        assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
+
+        assert cli(["manifest", "convert"]) == MANIFEST_DEFAULT.splitlines() + ["", ""]
+
+        # outfile
+        filepath = tmp_path / "out.toml"
+        assert cli(["manifest", "convert", "-O", str(filepath)]) == [""]
+        assert filepath.read_text() == MANIFEST_DEFAULT

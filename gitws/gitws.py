@@ -70,7 +70,7 @@ class GitWS:
 
     # pylint: disable=too-many-public-methods
 
-    manifestformatmanager = ManifestFormatManager.from_env()
+    manifest_format_manager = ManifestFormatManager.from_env()
 
     def __init__(
         self,
@@ -300,7 +300,7 @@ class GitWS:
             ManifestNotFoundError: If manifest does not exists.
             ManifestError: If manifest is broken.
         """
-        manifest_spec = cls.manifestformatmanager.load(manifest_path)
+        manifest_spec = cls.manifest_format_manager.load(manifest_path)
         Manifest.from_spec(manifest_spec, path=str(manifest_path))
 
     @staticmethod
@@ -399,7 +399,7 @@ class GitWS:
 
         # Update Workspace
         mngr = WorkspaceManager(workspace, secho=self.secho)
-        manifest_spec = self.manifestformatmanager.load(self.manifest_path)
+        manifest_spec = self.manifest_format_manager.load(self.manifest_path)
         #   main
         group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
         groupfilter = create_filter(group_selects_from_filters(group_filters), default=True)
@@ -766,7 +766,7 @@ class GitWS:
         group_filters = self.group_filters
         yield from ProjectIter(
             workspace,
-            self.manifestformatmanager,
+            self.manifest_format_manager,
             manifest_path,
             group_filters,
             skip_main=skip_main,
@@ -784,7 +784,7 @@ class GitWS:
         group_filters = self.group_filters
         yield from ManifestIter(
             workspace,
-            self.manifestformatmanager,
+            self.manifest_format_manager,
             manifest_path,
             group_filters,
         )
@@ -810,7 +810,7 @@ class GitWS:
         """
         workspace = self.workspace
         manifest_path = self.manifest_path
-        manifest_spec = self.manifestformatmanager.load(manifest_path)
+        manifest_spec = self.manifest_format_manager.load(manifest_path)
         if resolve:
             rdeps: List[ProjectSpec] = []
             for project in self.projects(skip_main=True):
@@ -848,7 +848,7 @@ class GitWS:
     def get_deptree(self, primary=False) -> DepNode:
         """Get Dependency Tree."""
         manifest = self.get_manifest()
-        return get_deptree(self.workspace, self.manifestformatmanager, manifest, primary=primary)
+        return get_deptree(self.workspace, self.manifest_format_manager, manifest, primary=primary)
 
     def _create_project_paths_filter(self, project_paths: Optional[ProjectPaths]):
         if project_paths:
@@ -876,10 +876,10 @@ class GitWS:
             for clone in self.clones()
         }
         for manifest in self.manifests():
-            if not manifest.path:
+            if not manifest.path:  # pragma: no cover
                 continue
             manifest_path = Path(manifest.path)
-            with self.manifestformatmanager.handle(manifest_path) as handler:
+            with self.manifest_format_manager.handle(manifest_path) as handler:
                 manifest_spec = handler.load()
                 manifest_url = Git.from_path(manifest_path.parent).get_url()
                 project_specs = {project_spec.name: project_spec for project_spec in manifest_spec.dependencies}
