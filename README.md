@@ -38,8 +38,11 @@ Please install python and then try:
 
 ```bash
 curl -L https://github.com/pypa/pipx/releases/latest/download/pipx.pyz -o pipx.pyz && python3 pipx.pyz install git-ws
+```
 
-# maybe you need to run
+Maybe you need run:
+
+```bash
 python3 pipx.pyz ensurepath
 ```
 
@@ -49,8 +52,11 @@ If you already installed `pipx` (https://pypa.github.io/pipx/installation/) just
 
 ```bash
 pipx install git-ws
+```
 
-# maybe you need to run
+Maybe you need run:
+
+```bash
 pipx ensurepath
 ```
 
