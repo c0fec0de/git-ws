@@ -30,7 +30,37 @@ Git Workspace is a lightweight tool for creating and managing *workspaces* consi
 
 ## 📦 Installation
 
-Git Workspace is written in Python and - as usual - installing it is pretty easy:
+Git Workspace is written in Python.
+
+### Recommended
+
+Please install python and then try:
+
+```bash
+curl -L https://github.com/pypa/pipx/releases/latest/download/pipx.pyz -o pipx.pyz && python3 pipx.pyz install git-ws
+```
+
+Maybe you need run:
+
+```bash
+python3 pipx.pyz ensurepath
+```
+
+### via `pipx`
+
+If you already installed `pipx` (https://pypa.github.io/pipx/installation/) just run:
+
+```bash
+pipx install git-ws
+```
+
+Maybe you need run:
+
+```bash
+pipx ensurepath
+```
+
+### via `pip`
 
 ```bash
 pip install git-ws
