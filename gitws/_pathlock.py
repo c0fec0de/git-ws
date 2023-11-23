@@ -140,7 +140,7 @@ def atomic_update_or_create_path(path: Path):
             # On success, first remove the original path:
             if path.exists():
                 if path.is_dir():
-                    rmtree(str(path))
+                    rmtree(path)
                 else:
                     path.unlink()
 
@@ -148,13 +148,13 @@ def atomic_update_or_create_path(path: Path):
             # Note, we have to use a rename here, to ensure an atomic update of
             # the target:
             if tmp_path.exists():
-                rename(str(tmp_path), str(path))
+                rename(tmp_path, path)
         finally:
             # Clean up in case errors happened: Remove the temporary
             # directory:
             if tmp_path.exists():
                 if tmp_path.is_dir():
-                    rmtree(str(tmp_path))
+                    rmtree(tmp_path)
                 else:
                     tmp_path.unlink()
 
