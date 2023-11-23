@@ -804,3 +804,19 @@ def test_remotes_unique():
     """Remote names must be unique."""
     with raises(ValueError):
         ManifestSpec(remotes=(Remote(name="foo", url_base="url"), Remote(name="foo", url_base="url")))
+
+
+def test_project_path():
+    """Project Name and Path."""
+    with raises(ValidationError):
+        Project(name="../dep1")
+    with raises(ValidationError):
+        Project(name="dep1", path="../dep1")
+
+
+def test_project_spec_path():
+    """ProjectSpec Name and Path."""
+    with raises(ValidationError):
+        ProjectSpec(name="../dep1")
+    with raises(ValidationError):
+        ProjectSpec(name="dep1", path="../dep1")

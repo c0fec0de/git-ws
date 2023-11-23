@@ -68,6 +68,7 @@ class WorkspaceManager:
         if path:
             self._knownpaths.append(Path(path))
         project_path = path or "."
+        self.__check_path((self.workspace.path / project_path).resolve(), "project")
         if linkfiles:
             for linkfile in linkfiles:
                 fileref = WorkspaceFileRef(
