@@ -102,6 +102,7 @@ import logging
 
 from pydantic import ValidationError
 
+from ._iters import ManifestIter, ProjectIter
 from .appconfig import AppConfig, AppConfigLocation
 from .clone import Clone, CloneFilter, filter_clone_on_branch, map_paths
 from .datamodel import (
@@ -146,7 +147,6 @@ from .exceptions import (
 from .git import Git
 from .gitws import GitWS
 from .gitwsmanifestformat import dump, load, save, upgrade
-from .iters import ManifestIter, ProjectIter
 from .manifestformat import ManifestFormat
 from .workspace import Workspace
 from .workspacefinder import find_workspace

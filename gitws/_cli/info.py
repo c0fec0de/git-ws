@@ -21,7 +21,7 @@ from anytree import ContStyle, RenderTree
 
 from gitws import GitWS
 
-from ..deptree import DepDotExporter
+from .._deptree import DepDotExporter
 from ..exceptions import NoMainError
 from .common import exceptionhandling, pass_context
 from .options import group_filters_option, manifest_option

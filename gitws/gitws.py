@@ -23,6 +23,8 @@ import urllib
 from pathlib import Path
 from typing import Dict, Generator, List, Optional, Tuple
 
+from ._deptree import DepNode, get_deptree
+from ._iters import ManifestIter, ProjectIter, create_filter
 from ._manifestformatmanager import ManifestFormatManager, get_manifest_format_manager
 from ._url import urlrel, urlsub
 from ._util import LOGGER, get_repr, no_echo, removesuffix, resolve_relative, run
@@ -39,11 +41,9 @@ from .datamodel import (
     ProjectSpec,
     group_selects_from_filters,
 )
-from .deptree import DepNode, get_deptree
 from .exceptions import GitTagExistsError, InitializedError, ManifestExistError, NoGitError, NoMainError, NotEmptyError
 from .git import DiffStat, Git, Status
 from .gitwsmanifestformat import save
-from .iters import ManifestIter, ProjectIter, create_filter
 from .manifestfinder import find_manifest
 from .workspace import Workspace
 

@@ -201,6 +201,7 @@ class GroupSelect(BaseModel):
 
 
 GroupSelects = Tuple[GroupSelect, ...]
+"""Group Selects."""
 
 
 def group_selects_from_groups(groups: Groups) -> GroupSelects:
