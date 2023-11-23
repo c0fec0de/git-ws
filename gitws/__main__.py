@@ -15,7 +15,7 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
-from ._cli import main
+from ._cli import main  # pragma: no cover
 
 if __name__ == "__main__":  # pragma: no cover
     main()
