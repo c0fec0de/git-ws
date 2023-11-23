@@ -23,6 +23,7 @@ import urllib
 from pathlib import Path
 from typing import Dict, Generator, List, Optional, Tuple
 
+from ._manifestformatmanager import ManifestFormatManager, get_manifest_format_manager
 from ._url import urlrel, urlsub
 from ._util import LOGGER, get_repr, no_echo, removesuffix, resolve_relative, run
 from ._workspacemanager import WorkspaceManager
@@ -41,6 +42,7 @@ from .datamodel import (
 from .deptree import DepNode, get_deptree
 from .exceptions import GitTagExistsError, InitializedError, ManifestExistError, NoGitError, NoMainError, NotEmptyError
 from .git import DiffStat, Git, Status
+from .gitwsmanifestformat import save
 from .iters import ManifestIter, ProjectIter, create_filter
 from .manifestfinder import find_manifest
 from .workspace import Workspace
@@ -74,11 +76,13 @@ class GitWS:
         manifest_path: Path,
         group_filters: GroupFilters,
         secho=None,
+        manifest_format_manager: Optional[ManifestFormatManager] = None,
     ):
         self.workspace = workspace
         self.manifest_path = manifest_path
         self.group_filters = group_filters
         self.secho = secho or no_echo
+        self.manifest_format_manager = manifest_format_manager or get_manifest_format_manager()
 
     def __eq__(self, other):
         if isinstance(other, GitWS):
@@ -296,7 +300,7 @@ class GitWS:
             ManifestNotFoundError: If manifest does not exists.
             ManifestError: If manifest is broken.
         """
-        manifest_spec = ManifestSpec.load(manifest_path)
+        manifest_spec = get_manifest_format_manager().load(manifest_path)
         Manifest.from_spec(manifest_spec, path=str(manifest_path))
 
     @staticmethod
@@ -395,7 +399,7 @@ class GitWS:
 
         # Update Workspace
         mngr = WorkspaceManager(workspace, secho=self.secho)
-        manifest_spec = ManifestSpec.load(self.manifest_path)
+        manifest_spec = self.manifest_format_manager.load(self.manifest_path)
         #   main
         group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
         groupfilter = create_filter(group_selects_from_filters(group_filters), default=True)
@@ -654,7 +658,7 @@ class GitWS:
         manifest_spec = self.get_manifest_spec(freeze=True, resolve=True)
         (main_path / MANIFESTS_PATH).mkdir(exist_ok=True, parents=True)
         (main_path / manifest_path).touch()
-        manifest_spec.save(main_path / manifest_path)
+        save(manifest_spec, main_path / manifest_path)
         # commit
         paths = (manifest_path,)
         git.add(paths, force=True)
@@ -760,7 +764,14 @@ class GitWS:
         workspace = self.workspace
         manifest_path = self.manifest_path
         group_filters = self.group_filters
-        yield from ProjectIter(workspace, manifest_path, group_filters, skip_main=skip_main, resolve_url=resolve_url)
+        yield from ProjectIter(
+            workspace,
+            self.manifest_format_manager,
+            manifest_path,
+            group_filters,
+            skip_main=skip_main,
+            resolve_url=resolve_url,
+        )
 
     def manifests(
         self,
@@ -771,7 +782,12 @@ class GitWS:
         workspace = self.workspace
         manifest_path = self.manifest_path
         group_filters = self.group_filters
-        yield from ManifestIter(workspace, manifest_path, group_filters)
+        yield from ManifestIter(
+            workspace,
+            self.manifest_format_manager,
+            manifest_path,
+            group_filters,
+        )
 
     @staticmethod
     def create_manifest(manifest_path: Path = MANIFEST_PATH_DEFAULT) -> Path:
@@ -779,7 +795,7 @@ class GitWS:
         if manifest_path.exists():
             raise ManifestExistError(manifest_path)
         manifest_spec = ManifestSpec()
-        manifest_spec.save(manifest_path)
+        save(manifest_spec, manifest_path)
         return manifest_path
 
     def get_manifest_spec(self, freeze: bool = False, resolve: bool = False) -> ManifestSpec:
@@ -794,7 +810,7 @@ class GitWS:
         """
         workspace = self.workspace
         manifest_path = self.manifest_path
-        manifest_spec = ManifestSpec.load(manifest_path)
+        manifest_spec = self.manifest_format_manager.load(manifest_path)
         if resolve:
             rdeps: List[ProjectSpec] = []
             for project in self.projects(skip_main=True):
@@ -832,7 +848,7 @@ class GitWS:
     def get_deptree(self, primary=False) -> DepNode:
         """Get Dependency Tree."""
         manifest = self.get_manifest()
-        return get_deptree(self.workspace, manifest, primary=primary)
+        return get_deptree(self.workspace, self.manifest_format_manager, manifest, primary=primary)
 
     def _create_project_paths_filter(self, project_paths: Optional[ProjectPaths]):
         if project_paths:
@@ -860,28 +876,29 @@ class GitWS:
             for clone in self.clones()
         }
         for manifest in self.manifests():
-            if not manifest.path:
+            if not manifest.path:  # pragma: no cover
                 continue
             manifest_path = Path(manifest.path)
-            manifest_spec = ManifestSpec.load(manifest_path)
-            manifest_url = Git.from_path(manifest_path.parent).get_url()
-            project_specs = {project_spec.name: project_spec for project_spec in manifest_spec.dependencies}
+            with self.manifest_format_manager.handle(manifest_path) as handler:
+                manifest_spec = handler.load()
+                manifest_url = Git.from_path(manifest_path.parent).get_url()
+                project_specs = {project_spec.name: project_spec for project_spec in manifest_spec.dependencies}
 
-            # update projects
-            for project in manifest.dependencies:
-                project_spec = project_specs[project.name]
-                project_spec = self._update_project(
-                    infos, manifest_spec, manifest_url, project, project_spec, revision, url
-                )
-                project_specs[project.name] = project_spec
+                # update projects
+                for project in manifest.dependencies:
+                    project_spec = project_specs[project.name]
+                    project_spec = self._update_project(
+                        infos, manifest_spec, manifest_url, project, project_spec, revision, url
+                    )
+                    project_specs[project.name] = project_spec
 
-            # update manifest
-            manifest_update = {"dependencies": tuple(project_specs.values())}
-            manifest_spec = manifest_spec.model_copy(update=manifest_update)
-            manifest_spec.save(manifest_path)
+                # update manifest
+                manifest_update = {"dependencies": tuple(project_specs.values())}
+                manifest_spec = manifest_spec.model_copy(update=manifest_update)
+                handler.save(manifest_spec)
 
-            if not recursive:
-                break
+                if not recursive:
+                    break
 
     @staticmethod
     def _update_project(

@@ -50,7 +50,7 @@ Git(...)
 Create a manifest:
 
 >>> manifest = gitws.ManifestSpec(defaults=gitws.Defaults(revision='main'))
->>> manifest.save(main_path / "git-ws.toml")
+>>> gitws.save(manifest, main_path / "git-ws.toml")
 
 Initialize Workspace
 
@@ -83,20 +83,24 @@ Git(...)
 Overview
 --------
 
-* :any:`GitWS`: the central API to the main functionality.
-* :any:`Clone`: is the pair of Of :any:`Project` And :any:`Git` Interface.
-* :any:`Git`: provides a reduced API to ``git``.
-* :any:`ManifestSpec`: Manifest specification for the current project.
-* :any:`Manifest`: Manifest as needed by :any:`GitWS` derived from :any:`ManifestSpec`.
-* :any:`ProjectSpec`: Dependency Specification in :any:`ManifestSpec`.
-* :any:`Project`: A Single Dependency as needed by :any:`GitWS` derived from :any:`ProjectSpec`.
-* :any:`Remote`: Remote Alias in :any:`ManifestSpec`.
-* :any:`Defaults`: Default Values in :any:`ManifestSpec`.
-* :any:`AppConfigData`: :any:`GitWS` Configuration.
-* :any:`Workspace`: the file system location containing all git clones.
+* :py:class:`gitws.GitWS`: the central API to the main functionality.
+* :py:class:`gitws.Clone`: is the pair of Of :py:class:`gitws.Project` And :py:class:`gitws.Git` Interface.
+* :py:class:`gitws.Git`: provides a reduced API to ``git``.
+* :py:class:`gitws.ManifestSpec`: Manifest specification for the current project.
+* :py:class:`gitws.Manifest`: Manifest as needed by :py:class:`gitws.GitWS` derived from
+  :py:class:`gitws.ManifestSpec`.
+* :py:class:`gitws.ProjectSpec`: Dependency Specification in :py:class:`gitws.ManifestSpec`.
+* :py:class:`gitws.Project`: A Single Dependency as needed by :py:class:`gitws.GitWS` derived from
+  :py:class:`gitws.ProjectSpec`.
+* :py:class:`gitws.Remote`: Remote Alias in :py:class:`gitws.ManifestSpec`.
+* :py:class:`gitws.Defaults`: Default Values in :py:class:`gitws.ManifestSpec`.
+* :py:class:`gitws.AppConfigData`: :py:class:`gitws.GitWS` Configuration.
+* :py:class:`gitws.Workspace`: the file system location containing all git clones.
 """
 
 import logging
+
+from pydantic import ValidationError
 
 from .appconfig import AppConfig, AppConfigLocation
 from .clone import Clone, CloneFilter, filter_clone_on_branch, map_paths
@@ -124,6 +128,7 @@ from .exceptions import (
     GitCloneMissingOriginError,
     GitCloneNotCleanError,
     GitTagExistsError,
+    IncompatibleFormatError,
     InitializedError,
     InvalidConfigurationFileError,
     InvalidConfigurationLocationError,
@@ -140,6 +145,8 @@ from .exceptions import (
 )
 from .git import Git
 from .gitws import GitWS
+from .gitwsmanifestformat import dump, load, save, upgrade
 from .iters import ManifestIter, ProjectIter
+from .manifestformat import ManifestFormat
 from .workspace import Workspace
 from .workspacefinder import find_workspace

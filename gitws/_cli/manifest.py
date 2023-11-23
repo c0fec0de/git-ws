@@ -19,7 +19,8 @@ from pathlib import Path
 
 import click
 
-from gitws import GitWS, ManifestSpec
+import gitws
+from gitws._manifestformatmanager import get_manifest_format_manager
 
 from .common import COLOR_INFO, exceptionhandling, pass_context
 from .options import group_filters_option, manifest_option, output_option
@@ -44,12 +45,12 @@ def resolve(context, manifest_path=None, group_filters=None, output=None):
     The output is a single manifest file with all dependencies and their dependencies.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
+        gws = gitws.GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
         manifest = gws.get_manifest_spec(resolve=True)
         if output:
-            manifest.save(Path(output))
+            gitws.save(manifest, Path(output))
         else:
-            click.echo(manifest.dump())
+            click.echo(gitws.dump(manifest))
 
 
 @manifest.command()
@@ -65,12 +66,12 @@ def freeze(context, manifest_path=None, group_filters=None, output=None):
     Revisions are replaced by the current SHAs.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
+        gws = gitws.GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
         manifest_spec = gws.get_manifest_spec(freeze=True, resolve=True)
         if output:
-            manifest_spec.save(Path(output))
+            gitws.save(manifest_spec, Path(output))
         else:
-            click.echo(manifest_spec.dump())
+            click.echo(gitws.dump(manifest_spec))
 
 
 @manifest.command()
@@ -81,7 +82,7 @@ def validate(context, manifest_path=None):
     Validate The Current Manifest, Exiting With An Error On Issues.
     """
     with exceptionhandling(context):
-        GitWS.from_path(manifest_path=manifest_path)
+        gitws.GitWS.from_path(manifest_path=manifest_path)
 
 
 @manifest.command()
@@ -93,7 +94,7 @@ def path(context, manifest_path=None, group_filters=None):
     Print Path to Main Manifest File.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
+        gws = gitws.GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
         manifest = next(gws.manifests())
         click.echo(str(manifest.path))
 
@@ -107,7 +108,7 @@ def paths(context, manifest_path=None, group_filters=None):
     Print Paths to ALL Manifest Files.
     """
     with exceptionhandling(context):
-        gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
+        gws = gitws.GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
         for manifest in gws.manifests():
             click.echo(str(manifest.path))
 
@@ -118,7 +119,7 @@ def paths(context, manifest_path=None, group_filters=None):
 def create(context, manifest_path):
     """Create Manifest."""
     with exceptionhandling(context):
-        path = GitWS.create_manifest(Path(manifest_path))
+        path = gitws.GitWS.create_manifest(manifest_path)
         click.secho(f"Manifest {str(path)!r} created.", fg=COLOR_INFO)
 
 
@@ -134,5 +135,21 @@ def upgrade(context, manifest_path):
     Comments are updated to the latest documentation.
     """
     with exceptionhandling(context):
-        ManifestSpec.upgrade(Path(manifest_path))
+        gitws.upgrade(manifest_path)
         click.secho(f"Manifest {str(manifest_path)!r} upgraded.", fg=COLOR_INFO)
+
+
+@manifest.command()
+@manifest_option(initial=True)
+@output_option()
+@pass_context
+def convert(context, manifest_path=None, output=None):
+    """
+    Convert Any Supported Manifest Format To Git Workspace Manifest.
+    """
+    with exceptionhandling(context):
+        manifest_spec = get_manifest_format_manager().load(manifest_path)
+        if output:
+            gitws.save(manifest_spec, Path(output))
+        else:
+            click.echo(gitws.dump(manifest_spec))

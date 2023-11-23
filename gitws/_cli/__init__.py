@@ -21,6 +21,7 @@ from pathlib import Path
 import click
 
 from gitws import AppConfig, AppConfigLocation, Defaults, GitWS, ManifestSpec, filter_clone_on_branch
+from gitws._manifestformatmanager import get_manifest_format_manager
 from gitws._util import resolve_relative
 from gitws.const import MANIFEST_PATH_DEFAULT
 from gitws.git import FileStatus, State
@@ -522,15 +523,16 @@ def default(context, manifest_path, name, value):
     Set DEFAULT in Manifest to VALUE.
     """
     with exceptionhandling(context):
-        manifest_spec = ManifestSpec.load(manifest_path)
-        defaults = manifest_spec.defaults
-        for fname, field in defaults.model_fields.items():  # pragma: no branch
-            if name == (field.alias or fname):
-                update = {fname: value}
-                defaults = defaults.model_copy_fromstr(update)
-                break
-        manifest_spec = manifest_spec.model_copy(update={"defaults": defaults})
-        manifest_spec.save(manifest_path)
+        with get_manifest_format_manager().handle(manifest_path) as handler:
+            manifest_spec = handler.load()
+            defaults = manifest_spec.defaults
+            for fname, field in defaults.model_fields.items():  # pragma: no branch
+                if name == (field.alias or fname):
+                    update = {fname: value}
+                    defaults = defaults.model_copy_fromstr(update)
+                    break
+            manifest_spec = manifest_spec.model_copy(update={"defaults": defaults})
+            handler.save(manifest_spec)
 
 
 @main.command(name="group-filters")
@@ -544,9 +546,10 @@ def group_filters(context, manifest_path, value):
     The group filter selects/deselects dependencies based on their path and/or groups.
     """
     with exceptionhandling(context):
-        manifest_spec = ManifestSpec.load(manifest_path)
-        manifest_spec = manifest_spec.model_copy_fromstr({"group_filters": value})
-        manifest_spec.save(manifest_path)
+        with get_manifest_format_manager().handle(manifest_path) as handler:
+            manifest_spec = handler.load()
+            manifest_spec = manifest_spec.model_copy_fromstr({"group_filters": value})
+            handler.save(manifest_spec)
 
 
 @main.command()

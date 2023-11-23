@@ -14,21 +14,23 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
-"""Command Line Interface."""
+"""Manifest Format Testing."""
+
 from pathlib import Path
 
-from gitws import load
+from pytest import raises
 
-from .util import chdir, cli
+from gitws import IncompatibleFormatError, ManifestFormat, ManifestSpec
 
 
-def test_cli_groupfilters_remote(tmp_path):
-    """Group Filters."""
-    with chdir(tmp_path):
-        cli(("manifest", "create"))
-
-        cli(("group-filters", "+myfoo, -myboo"))
-        assert load(Path("git-ws.toml")).group_filters == ("+myfoo", "-myboo")
-
-        cli(("group-filters", ""))
-        assert load(Path("git-ws.toml")).group_filters == tuple()
+def test_basic():
+    """Basic Testing."""
+    path = Path("git-ws.toml")
+    manifest_format = ManifestFormat()
+    assert not manifest_format.is_compatible(path)
+    with raises(IncompatibleFormatError):
+        manifest_format.load(path)
+    with raises(IncompatibleFormatError):
+        manifest_format.save(ManifestSpec(), path)
+    with raises(IncompatibleFormatError):
+        manifest_format.upgrade(path)

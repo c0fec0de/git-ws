@@ -15,9 +15,9 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """
-Helpers to iterate over all :any:`Manifest` or :any:`Project` instances.
+Helpers to iterate over all :py:class:`gitws.Manifest` or :py:class:`gitws.Project` instances.
 
-Please note, these iterators require a :any:`Workspace` with existing manifest files within.
+Please note, these iterators require a :py:class:`gitws.Workspace` with existing manifest files within.
 The creation/cloning of missing project dependencies during the iteration is supported.
 """
 import logging
@@ -25,6 +25,7 @@ from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Callable, Generator, List, Optional, Tuple
 
+from ._manifestformatmanager import ManifestFormatManager
 from ._util import resolve_relative
 from .datamodel import (
     GroupFilters,
@@ -47,12 +48,14 @@ FilterFunc = Callable[[str, Groups], bool]
 
 class ManifestIter:
     """
-    Iterate over all :any:`Manifest` s.
+    Iterate over all :py:class:`gitws.Manifest` s.
 
-    The iterator takes a :any:`Workspace` and the path to a manifest file (`manifest_path`) of the main project.
-    The manifest is read (:any:`ManifestSpec`) and translated to a :any:`Manifest`, which is yielded.
-    The manifest files of the dependencies are also read, translated to a :any:`Manifest` and yielded likewise,
-    until all manifest files and their dependencies are read.
+    The iterator takes a :py:class:`gitws.Workspace` and the path to a manifest file (`manifest_path`)
+    of the main project.
+    The manifest is read (:py:class:`gitws.ManifestSpec`) and translated to a :py:class:`gitws.Manifest`,
+    which is yielded.
+    The manifest files of the dependencies are also read, translated to a :py:class:`gitws.Manifest` and
+    yielded likewise, until all manifest files and their dependencies are read.
     Dependencies which have been already yielded are not evaluated again.
     Means the first dependency (i.e. from the MAIN project) wins. Including the specified attributes (i.e. revision).
 
@@ -62,12 +65,19 @@ class ManifestIter:
         group_filters: Group Filters.
 
     Yields:
-        :any:`Manifest`
+        :py:class:`gitws.Manifest`
     """
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, workspace: Workspace, manifest_path: Path, group_filters: GroupFilters):
+    def __init__(
+        self,
+        workspace: Workspace,
+        manifest_format_manager: ManifestFormatManager,
+        manifest_path: Path,
+        group_filters: GroupFilters,
+    ):
         self.workspace: Workspace = workspace
+        self.manifest_format_manager = manifest_format_manager
         self.manifest_path: Path = manifest_path
         self.group_filters: GroupFilters = group_filters
         self.__done: List[str] = []
@@ -75,7 +85,7 @@ class ManifestIter:
     def __iter__(self) -> Generator[Manifest, None, None]:
         self.__done.clear()
         try:
-            manifest_spec = ManifestSpec.load(self.manifest_path)
+            manifest_spec = self.manifest_format_manager.load(self.manifest_path)
         except ManifestNotFoundError:
             pass
         else:
@@ -105,11 +115,15 @@ class ManifestIter:
                 _LOGGER.debug("FILTERED OUT %r", dep_project)
                 continue
 
+            if not dep_project.recursive:
+                _LOGGER.debug("NON-RECURSIVE %r", dep_project)
+                continue
+
             # Recursive
             dep_project_path = self.workspace.get_project_path(dep_project)
             dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
             try:
-                dep_manifest_spec = ManifestSpec.load(dep_manifest_path)
+                dep_manifest_spec = self.manifest_format_manager.load(dep_manifest_path)
             except ManifestNotFoundError:
                 pass
             else:
@@ -124,15 +138,17 @@ class ManifestIter:
 
 class ProjectIter:
     """
-    Iterate over all :any:`Project` s.
+    Iterate over all :py:class:`gitws.Project` s.
 
-    The iterator takes a :any:`Workspace` and the path to a manifest file (`manifest_path`) of the main project.
-    The manifest is read (:any:`ManifestSpec`) and all dependencies are translated to :any:`Project` s, which are
-    yielded.
-    The manifest files of the dependencies are also read, translated to a :any:`Project` s and yielded likewise,
-    until all manifest files and their dependencies are read.
+    The iterator takes a :py:class:`gitws.Workspace` and the path to a manifest file (`manifest_path`)
+    of the main project.
+    The manifest is read (:py:class:`gitws.ManifestSpec`) and all dependencies are translated to
+    :py:class:`gitws.Project` s, which are yielded.
+    The manifest files of the dependencies are also read, translated to a :py:class:`gitws.Project` s
+    and yielded likewise, until all manifest files and their dependencies are read.
     Dependencies which have been already yielded are not evaluated again.
-    Means the first dependency (i.e. from the MAIN project) wins. Including the specified attributes (i.e. revision).
+    Means the first dependency (i.e. from the MAIN project) wins. Including the specified
+    attributes (i.e. revision).
 
     Args:
         workspace: The current workspace
@@ -144,7 +160,7 @@ class ProjectIter:
         resolve_url: Resolve relative URLs to absolute ones.
 
     Yields:
-        :any:`Project`
+        :py:class:`gitws.Project`
     """
 
     # pylint: disable=too-few-public-methods
@@ -152,12 +168,14 @@ class ProjectIter:
     def __init__(
         self,
         workspace: Workspace,
+        manifest_format_manager: ManifestFormatManager,
         manifest_path: Path,
         group_filters: GroupFilters,
         skip_main: bool = False,
         resolve_url: bool = False,
     ):
         self.workspace: Workspace = workspace
+        self.manifest_format_manager: ManifestFormatManager = manifest_format_manager
         self.manifest_path: Path = manifest_path
         self.group_filters: GroupFilters = group_filters
         self.skip_main: bool = skip_main
@@ -181,7 +199,7 @@ class ProjectIter:
                 is_main=True,
             )
         try:
-            manifest_spec = ManifestSpec.load(self.manifest_path)
+            manifest_spec = self.manifest_format_manager.load(self.manifest_path)
         except ManifestNotFoundError:
             manifest_spec = ManifestSpec()
         if manifest_spec.dependencies:
@@ -222,11 +240,14 @@ class ProjectIter:
             _LOGGER.debug("%r", dep_project)
             yield dep_project
 
+            if not dep_project.recursive:
+                continue
+
             # Recursive
             dep_project_path = self.workspace.get_project_path(dep_project)
             dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
             try:
-                dep_manifest = ManifestSpec.load(dep_manifest_path)
+                dep_manifest = self.manifest_format_manager.load(dep_manifest_path)
             except ManifestNotFoundError:
                 pass
             else:
@@ -249,7 +270,7 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     The default selection of these groups is controlled by ``default``.
 
     Keyword Args:
-        group_selects: Iterable with :any:`GroupSelect`.
+        group_selects: Iterable with :py:class:`gitws.GroupSelect`.
         default: Default selection of all ``groups``.
 
     >>> group_filters = ('-@special', '+test', '+doc', '+feature@dep', '-doc')

@@ -203,3 +203,7 @@ class FileRefModifiedError(RuntimeError):
         super().__init__(msg)
         self.dest = dest
         self.src = src
+
+
+class IncompatibleFormatError(RuntimeError):
+    """Incompatibility Error."""

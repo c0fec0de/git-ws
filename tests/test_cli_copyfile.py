@@ -17,13 +17,12 @@
 """Command Line Interface - Update Variants."""
 from pathlib import Path
 
-from gitws import Git, GitWS
-from gitws.datamodel import FileRef, MainFileRef, ManifestSpec, ProjectSpec
+from gitws import FileRef, Git, GitWS, MainFileRef, ManifestSpec, ProjectSpec, save
 
 from .fixtures import git_repo
 
 # pylint: disable=unused-import
-from .util import chdir, cli, format_output, run
+from .util import chdir, cli
 
 
 def create_repos(repos_path) -> str:
@@ -32,7 +31,7 @@ def create_repos(repos_path) -> str:
         (path / "data0.txt").write_text("main-0")
         (path / "data1.txt").write_text("main-1")
         (path / "data2.txt").write_text("main-2")
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             copyfiles=[
                 MainFileRef(src="data0.txt", dest="main-data0.txt"),
                 MainFileRef(src="data1.txt", dest="build/main-data1.txt"),
@@ -49,13 +48,14 @@ def create_repos(repos_path) -> str:
                     ],
                 ),
             ],
-        ).save(path / "git-ws.toml")
+        )
+        save(manifest_spec, path / "git-ws.toml")
 
     with git_repo(repos_path / "dep1", commit="initial") as path:
         (path / "data0.txt").write_text("dep1-0")
         (path / "data1.txt").write_text("dep1-1")
         (path / "data2.txt").write_text("dep1-2")
-        ManifestSpec().save(path / "git-ws.toml")
+        save(ManifestSpec(), path / "git-ws.toml")
 
     return Git(repos_path / "main").get_sha()[:7]
 
@@ -63,7 +63,7 @@ def create_repos(repos_path) -> str:
 def modify_repos(repos_path) -> str:
     """Update."""
     with chdir(repos_path / "main"):
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             copyfiles=[
                 MainFileRef(src="data0.txt", dest="main-data0.txt"),
                 MainFileRef(src="data2.txt", dest="main-data2.txt"),
@@ -78,7 +78,8 @@ def modify_repos(repos_path) -> str:
                     ],
                 ),
             ],
-        ).save(Path("git-ws.toml"))
+        )
+        save(manifest_spec, Path("git-ws.toml"))
         Path("data0.txt").write_text("main-0 - update", encoding="utf-8")
         git = Git(Path("."))
         git.commit("update", all_=True)
@@ -182,12 +183,13 @@ def test_no_main(tmp_path):
     with chdir(tmp_path):
         (tmp_path / "data0.txt").touch()
         (tmp_path / "data2.txt").touch()
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             copyfiles=[
                 MainFileRef(src="data0.txt", dest="main-data0.txt"),
                 MainFileRef(src="data2.txt", dest="main-data2.txt"),
             ],
-        ).save(Path("git-ws.toml"))
+        )
+        save(manifest_spec, Path("git-ws.toml"))
 
         gws = GitWS.init()
 
@@ -207,14 +209,15 @@ def test_group(tmp_path):
         (tmp_path / "data0.txt").touch()
         (tmp_path / "data1.txt").touch()
         (tmp_path / "data2.txt").touch()
-        ManifestSpec(
+        manifest_spec = ManifestSpec(
             group_filters=["-grp"],
             copyfiles=[
                 MainFileRef(src="data0.txt", dest="main-data0.txt"),
                 MainFileRef(src="data1.txt", dest="main-data1.txt", groups=["ab", "cd"]),
                 MainFileRef(src="data2.txt", dest="main-data2.txt", groups=["grp"]),
             ],
-        ).save(Path("git-ws.toml"))
+        )
+        save(manifest_spec, Path("git-ws.toml"))
 
         gws = GitWS.init()
 

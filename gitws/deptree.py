@@ -30,7 +30,8 @@ from typing import List, Tuple
 from anytree import NodeMixin
 from anytree.exporter import DotExporter
 
-from .datamodel import Manifest, ManifestSpec, Project
+from ._manifestformatmanager import ManifestFormatManager
+from .datamodel import Manifest, Project
 from .exceptions import ManifestNotFoundError
 from .workspace import Workspace
 
@@ -48,7 +49,12 @@ class DepNode(NodeMixin):
         self.parent = parent
 
 
-def get_deptree(workspace: Workspace, manifest: Manifest, primary: bool = False) -> DepNode:
+def get_deptree(
+    workspace: Workspace,
+    manifest_format_manager: ManifestFormatManager,
+    manifest: Manifest,
+    primary: bool = False,
+) -> DepNode:
     """
     Calculate Dependency Tree.
 
@@ -63,12 +69,18 @@ def get_deptree(workspace: Workspace, manifest: Manifest, primary: bool = False)
     main_node = DepNode(Project(name=main, path=main), is_primary=True)
     primaries: List[str] = []
     edges: List[Tuple[str, str]] = []
-    _build(primaries, edges, workspace, main_node, manifest, primary=primary)
+    _build(primaries, edges, workspace, manifest_format_manager, main_node, manifest, primary=primary)
     return main_node
 
 
 def _build(
-    primaries: List, edges: List, workspace: Workspace, node: DepNode, manifest: Manifest, primary: bool = False
+    primaries: List,
+    edges: List,
+    workspace: Workspace,
+    manifest_format_manager: ManifestFormatManager,
+    node: DepNode,
+    manifest: Manifest,
+    primary: bool = False,
 ):
     _LOGGER.debug("get_deptree(primaries=%r, path=%r)", primaries, node.project.path)
     for project in manifest.dependencies:
@@ -84,12 +96,12 @@ def _build(
         project_node = DepNode(project, is_primary=is_primary, parent=node)
         manifest_path = workspace.get_project_path(project) / project.manifest_path
         try:
-            manifest_spec = ManifestSpec.load(manifest_path)
+            manifest_spec = manifest_format_manager.load(manifest_path)
         except ManifestNotFoundError:
             continue
         manifest = Manifest.from_spec(manifest_spec)
         if is_primary:
-            _build(primaries, edges, workspace, project_node, manifest, primary=primary)
+            _build(primaries, edges, workspace, manifest_format_manager, project_node, manifest, primary=primary)
 
 
 class DepDotExporter(DotExporter):

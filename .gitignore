@@ -1,6 +1,7 @@
 *.egg-info/
 *.sublime-workspace
-*.xml
+report.xml
+coverage.xml
 .coverage*
 .tox
 .venv

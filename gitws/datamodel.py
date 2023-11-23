@@ -36,16 +36,15 @@ import re
 from pathlib import Path, PurePath
 from typing import Any, Dict, List, Optional, Tuple
 
-import tomlkit
 from pydantic import AfterValidator, ConfigDict, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Annotated
 
 from ._basemodel import BaseModel
 from ._url import is_urlabs, urljoin, urlsub
-from ._util import add_comment, add_info, as_dict, get_repr, resolve_relative
+from ._util import get_repr
 from .const import MANIFEST_PATH_DEFAULT
-from .exceptions import ManifestError, ManifestNotFoundError, NoAbsUrlError
+from .exceptions import NoAbsUrlError
 
 _RE_GROUP = re.compile(r"\A[a-zA-Z0-9_][a-zA-Z0-9_\-]*\Z")
 
@@ -364,6 +363,7 @@ class Project(BaseModel):
         submodules: initialize and update `git submodules`
         linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
+        recursive: integrate dependencies of this dependency
         is_main: Project is Main Project.
 
     The :any:`ProjectSpec` represents the User Interface. The options which can be specified in the manifest file.
@@ -412,6 +412,9 @@ class Project(BaseModel):
 
     copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
+
+    recursive: bool = True
+    """Integrate Dependencies of this dependency."""
 
     is_main: bool = False
     """Project is the main project."""
@@ -510,6 +513,7 @@ class Project(BaseModel):
             submodules=submodules,
             linkfiles=spec.linkfiles,
             copyfiles=spec.copyfiles,
+            recursive=spec.recursive,
         )
 
 
@@ -534,6 +538,7 @@ class ProjectSpec(BaseModel):
         submodules: initialize and update `git submodules`
         linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
+        recursive: integrate dependencies of this dependency
 
     Some parameters are restricted:
 
@@ -584,6 +589,9 @@ class ProjectSpec(BaseModel):
     copyfiles: FileRefs = tuple()
     """Files To Be Created In The Workspace."""
 
+    recursive: bool = True
+    """Integrate Dependencies of this dependency."""
+
     @model_validator(mode="after")
     def _remote_or_url(self):
         remote = self.remote
@@ -621,6 +629,7 @@ class ProjectSpec(BaseModel):
             submodules=project.submodules,
             linkfiles=project.linkfiles,
             copyfiles=project.copyfiles,
+            recursive=project.recursive,
         )
 
 
@@ -764,316 +773,6 @@ class ManifestSpec(BaseModel):
             else:
                 raise ValueError(f"Dependency name {name!r} is used more than once")
         return self
-
-    @classmethod
-    def load(cls, path: Path) -> "ManifestSpec":
-        """
-        Load :any:`ManifestSpec` from ``path``.
-
-        The file referenced by ``path`` must be a TOML file according to the manifest scheme.
-
-        Raises:
-            ManifestNotFoundError: if file is not found
-            ManifestError: On syntax or data scheme errors.
-        """
-        try:
-            content = path.read_text()
-        except FileNotFoundError:
-            raise ManifestNotFoundError(resolve_relative(path)) from None
-        try:
-            doc = tomlkit.parse(content)
-            data = dict(doc)
-            return cls(**data)
-        except Exception as exc:
-            raise ManifestError(resolve_relative(path), str(exc)) from None
-
-    def dump(
-        self, doc: Optional[tomlkit.TOMLDocument] = None, path: Optional[Path] = None, minimal: bool = False
-    ) -> str:
-        """
-        Return :any:`ManifestSpec` as string.
-
-        The output will include an inline documentation of all available options.
-        If ``doc`` or ``path`` are specified, any additional attributes and comments are **kept**.
-
-        Keyword Args:
-            doc: Existing document to be updated.
-            path: Path to possibly existing document.
-            minimal: Skip unset
-
-        >>> print(ManifestSpec(defaults=Defaults(revision='main'), dependencies=(ProjectSpec(name='mylib'),)).dump())
-        version = "1.0"
-        ##
-        ## Git Workspace's Manifest. Please see the documentation at:
-        ##
-        ## https://git-ws.readthedocs.io/en/stable/manual/manifest.html
-        ##
-        <BLANKLINE>
-        <BLANKLINE>
-        # group-filters = ["-doc", "-feature@path"]
-        group-filters = []
-        <BLANKLINE>
-        <BLANKLINE>
-        # [[remotes]]
-        # name = "myremote"
-        # url-base = "https://github.com/myuser"
-        <BLANKLINE>
-        <BLANKLINE>
-        [defaults]
-        revision = "main"
-        <BLANKLINE>
-        # remote = "myserver"
-        # revision = "main"
-        # groups = ["test"]
-        # with-groups = ["doc"]
-        <BLANKLINE>
-        <BLANKLINE>
-        ## A minimal dependency:
-        # [[dependencies]]
-        # name = "my"
-        <BLANKLINE>
-        ## A full flavored dependency using a 'remote':
-        # [[dependencies]]
-        # name = "myname"
-        # remote = "remote"
-        # sub-url = "my.git"
-        # revision = "main"
-        # path = "mydir"
-        # groups = ["group"]
-        #
-        # [[dependencies.linkfiles]]
-        # src = "file0-in-mydir.txt"
-        # dest = "link0-in-workspace.txt"
-        #
-        # [[dependencies.linkfiles]]
-        # src = "file1-in-mydir.txt"
-        # dest = "link1-in-workspace.txt"
-        #
-        # [[dependencies.copyfiles]]
-        # src = "file0-in-mydir.txt"
-        # dest = "file0-in-workspace.txt"
-        #
-        # [[dependencies.copyfiles]]
-        # src = "file1-in-mydir.txt"
-        # dest = "file1-in-workspace.txt"
-        <BLANKLINE>
-        ## A full flavored dependency using a 'url':
-        # [[dependencies]]
-        # name = "myname"
-        # url = "https://github.com/myuser/my.git"
-        # revision = "main"
-        # path = "mydir"
-        # groups = ["group"]
-        #
-        # [[dependencies.linkfiles]]
-        # src = "file0-in-mydir.txt"
-        # dest = "link0-in-workspace.txt"
-        #
-        # [[dependencies.linkfiles]]
-        # src = "file1-in-mydir.txt"
-        # dest = "link1-in-workspace.txt"
-        #
-        # [[dependencies.copyfiles]]
-        # src = "file0-in-mydir.txt"
-        # dest = "file0-in-workspace.txt"
-        #
-        # [[dependencies.copyfiles]]
-        # src = "file1-in-mydir.txt"
-        # dest = "file1-in-workspace.txt"
-        <BLANKLINE>
-        [[dependencies]]
-        name = "mylib"
-        <BLANKLINE>
-        <BLANKLINE>
-        # [[linkfiles]]
-        # src = "file-in-main-clone.txt"
-        # dest = "link-in-workspace.txt"
-        <BLANKLINE>
-        <BLANKLINE>
-        # [[copyfiles]]
-        # src = "file-in-main-clone.txt"
-        # dest = "file-in-workspace.txt"
-        <BLANKLINE>
-        """
-        assert not doc or not path, "'doc' and 'path' are mutually exclusive."
-        if doc is None:
-            if path and path.exists():
-                doc = tomlkit.parse(path.read_text())
-            else:
-                doc = self._create()
-        if minimal:
-            data = as_dict(self)
-        else:
-            data = {
-                "version": ManifestSpec().version,
-                "remotes": tomlkit.aot(),
-                "group-filters": tuple(),
-                "defaults": {},
-                "dependencies": tomlkit.aot(),
-                "linkfiles": tomlkit.aot(),
-                "copyfiles": tomlkit.aot(),
-            }
-            data.update(as_dict(self))
-        for key, value in data.items():
-            doc[key] = value
-        return tomlkit.dumps(doc)
-
-    def save(self, path: Path, update=True):
-        """
-        Save :any:`ManifestSpec` at ``path``.
-
-        The file will include an inline documentation of all available options.
-
-        Keyword Args:
-            update: Additional attributes and comments added by the user are **kept**.
-                    Otherwise the file is just overwritten.
-        """
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if update:
-            path.write_text(self.dump(path=path))
-        else:
-            path.write_text(self.dump())
-
-    @classmethod
-    def upgrade(cls, path: Path):
-        """Upgrade :any:`ManifestSpec` at ``path`` to latest version including documentation."""
-        # read
-        content = path.read_text()
-        try:
-            olddoc = tomlkit.parse(content)
-            olddata = dict(olddoc)
-            olddata.pop("groups", None)
-            obj = cls(**olddata)
-        except Exception as exc:
-            raise ManifestError(resolve_relative(path), str(exc)) from None
-
-        # merge
-        newdoc = cls._create()
-        for key, value in olddata.items():
-            newdoc[key] = value
-        for key, value in as_dict(obj).items():
-            newdoc[key] = value
-        newdoc["version"] = "1.0"
-
-        # write
-        path.write_text(tomlkit.dumps(newdoc))
-
-    @staticmethod
-    def _create() -> tomlkit.TOMLDocument:
-        doc = tomlkit.document()
-
-        # Version
-        doc.add("version", ManifestSpec().version)  # type: ignore
-        # Intro
-        add_info(
-            doc,
-            """
-Git Workspace's Manifest. Please see the documentation at:
-
-https://git-ws.readthedocs.io/en/stable/manual/manifest.html
-""",
-        )
-        doc.add(tomlkit.nl())
-        doc.add(tomlkit.nl())
-
-        # Group Filtering
-        example = ManifestSpec(group_filters=("-doc", "-feature@path"))
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
-        doc.add("group-filters", tomlkit.array())
-        doc.add(tomlkit.nl())
-        doc.add(tomlkit.nl())
-
-        # Remotes
-        example = ManifestSpec(remotes=[Remote(name="myremote", url_base="https://github.com/myuser")])
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
-        doc.add("remotes", tomlkit.aot())
-        doc.add(tomlkit.nl())
-        doc.add(tomlkit.nl())
-
-        # Defaults
-        doc.add("defaults", as_dict(Defaults()))
-        example = ManifestSpec(
-            defaults=Defaults(
-                remote="myserver", revision="main", groups=("test",), with_groups=("doc",), submodules=True
-            )
-        )
-        add_comment(doc, "\n".join(example.dump(doc=tomlkit.document(), minimal=True).split("\n")[1:-1]))
-        doc.add(tomlkit.nl())
-        doc.add(tomlkit.nl())
-
-        add_info(doc, "A minimal dependency:")
-        example = ManifestSpec(dependencies=[ProjectSpec(name="my", submodules=None)])
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
-        doc.add(tomlkit.nl())
-
-        # Dependencies
-        add_info(doc, "A full flavored dependency using a 'remote':")
-        example = ManifestSpec(
-            dependencies=[
-                ProjectSpec(
-                    name="myname",
-                    remote="remote",
-                    sub_url="my.git",
-                    revision="main",
-                    path="mydir",
-                    manifest_path="git-ws.toml",
-                    groups=("group",),
-                    linkfiles=[
-                        FileRef(src="file0-in-mydir.txt", dest="link0-in-workspace.txt"),
-                        FileRef(src="file1-in-mydir.txt", dest="link1-in-workspace.txt"),
-                    ],
-                    copyfiles=[
-                        FileRef(src="file0-in-mydir.txt", dest="file0-in-workspace.txt"),
-                        FileRef(src="file1-in-mydir.txt", dest="file1-in-workspace.txt"),
-                    ],
-                )
-            ]
-        )
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
-        doc.add(tomlkit.nl())
-
-        add_info(doc, "A full flavored dependency using a 'url':")
-        example = ManifestSpec(
-            dependencies=[
-                ProjectSpec(
-                    name="myname",
-                    url="https://github.com/myuser/my.git",
-                    revision="main",
-                    path="mydir",
-                    manifest_path="git-ws.toml",
-                    groups=("group",),
-                    linkfiles=[
-                        FileRef(src="file0-in-mydir.txt", dest="link0-in-workspace.txt"),
-                        FileRef(src="file1-in-mydir.txt", dest="link1-in-workspace.txt"),
-                    ],
-                    copyfiles=[
-                        FileRef(src="file0-in-mydir.txt", dest="file0-in-workspace.txt"),
-                        FileRef(src="file1-in-mydir.txt", dest="file1-in-workspace.txt"),
-                    ],
-                )
-            ]
-        )
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
-        doc.add(tomlkit.nl())
-
-        doc.add("dependencies", tomlkit.aot())
-        doc.add(tomlkit.nl())
-        doc.add(tomlkit.nl())
-
-        # linkfíles
-        example = ManifestSpec(linkfiles=[MainFileRef(src="file-in-main-clone.txt", dest="link-in-workspace.txt")])
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
-        doc.add("linkfiles", tomlkit.aot())
-        doc.add(tomlkit.nl())
-        doc.add(tomlkit.nl())
-
-        # copyfíles
-        example = ManifestSpec(copyfiles=[MainFileRef(src="file-in-main-clone.txt", dest="file-in-workspace.txt")])
-        add_comment(doc, example.dump(doc=tomlkit.document(), minimal=True)[:-1])
-        doc.add("copyfiles", tomlkit.aot())
-
-        # Done
-        return doc
 
 
 class AppConfigData(BaseSettings):

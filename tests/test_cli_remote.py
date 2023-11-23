@@ -17,7 +17,7 @@
 """Command Line Interface."""
 from pathlib import Path
 
-from gitws import ManifestSpec, Remote
+from gitws import Remote, load
 
 from .util import chdir, cli
 
@@ -26,13 +26,13 @@ def test_cli_remote(tmp_path):
     """Add, List, Delete Remote."""
     with chdir(tmp_path):
         cli(("manifest", "create"))
-        assert ManifestSpec.load(Path("git-ws.toml")).remotes == tuple()
+        assert load(Path("git-ws.toml")).remotes == tuple()
 
         cli(("remote", "add", "myremote", "myurl"))
-        assert ManifestSpec.load(Path("git-ws.toml")).remotes == (Remote(name="myremote", url_base="myurl"),)
+        assert load(Path("git-ws.toml")).remotes == (Remote(name="myremote", url_base="myurl"),)
 
         cli(("remote", "add", "myremote2", "myurl2"))
-        assert ManifestSpec.load(Path("git-ws.toml")).remotes == (
+        assert load(Path("git-ws.toml")).remotes == (
             Remote(name="myremote", url_base="myurl"),
             Remote(name="myremote2", url_base="myurl2"),
         )
@@ -40,11 +40,11 @@ def test_cli_remote(tmp_path):
         assert cli(("remote", "list")) == ["myremote: myurl", "myremote2: myurl2", ""]
 
         cli(("remote", "delete", "myremote2"))
-        assert ManifestSpec.load(Path("git-ws.toml")).remotes == (Remote(name="myremote", url_base="myurl"),)
+        assert load(Path("git-ws.toml")).remotes == (Remote(name="myremote", url_base="myurl"),)
 
         assert cli(("remote", "list")) == ["myremote: myurl", ""]
 
         cli(("remote", "delete", "myremote"))
-        assert ManifestSpec.load(Path("git-ws.toml")).remotes == tuple()
+        assert load(Path("git-ws.toml")).remotes == tuple()
 
         assert cli(("remote", "delete", "myremote3"), exit_code=1) == ["Error: Unknown dependency 'myremote3'", ""]
