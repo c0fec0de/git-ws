@@ -116,6 +116,7 @@ class ManifestIter:
                 continue
 
             if not dep_project.recursive:
+                _LOGGER.debug("NON-RECURSIVE %r", dep_project)
                 continue
 
             # Recursive
