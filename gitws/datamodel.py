@@ -33,7 +33,7 @@ Central :any:`GitWS` Datamodel.
 
 
 import re
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any, Dict, List, Optional, Tuple
 
 import tomlkit
@@ -53,6 +53,30 @@ ProjectPath = str
 """Project Path."""
 
 ProjectPaths = Tuple[ProjectPath, ...]
+
+
+def _validate_name(name):
+    """
+    Validate Name.
+
+    name is just a ``str`` for performance reasons. This function does the validation.
+    """
+    parts = PurePath(name).parts
+    if ".." in parts:
+        raise ValueError(f"Invalid name {name!r}")
+    return name
+
+
+def _validate_path(path):
+    """
+    Validate Path.
+
+    path is just a ``str`` for performance reasons. This function does the validation.
+    """
+    parts = PurePath(path).parts
+    if ".." in parts:
+        raise ValueError(f"Invalid path {path!r}")
+    return path
 
 
 def _validate_group(group):
@@ -356,10 +380,10 @@ class Project(BaseModel):
     """
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, populate_by_name=True)
-    name: str
+    name: Annotated[str, AfterValidator(_validate_name)]
     """Dependency Name."""
 
-    path: str
+    path: Annotated[str, AfterValidator(_validate_path)]
     """Dependency Path. ``name`` will be used as default."""
 
     level: Optional[int] = None
@@ -524,7 +548,7 @@ class ProjectSpec(BaseModel):
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, populate_by_name=True)
 
-    name: str
+    name: Annotated[str, AfterValidator(_validate_name)]
     """Dependency Name."""
 
     remote: Optional[str] = None
@@ -539,7 +563,7 @@ class ProjectSpec(BaseModel):
     revision: Optional[str] = None
     """Revision to be checked out."""
 
-    path: Optional[str] = None
+    path: Annotated[Optional[str], AfterValidator(_validate_path)] = None
     """Path within workspace. ``name`` will be used as default."""
 
     manifest_path: Optional[str] = Field(str(MANIFEST_PATH_DEFAULT), alias="manifest-path")
