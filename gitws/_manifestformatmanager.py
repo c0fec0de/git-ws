@@ -36,7 +36,6 @@ else:
 
 
 class Handler(BaseModel):
-
     """format_ Handler."""
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
@@ -48,7 +47,7 @@ class Handler(BaseModel):
         """
         Load Manifest.
 
-        Raises:
+        Raises
             ManifestNotFoundError: if file is not found
             IncompatibleFormatError: Not Supported File format_.
             ManifestError: On Syntax Or Data Scheme Errors.
@@ -59,6 +58,9 @@ class Handler(BaseModel):
         """
         Save ``spec``.
 
+        Args:
+            spec: Manifest specification to be stored.
+
         Keyword Args:
             update: Additional Attributes And Comments Added By The User Are **Kept**.
                     Otherwise The File Is Just Overwritten.
@@ -67,7 +69,6 @@ class Handler(BaseModel):
 
 
 class ManifestFormatManager(BaseModel):
-
     """
     Manifest format_ Manager.
     """
@@ -109,7 +110,7 @@ class ManifestFormatManager(BaseModel):
         """
         Load Manifest From ``path``.
 
-        Raises:
+        Raises
             ManifestNotFoundError: if file is not found
             IncompatibleFormatError: Not Supported File format_.
             ManifestError: On Syntax Or Data Scheme Errors.
@@ -129,8 +130,7 @@ def get_manifest_format_manager() -> ManifestFormatManager:
     Plugin loading takes time.
     This method returns a cached global manifest format manager instance.
     """
-    # pylint: disable=global-statement
-    global _MANAGER
+    global _MANAGER  # noqa: PLW0603
     if not _MANAGER:
         _MANAGER = ManifestFormatManager()
         _MANAGER.load_plugins()

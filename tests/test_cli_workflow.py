@@ -19,16 +19,12 @@ from pytest import fixture
 
 from gitws import Git, GitWS
 
-# pylint: disable=unused-import
-from .fixtures import repos
 from .util import assert_any, chdir, cli
 
 
 @fixture
 def gws(tmp_path, repos):
-    """Initialized :any:`GitWS` on ``repos``."""
-    # pylint: disable=unused-argument
-
+    """Initialize :any:`GitWS` on ``repos``."""
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
@@ -41,8 +37,6 @@ def gws(tmp_path, repos):
 
 def test_status(tmp_path, gws):
     """Test status."""
-    # pylint: disable=unused-argument
-
     workspace = tmp_path / "main"
     dep1 = workspace / "dep1"
     dep2 = workspace / "dep2"
@@ -105,6 +99,16 @@ def test_status(tmp_path, gws):
                 "",
             ],
             [
+                "## main...origin/main",
+                "WARNING: Clone dep1 has no revision!",
+                "## main...origin/main",
+                "## 1-feature...origin/1-feature",
+                "?? dep2/bb.txt",
+                "?? dep2/bc.txt",
+                "## main...origin/main",
+                "",
+            ],
+            [
                 "## main",
                 "WARNING: Clone dep1 has no revision!",
                 "## main",
@@ -145,10 +149,8 @@ def test_status(tmp_path, gws):
     ]
 
 
-def test_workflow(tmp_path, gws):
+def test_workflow(tmp_path, gws):  # noqa: PLR0915
     """Test Full Workflow."""
-    # pylint: disable=unused-argument,too-many-statements
-
     workspace = tmp_path / "main"
     dep1 = workspace / "dep1"
     dep2 = workspace / "dep2"
@@ -414,8 +416,6 @@ def test_workflow(tmp_path, gws):
 
 def test_checkout_file(tmp_path, gws):
     """Checkout files."""
-    # pylint: disable=unused-argument
-
     workspace = tmp_path / "main"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
@@ -477,8 +477,6 @@ def test_checkout_file(tmp_path, gws):
 
 def test_checkout(tmp_path, gws):
     """Checkout files."""
-    # pylint: disable=unused-argument
-
     workspace = tmp_path / "main"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
@@ -542,8 +540,6 @@ def test_checkout(tmp_path, gws):
 
 def test_add(tmp_path, gws):
     """Add."""
-    # pylint: disable=unused-argument
-
     workspace = tmp_path / "main"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"
@@ -580,8 +576,6 @@ def test_add(tmp_path, gws):
 
 def test_diff(tmp_path, gws):
     """diff."""
-    # pylint: disable=unused-argument
-
     workspace = tmp_path / "main"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"

@@ -40,7 +40,6 @@ def repos():
 
 def test_tag(tmp_path, repos):
     """Create Tag."""
-    # pylint: disable=too-many-locals
     workspace = tmp_path / "main"
     dep6_sha_repo = Git(repos / "dep6").get_sha(revision="HEAD^")
 
@@ -326,7 +325,6 @@ def test_tag_dep(tmp_path, repos):
 
 def test_tag_overwrite(tmp_path, repos):
     """Create Tag."""
-    # pylint: disable=too-many-locals
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):

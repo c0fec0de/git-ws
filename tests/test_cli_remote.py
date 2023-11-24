@@ -26,7 +26,7 @@ def test_cli_remote(tmp_path):
     """Add, List, Delete Remote."""
     with chdir(tmp_path):
         cli(("manifest", "create"))
-        assert load(Path("git-ws.toml")).remotes == tuple()
+        assert load(Path("git-ws.toml")).remotes == ()
 
         cli(("remote", "add", "myremote", "myurl"))
         assert load(Path("git-ws.toml")).remotes == (Remote(name="myremote", url_base="myurl"),)
@@ -45,6 +45,6 @@ def test_cli_remote(tmp_path):
         assert cli(("remote", "list")) == ["myremote: myurl", ""]
 
         cli(("remote", "delete", "myremote"))
-        assert load(Path("git-ws.toml")).remotes == tuple()
+        assert load(Path("git-ws.toml")).remotes == ()
 
         assert cli(("remote", "delete", "myremote3"), exit_code=1) == ["Error: Unknown dependency 'myremote3'", ""]

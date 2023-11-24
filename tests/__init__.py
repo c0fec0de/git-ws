@@ -13,3 +13,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
+"""
+Unit tests.
+"""

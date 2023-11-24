@@ -19,8 +19,7 @@
 import click
 
 from gitws import GitWS
-
-from ..common import exceptionhandling, pass_context
+from gitws._cli.common import exceptionhandling, pass_context
 
 recursive_option = click.option(
     "--recursive", "-r", is_flag=True, help="Update all manifests, not just the main manifest"

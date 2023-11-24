@@ -23,18 +23,14 @@ from pytest import fixture
 from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
 from .common import TESTDATA_PATH
-
-# pylint: disable=unused-import
 from .fixtures import git_repo
-from .util import assert_gen, chdir, check, cli, run
+from .util import assert_gen, chdir, check, cli
 
 
 @fixture(scope="session")
 def repos_submodules():
     """Fixture with main and four depedency repos."""
-
     with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
-
         repos_path = Path(tmpdir)
 
         with git_repo(repos_path / "main", commit="initial") as path:
@@ -76,7 +72,7 @@ def repos_submodules():
 
 @fixture
 def gws(tmp_path, repos_submodules):
-    """Initialized :any:`GitWS` on ``repos_submodules``."""
+    """Initialize :any:`GitWS` on ``repos_submodules``."""
     with chdir(tmp_path):
         gws = GitWS.clone(str(repos_submodules / "main"))
         gws.update(skip_main=True)
@@ -87,7 +83,6 @@ def gws(tmp_path, repos_submodules):
 
 def test_update(tmp_path, repos_submodules, gws):
     """Test update."""
-    # pylint: disable=unused-argument
     genpath = tmp_path / "gen"
     genpath.mkdir()
 

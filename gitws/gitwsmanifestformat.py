@@ -82,7 +82,7 @@ class GitWSManifestFormat(ManifestFormat):
             data = {
                 "version": ManifestSpec().version,
                 "remotes": tomlkit.aot(),
-                "group-filters": tuple(),
+                "group-filters": (),
                 "defaults": {},
                 "dependencies": tomlkit.aot(),
                 "linkfiles": tomlkit.aot(),

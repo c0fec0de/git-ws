@@ -22,7 +22,6 @@ from pydantic import BaseModel
 
 
 class StringConverter(BaseModel):
-
     """
     String Converter.
 
@@ -57,11 +56,11 @@ class StringConverter(BaseModel):
         elif "anyOf" in properties:
             specs = properties["anyOf"]
         else:
-            assert False
+            raise RuntimeError(f"Unknown properties {properties}")
         return self._convert(specs, name, value)
 
     @staticmethod
-    def _convert(specs, name, value):
+    def _convert(specs, name, value):  # noqa: C901
         for spec in specs:
             type_ = spec["type"]
             if type_ == "null":
@@ -80,5 +79,5 @@ class StringConverter(BaseModel):
                 if value:
                     items = [item.strip() for item in value.split(",")]
                     return tuple(item for item in items if item)
-                return tuple()
+                return ()
         raise ValueError(f"{name!r}: {value!r}")

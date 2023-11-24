@@ -20,8 +20,6 @@ from pathlib import Path
 from gitws import FileRef, Git, GitWS, MainFileRef, ManifestSpec, ProjectSpec, save
 
 from .fixtures import git_repo
-
-# pylint: disable=unused-import
 from .util import chdir, cli
 
 
@@ -88,8 +86,6 @@ def modify_repos(repos_path) -> str:
 
 def test_update(tmp_path):
     """Test Update."""
-    # pylint: disable=unused-argument
-
     repos_path = tmp_path / "repos"
     sha_initial = create_repos(repos_path)
 
@@ -97,7 +93,6 @@ def test_update(tmp_path):
         gws = GitWS.clone(str(repos_path / "main"))
 
     with chdir(gws.path):
-
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path, exit_code=1) == [
             "===== main (MAIN 'main', revision='main') =====",
             "Fetching.",
@@ -178,8 +173,7 @@ def test_update(tmp_path):
 
 
 def test_no_main(tmp_path):
-    """Copyfile without Main-Project"""
-
+    """Copyfile without Main-Project."""
     with chdir(tmp_path):
         (tmp_path / "data0.txt").touch()
         (tmp_path / "data2.txt").touch()
@@ -204,7 +198,6 @@ def test_no_main(tmp_path):
 
 def test_group(tmp_path):
     """Groups Filtering."""
-
     with chdir(tmp_path):
         (tmp_path / "data0.txt").touch()
         (tmp_path / "data1.txt").touch()
@@ -234,8 +227,6 @@ def test_group(tmp_path):
 
 def test_existing(tmp_path):
     """Test Existing."""
-    # pylint: disable=unused-argument
-
     repos_path = tmp_path / "repos"
     create_repos(repos_path)
 
@@ -243,7 +234,6 @@ def test_existing(tmp_path):
         gws = GitWS.clone(str(repos_path / "main"))
 
     with chdir(gws.path):
-
         Path("build").mkdir()
         Path("build/main-data1.txt").touch()
 

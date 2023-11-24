@@ -27,7 +27,7 @@ _LOGLEVELMAP = {
 
 
 class LogHandler(logging.Handler):
-    """Logging Handler"""
+    """Logging Handler."""
 
     def __init__(self):
         super().__init__()
@@ -41,21 +41,20 @@ class LogHandler(logging.Handler):
 
 
 class LogFormatter(logging.Formatter):
-
     """Log Formatter."""
 
-    levelsettings = {
+    levelsettings = {  # noqa: RUF012
         logging.WARNING: {"fg": "yellow", "bold": True},
         logging.ERROR: {"fg": "red", "bold": True},
     }
-    leveldefault = {"bold": True, "dim": True}
-    msgsettings = {
+    leveldefault = {"bold": True, "dim": True}  # noqa: RUF012
+    msgsettings = {  # noqa: RUF012
         logging.DEBUG: {"dim": True, "fg": "cyan"},
         logging.INFO: {"dim": True, "fg": "blue"},
         logging.WARNING: {"fg": "yellow"},
         logging.ERROR: {"fg": "red"},
     }
-    msgdefault = {"fg": "blue", "dim": True}
+    msgdefault = {"fg": "blue", "dim": True}  # noqa: RUF012
 
     def __init__(self, color: bool):
         super().__init__()
@@ -77,7 +76,7 @@ class LogFormatter(logging.Formatter):
 
 
 def setup_logging(color: bool, verbose: int) -> LogHandler:
-    """Setup Logging."""
+    """Create And Setup Logging Handler."""
     handler = LogHandler()
     handler.formatter = LogFormatter(color)
     logger = logging.getLogger()

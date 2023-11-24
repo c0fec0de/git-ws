@@ -23,8 +23,6 @@ from unittest import mock
 from gitws import Git
 from gitws._util import run
 
-# pylint: disable=unused-import
-from .fixtures import repos
 from .util import chdir, check, cli, path2url
 
 

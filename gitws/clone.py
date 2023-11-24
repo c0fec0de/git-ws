@@ -35,7 +35,6 @@ _LOGGER = logging.getLogger("git-ws")
 
 
 class Clone:
-
     """
     Clone - A Pair Of Project Definition And Git Interface.
 
@@ -96,7 +95,7 @@ class Clone:
     def _check_revision(self) -> None:
         git = self.git
         project = self.project
-        revs = tuple()  # type: ignore
+        revs: Tuple[str, ...] = ()
         with suppress(FileNotFoundError):
             # We cannot determine if we checked out a tag or SHA, so we need to be careful here
             branch = git.get_branch()
@@ -105,9 +104,11 @@ class Clone:
             else:
                 tag = git.get_tag()
                 sha = git.get_sha()
-                if tag:
+                if tag and sha:
                     revs = (tag, sha)
-                else:
+                elif tag:
+                    revs = (tag,)
+                elif sha:
                     revs = (sha,)
         if revs and project.revision not in revs:
             akas = " aka ".join(repr(rev) for rev in revs)
@@ -192,7 +193,7 @@ def map_paths(clones: Tuple[Clone, ...], paths: Optional[Tuple[Path, ...]]) -> G
             if cpaths:
                 yield clone, tuple(cpaths)
     else:
-        nopaths: Tuple[Path, ...] = tuple()
+        nopaths: Tuple[Path, ...] = ()
         for clone in clones:
             yield clone, nopaths
 
@@ -201,5 +202,5 @@ CloneFilter = Callable[[Clone], bool]
 
 
 def filter_clone_on_branch(clone: Clone) -> bool:
-    """Return `True` on branches"""
+    """Return `True` on branches."""
     return bool(clone.git.get_branch())

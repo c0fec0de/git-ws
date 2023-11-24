@@ -72,7 +72,7 @@ def test_nomain(tmp_path):
 
 
 def test_noabs(tmp_path):
-    """Test Without absolute paths"""
+    """Test Without Absolute Paths."""
     path = tmp_path / "workspace"
     path.mkdir(parents=True)
     with chdir(path):

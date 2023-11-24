@@ -24,8 +24,6 @@ from pytest import fixture
 from gitws import Git, GitWS
 
 from .common import TESTDATA_PATH
-
-# pylint: disable=unused-import
 from .fixtures import create_repos
 from .util import assert_gen, chdir, cli
 
@@ -43,7 +41,7 @@ def repos():
 
 @fixture
 def gws(tmp_path, repos):
-    """Initialized :any:`GitWS` on ``repos``."""
+    """Initialize :any:`GitWS` on ``repos``."""
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
@@ -61,7 +59,6 @@ def test_pull(tmp_path, gws):
 
 def test_push(tmp_path, gws):
     """Test push."""
-    # pylint: disable=unused-argument
     dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(("push",)) == [
         "===== dep4 ('dep4', revision='main') =====",
@@ -92,7 +89,6 @@ def test_diff(tmp_path, gws):
 
 def test_deinit(tmp_path, gws):
     """Test deinit."""
-    # pylint: disable=unused-argument
     assert cli(["deinit"]) == ["Workspace deinitialized at '.'.", ""]
 
     assert not (tmp_path / "main" / ".gitws").exists()
@@ -117,7 +113,6 @@ def test_deinit(tmp_path, gws):
 
 def test_deinit_prune(tmp_path, gws):
     """Test deinit - prune."""
-    # pylint: disable=unused-argument
     assert cli(["deinit", "--prune"]) == [
         "===== dep1 (OBSOLETE) =====",
         "Removing 'dep1'.",
@@ -157,7 +152,6 @@ def test_deinit_prune(tmp_path, gws):
 
 def test_git(tmp_path, gws):
     """Test git."""
-    # pylint: disable=unused-argument
     dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(["git", "status"]) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -183,7 +177,6 @@ def test_git(tmp_path, gws):
 
 def test_foreach(tmp_path, gws, repos):
     """Test foreach."""
-    # pylint: disable=unused-argument
     dep5_sha = Git(gws.path / "dep5").get_sha()
     dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(["foreach", "git", "status"]) == [
@@ -212,7 +205,6 @@ def test_foreach(tmp_path, gws, repos):
 
 def test_foreach_clone_missing(tmp_path, gws):
     """Test foreach."""
-    # pylint: disable=unused-argument
     rmtree(tmp_path / "main" / "dep2")
     assert cli(["foreach", "git", "status"], exit_code=1) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -229,7 +221,6 @@ def test_foreach_clone_missing(tmp_path, gws):
 
 def test_foreach_fail(tmp_path, gws):
     """Test foreach failing."""
-    # pylint: disable=unused-argument
     assert cli(["foreach", "--", "git", "status", "--invalidoption"], exit_code=1) == [
         "===== main (MAIN 'main', revision='main') =====",
         "Error: 'git status --invalidoption' failed.",
@@ -239,7 +230,6 @@ def test_foreach_fail(tmp_path, gws):
 
 def test_outside(tmp_path, gws):
     """Outside Workspace."""
-    # pylint: disable=unused-argument
     with chdir(tmp_path):
         assert cli(["update"], exit_code=1) == [
             "Error: git workspace has not been initialized yet. Try:",
@@ -255,7 +245,6 @@ def test_outside(tmp_path, gws):
 
 
 def _test_foreach(tmp_path, gws, *command, on_branch=False):
-    # pylint: disable=unused-argument
     dep6_sha = Git(gws.path / "dep6").get_sha()
     if on_branch:
         output = [
@@ -284,7 +273,6 @@ def _test_foreach(tmp_path, gws, *command, on_branch=False):
 
 def test_git_no_color(tmp_path, gws, repos):
     """Test git."""
-    # pylint: disable=unused-argument
     dep5_sha = Git(gws.path / "dep5").get_sha()
     dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(["config", "set", "color_ui", "False"]) == [""]
@@ -314,5 +302,4 @@ def test_git_no_color(tmp_path, gws, repos):
 
 def test_foreach_command_missing(tmp_path, gws):
     """Test git."""
-    # pylint: disable=unused-argument
     assert cli(["foreach"], exit_code=1) == ["Error: COMMAND is required", ""]

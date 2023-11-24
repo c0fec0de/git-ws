@@ -19,12 +19,11 @@ import click
 import tomlkit
 
 from gitws import ProjectSpec
+from gitws._cli.common import exceptionhandling, pass_context
+from gitws._cli.dep.update import update
+from gitws._cli.options import manifest_option
 from gitws._manifestformatmanager import get_manifest_format_manager
 from gitws._util import as_dict
-
-from ..common import exceptionhandling, pass_context
-from ..options import manifest_option
-from .update import update
 
 
 @click.group()
@@ -88,7 +87,7 @@ def add(
 
 
 _DEP_ATTRIBUTES = tuple(
-    (item for item in ProjectSpec(name="dummy").model_dump(by_alias=True) if item not in ("linkfiles", "copyfiles"))
+    item for item in ProjectSpec(name="dummy").model_dump(by_alias=True) if item not in ("linkfiles", "copyfiles")
 )
 
 
@@ -108,10 +107,10 @@ def set_(context, manifest_path, dep, attribute, value):
             dependencies = list(manifest_spec.dependencies)
             for idx, dependency in enumerate(dependencies):
                 if dependency.name == dep:
+                    dependencies[idx] = dependencies[idx].model_copy_fromstr({attribute: value})
                     break
             else:
                 raise ValueError(f"Unknown dependency {dep!r}")
-            dependencies[idx] = dependencies[idx].model_copy_fromstr({attribute: value})
             manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
             handler.save(manifest_spec)
 
@@ -145,10 +144,10 @@ def delete(context, name, manifest_path):
             dependencies = list(manifest_spec.dependencies)
             for idx, dep in enumerate(manifest_spec.dependencies):
                 if dep.name == name:
+                    dependencies.pop(idx)
                     break
             else:
                 raise ValueError(f"Unknown dependency {name!r}")
-            dependencies.pop(idx)
             manifest_spec = manifest_spec.model_copy(update={"dependencies": tuple(dependencies)})
             handler.save(manifest_spec)
 

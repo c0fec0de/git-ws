@@ -26,7 +26,7 @@ from .util import chdir, check, path2url
 
 @fixture
 def repos(tmp_path):
-    """An example."""
+    """Return Example Repos."""
     repos_path = tmp_path / "repos"
 
     with git_repo(repos_path / "main", commit="initial") as path:

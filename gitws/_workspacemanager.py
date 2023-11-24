@@ -16,7 +16,7 @@
 
 
 """
-Workspace Management
+Workspace Management.
 """
 import hashlib
 import shutil
@@ -64,6 +64,8 @@ class WorkspaceManager:
 
         Args:
             path: Project Path relative to workspace root directory.
+            linkfiles: symbolic links to be created.
+            copyfiles: files to be copied.
         """
         if path:
             self._knownpaths.append(Path(path))
@@ -149,7 +151,7 @@ class WorkspaceManager:
                     srcabs = workspace_path / fileref.project_path / fileref.src
                     self.__check_path(srcabs, "source", exists=True, is_file=True)
                     hash_ = _get_filehash(srcabs)
-                    fileref = fileref.model_copy(update={"hash_": hash_})
+                    fileref = fileref.model_copy(update={"hash_": hash_})  # noqa: PLW2901
 
                 # existing file up-to-date?
                 efileref = efilerefmap.get(dest)
@@ -215,7 +217,7 @@ class WorkspaceManager:
             self.secho(f"Linking '{relative(srcabs)!s}' -> '{relative(destabs)!s}'")
             destabs.symlink_to(srcabs)
         else:
-            assert False  # pragma: no cover
+            raise RuntimeError(f"Unknown filereftype {filereftype!r}")  # pragma: no cover
 
     def __check_path(self, path, what, exists=None, is_file=None):
         assert path.is_absolute()

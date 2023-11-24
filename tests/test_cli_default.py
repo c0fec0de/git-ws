@@ -47,7 +47,7 @@ def test_cli_default_revision(tmp_path):
 
 
 def test_cli_default_groups(tmp_path):
-    """groups in defaults."""
+    """Groups in defaults."""
     with chdir(tmp_path):
         cli(("manifest", "create"))
 
@@ -77,7 +77,7 @@ def test_cli_default_with_groups(tmp_path):
 
 
 def test_cli_default_submodules(tmp_path):
-    """submodules in defaults."""
+    """Submodules in defaults."""
     with chdir(tmp_path):
         cli(("manifest", "create"))
 

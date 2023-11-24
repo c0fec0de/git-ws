@@ -20,9 +20,9 @@ import click
 from anytree import ContStyle, RenderTree
 
 from gitws import GitWS
+from gitws._deptree import DepDotExporter
+from gitws.exceptions import NoMainError
 
-from .._deptree import DepDotExporter
-from ..exceptions import NoMainError
 from .common import exceptionhandling, pass_context
 from .options import group_filters_option, manifest_option
 
@@ -100,13 +100,13 @@ def dep_tree(context, manifest_path=None, group_filters=None, dot: bool = False,
     Print Dependency Tree.
 
     The standard output on '--dot' can be directly forwarded to `graphviz`'s tool `dot`.
+
     Example:
 
     $ git ws info dep-tree --dot | dot -Tpng > dep-tree.png
 
     $ git ws info dep-tree --dot | dot -Tsvg > dep-tree.svg
-    """
-
+    """  # noqa: D412
     with exceptionhandling(context):
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters)
         deptree = gws.get_deptree(primary=primary)

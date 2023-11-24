@@ -68,8 +68,6 @@ class GitWS:
     * :any:`GitWS.clone()`: Clone git ``url``, initialize NEW Workspace and return corresponding :any:`GitWS`.
     """
 
-    # pylint: disable=too-many-public-methods
-
     def __init__(
         self,
         workspace: Workspace,
@@ -388,7 +386,6 @@ class GitWS:
             rebase: Rebase instead of merge.
             force: Enforce to prune repositories with changes.
         """
-        # pylint: disable=too-many-locals
         workspace = self.workspace
         depth = workspace.app_config.options.depth
 
@@ -401,7 +398,7 @@ class GitWS:
         mngr = WorkspaceManager(workspace, secho=self.secho)
         manifest_spec = self.manifest_format_manager.load(self.manifest_path)
         #   main
-        group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
+        group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters
         groupfilter = create_filter(group_selects_from_filters(group_filters), default=True)
         linkfiles = tuple(linkfile for linkfile in manifest_spec.linkfiles if groupfilter("", linkfile.groups))
         copyfiles = tuple(copyfile for copyfile in manifest_spec.copyfiles if groupfilter("", copyfile.groups))
@@ -475,6 +472,7 @@ class GitWS:
 
         Keyword Args:
             paths: Limit Git Status to ``paths`` only.
+            banner: Display Banner For Every Dependency.
             branch: Dump branch information.
 
         Yields:
@@ -565,23 +563,21 @@ class GitWS:
             for clone, cpaths in map_paths(tuple(self.clones()), paths):
                 clone.check()
                 clone.git.add(cpaths, force=force)
+        elif all_:
+            for clone in self.clones():
+                clone.check()
+                clone.git.add(all_=True, force=force)
         else:
-            if all_:
-                for clone in self.clones():
-                    clone.check()
-                    clone.git.add(all_=True, force=force)
-            else:
-                raise ValueError("Nothing specified, nothing added.")
+            raise ValueError("Nothing specified, nothing added.")
 
-    # pylint: disable=invalid-name
     def rm(self, paths: Tuple[Path, ...], cached: bool = False, force: bool = False, recursive: bool = False):
         """
-        Remove ``paths`` - aka ``git rm``
+        Remove ``paths`` - aka ``git rm``.
 
         The given ``paths`` are automatically mapped to the corresponding git clones.
 
         Args:
-            paths: Paths.
+            paths: Files and/or Directories.
 
         Keyword Args:
             cached: only remove from the index
@@ -857,8 +853,7 @@ class GitWS:
             return lambda project: workspace.get_project_path(project) in abspaths
 
         def default_filter(project: Project) -> bool:
-            """Default Filter - always returning True."""
-            # pylint: disable=unused-argument
+            """Create Default Filter - always returning True."""
             return True
 
         return default_filter
@@ -870,6 +865,7 @@ class GitWS:
         Keyword Args:
             recursive: Update dependencies too.
             revision: Update Revisions.
+            url: Update URL.
         """
         infos = {
             clone.project.path: {"revision": clone.git.get_revision(), "url": clone.git.get_url()}

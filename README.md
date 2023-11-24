@@ -1,15 +1,18 @@
+<p style="text-align: center;">
+
 [![PyPI Version](https://badge.fury.io/py/git-ws.svg)](https://badge.fury.io/py/git-ws)
 [![Python Build](https://github.com/c0fec0de/git-ws/actions/workflows/main.yml/badge.svg)](https://github.com/c0fec0de/git-ws/actions/workflows/main.yml)
 [![Documentation](https://readthedocs.org/projects/git-ws/badge/?version=stable)](https://git-ws.readthedocs.io/en/stable)
 [![Coverage Status](https://coveralls.io/repos/github/c0fec0de/git-ws/badge.svg?branch=main)](https://coveralls.io/github/c0fec0de/git-ws?branch=main)
 [![python-versions](https://img.shields.io/pypi/pyversions/git-ws.svg)](https://pypi.python.org/pypi/git-ws)
-[![pylint](https://img.shields.io/badge/linter-pylint-%231674b1?style=flat)](https://www.pylint.org/)
-[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 [Documentation](https://git-ws.readthedocs.io/en/stable/) -
 [PyPI](https://pypi.org/project/git-ws/) -
 [Sources](https://github.com/c0fec0de/git-ws) -
 [Issues](https://github.com/c0fec0de/git-ws/issues)
+
+</p>
 
 # Git Workspace - Multi Repository Management Tool
 

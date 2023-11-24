@@ -158,7 +158,6 @@ class GitCloneMissingOriginError(RuntimeError):
 
 
 class GitTagExistsError(RuntimeError):
-
     """Git Tag Already Exists."""
 
     def __init__(self, tag):
@@ -196,7 +195,7 @@ class FileRefConflict(RuntimeError):
 
 
 class FileRefModifiedError(RuntimeError):
-    """File Reference Got Modified"""
+    """File Reference Got Modified."""
 
     def __init__(self, dest: Path, src: Path):
         msg = f"File {str(dest)!r} got manipulated. (Originally {str(src)!r})"

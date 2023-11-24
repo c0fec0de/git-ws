@@ -20,7 +20,7 @@ from typing import Optional, Tuple
 
 import click
 
-from ..const import MANIFEST_PATH_DEFAULT
+from gitws.const import MANIFEST_PATH_DEFAULT
 
 
 def projects_option():
@@ -122,12 +122,12 @@ def ws_path_option(nomain: bool = False):
 
 
 def main_path_option():
-    """Main Repository Path."""
+    """Return Main Repository Path Argument."""
     return click.argument("main_path", nargs=-1, type=click.UNPROCESSED)
 
 
 def depth_option():
-    """Depth Option."""
+    """Return Depth Option."""
     return click.option("--depth", type=int, help="Create clones shallow of that depth.")
 
 
@@ -165,4 +165,4 @@ command_options_option = click.argument("command_options", nargs=-1, type=click.
 
 def process_command_options(options):
     """Process options Argument."""
-    return options or tuple()
+    return options or ()

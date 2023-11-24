@@ -23,16 +23,13 @@ from pytest import fixture
 from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
 from .common import TESTDATA_PATH
-
-# pylint: disable=unused-import
 from .fixtures import git_repo
-from .util import assert_gen, chdir, check, format_logs
+from .util import assert_gen, chdir, check
 
 
 @fixture
 def repos_deptop():
     """Fixture dep back to top."""
-
     with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
         repos_path = Path(tmpdir)
 

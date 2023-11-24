@@ -131,7 +131,6 @@ class AppConfig:
     setting the ``GIT_WS_MANIFEST_PATH`` environment variable.
 
     Keyword Args:
-
         system_config_dir: The path to where the system configuration file is stored. If not set, a platform specific
                            system configuration path will be used.
         user_config_dir: The path to where the user configuration file is stored. If not set, a platform specific
@@ -351,7 +350,6 @@ class AppConfig:
         This loads a configuration file from a specific location.
 
         Args:
-
             location: The location to load the configuration from.
 
         Raises:

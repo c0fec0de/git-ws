@@ -60,6 +60,7 @@ def get_deptree(
 
     Args:
         workspace: The Workspace
+        manifest_format_manager: :any:`ManifestFormatManager` instance
         manifest: The Manifest
 
     Keyword Args:
@@ -115,7 +116,6 @@ class DepDotExporter(DotExporter):
     @staticmethod
     def _edgeattr(node, child):
         """Edge Attributes."""
-        # pylint:disable=unused-argument
         project = child.project
         attrs = []
         if not child.is_primary:

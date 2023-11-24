@@ -16,10 +16,11 @@
 
 """Test API."""
 
+# ruff: noqa: F401
+
 
 def test_imports():
     """Test imports."""
-    # pylint: disable=unused-import,too-many-locals,import-outside-toplevel
     from gitws import (
         AppConfig,
         AppConfigData,

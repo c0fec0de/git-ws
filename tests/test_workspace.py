@@ -78,7 +78,7 @@ def test_outside(tmp_path):
 
 
 def test_edit_info(tmp_path):
-    """Test Info Edit"""
+    """Test Info Edit."""
     with chdir(tmp_path):
         main_path = tmp_path / "main"
         main_path.mkdir(parents=True)

@@ -19,14 +19,12 @@ from pytest import fixture
 
 from gitws import GitWS
 
-# pylint: disable=unused-import
-from .fixtures import repos
 from .util import chdir, cli
 
 
 @fixture
 def gws(tmp_path, repos):
-    """Initialized :any:`GitWS` on ``repos``."""
+    """Initialize :any:`GitWS` on ``repos``."""
     with chdir(tmp_path):
         gws = GitWS.clone(str(repos / "main"))
         gws.update()
@@ -36,25 +34,21 @@ def gws(tmp_path, repos):
 
 def test_main_path(tmp_path, gws):
     """Main Path."""
-    # pylint: disable=unused-argument
     assert cli(["info", "main-path"], tmp_path=tmp_path) == ["TMP/main/main", ""]
 
 
 def test_base_path(tmp_path, gws):
     """Base Path."""
-    # pylint: disable=unused-argument
     assert cli(["info", "base-path"], tmp_path=tmp_path) == ["TMP/main/main", ""]
 
 
 def test_workspace_path(tmp_path, gws):
     """Workspace Path."""
-    # pylint: disable=unused-argument
     assert cli(["info", "workspace-path"], tmp_path=tmp_path) == ["TMP/main", ""]
 
 
 def test_project_paths(tmp_path, gws):
     """Project Paths."""
-    # pylint: disable=unused-argument
     assert cli(["info", "project-paths"], tmp_path=tmp_path) == [
         "TMP/main/main",
         "TMP/main/dep1",
@@ -66,7 +60,6 @@ def test_project_paths(tmp_path, gws):
 
 def test_dep_tree(tmp_path, gws):
     """Dependency Trees."""
-    # pylint: disable=unused-argument
     assert cli(["info", "dep-tree"], tmp_path=tmp_path) == [
         "main",
         "├── dep1",
@@ -81,7 +74,6 @@ def test_dep_tree(tmp_path, gws):
 
 def test_dep_tree_primary(tmp_path, gws):
     """Dependency Trees - Primary Only."""
-    # pylint: disable=unused-argument
     assert cli(["info", "dep-tree", "--primary"], tmp_path=tmp_path) == [
         "main",
         "├── dep1",
@@ -94,7 +86,6 @@ def test_dep_tree_primary(tmp_path, gws):
 
 def test_dep_tree_dot(tmp_path, gws):
     """Dependency Trees - dot."""
-    # pylint: disable=unused-argument
     assert cli(["info", "dep-tree", "--dot"], tmp_path=tmp_path) == [
         "digraph tree {",
         '    "main";',

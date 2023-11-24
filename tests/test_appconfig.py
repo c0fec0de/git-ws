@@ -135,7 +135,7 @@ def test_invalid_config_file_2():
 def test_invalid_config_location():
     """If - for whatever reason - an invalid config location is used, we expect a specific exception."""
     with raises(InvalidConfigurationLocationError):
-        AppConfig()._load("Hello World")  # pylint: disable=protected-access
+        AppConfig()._load("Hello World")
 
 
 def test_write_config():

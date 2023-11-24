@@ -47,7 +47,6 @@ def run(cmd, cwd=None, capture_output=False, check=True, secho=None):
         raise error
 
 
-# pylint: disable=unused-argument
 def no_echo(text: str, err=False, **kwargs):
     """Just suppress ``text``."""
     if err:
@@ -93,9 +92,7 @@ def relative(path: Path, base: Optional[Path] = None) -> Path:
 
 def get_repr(obj=None, args=None, kwargs=None):
     """Return `repr()` string."""
-    parts = []
-    for arg in args or []:
-        parts.append(f"{arg!r}")
+    parts = [f"{arg!r}" for arg in args or []]
     for item in kwargs or []:
         name, value, default = item
         if value != default:
@@ -142,8 +139,7 @@ def as_dict(obj, exclude_defaults: bool = True):
 @contextmanager
 def exception2logging(info: Optional[str] = ""):
     """Capture Exception and Report as Error to logging."""
-
     try:
         yield
-    except Exception as exc:  # pylint: disable=broad-exception-caught
+    except Exception as exc:
         LOGGER.error("%s%s", info, exc)

@@ -277,7 +277,6 @@ def test_dest_dir(caplog, mgr, tmp_path):
 
 def test_modified_symlink(caplog, mgr, tmp_path):
     """Symlinkg got modified."""
-
     workspace_path = mgr.workspace.path
     main_path = workspace_path / "main"
     main_path.mkdir(parents=True, exist_ok=True)
@@ -298,7 +297,7 @@ def test_modified_symlink(caplog, mgr, tmp_path):
 
     assert (workspace_path / "main-link.txt").is_symlink()
     assert not (workspace_path / "main-copy.txt").is_symlink()
-    assert Path(readlink((workspace_path / "main-link.txt"))) == (main_path / "link.txt")
+    assert Path(readlink(workspace_path / "main-link.txt")) == (main_path / "link.txt")
     assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == []
 
     (workspace_path / "main-link.txt").unlink()
@@ -324,8 +323,8 @@ def test_modified_symlink(caplog, mgr, tmp_path):
         "manipulated. (Originally 'WSREL/main/link.txt')"
     ]
 
-    assert Path(readlink((workspace_path / "main-link.txt"))) == (main_path / "copy.txt")
+    assert Path(readlink(workspace_path / "main-link.txt")) == (main_path / "copy.txt")
 
     mgr.update(force=True)
 
-    assert Path(readlink((workspace_path / "main-link.txt"))) == (main_path / "link2.txt")
+    assert Path(readlink(workspace_path / "main-link.txt")) == (main_path / "link2.txt")

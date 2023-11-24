@@ -26,7 +26,7 @@ from .common import MANIFEST_DEFAULT
 
 @fixture
 def mod_manifest_spec():
-    """Modified Manifest Spec."""
+    """Return Modified Manifest Spec."""
     yield ManifestSpec(
         version="1.1",
         remotes=[Remote(name="remote")],

@@ -31,4 +31,4 @@ def test_cli_groupfilters_remote(tmp_path):
         assert load(Path("git-ws.toml")).group_filters == ("+myfoo", "-myboo")
 
         cli(("group-filters", ""))
-        assert load(Path("git-ws.toml")).group_filters == tuple()
+        assert load(Path("git-ws.toml")).group_filters == ()

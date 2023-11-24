@@ -78,9 +78,9 @@ def delete(context, name, manifest_path):
             remotes = list(manifest_spec.remotes)
             for idx, remote in enumerate(manifest_spec.remotes):
                 if remote.name == name:
+                    remotes.pop(idx)
                     break
             else:
                 raise ValueError(f"Unknown dependency {name!r}")
-            remotes.pop(idx)
             manifest_spec = manifest_spec.model_copy(update={"remotes": tuple(remotes)})
             handler.save(manifest_spec)
