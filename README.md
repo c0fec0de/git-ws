@@ -1,17 +1,29 @@
-<p style="text-align: center;">
+<p align="center">
+    <a href="https://github.com/astral-sh/ruff" target="_blank">
+        <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff">
+    </a>
+    <a href="https://badge.fury.io/py/git-ws" target="_blank">
+        <img src="https://badge.fury.io/py/git-ws.svg" alt="PyPI Version">
+    </a>
+    <a href="https://github.com/c0fec0de/git-ws/actions/workflows/main.yml" target="_blank">
+        <img src="https://github.com/c0fec0de/git-ws/actions/workflows/main.yml/badge.svg" alt="Python Build">
+    </a>
+    <a href="https://git-ws.readthedocs.io/en/stable" target="_blank">
+        <img src="https://readthedocs.org/projects/git-ws/badge/?version=stable" alt="Coverage Status">
+    </a>
+    <a href="https://pypi.python.org/pypi/git-ws" target="_blank">
+        <img src="https://img.shields.io/pypi/pyversions/git-ws.svg" alt="python-versions">
+    </a>
+</p>
 
-[![PyPI Version](https://badge.fury.io/py/git-ws.svg)](https://badge.fury.io/py/git-ws)
-[![Python Build](https://github.com/c0fec0de/git-ws/actions/workflows/main.yml/badge.svg)](https://github.com/c0fec0de/git-ws/actions/workflows/main.yml)
-[![Documentation](https://readthedocs.org/projects/git-ws/badge/?version=stable)](https://git-ws.readthedocs.io/en/stable)
-[![Coverage Status](https://coveralls.io/repos/github/c0fec0de/git-ws/badge.svg?branch=main)](https://coveralls.io/github/c0fec0de/git-ws?branch=main)
-[![python-versions](https://img.shields.io/pypi/pyversions/git-ws.svg)](https://pypi.python.org/pypi/git-ws)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-
-[Documentation](https://git-ws.readthedocs.io/en/stable/) -
-[PyPI](https://pypi.org/project/git-ws/) -
-[Sources](https://github.com/c0fec0de/git-ws) -
-[Issues](https://github.com/c0fec0de/git-ws/issues)
-
+<p align="center">
+    <a href="https://git-ws.readthedocs.io/en/stable/" target="_blank">Documentation</a>
+    -
+    <a href="https://pypi.org/project/git-ws/" target="_blank">PyPI</a>
+    -
+    <a href="https://github.com/c0fec0de/git-ws" target="_blank">Sources</a>
+    -
+    <a href="https://github.com/c0fec0de/git-ws/issues" target="_blank">Issues</a>
 </p>
 
 # Git Workspace - Multi Repository Management Tool
