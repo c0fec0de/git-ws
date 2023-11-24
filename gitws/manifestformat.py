@@ -34,6 +34,7 @@ class ManifestFormat:
     """
 
     prio: int = 0
+    """Manifest Format Priority In Case Of Multiple Matching Formats."""
 
     def is_compatible(self, path: Path) -> bool:
         """Check If File At ``path`` Is Compatible."""
@@ -43,7 +44,7 @@ class ManifestFormat:
         """
         Load Manifest From ``path``.
 
-        Raises
+        Raises:
             ManifestNotFoundError: if file is not found
             IncompatibleFormatError: Not Supported File Format.
             ManifestError: On Syntax Or Data Scheme Errors.
