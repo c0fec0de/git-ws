@@ -26,7 +26,7 @@ from gitws.gitwsmanifestformat import GitWSManifestFormat
 
 @fixture
 def mngr():
-    """Provide initialized"""
+    """Provide Initialized ManifestFormatManager."""
     mngr = ManifestFormatManager()
     mngr.add(GitWSManifestFormat())
     yield mngr
@@ -38,7 +38,7 @@ def test_empty_project_iter(tmp_path, mngr):
     manifest_path = Path("none.toml")
     group_filters: GroupFilters = []
     project_iter = ProjectIter(workspace, mngr, manifest_path, group_filters)
-    assert tuple(project_iter) == tuple()
+    assert tuple(project_iter) == ()
 
 
 def test_empty_manifest_iter(tmp_path, mngr):
@@ -47,4 +47,4 @@ def test_empty_manifest_iter(tmp_path, mngr):
     manifest_path = Path("none.toml")
     group_filters: GroupFilters = []
     manifest_iter = ManifestIter(workspace, mngr, manifest_path, group_filters)
-    assert tuple(manifest_iter) == tuple()
+    assert tuple(manifest_iter) == ()

@@ -97,7 +97,6 @@ class Status(BaseModel):
 
 
 class FileStatus(Status):
-
     """
     Git File Status Line.
 
@@ -161,7 +160,6 @@ class FileStatus(Status):
 
 
 class BranchStatus(Status):
-
     """
     Branch Status Line From ``git status`` command.
 
@@ -185,12 +183,10 @@ class BranchStatus(Status):
 
     def with_path(self, path: Path) -> "BranchStatus":
         """Return :any:`BranchStatus` with ``path`` as prefix."""
-        # pylint: disable=unused-argument
         return self
 
 
 class DiffStat(BaseModel):
-
     """
     Diff Status Line From ``git diff --stat`` command.
 
@@ -225,7 +221,6 @@ class DiffStat(BaseModel):
 
 
 class Git:
-
     """
     Work with git repositories.
 
@@ -238,8 +233,6 @@ class Git:
 
     >>> git = Git.from_path()
     """
-
-    # pylint: disable=too-many-public-methods
 
     def __init__(self, path: Path, clone_cache: Optional[Path] = None, secho=None):
         self.path = path
@@ -470,10 +463,12 @@ class Git:
         _LOGGER.info("Git(%r).add(%r, force=%r, all_=%r)", str(self.path), paths, force, all_)
         self._run(["add"], booloptions=(("--force", force), ("--all", all_)), paths=paths)
 
-    # pylint: disable=invalid-name
     def rm(self, paths: Paths, cached: bool = False, force: bool = False, recursive: bool = False):
         """
         Remove Files.
+
+        Args:
+            paths: files and/or directories to be removed
 
         Keyword Args:
             cached: only remove from the index
@@ -550,6 +545,7 @@ class Git:
         Git Status.
 
         Keyword Args:
+            paths: files and/or directories to be checked
             branch: Show branch too.
         """
         _LOGGER.info("Git(%r).status(paths=%r, branch=%r)", str(self.path), paths, branch)
@@ -656,7 +652,7 @@ class Git:
     ):
         cmd = ["git"]
         cmd.extend(args)
-        for name, value in booloptions or tuple():
+        for name, value in booloptions or ():
             if value:
                 cmd.append(name)
         if paths:

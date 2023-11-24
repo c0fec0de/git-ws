@@ -16,10 +16,9 @@
 
 """Clone Testing."""
 
+
 from gitws.const import INFO_PATH
 
-# pylint: disable=unused-import
-from .fixtures import repos
 from .util import chdir, check, cli, path2url
 
 

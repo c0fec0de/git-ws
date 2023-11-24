@@ -34,22 +34,19 @@ anytree = "^2.8.0"
 appdirs = "^1.4.4"
 click = '>=6.7.0,<9.0.0'
 flufl-lock = ">=6.0,<9.0"
+importlib-metadata = {version = "^6.8.0", python = "<3.10"}
 pydantic = "^2.2.0"
 pydantic-settings = "^2.0.3"
 tomlkit = '>=0.11.5,<1.0.0'
-importlib-metadata = {version = "^6.8.0", python = "<3.10"}
 
 [tool.poetry.group.test.dependencies]
-black = '^22.3.0'
 coveralls = "^3.3.1"
-isort = '^5.9'
 mypy = "~1.0.0"
-pylint = '^2.15'
 pytest = '^7.0'
 pytest-cov = "^4.1.0"
 pytest-xdist = "^3.5.0"
-tabulate = '>=0.8.10,<1.0.0'
 types-appdirs = "^1.4.3"
+ruff = "^0.1.6"
 
 [tool.poetry.group.doc.dependencies]
 sphinx = '^5.1.1'
@@ -60,38 +57,97 @@ sphinxemoji = ">=0.2.0"
 requires = ["poetry_core>=1.0"]
 build-backend = "poetry.core.masonry.api"
 
-
-[tool.black]
+[tool.ruff]
 line-length = 120
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.mypy_cache
-  | \.venv
-  | \.tox
-  | build
-  | dist
-  | setup\.py
-)/
-'''
+fix = true
+select = [
+    # isort
+    "I",
+    # pyflakes
+    "F",
+    # pycodestyle
+    "E", "W",
+    # pydocstyle
+    "D",
+    # flake8-2020
+    "YTT",
+    # flake8-bugbear
+    "B",
+    # flake8-quotes
+    "Q",
+    # flake8-debugger
+    "T10",
+    # flake8-gettext
+    "INT",
+    # pylint
+    "PL",
+    # misc lints
+    "PIE",
+    # flake8-pyi
+    "PYI",
+    # tidy imports
+    "TID",
+    # implicit string concatenation
+    "ISC",
+    # type-checking imports
+    "TCH",
+    # comprehensions
+    "C",
+    # pygrep-hooks
+    "PGH",
+    # Ruff-specific rules
+    "RUF",
+    # flake8-bandit: exec-builtin
+    "S102",
+    # numpy-legacy-random
+    "NPY002",
+    # Perflint
+    "PERF",
+    # flynt
+    "FLY",
+    # flake8-logging-format
+    "G",
+    # pyupgrade
+    "UP",
+]
+ignore = [
+    # too-many-arguments
+    'PLR0913',
+    # Ambigious
+    'ISC001',
+    # support type: ignore
+    'PGH003',
+    # poetry deviates
+    'RUF200',
+    # Ambigious doc
+    'D203', 'D212', 'D402', 'D406',
+    # Multiline doc is ok.
+    'D200',
+    # We use the class for constructor doc
+    'D107',
+    # We keep legacy on Optional[] and Union[]
+    'UP007',
+    # Magic method documentation is optional
+    'D105',
+    # Section underline
+    'D407',
+]
 
-[tool.isort]
-profile = "black"
-line_length = 120
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"gitws/_cli/**.py" = ["PLR0913"]
 
 [tool.pytest.ini_options]
 addopts = """
---cov gitws
---cov-report term
---cov-report html -n auto
---doctest-glob=docs/*.rst
---doctest-modules
---ignore-glob=tests/testdata*
---ignore=docs/conf.py
---log-level=DEBUG
---junitxml=report.xml
+    --cov gitws
+    --cov-report term
+    --cov-report html -n auto
+    --doctest-glob=docs/*.rst
+    --doctest-modules
+    --ignore-glob=tests/testdata*
+    --ignore=docs/conf.py
+    --log-level=DEBUG
+    --junitxml=report.xml
 """
 filterwarnings = [
     "error",
@@ -103,16 +159,6 @@ exclude_lines = [
     'raise NotImplementedError()',
     'pragma: no cover',
     'assert False',
-]
-
-
-[tool.pylint.'MESSAGES CONTROL']
-max-line-length = 120
-extension-pkg-whitelist = "pydantic"
-disable = [
-    'duplicate-code',
-    'redefined-outer-name',
-    'too-many-arguments',
 ]
 
 [tool.mypy]
@@ -134,10 +180,9 @@ setenv =
 
 commands =
     poetry install --with=test --with=doc
-    poetry run black .
-    poetry run isort .
+    poetry run ruff format .
+    poetry run ruff check .
     poetry run pytest -vv
-    poetry run pylint gitws tests
     poetry run mypy gitws
     poetry run make html -C docs
 

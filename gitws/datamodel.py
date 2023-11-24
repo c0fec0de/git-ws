@@ -29,8 +29,6 @@ Central :any:`GitWS` Datamodel.
 * :any:`AppConfigData`: :any:`GitWS` Configuration.
 """
 
-# pylint: disable=too-many-lines
-
 
 import re
 from pathlib import Path, PurePath
@@ -108,9 +106,9 @@ _RE_GROUP_FILTER = re.compile(r"\A(?P<select>[\-\+])(?P<group>[a-zA-Z0-9_][a-zA-
 
 def _validate_group_filter(group_filter):
     """
-    Groups Filter.
+    Validate Group Filter.
 
-    Group Filters are just a ``tuple`` of ``str`` for performance reasons. This function does the validation.
+    Group Filter are just a ``tuple`` of ``str`` for performance reasons. This function does the validation.
     """
     group_filter = str(group_filter)
     mat = _RE_GROUP_FILTER.match(group_filter)
@@ -138,7 +136,6 @@ Used by Config and Command Line Interface.
 
 
 class GroupSelect(BaseModel):
-
     """
     Group Selection.
 
@@ -255,10 +252,10 @@ class Defaults(BaseModel):
     revision: Optional[str] = None
     """The revision if not specified by the dependency. Tag or Branch. SHA does not make sense here."""
 
-    groups: Optional[Groups] = tuple()
+    groups: Optional[Groups] = ()
     """The ``groups`` attribute if not specified by the dependency."""
 
-    with_groups: Optional[Groups] = Field(tuple(), alias="with-groups")
+    with_groups: Optional[Groups] = Field((), alias="with-groups")
     """The ``with_groups`` attribute if not specified by the dependency."""
 
     submodules: bool = True
@@ -289,7 +286,6 @@ FileRefs = Tuple[FileRef, ...]
 
 
 class MainFileRef(FileRef):
-
     """
     Main Project File Reference.
 
@@ -302,7 +298,7 @@ class MainFileRef(FileRef):
     """
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
-    groups: Groups = tuple()
+    groups: Groups = ()
     """``groups`` specification."""
 
 
@@ -344,7 +340,6 @@ WorkspaceFileRefs = List[WorkspaceFileRef]
 
 
 class Project(BaseModel):
-
     """
     Project.
 
@@ -399,19 +394,19 @@ class Project(BaseModel):
     manifest_path: str = str(MANIFEST_PATH_DEFAULT)
     """Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default."""
 
-    groups: Groups = tuple()
+    groups: Groups = ()
     """Dependency Groups."""
 
-    with_groups: Groups = Field(tuple(), alias="with-groups")
+    with_groups: Groups = Field((), alias="with-groups")
     """Group Selection for referred project."""
 
     submodules: bool = True
     """Initialize and Update `git submodules`."""
 
-    linkfiles: FileRefs = tuple()
+    linkfiles: FileRefs = ()
     """Symbolic Links To Be Created In The workspace."""
 
-    copyfiles: FileRefs = tuple()
+    copyfiles: FileRefs = ()
     """Files To Be Created In The Workspace."""
 
     recursive: bool = True
@@ -520,7 +515,7 @@ class Project(BaseModel):
 
 class ProjectSpec(BaseModel):
     """
-    Project Dependency Specification
+    Project Dependency Specification.
 
     A project specifies the reference to a repository.
 
@@ -575,19 +570,19 @@ class ProjectSpec(BaseModel):
     manifest_path: Optional[str] = Field(str(MANIFEST_PATH_DEFAULT), alias="manifest-path")
     """Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default."""
 
-    groups: Groups = tuple()
+    groups: Groups = ()
     """Dependency Groups."""
 
-    with_groups: Groups = Field(tuple(), alias="with-groups")
+    with_groups: Groups = Field((), alias="with-groups")
     """Group Selection for refered project."""
 
     submodules: Optional[bool] = None
     """Initialize and Update `git submodules`."""
 
-    linkfiles: FileRefs = tuple()
+    linkfiles: FileRefs = ()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: FileRefs = tuple()
+    copyfiles: FileRefs = ()
     """Files To Be Created In The Workspace."""
 
     recursive: bool = True
@@ -635,7 +630,6 @@ class ProjectSpec(BaseModel):
 
 
 class Manifest(BaseModel):
-
     """
     The Manifest.
 
@@ -657,16 +651,16 @@ class Manifest(BaseModel):
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True, populate_by_name=True)
 
-    group_filters: GroupFilters = Field(tuple(), alias="group-filters")
+    group_filters: GroupFilters = Field((), alias="group-filters")
     """Default Group Selection and Deselection."""
 
-    linkfiles: MainFileRefs = tuple()
+    linkfiles: MainFileRefs = ()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: MainFileRefs = tuple()
+    copyfiles: MainFileRefs = ()
     """Files To Be Created In The Workspace."""
 
-    dependencies: Tuple[Project, ...] = tuple()
+    dependencies: Tuple[Project, ...] = ()
     """Dependencies - Other Projects To Be Cloned In The Workspace."""
 
     path: Optional[str] = None
@@ -704,7 +698,6 @@ class Manifest(BaseModel):
 
 
 class ManifestSpec(BaseModel):
-
     """
     ManifestSpec.
 
@@ -733,22 +726,22 @@ class ManifestSpec(BaseModel):
     Actual Version: ``1.0``.
     """
 
-    group_filters: GroupFilters = Field(tuple(), alias="group-filters")
+    group_filters: GroupFilters = Field((), alias="group-filters")
     """Default Group Selection and Deselection."""
 
-    linkfiles: MainFileRefs = tuple()
+    linkfiles: MainFileRefs = ()
     """Symbolic Links To Be Created In The Workspace."""
 
-    copyfiles: MainFileRefs = tuple()
+    copyfiles: MainFileRefs = ()
     """Files To Be Created In The Workspace."""
 
-    remotes: Tuple[Remote, ...] = tuple()
+    remotes: Tuple[Remote, ...] = ()
     """Remotes - Helpers to Simplify URL Handling."""
 
     defaults: Defaults = Defaults()
     """Default Values."""
 
-    dependencies: Tuple[ProjectSpec, ...] = tuple()
+    dependencies: Tuple[ProjectSpec, ...] = ()
     """Dependencies - Other Projects To Be Cloned In The Workspace."""
 
     @model_validator(mode="after")

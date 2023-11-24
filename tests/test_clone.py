@@ -24,8 +24,6 @@ from pytest import raises
 
 from gitws import Clone, Git, GitCloneNotCleanError, GitWS, Manifest, NotEmptyError, Project, WorkspaceNotEmptyError
 
-# pylint: disable=unused-import
-from .fixtures import repos
 from .util import chdir, check
 
 
@@ -45,7 +43,6 @@ def test_clone_basic():
 
 def test_clone(tmp_path, repos):
     """Test Cloning."""
-
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
@@ -111,7 +108,6 @@ def test_clone(tmp_path, repos):
 
 def test_clone_groups(tmp_path, repos):
     """Test Cloning."""
-
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
@@ -179,7 +175,6 @@ def test_clone_groups(tmp_path, repos):
 
 def test_clone_other(tmp_path, repos):
     """Test Clone Other."""
-
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
@@ -246,7 +241,6 @@ def test_clone_other(tmp_path, repos):
 
 def test_clone_cached(tmp_path, repos):
     """Test Cloning."""
-
     workspace = tmp_path / "main"
     cache = tmp_path / "cache"
 
@@ -268,8 +262,8 @@ def test_clone_cached(tmp_path, repos):
             check(workspace, "dep4")
             check(workspace, "dep5", exists=False)
 
-            rmtree((workspace / "dep1"))
-            rmtree((workspace / "dep2"))
+            rmtree(workspace / "dep1")
+            rmtree(workspace / "dep2")
 
             gws.update()
 
@@ -281,7 +275,7 @@ def test_clone_cached(tmp_path, repos):
             check(workspace, "dep5", exists=False)
 
             # checkout too
-            rmtree((workspace / "dep4"))
+            rmtree(workspace / "dep4")
 
             gws.checkout()
 
@@ -295,7 +289,6 @@ def test_clone_cached(tmp_path, repos):
 
 def test_clone_force(tmp_path, repos):
     """Test Cloning - force."""
-
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):

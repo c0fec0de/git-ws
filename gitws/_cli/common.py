@@ -39,7 +39,6 @@ COLOR_INFO = "blue"
 
 
 class Context(BaseModel):
-
     """Command Line Context."""
 
     verbose: int
@@ -74,7 +73,7 @@ class Error(click.ClickException):
 
 
 @contextmanager
-def exceptionhandling(context: Context):
+def exceptionhandling(context: Context):  # noqa: PLR0912, C901
     """
     Click Exception Handling.
 
@@ -128,6 +127,5 @@ def exceptionhandling(context: Context):
 
 def _print_traceback(context: Context):
     if context.verbose > 1:  # pragma: no cover
-        # pylint: disable=no-value-for-parameter
         lines = "".join(traceback.format_exc())
         context.secho(lines, fg="red", err=True)

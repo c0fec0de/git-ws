@@ -27,7 +27,6 @@ from .exceptions import IncompatibleFormatError
 
 
 class ManifestFormat:
-
     """
     Manifest Format.
 
@@ -38,14 +37,13 @@ class ManifestFormat:
 
     def is_compatible(self, path: Path) -> bool:
         """Check If File At ``path`` Is Compatible."""
-        # pylint: disable=unused-argument
         return False
 
     def load(self, path: Path) -> ManifestSpec:
         """
         Load Manifest From ``path``.
 
-        Raises:
+        Raises
             ManifestNotFoundError: if file is not found
             IncompatibleFormatError: Not Supported File Format.
             ManifestError: On Syntax Or Data Scheme Errors.
@@ -68,6 +66,10 @@ class ManifestFormat:
     def save(self, spec: ManifestSpec, path: Path, update: bool = True):
         """
         Save ``spec`` At ``path``.
+
+        Args:
+            spec: Manifest Specification to be stored
+            path: Filepath For Manifest.
 
         Keyword Args:
             update: Additional Attributes And Comments Added By The User Are **Kept**.

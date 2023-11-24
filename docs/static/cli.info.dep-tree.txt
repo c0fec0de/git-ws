@@ -3,7 +3,9 @@ Usage: git-ws info dep-tree [OPTIONS]
   Print Dependency Tree.
 
   The standard output on '--dot' can be directly forwarded to `graphviz`'s
-  tool `dot`. Example:
+  tool `dot`.
+
+  Example:
 
   $ git ws info dep-tree --dot | dot -Tpng > dep-tree.png
 

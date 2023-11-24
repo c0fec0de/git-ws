@@ -20,15 +20,12 @@ from pytest import fixture
 from gitws import GitWS
 
 from .common import MANIFEST_DEFAULT
-
-# pylint: disable=unused-import
-from .fixtures import repos, repos_dotgit
 from .util import chdir, cli, get_sha
 
 
 @fixture
 def gws(tmp_path, repos):
-    """Initialized :any:`GitWS` on ``repos``."""
+    """Initialize :any:`GitWS` on ``repos``."""
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
@@ -41,7 +38,7 @@ def gws(tmp_path, repos):
 
 @fixture
 def gws_dotgit(tmp_path, repos_dotgit):
-    """Initialized :any:`GitWS` on ``repos_dotgit``."""
+    """Initialize :any:`GitWS` on ``repos_dotgit``."""
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
@@ -54,13 +51,11 @@ def gws_dotgit(tmp_path, repos_dotgit):
 
 def test_validate(tmp_path, gws):
     """Manifest Validate."""
-    # pylint: disable=unused-argument
-
     assert cli(["manifest", "validate"]) == [""]
 
     manifest_path = tmp_path / "main" / "main" / "git-ws.toml"
     assert manifest_path.write_text(
-        "\n".join(
+        "\n".join(  # noqa: FLY002
             [
                 "[[dependencies]]",
                 'nam = "dep1"',
@@ -380,7 +375,7 @@ def test_freeze(tmp_path, gws, repos):
     ]
 
     # STDOUT again
-    assert cli(["manifest", "freeze"]) == default + [""]
+    assert cli(["manifest", "freeze"]) == [*default, ""]
 
     assert cli(["update", "--manifest", str(output_path)]) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -398,8 +393,6 @@ def test_freeze(tmp_path, gws, repos):
 
 def test_resolve(tmp_path, gws):
     """Manifest Resolve."""
-    # pylint: disable=unused-argument
-
     lines = [
         'version = "1.0"',
         "##",
@@ -512,7 +505,7 @@ def test_resolve(tmp_path, gws):
     ]
 
     # STDOUT
-    assert cli(["manifest", "resolve"]) == lines + [""]
+    assert cli(["manifest", "resolve"]) == [*lines, ""]
 
     # FILE
     output_path = tmp_path / "manifest.toml"
@@ -524,13 +517,11 @@ def test_resolve(tmp_path, gws):
 
 def test_path(tmp_path, gws):
     """Manifest Path."""
-    # pylint: disable=unused-argument
     assert cli(["manifest", "path"], tmp_path=tmp_path) == ["TMP/main/main/git-ws.toml", ""]
 
 
 def test_paths(tmp_path, gws):
     """Manifest Paths."""
-    # pylint: disable=unused-argument
     assert cli(["manifest", "paths"], tmp_path=tmp_path) == [
         "TMP/main/main/git-ws.toml",
         "TMP/main/dep1/git-ws.toml",
@@ -835,7 +826,7 @@ def test_convert(tmp_path):
     with chdir(tmp_path):
         assert cli(["manifest", "create"]) == ["Manifest 'git-ws.toml' created.", ""]
 
-        assert cli(["manifest", "convert"]) == MANIFEST_DEFAULT.splitlines() + ["", ""]
+        assert cli(["manifest", "convert"]) == [*MANIFEST_DEFAULT.splitlines(), "", ""]
 
         # outfile
         filepath = tmp_path / "out.toml"

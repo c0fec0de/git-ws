@@ -22,9 +22,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path, PosixPath
-
-# pylint: disable=unused-import
-from subprocess import run  # noqa
+from subprocess import run
 
 from click.testing import CliRunner
 
@@ -142,7 +140,7 @@ def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_
         (genpath / "stdout.txt").write_text(out)
         (genpath / "stderr.txt").write_text(err)
     if caplog:
-        with open(genpath / "logging.txt", "wt", encoding="utf-8") as file:
+        with open(genpath / "logging.txt", "w", encoding="utf-8") as file:
             for item in format_logs(caplog, tmp_path=tmp_path, repos_path=repos_path, replacements=replacements):
                 file.write(f"{item}\n")
     if LEARN:  # pragma: no cover
@@ -151,9 +149,9 @@ def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_
         shutil.copytree(genpath, refpath)
     cmd = ["diff", "-r", "--exclude", "__pycache__", str(refpath), str(genpath)]
     try:
-        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(cmd, check=True, capture_output=True)
     except subprocess.CalledProcessError as error:  # pragma: no cover
-        assert False, error.stdout.decode("utf-8")
+        raise AssertionError(error.stdout.decode("utf-8")) from None
 
 
 def assert_any(gen, refs):  # pragma: no cover

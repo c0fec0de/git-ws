@@ -68,7 +68,6 @@ class ManifestIter:
         :py:class:`gitws.Manifest`
     """
 
-    # pylint: disable=too-few-public-methods
     def __init__(
         self,
         workspace: Workspace,
@@ -89,7 +88,7 @@ class ManifestIter:
         except ManifestNotFoundError:
             pass
         else:
-            group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
+            group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters
             group_selects = group_selects_from_filters(group_filters)
             filter_ = create_filter(group_selects, default=True)
             yield from self.__iter(self.manifest_path, manifest_spec, filter_)
@@ -97,7 +96,7 @@ class ManifestIter:
     def __iter(
         self, manifest_path: Path, manifest_spec: ManifestSpec, filter_: FilterFunc
     ) -> Generator[Manifest, None, None]:
-        deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
+        deps: List[tuple[Path, ManifestSpec, GroupSelects]] = []
         done: List[str] = self.__done
 
         manifest = Manifest.from_spec(manifest_spec, path=str(manifest_path))
@@ -163,8 +162,6 @@ class ProjectIter:
         :py:class:`gitws.Project`
     """
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(
         self,
         workspace: Workspace,
@@ -203,7 +200,7 @@ class ProjectIter:
         except ManifestNotFoundError:
             manifest_spec = ManifestSpec()
         if manifest_spec.dependencies:
-            group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters  # type: ignore
+            group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters
             group_selects = group_selects_from_filters(group_filters)
             filter_ = create_filter(group_selects, default=True)
             yield from self.__iter(1, main_path, manifest_spec, filter_)
@@ -211,7 +208,6 @@ class ProjectIter:
     def __iter(
         self, level: int, project_path: Optional[Path], manifest_spec: ManifestSpec, filter_: FilterFunc
     ) -> Generator[Project, None, None]:
-        # pylint: disable=too-many-locals
         deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
         refurl: Optional[str] = None
         done: List[str] = self.__done
@@ -265,18 +261,19 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     """
     Create Group Filter Function.
 
+    Keyword Args:
+    group_selects: Iterable with :py:class:`gitws.GroupSelect`.
+    default: Default selection of all ``groups``.
+
     Filter projects based on their ``path`` and ``groups``.
     The filter has ``group_selects``, a specification which groups should be included or excluded.
     The default selection of these groups is controlled by ``default``.
 
-    Keyword Args:
-        group_selects: Iterable with :py:class:`gitws.GroupSelect`.
-        default: Default selection of all ``groups``.
 
     >>> group_filters = ('-@special', '+test', '+doc', '+feature@dep', '-doc')
     >>> group_selects = group_selects_from_filters(group_filters)
     >>> groupfilter = create_filter(group_selects)
-    >>> groupfilter('sub', tuple())  # selected as there is no group
+    >>> groupfilter('sub', ())  # selected as there is no group
     True
     >>> groupfilter('sub', ('foo', 'bar'))  # no group selected by group_filters
     False
@@ -290,7 +287,7 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     False
     >>> groupfilter('dep', ('feature',))  # 'feature' is only selected for 'dep'
     True
-    >>> groupfilter('special', tuple())  # deselected, even without group
+    >>> groupfilter('special', ())  # deselected, even without group
     False
     >>> groupfilter('special', ('foo', 'bar'))  # deselected
     False
@@ -300,7 +297,7 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     The same, but with ``default=True``:
 
     >>> groupfilter = create_filter(group_selects, default=True)
-    >>> groupfilter('sub', tuple())  # selected as there is no group
+    >>> groupfilter('sub', ())  # selected as there is no group
     True
     >>> groupfilter('sub', ('foo', 'bar'))  # no group selected by group_filters, but `default=True`
     True
@@ -314,14 +311,13 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     True
     >>> groupfilter('dep', ('feature',))  # 'feature' is only selected for 'dep'
     True
-    >>> groupfilter('special', tuple())  # deselected, even without group
+    >>> groupfilter('special', ())  # deselected, even without group
     False
     >>> groupfilter('special', ('foo', 'bar'))  # deselected
     False
     >>> groupfilter('special', ('test', 'bar'))  # deselected, but overwritten by '+test'
     True
     """
-
     if group_selects:
 
         def filter_(path: str, groups: Groups):
@@ -346,7 +342,6 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     else:
 
         def filter_(path: str, groups: Groups):
-            # pylint: disable=unused-argument
             if groups:
                 return default
             return True

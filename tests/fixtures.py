@@ -15,11 +15,8 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Fixtures."""
-import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-
-from pytest import fixture
 
 from gitws import Defaults, Git, ManifestSpec, ProjectSpec, save
 
@@ -45,71 +42,8 @@ def git_repo(path, commit=None, branch="main"):
         run(("git", "commit", "-m", commit), check=True)
 
 
-@fixture(scope="session")
-def repos():
-    """Fixture with main and four depedency repos."""
-
-    with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
-        repos_path = Path(tmpdir)
-
-        create_repos(repos_path)
-
-        yield repos_path
-
-
-@fixture(scope="session")
-def repos_dotgit():
-    """Fixture with main and four depedency repos."""
-
-    with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
-        repos_path = Path(tmpdir)
-
-        # with .git
-        with git_repo(repos_path / "main.git", commit="initial") as path:
-            (path / "data.txt").write_text("main")
-            manifest_spec = ManifestSpec(
-                dependencies=[
-                    ProjectSpec(name="dep1", revision="main"),
-                    ProjectSpec(name="dep3", url="../dep3", revision="main"),
-                ],
-            )
-            save(manifest_spec, path / "git-ws.toml")
-
-        # with .git
-        with git_repo(repos_path / "dep1.git", commit="initial") as path:
-            (path / "data.txt").write_text("dep1")
-            manifest_spec = ManifestSpec(
-                dependencies=[
-                    ProjectSpec(name="dep2", revision="main"),
-                ],
-            )
-            save(manifest_spec, path / "git-ws.toml")
-
-        # with .git
-        with git_repo(repos_path / "dep2.git", commit="initial") as path:
-            (path / "data.txt").write_text("dep2")
-
-        # non .git
-        with git_repo(repos_path / "dep3", commit="initial") as path:
-            (path / "data.txt").write_text("dep3")
-            manifest_spec = ManifestSpec(
-                dependencies=[
-                    ProjectSpec(name="dep4", revision="main"),  # refer to non .git
-                ],
-            )
-            save(manifest_spec, path / "git-ws.toml")
-
-        # non .git
-        with git_repo(repos_path / "dep4", commit="initial") as path:
-            (path / "data.txt").write_text("dep4")
-
-        yield repos_path
-
-
-def create_repos(repos_path, add_dep5=False, add_dep6=False):
+def create_repos(repos_path, add_dep5=False, add_dep6=False):  # noqa: PLR0915
     """Create Test Repos."""
-    # pylint: disable=too-many-statements
-
     with git_repo(repos_path / "dep6", commit="initial") as path:
         (path / "data.txt").write_text("dep6")
 

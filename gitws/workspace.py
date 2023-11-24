@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Generator, Optional
 
 import tomlkit
+from pydantic import Field
 
 from ._basemodel import BaseModel
 from ._util import resolve_relative
@@ -55,7 +56,7 @@ class Info(BaseModel):
     Path to main project. Relative to workspace root directory.
     """
 
-    filerefs: WorkspaceFileRefs = []
+    filerefs: WorkspaceFileRefs = Field(default_factory=list)
     """
     File References.
 
@@ -110,7 +111,6 @@ class Info(BaseModel):
 
 
 class Workspace:
-
     """
     Workspace.
 
@@ -312,7 +312,7 @@ class Workspace:
         * empty group filters.
         """
         if group_filters is None:
-            return self.app_config.options.group_filters or tuple()
+            return self.app_config.options.group_filters or ()
         return group_filters
 
     @contextmanager

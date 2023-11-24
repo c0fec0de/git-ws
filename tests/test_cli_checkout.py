@@ -18,15 +18,12 @@
 
 from gitws import GitWS
 
-# pylint: disable=unused-import
 from .fixtures import create_repos
 from .util import chdir, cli
 
 
 def test_checkout(tmp_path):
     """Test update."""
-    # pylint: disable=unused-argument
-
     repos_path = tmp_path / "repos"
     create_repos(repos_path)
 

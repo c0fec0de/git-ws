@@ -15,15 +15,12 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
-import logging
-from pathlib import Path
 
 import click
 
-from gitws import AppConfig, AppConfigLocation, Defaults, GitWS, ManifestSpec, filter_clone_on_branch
+from gitws import AppConfig, AppConfigLocation, Defaults, GitWS, filter_clone_on_branch
 from gitws._manifestformatmanager import get_manifest_format_manager
 from gitws._util import resolve_relative
-from gitws.const import MANIFEST_PATH_DEFAULT
 from gitws.git import FileStatus, State
 
 from .common import COLOR_INFO, Context, Error, exceptionhandling, pass_context
@@ -241,7 +238,7 @@ def git(context, command, projects=None, manifest_path=None, group_filters=None,
         command = process_command(command)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         filter_ = filter_clone_on_branch if on_branch else None
-        gws.run_foreach(("git",) + command, project_paths=projects, reverse=reverse, filter_=filter_)
+        gws.run_foreach(("git", *command), project_paths=projects, reverse=reverse, filter_=filter_)
 
 
 @main.command()
@@ -262,7 +259,7 @@ def fetch(context, command_options=None, projects=None, manifest_path=None, grou
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         base_cmd = ("git", "fetch")
         if unshallow:
-            base_cmd = base_cmd + ("--unshallow",)
+            base_cmd = (*base_cmd, "--unshallow")
         gws.run_foreach(base_cmd + command_options, project_paths=projects)
 
 
@@ -281,7 +278,7 @@ def pull(context, command_options=None, projects=None, manifest_path=None, group
     with exceptionhandling(context):
         command_options = process_command_options(command_options)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        gws.run_foreach(("git", "pull") + command_options, project_paths=projects, filter_=filter_clone_on_branch)
+        gws.run_foreach(("git", "pull", *command_options), project_paths=projects, filter_=filter_clone_on_branch)
 
 
 @main.command()
@@ -300,7 +297,7 @@ def push(context, command_options=None, projects=None, manifest_path=None, group
         command_options = process_command_options(command_options)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         gws.run_foreach(
-            ("git", "push") + command_options, project_paths=projects, reverse=True, filter_=filter_clone_on_branch
+            ("git", "push", *command_options), project_paths=projects, reverse=True, filter_=filter_clone_on_branch
         )
 
 
@@ -319,7 +316,7 @@ def rebase(context, command_options=None, projects=None, manifest_path=None, gro
     with exceptionhandling(context):
         command_options = process_command_options(command_options)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        gws.run_foreach(("git", "rebase") + command_options, project_paths=projects, filter_=filter_clone_on_branch)
+        gws.run_foreach(("git", "rebase", *command_options), project_paths=projects, filter_=filter_clone_on_branch)
 
 
 @main.command()
@@ -402,7 +399,6 @@ def add(context, manifest_path=None, group_filters=None, paths=None, force=False
         gws.add(process_paths(paths), force=force, all_=all_)
 
 
-# pylint: disable=invalid-name
 @main.command()
 @paths_argument()
 @force_option()
@@ -510,7 +506,7 @@ def submodule(context, command, projects=None, manifest_path=None, group_filters
         command = process_command(command)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
         filter_ = filter_clone_on_branch if on_branch else None
-        gws.run_foreach(("git", "submodule") + command, project_paths=projects, reverse=reverse, filter_=filter_)
+        gws.run_foreach(("git", "submodule", *command), project_paths=projects, reverse=reverse, filter_=filter_)
 
 
 @main.command()

@@ -25,7 +25,7 @@ from gitws._manifestformatmanager import ManifestFormatManager
 
 
 def test_mngr(tmp_path):
-    """Basic Testing"""
+    """Basic Testing."""
     mngr = ManifestFormatManager()
     filepath = tmp_path / "manifest.toml"
     with raises(IncompatibleFormatError):
@@ -34,7 +34,6 @@ def test_mngr(tmp_path):
 
 
 class OneFormat(ManifestFormat):
-
     """Just One Example Format."""
 
     prio: int = 1
@@ -45,12 +44,10 @@ class OneFormat(ManifestFormat):
 
 
 class AnotherOneFormat(OneFormat):
-
     """Another One Format."""
 
 
 class TwoFormat(ManifestFormat):
-
     """Just Another Example Format."""
 
     prio: int = 1
@@ -61,7 +58,6 @@ class TwoFormat(ManifestFormat):
 
 
 class AllFormat(ManifestFormat):
-
     """Default Format Handler."""
 
     def is_compatible(self, path: Path) -> bool:
@@ -91,7 +87,6 @@ def test_prio():
 
 def test_no_default():
     """Without Default."""
-
     mngr = ManifestFormatManager()
     one = OneFormat()
     mngr.add(one)

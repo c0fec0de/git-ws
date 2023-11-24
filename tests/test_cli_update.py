@@ -20,15 +20,12 @@ from pathlib import Path
 from gitws import Git, GitWS, save
 from gitws.datamodel import ManifestSpec, ProjectSpec
 
-# pylint: disable=unused-import
 from .fixtures import create_repos
 from .util import chdir, check, cli, run
 
 
 def test_update(tmp_path):
     """Test update."""
-    # pylint: disable=unused-argument
-
     repos_path = tmp_path / "repos"
     create_repos(repos_path)
 
@@ -37,7 +34,6 @@ def test_update(tmp_path):
         gws.update(skip_main=True)
 
     with chdir(gws.path):
-
         # Modify dep4
         path = repos_path / "dep4"
         manifest_spec = ManifestSpec(
@@ -159,7 +155,6 @@ def test_update(tmp_path):
 
 def test_update_rebase(tmp_path):
     """Test update --rebase."""
-
     repos_path = tmp_path / "repos"
     create_repos(repos_path)
 
@@ -168,7 +163,6 @@ def test_update_rebase(tmp_path):
         gws.update(skip_main=True)
 
     with chdir(gws.path):
-
         # Modify dep4
         path = repos_path / "dep4"
         manifest_spec = ManifestSpec(
@@ -261,7 +255,6 @@ def test_update_missing_origin(tmp_path):
         gws.update(skip_main=True)
 
     with chdir(gws.path):
-
         run(("git", "remote", "remove", "origin"), cwd=gws.path / "dep4", check=True)
 
         # Update project
@@ -314,8 +307,6 @@ def test_update_missing_origin(tmp_path):
 
 def test_update_manifest(tmp_path):
     """Test update manifest."""
-    # pylint: disable=unused-argument
-
     repos_path = tmp_path / "repos"
     create_repos(repos_path)
 
@@ -358,8 +349,6 @@ def test_update_manifest(tmp_path):
 
 def test_update_missing_upstream(tmp_path):
     """Test Update With Missing Upstream."""
-    # pylint: disable=unused-argument
-
     repos_path = tmp_path / "repos"
     create_repos(repos_path)
 

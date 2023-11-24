@@ -23,9 +23,7 @@ from pytest import fixture
 from gitws._util import run
 from gitws.git import Git
 
-# pylint: disable=unused-import
-from .fixtures import git_repo, repos
-from .util import assert_gen
+from .fixtures import git_repo
 
 
 def is_sha(sha):
@@ -73,7 +71,7 @@ def test_git_revisions(git):
 
     git.commit("initial")
 
-    assert git.get_tags() == tuple()
+    assert git.get_tags() == ()
 
     sha0 = git.get_sha()
     git.tag("mytag")
@@ -173,7 +171,6 @@ def test_git_status(git):
 
 def test_git_has_changes(tmp_path, repos):
     """Git Has Changes."""
-
     main = tmp_path / "main"
     git = Git(main)
     git.clone(str(repos / "main"))
@@ -275,7 +272,7 @@ def test_cache_modified(tmp_path, repos):
     assert (git.path / "data.txt").read_text() == "dep2-feature"
 
     # corrupt cache
-    cache_entry_path = tuple(cache_path.glob("*"))[0]
+    cache_entry_path = next(iter(cache_path.glob("*")))
     (cache_entry_path / "data.txt").write_text("dep2-feature*")
     (cache_entry_path / "new.txt").touch()
 
@@ -292,7 +289,7 @@ def test_empty(tmp_path):
     Git.init(tmp_path)
     git = Git(tmp_path)
     assert git.is_empty()
-    assert tuple(git.diffstat()) == tuple()
+    assert tuple(git.diffstat()) == ()
 
 
 def test_cache_nomain(tmp_path):

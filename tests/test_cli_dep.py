@@ -30,7 +30,7 @@ def test_cli_dep(tmp_path):
     """Add, List, Delete Dependencies."""
     with chdir(tmp_path):
         cli(("manifest", "create"))
-        assert load(Path("git-ws.toml")).dependencies == tuple()
+        assert load(Path("git-ws.toml")).dependencies == ()
 
         cli(("dep", "add", "dep1"))
         assert load(Path("git-ws.toml")).dependencies == (ProjectSpec(name="dep1"),)
@@ -104,14 +104,13 @@ def test_cli_dep(tmp_path):
         assert cli(("dep", "list")) == ["[[dependencies]]", 'name = "dep1"', 'url = "myurl.git"', "", ""]
 
         cli(("dep", "delete", "dep1"))
-        assert load(Path("git-ws.toml")).dependencies == tuple()
+        assert load(Path("git-ws.toml")).dependencies == ()
 
         assert cli(("dep", "delete", "dep3"), exit_code=1) == ["Error: Unknown dependency 'dep3'", ""]
 
 
 def _get_infos(workspace_path):
     for manifest_path in sorted(workspace_path.glob("*/git-ws.toml")):
-
         name = manifest_path.parent.name
         manifest_spec = load(manifest_path)
         revisions = [
@@ -341,7 +340,11 @@ def test_cli_dep_update_revision_default(tmp_path):
 
     # Clone
     with chdir(tmp_path):
-        assert cli(["clone", path2url(repos_path / "main"), "--update"], tmp_path=tmp_path, repos_path=repos_path,) == [
+        assert cli(
+            ["clone", path2url(repos_path / "main"), "--update"],
+            tmp_path=tmp_path,
+            repos_path=repos_path,
+        ) == [
             "===== main/main (MAIN 'main') =====",
             "Cloning 'file://REPOS/main'.",
             "===== main/dep1 ('dep1', revision='main') =====",

@@ -41,31 +41,31 @@ def test_defaults():
     defaults = Defaults()
     assert defaults.remote is None
     assert defaults.revision is None
-    assert defaults.groups == tuple()
-    assert defaults.with_groups == tuple()
+    assert defaults.groups == ()
+    assert defaults.with_groups == ()
 
     defaults = Defaults(remote="remote")
     assert defaults.remote == "remote"
     assert defaults.revision is None
-    assert defaults.groups == tuple()
-    assert defaults.with_groups == tuple()
+    assert defaults.groups == ()
+    assert defaults.with_groups == ()
 
     defaults = Defaults(revision="Revision")
     assert defaults.remote is None
     assert defaults.revision == "Revision"
-    assert defaults.groups == tuple()
-    assert defaults.with_groups == tuple()
+    assert defaults.groups == ()
+    assert defaults.with_groups == ()
 
     defaults = Defaults(groups=("test", "doc"))
     assert defaults.remote is None
     assert defaults.revision is None
     assert defaults.groups == ("test", "doc")
-    assert defaults.with_groups == tuple()
+    assert defaults.with_groups == ()
 
     defaults = Defaults(with_groups=("test", "doc"))
     assert defaults.remote is None
     assert defaults.revision is None
-    assert defaults.groups == tuple()
+    assert defaults.groups == ()
     assert defaults.with_groups == ("test", "doc")
 
     # Immutable
@@ -118,11 +118,11 @@ def test_project():
     assert project.url is None
     assert project.revision is None
     assert project.manifest_path == "git-ws.toml"
-    assert project.groups == tuple()
-    assert project.with_groups == tuple()
+    assert project.groups == ()
+    assert project.with_groups == ()
     assert project.submodules is True
-    assert project.linkfiles == tuple()
-    assert project.copyfiles == tuple()
+    assert project.linkfiles == ()
+    assert project.copyfiles == ()
     assert project.info == "name (path='path')"
 
     # Immutable
@@ -167,11 +167,11 @@ def test_project_spec():
     assert project_spec.revision is None
     assert project_spec.path is None
     assert project_spec.manifest_path == "git-ws.toml"
-    assert project_spec.groups == tuple()
-    assert project_spec.with_groups == tuple()
+    assert project_spec.groups == ()
+    assert project_spec.with_groups == ()
     assert project_spec.submodules is None
-    assert project_spec.copyfiles == tuple()
-    assert project_spec.linkfiles == tuple()
+    assert project_spec.copyfiles == ()
+    assert project_spec.linkfiles == ()
 
     with raises(ValueError):
         ProjectSpec(name="name", remote="remote", url="url")
@@ -211,12 +211,12 @@ def test_manifest_spec():
     """Test ManifestSpec."""
     manifest_spec = ManifestSpec()
     assert manifest_spec.version == "1.0"
-    assert manifest_spec.remotes == tuple()
-    assert manifest_spec.group_filters == tuple()
+    assert manifest_spec.remotes == ()
+    assert manifest_spec.group_filters == ()
     assert manifest_spec.defaults == Defaults()
-    assert manifest_spec.linkfiles == tuple()
-    assert manifest_spec.copyfiles == tuple()
-    assert manifest_spec.dependencies == tuple()
+    assert manifest_spec.linkfiles == ()
+    assert manifest_spec.copyfiles == ()
+    assert manifest_spec.dependencies == ()
 
     # Immutable
     with raises(ValidationError):
