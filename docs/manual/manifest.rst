@@ -265,4 +265,3 @@ Multiple entries look like that:
 .. note::
 
     ``linkfiles`` and ``copyfiles`` are also supported on standalone manifest files. ``src`` is relative to the workspace directory then.
-

@@ -395,4 +395,3 @@ And that's what we did - Git Workspace is our tool for managing a large workspac
 👉 Please note that our view on the various features might be biased. As we did, always look at all the options available to you before deciding on one tool or the other. While the other tools in comparison did not model what we needed for our workflow, they might just be what you are looking for.
 
 If you want to learn more, have a look into [Why We Started Git Workspace](https://git-ws.readthedocs.io/en/stable/manual/why.html).
-

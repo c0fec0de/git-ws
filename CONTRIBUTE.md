@@ -10,7 +10,13 @@ Run these commands just the first time:
 # Ensure python3 is installed
 python3 -m venv .venv
 source .venv/bin/activate
-pip install tox "poetry>=1.4"
+pip install tox "poetry>=1.4" pre-commit
+```
+
+Install the pre-commit hook
+
+```bash
+pre-commit install
 ```
 
 ### Enter Environment
