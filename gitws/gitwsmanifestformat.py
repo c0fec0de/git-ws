@@ -46,7 +46,6 @@ class GitWSManifestFormat(ManifestFormat):
 
         Raises:
             ManifestNotFoundError: if file is not found
-            IncompatibleFormatError: Not Supported File Format.
             ManifestError: On Syntax Or Data Scheme Errors.
         """
         try:

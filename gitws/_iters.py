@@ -96,7 +96,7 @@ class ManifestIter:
     def __iter(
         self, manifest_path: Path, manifest_spec: ManifestSpec, filter_: FilterFunc
     ) -> Generator[Manifest, None, None]:
-        deps: List[tuple[Path, ManifestSpec, GroupSelects]] = []
+        deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
         done: List[str] = self.__done
 
         manifest = Manifest.from_spec(manifest_spec, path=str(manifest_path))
@@ -262,8 +262,8 @@ def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterF
     Create Group Filter Function.
 
     Keyword Args:
-    group_selects: Iterable with :py:class:`gitws.GroupSelect`.
-    default: Default selection of all ``groups``.
+        group_selects: Iterable with :py:class:`gitws.GroupSelect`.
+        default: Default selection of all ``groups``.
 
     Filter projects based on their ``path`` and ``groups``.
     The filter has ``group_selects``, a specification which groups should be included or excluded.

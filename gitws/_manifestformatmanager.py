@@ -47,7 +47,7 @@ class Handler(BaseModel):
         """
         Load Manifest.
 
-        Raises
+        Raises:
             ManifestNotFoundError: if file is not found
             IncompatibleFormatError: Not Supported File format_.
             ManifestError: On Syntax Or Data Scheme Errors.
@@ -110,7 +110,7 @@ class ManifestFormatManager(BaseModel):
         """
         Load Manifest From ``path``.
 
-        Raises
+        Raises:
             ManifestNotFoundError: if file is not found
             IncompatibleFormatError: Not Supported File format_.
             ManifestError: On Syntax Or Data Scheme Errors.
