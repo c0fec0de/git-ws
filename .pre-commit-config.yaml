@@ -1,0 +1,31 @@
+# Copyright cocotb contributors
+# Licensed under the Revised BSD License, see LICENSE for details.
+# SPDX-License-Identifier: BSD-3-Clause
+
+exclude: "tests/testdata/appconfig/invalid_config/user/config.toml"
+repos:
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: v0.1.6
+  hooks:
+    # Run the formatter.
+    - id: ruff-format
+    # Run the linter.
+    - id: ruff
+      args: [ --fix ]
+
+- repo: "https://github.com/pre-commit/pre-commit-hooks"
+  rev: "v4.5.0"
+  hooks:
+  - id: "check-added-large-files"
+  - id: "check-merge-conflict"
+  - id: "check-shebang-scripts-are-executable"
+  - id: "check-toml"
+  - id: "check-yaml"
+  - id: "debug-statements"
+  - id: "end-of-file-fixer"
+    exclude: "docs/images/.*"
+  - id: "trailing-whitespace"
+  - id: "mixed-line-ending"
+    args:
+    - "--fix=lf"

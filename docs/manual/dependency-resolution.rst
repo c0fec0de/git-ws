@@ -121,13 +121,13 @@ The tree looks somehow as expected, however, note that the second occurrence of 
 This is because of the *First Wins* rule ``git ws`` uses for resolving (conflicting) dependencies: If there are two dependencies specified to be mounted to the same path but referring to different revisions, the tool will pick whichever revision has been specified first. Manifests are evaluated via a *breadth first* search over the tree structure, where the dependencies of one manifest are evaluated in order as seen in the manifest. In the example, this means:
 
 * Evaluation starts at the ``HelloWorld`` project.
-  
+
   * First, we find ``FooLib`` at ``v2.4.0`` and add it to the workspace. As this project has a manifest on its own, we start evaluating it.
 
   * Next at this level, we find ``BazLib`` at ``v5.6.7``, which we also add.
-  
+
   * This concludes this manifest, so we continue checking the dependencies of our first level dependencies:
-  
+
     * The first (and only) dependency we find for ``FooLib`` is ``BarLib`` at revision ``v42.0``, so we add it to the workspace.
 
     * Next, we check ``BarLib`` again, this time at ``v44.0``, but as it already has been added to the workspace, we skip it.

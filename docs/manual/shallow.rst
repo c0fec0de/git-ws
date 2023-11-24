@@ -60,4 +60,3 @@ That's it!
     If you used shallow cloning initially, it might have been for a reason.
     So if you unshallow a workspace consisting of multiple, potentially
     very large repositories, get a coffee, lean back and be patient.
-

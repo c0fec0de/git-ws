@@ -19,7 +19,7 @@ import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
+from typing import List, Optional
 from unittest import mock
 
 from appdirs import site_config_dir, user_config_dir
