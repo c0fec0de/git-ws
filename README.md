@@ -17,6 +17,9 @@
     <a href="https://pypi.python.org/pypi/git-ws" target="_blank">
         <img src="https://img.shields.io/pypi/pyversions/git-ws.svg" alt="python-versions">
     </a>
+    <a href="https://github.com/pre-commit/pre-commit" target="_blank">
+        <img src="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit" alt="pre-commit">
+    </a>
 </p>
 
 <p align="center">
