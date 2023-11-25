@@ -8,8 +8,11 @@
     <a href="https://github.com/c0fec0de/git-ws/actions/workflows/main.yml" target="_blank">
         <img src="https://github.com/c0fec0de/git-ws/actions/workflows/main.yml/badge.svg" alt="Python Build">
     </a>
+    <a href="https://coveralls.io/github/c0fec0de/git-ws?branch=main" target="_blank">
+        <img src="https://coveralls.io/repos/github/c0fec0de/git-ws/badge.svg?branch=main" alt="Coverage Status">
+    </a>
     <a href="https://git-ws.readthedocs.io/en/stable" target="_blank">
-        <img src="https://readthedocs.org/projects/git-ws/badge/?version=stable" alt="Coverage Status">
+        <img src="https://readthedocs.org/projects/git-ws/badge/?version=stable" alt="Documentation Build">
     </a>
     <a href="https://pypi.python.org/pypi/git-ws" target="_blank">
         <img src="https://img.shields.io/pypi/pyversions/git-ws.svg" alt="python-versions">
