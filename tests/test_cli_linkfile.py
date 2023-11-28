@@ -20,7 +20,7 @@ from pathlib import Path
 from gitws import FileRef, Git, GitWS, MainFileRef, ManifestSpec, ProjectSpec, save
 
 from .fixtures import git_repo
-from .util import chdir, cli
+from .util import chdir, cli, path2url
 
 
 def create_repos(repos_path) -> str:
@@ -89,7 +89,7 @@ def test_update(tmp_path):
     sha_initial = create_repos(repos_path)
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_path / "main"))
+        gws = GitWS.clone(path2url(repos_path / "main"))
 
     with chdir(gws.path):
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path, exit_code=1) == [
@@ -97,7 +97,7 @@ def test_update(tmp_path):
             "Fetching.",
             "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='main') =====",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "===== Update Referenced Files =====",
             "Linking 'main/data0.txt' -> 'main-data0.txt'",
             "Linking 'main/data1.txt' -> 'build/main-data1.txt'",
@@ -137,7 +137,7 @@ def test_update(tmp_path):
         assert cli(["update"], tmp_path=tmp_path, repos_path=repos_path) == [
             "===== main (MAIN 'main', revision='main') =====",
             "Fetching.",
-            "From REPOS/main",
+            "From file://REPOS/main",
             f"   {sha_initial}..{sha_update}  main       -> origin/main",
             "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='main') =====",
@@ -217,7 +217,7 @@ def test_existing(tmp_path):
     create_repos(repos_path)
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_path / "main"))
+        gws = GitWS.clone(path2url(repos_path / "main"))
 
     with chdir(gws.path):
         Path("build").mkdir()
@@ -228,7 +228,7 @@ def test_existing(tmp_path):
             "Fetching.",
             "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='main') =====",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "===== Update Referenced Files =====",
             "Linking 'main/data0.txt' -> 'main-data0.txt'",
             "ERROR:   Cannot update: destination file 'build/main-data1.txt' already exists!",

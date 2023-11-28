@@ -24,7 +24,7 @@ from pytest import raises
 
 from gitws import Clone, Git, GitCloneNotCleanError, GitWS, Manifest, NotEmptyError, Project, WorkspaceNotEmptyError
 
-from .util import chdir, check
+from .util import chdir, check, path2url
 
 
 def test_clone_basic():
@@ -46,7 +46,7 @@ def test_clone(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos / "main"))
+        gws = GitWS.clone(path2url(repos / "main"))
         assert gws.path == workspace
 
         for clone in gws.clones():
@@ -248,7 +248,7 @@ def test_clone_cached(tmp_path, repos):
         with chdir(tmp_path):
             assert not cache.exists()
 
-            gws = GitWS.clone(str(repos / "main"))
+            gws = GitWS.clone(path2url(repos / "main"))
             assert gws.path == workspace
 
             gws.update()
@@ -292,7 +292,7 @@ def test_clone_force(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos / "main"))
+        gws = GitWS.clone(path2url(repos / "main"))
         gws.update()
 
         check(workspace, "main")
@@ -303,19 +303,19 @@ def test_clone_force(tmp_path, repos):
         check(workspace, "dep5", exists=False)
 
         with raises(WorkspaceNotEmptyError):
-            GitWS.clone(str(repos / "main"))
+            GitWS.clone(path2url(repos / "main"))
 
         with raises(NotEmptyError):
-            GitWS.clone(str(repos / "main"), force=True)
+            GitWS.clone(path2url(repos / "main"), force=True)
 
         # remove main and one dep
         rmtree(workspace / "main")
         rmtree(workspace / "dep4")
 
         with raises(WorkspaceNotEmptyError):
-            GitWS.clone(str(repos / "main"))
+            GitWS.clone(path2url(repos / "main"))
 
-        gws = GitWS.clone(str(repos / "main"), force=True)
+        gws = GitWS.clone(path2url(repos / "main"), force=True)
 
         check(workspace, "main")
         check(workspace, "dep1")

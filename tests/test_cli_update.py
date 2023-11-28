@@ -21,7 +21,7 @@ from gitws import Git, GitWS, save
 from gitws.datamodel import ManifestSpec, ProjectSpec
 
 from .fixtures import create_repos
-from .util import chdir, check, cli, run
+from .util import chdir, check, cli, path2url, run
 
 
 def test_update(tmp_path):
@@ -30,7 +30,7 @@ def test_update(tmp_path):
     create_repos(repos_path)
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_path / "main"))
+        gws = GitWS.clone(path2url(repos_path / "main"))
         gws.update(skip_main=True)
 
     with chdir(gws.path):
@@ -73,12 +73,12 @@ def test_update(tmp_path):
             "Merging branch '1-feature'.",
             "===== dep4 ('dep4', revision='main') =====",
             "Fetching.",
-            "From REPOS/dep4",
+            "From file://REPOS/dep4",
             f"   {sha1}..{sha2}  main       -> origin/main",
             "Merging branch 'main'.",
             "===== dep5 ('dep5') =====",
             "WARNING: Clone dep5 has no revision!",
-            "Cloning 'REPOS/dep5'.",
+            "Cloning 'file://REPOS/dep5'.",
             "",
         ]
 
@@ -118,7 +118,7 @@ def test_update(tmp_path):
             "Fetching.",
             "Merging branch 'main'.",
             "===== sub/dep6 ('dep6', revision='main', groups='foo,bar,fast') =====",
-            "Cloning 'REPOS/dep6'.",
+            "Cloning 'file://REPOS/dep6'.",
             "===== dep4 ('dep4', revision='4-feature') =====",
             "Fetching.",
             "Switched to a new branch '4-feature'",
@@ -159,7 +159,7 @@ def test_update_rebase(tmp_path):
     create_repos(repos_path)
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_path / "main"))
+        gws = GitWS.clone(path2url(repos_path / "main"))
         gws.update(skip_main=True)
 
     with chdir(gws.path):
@@ -191,13 +191,13 @@ def test_update_rebase(tmp_path):
             "Rebasing branch '1-feature'.",
             "===== dep4 ('dep4', revision='main') =====",
             "Fetching.",
-            "From REPOS/dep4",
+            "From file://REPOS/dep4",
             f"   {sha1}..{sha2}  main       -> origin/main",
             "Rebasing branch 'main'.",
             "Successfully rebased and updated refs/heads/main.",
             "===== dep5 ('dep5') =====",
             "WARNING: Clone dep5 has no revision!",
-            "Cloning 'REPOS/dep5'.",
+            "Cloning 'file://REPOS/dep5'.",
             "",
         ]
 
@@ -230,7 +230,7 @@ def test_update_rebase(tmp_path):
             "Fetching.",
             "Rebasing branch 'main'.",
             "===== sub/dep6 ('dep6', revision='main', groups='foo,bar,fast') =====",
-            "Cloning 'REPOS/dep6'.",
+            "Cloning 'file://REPOS/dep6'.",
             "===== dep4 ('dep4', revision='4-feature') =====",
             "Fetching.",
             "Switched to a new branch '4-feature'",
@@ -251,7 +251,7 @@ def test_update_missing_origin(tmp_path):
     create_repos(repos_path)
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_path / "main"))
+        gws = GitWS.clone(path2url(repos_path / "main"))
         gws.update(skip_main=True)
 
     with chdir(gws.path):
@@ -266,7 +266,7 @@ def test_update_missing_origin(tmp_path):
             "Already on '1-feature'",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
-            "WARNING: Clone dep4 (revision='main') has no remote origin but intends to be: 'TMP/repos/dep4'",
+            "WARNING: Clone dep4 (revision='main') has no remote origin but intends to be: 'file://TMP/repos/dep4'",
             "",
         ]
 
@@ -278,10 +278,10 @@ def test_update_missing_origin(tmp_path):
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
             "WARNING: Clone dep2 (revision='1-feature', submodules=False) has no "
-            "remote origin but intends to be: 'TMP/repos/dep2'",
+            "remote origin but intends to be: 'file://TMP/repos/dep2'",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
-            "WARNING: Clone dep4 (revision='main') has no remote origin but intends to be: 'TMP/repos/dep4'",
+            "WARNING: Clone dep4 (revision='main') has no remote origin but intends to be: 'file://TMP/repos/dep4'",
             "Error: Git Clone 'dep2' has not remote 'origin'. Try:",
             "",
             "    git remote add origin <URL>",
@@ -289,8 +289,8 @@ def test_update_missing_origin(tmp_path):
             "",
         ]
 
-        run(("git", "remote", "add", "origin", str(repos_path / "dep4")), cwd=gws.path / "dep4", check=True)
-        run(("git", "remote", "add", "origin", str(repos_path / "dep9")), cwd=gws.path / "dep2", check=True)
+        run(("git", "remote", "add", "origin", path2url(repos_path / "dep4")), cwd=gws.path / "dep4", check=True)
+        run(("git", "remote", "add", "origin", path2url(repos_path / "dep9")), cwd=gws.path / "dep2", check=True)
         assert cli(["checkout"], tmp_path=tmp_path) == [
             "===== main (MAIN 'main', revision='main') =====",
             "===== dep1 ('dep1') =====",
@@ -298,7 +298,7 @@ def test_update_missing_origin(tmp_path):
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
             "WARNING: Clone dep2 (revision='1-feature', submodules=False) "
-            "remote origin is 'TMP/repos/dep9' but intends to be: 'TMP/repos/dep2'",
+            "remote origin is 'file://TMP/repos/dep9' but intends to be: 'file://TMP/repos/dep2'",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
             "",
@@ -311,7 +311,7 @@ def test_update_manifest(tmp_path):
     create_repos(repos_path)
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_path / "main"))
+        gws = GitWS.clone(path2url(repos_path / "main"))
         gws.update()
 
         check(gws.path, "main")
@@ -353,7 +353,7 @@ def test_update_missing_upstream(tmp_path):
     create_repos(repos_path)
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_path / "main"))
+        gws = GitWS.clone(path2url(repos_path / "main"))
         gws.update()
 
         Git(gws.path / "main").checkout(branch="90-new")

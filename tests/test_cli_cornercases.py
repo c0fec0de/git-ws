@@ -24,7 +24,7 @@ from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
 from .common import TESTDATA_PATH
 from .fixtures import git_repo
-from .util import assert_gen, chdir, check
+from .util import assert_gen, chdir, check, path2url
 
 
 @fixture
@@ -92,7 +92,7 @@ def test_deptop(tmp_path, repos_deptop, caplog, capsys):
     workspace = tmp_path / "top"
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_deptop / "top"))
+        gws = GitWS.clone(path2url(repos_deptop / "top"))
 
         check(workspace, "top")
         check(workspace, "dep1", exists=False)

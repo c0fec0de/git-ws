@@ -25,7 +25,7 @@ from gitws import Git, GitWS
 
 from .common import TESTDATA_PATH
 from .fixtures import create_repos
-from .util import assert_gen, chdir, cli
+from .util import assert_gen, chdir, cli, path2url
 
 
 @fixture()
@@ -45,7 +45,7 @@ def gws(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos / "main"))
+        gws = GitWS.clone(path2url(repos / "main"))
         gws.update(skip_main=True)
 
     with chdir(workspace):

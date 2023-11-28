@@ -40,6 +40,13 @@ def urljoin(base: Optional[str], url: str) -> str:
     >>> urljoin('ssh://domain.com/base/repo1.git', '../repo2.git')
     'ssh://domain.com/base/repo2.git'
 
+    >>> urljoin('..', 'repo1.git')
+    '../repo1.git'
+    >>> urljoin('../../', 'repo1.git')
+    '../../repo1.git'
+    >>> urljoin('../..', '../sub/repo1.git')
+    '../../../sub/repo1.git'
+
     >>> urljoin(None, 'repo2.git')
     'repo2.git'
     >>> urljoin(None, '../repo2.git')
@@ -50,11 +57,16 @@ def urljoin(base: Optional[str], url: str) -> str:
 
     urlparsed = parse.urlparse(url)
     if urlparsed.scheme:
+        # absolute url
         return url
 
     if not base.endswith("/"):
         base = f"{base}/"
     baseparsed = parse.urlparse(base)
+    if not baseparsed.scheme:
+        # relative base
+        return f"{base}{url}"
+    # absolute base
     httpbase = parse.urlunparse(("http",) + baseparsed[1:])
     joined = parse.urljoin(httpbase, url)
     joinedparsed = parse.urlparse(joined)

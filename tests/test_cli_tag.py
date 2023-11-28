@@ -24,7 +24,7 @@ from gitws import Git, load, save
 from gitws.const import CONFIG_PATH, INFO_PATH, MANIFESTS_PATH
 
 from .fixtures import create_repos, set_meta
-from .util import chdir, cli, run
+from .util import chdir, cli, path2url, run
 
 
 @fixture()
@@ -44,20 +44,20 @@ def test_tag(tmp_path, repos):
     dep6_sha_repo = Git(repos / "dep6").get_sha(revision="HEAD^")
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "main"), "--update"], tmp_path=tmp_path, repos_path=repos) == [
+        assert cli(["clone", path2url(repos / "main"), "--update"], tmp_path=tmp_path, repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'REPOS/main'.",
+            "Cloning 'file://REPOS/main'.",
             "===== main/dep1 ('dep1') =====",
             "WARNING: Clone dep1 has no revision!",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "===== main/dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "Cloning 'REPOS/dep2'.",
+            "Cloning 'file://REPOS/dep2'.",
             "===== main/dep5 ('dep5', revision='final2') =====",
-            "Cloning 'REPOS/dep5'.",
+            "Cloning 'file://REPOS/dep5'.",
             f"===== main/dep6 ('dep6', revision='{dep6_sha_repo}') =====",
-            "Cloning 'REPOS/dep6'.",
+            "Cloning 'file://REPOS/dep6'.",
             "===== main/dep4 ('dep4', revision='main') =====",
-            "Cloning 'REPOS/dep4'.",
+            "Cloning 'file://REPOS/dep4'.",
             "",
         ]
 
@@ -178,23 +178,23 @@ def test_tag(tmp_path, repos):
 
     with chdir(tmp_path):
         assert cli(
-            ["clone", str(repos / "main"), "other/main", "--update", "--revision", "MYTAG"],
+            ["clone", path2url(repos / "main"), "other/main", "--update", "--revision", "MYTAG"],
             tmp_path=tmp_path,
             repos_path=repos,
         ) == [
             "===== other/main (MAIN 'main') =====",
-            "Cloning 'REPOS/main'.",
+            "Cloning 'file://REPOS/main'.",
             "===== other/dep1 ('dep1') =====",
             "WARNING: Clone dep1 has no revision!",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "===== other/dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "Cloning 'REPOS/dep2'.",
+            "Cloning 'file://REPOS/dep2'.",
             "===== other/dep5 ('dep5', revision='final2') =====",
-            "Cloning 'REPOS/dep5'.",
+            "Cloning 'file://REPOS/dep5'.",
             f"===== other/dep6 ('dep6', revision='{dep6_sha}') =====",
-            "Cloning 'REPOS/dep6'.",
+            "Cloning 'file://REPOS/dep6'.",
             "===== other/dep4 ('dep4', revision='main') =====",
-            "Cloning 'REPOS/dep4'.",
+            "Cloning 'file://REPOS/dep4'.",
             "",
         ]
 
@@ -247,11 +247,11 @@ def test_tag_dep(tmp_path, repos):
     dep6_sha = Git(repos / "dep6").get_sha(revision="HEAD^")
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "dep1"), "--update"], tmp_path=tmp_path, repos_path=repos) == [
+        assert cli(["clone", path2url(repos / "dep1"), "--update"], tmp_path=tmp_path, repos_path=repos) == [
             "===== dep1/dep1 (MAIN 'dep1') =====",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "===== dep1/dep4 ('dep4', revision='main') =====",
-            "Cloning 'REPOS/dep4'.",
+            "Cloning 'file://REPOS/dep4'.",
             "",
         ]
     with chdir(dep1_workspace):
@@ -279,9 +279,9 @@ def test_tag_dep(tmp_path, repos):
         dep4_git.commit(msg="change dep4")
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "main")], tmp_path=tmp_path, repos_path=repos) == [
+        assert cli(["clone", path2url(repos / "main")], tmp_path=tmp_path, repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'REPOS/main'.",
+            "Cloning 'file://REPOS/main'.",
             "Workspace initialized at 'main'. Please continue with:",
             "",
             "    git ws update",
@@ -303,15 +303,15 @@ def test_tag_dep(tmp_path, repos):
             "Fetching.",
             "Merging branch 'main'.",
             "===== dep1 ('dep1', revision='DEP1TAG') =====",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "Cloning 'REPOS/dep2'.",
+            "Cloning 'file://REPOS/dep2'.",
             "===== dep5 ('dep5', revision='final2') =====",
-            "Cloning 'REPOS/dep5'.",
+            "Cloning 'file://REPOS/dep5'.",
             f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
-            "Cloning 'REPOS/dep6'.",
+            "Cloning 'file://REPOS/dep6'.",
             f"===== dep4 ('dep4', revision='{sha4}') =====",
-            "Cloning 'REPOS/dep4'.",
+            "Cloning 'file://REPOS/dep4'.",
             "",
         ]
 
@@ -328,7 +328,7 @@ def test_tag_overwrite(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        cli(["clone", str(repos / "main"), "--update"], tmp_path=tmp_path, repos_path=repos)
+        cli(["clone", path2url(repos / "main"), "--update"], tmp_path=tmp_path, repos_path=repos)
 
     main_git = Git(workspace / "main")
     dep1_git = Git(workspace / "dep1")

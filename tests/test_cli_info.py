@@ -19,14 +19,14 @@ from pytest import fixture
 
 from gitws import GitWS
 
-from .util import chdir, cli
+from .util import chdir, cli, path2url
 
 
 @fixture
 def gws(tmp_path, repos):
     """Initialize :any:`GitWS` on ``repos``."""
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos / "main"))
+        gws = GitWS.clone(path2url(repos / "main"))
         gws.update()
     with chdir(tmp_path / "main"):
         yield gws
