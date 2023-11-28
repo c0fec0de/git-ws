@@ -344,7 +344,7 @@ def test_manifest_from_spec():
             },
             {
                 "name": "remote2",
-                "url-base": "file:///repos/url2",
+                "url-base": "file:///repos/url2/",
             },
         ],
         "defaults": {
@@ -412,6 +412,48 @@ def test_manifest_from_spec():
     assert manifest.copyfiles == (
         MainFileRef(src="c0", dest="e0"),
         MainFileRef(src="c1", dest="e1", groups=("ab", "c")),
+    )
+
+
+def test_manifest_from_spec_remote_rel():
+    """Test Manifest with Remote with relative URL."""
+    data = {
+        "remotes": [
+            {
+                "name": "remote1",
+                "url-base": "..",
+            },
+            {
+                "name": "remote2",
+                "url-base": "../../",
+            },
+        ],
+        "dependencies": [
+            {"name": "dep1", "remote": "remote2"},
+            {"name": "dep2", "path": "dep2dir", "url": "../../base3/dep2.git"},
+            {"name": "dep3", "remote": "remote1"},
+            {"name": "dep4", "remote": "remote1", "sub-url": "sub.git"},
+        ],
+    }
+    manifest_spec = ManifestSpec(**data)
+    manifest = Manifest.from_spec(manifest_spec)
+    assert manifest == Manifest(
+        dependencies=(
+            Project(name="dep1", path="dep1", level=1, url="../../dep1"),
+            Project(name="dep2", path="dep2dir", level=1, url="../../base3/dep2.git"),
+            Project(name="dep3", path="dep3", level=1, url="../dep3"),
+            Project(name="dep4", path="dep4", level=1, url="../sub.git"),
+        )
+    )
+
+    manifest = Manifest.from_spec(manifest_spec, refurl="file:///repos/url1/sub.git", resolve_url=True)
+    assert manifest == Manifest(
+        dependencies=(
+            Project(name="dep1", path="dep1", level=1, url="file:///repos/dep1.git"),
+            Project(name="dep2", path="dep2dir", level=1, url="file:///repos/base3/dep2.git"),
+            Project(name="dep3", path="dep3", level=1, url="file:///repos/url1/dep3.git"),
+            Project(name="dep4", path="dep4", level=1, url="file:///repos/url1/sub.git"),
+        )
     )
 
 

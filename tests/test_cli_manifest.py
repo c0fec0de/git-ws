@@ -20,7 +20,7 @@ from pytest import fixture
 from gitws import GitWS
 
 from .common import MANIFEST_DEFAULT
-from .util import chdir, cli, get_sha
+from .util import chdir, cli, get_sha, path2url
 
 
 @fixture
@@ -29,7 +29,7 @@ def gws(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos / "main"))
+        gws = GitWS.clone(path2url(repos / "main"))
         gws.update()
 
     with chdir(workspace):
@@ -42,7 +42,7 @@ def gws_dotgit(tmp_path, repos_dotgit):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_dotgit / "main.git"))
+        gws = GitWS.clone(path2url(repos_dotgit / "main.git"))
         gws.update()
 
     with chdir(workspace):
@@ -221,7 +221,7 @@ def test_freeze(tmp_path, gws, repos):
         "Merging branch '1-feature'.",
         "===== dep3 ('dep3', groups='test') =====",
         "WARNING: Clone dep3 (groups='test') has no revision!",
-        "Cloning 'REPOS/dep3'.",
+        "Cloning 'file://REPOS/dep3'.",
         "===== dep4 ('dep4', revision='main') =====",
         "Fetching.",
         "Merging branch 'main'.",

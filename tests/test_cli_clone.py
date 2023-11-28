@@ -102,17 +102,17 @@ def test_cli_clone_long_path(tmp_path, repos):
 
     with chdir(tmp_path):
         assert cli(
-            ["clone", str(repos / "main"), "some/where/main", "--update"], tmp_path=tmp_path, repos_path=repos
+            ["clone", path2url(repos / "main"), "some/where/main", "--update"], tmp_path=tmp_path, repos_path=repos
         ) == [
             "===== some/where/main (MAIN 'main') =====",
-            "Cloning 'REPOS/main'.",
+            "Cloning 'file://REPOS/main'.",
             "===== some/where/dep1 ('dep1') =====",
             "WARNING: Clone dep1 has no revision!",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "===== some/where/dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "Cloning 'REPOS/dep2'.",
+            "Cloning 'file://REPOS/dep2'.",
             "===== some/where/dep4 ('dep4', revision='main') =====",
-            "Cloning 'REPOS/dep4'.",
+            "Cloning 'file://REPOS/dep4'.",
             "",
         ]
 
@@ -135,7 +135,7 @@ def test_cli_clone_not_empty(tmp_path, repos):
 
     with chdir(tmp_path):
         (workspace / "file.txt").touch()
-        assert cli(["clone", str(repos / "main")], exit_code=1, tmp_path=tmp_path) == [
+        assert cli(["clone", path2url(repos / "main")], exit_code=1, tmp_path=tmp_path) == [
             "Error: Workspace 'main' is not an empty directory. It contains: TMP/main/file.txt.",
             "",
             "Choose an empty directory or use '--force'",
@@ -150,9 +150,9 @@ def test_cli_clone_not_empty(tmp_path, repos):
         check(workspace, "dep4", exists=False)
         check(workspace, "dep5", exists=False)
 
-        assert cli(["clone", str(repos / "main"), "--force"], tmp_path=tmp_path, repos_path=repos) == [
+        assert cli(["clone", path2url(repos / "main"), "--force"], tmp_path=tmp_path, repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'REPOS/main'.",
+            "Cloning 'file://REPOS/main'.",
             "Workspace initialized at 'main'. Please continue with:",
             "",
             "    git ws update",
@@ -173,16 +173,16 @@ def test_cli_clone_update(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "main"), "--update"], tmp_path=tmp_path, repos_path=repos) == [
+        assert cli(["clone", path2url(repos / "main"), "--update"], tmp_path=tmp_path, repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'REPOS/main'.",
+            "Cloning 'file://REPOS/main'.",
             "===== main/dep1 ('dep1') =====",
             "WARNING: Clone dep1 has no revision!",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "===== main/dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "Cloning 'REPOS/dep2'.",
+            "Cloning 'file://REPOS/dep2'.",
             "===== main/dep4 ('dep4', revision='main') =====",
-            "Cloning 'REPOS/dep4'.",
+            "Cloning 'file://REPOS/dep4'.",
             "",
         ]
 
@@ -199,9 +199,9 @@ def test_cli_clone_checkout(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "main")], tmp_path=tmp_path, repos_path=repos) == [
+        assert cli(["clone", path2url(repos / "main")], tmp_path=tmp_path, repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'REPOS/main'.",
+            "Cloning 'file://REPOS/main'.",
             "Workspace initialized at 'main'. Please continue with:",
             "",
             "    git ws update",
@@ -220,13 +220,13 @@ def test_cli_clone_checkout(tmp_path, repos):
         assert cli(["checkout"], tmp_path=tmp_path, repos_path=repos) == [
             "===== . (MAIN 'main', revision='main') =====",
             "===== ../dep1 ('dep1') =====",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "WARNING: Clone dep1 has no revision!",
             "===== ../dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "Cloning 'REPOS/dep2'.",
+            "Cloning 'file://REPOS/dep2'.",
             "Already on '1-feature'",
             "===== ../dep4 ('dep4', revision='main') =====",
-            "Cloning 'REPOS/dep4'.",
+            "Cloning 'file://REPOS/dep4'.",
             "Already on 'main'",
             "",
         ]
@@ -244,9 +244,9 @@ def test_cli_clone_groups(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        assert cli(["clone", str(repos / "main"), "-G", "+test"], repos_path=repos) == [
+        assert cli(["clone", path2url(repos / "main"), "-G", "+test"], repos_path=repos) == [
             "===== main/main (MAIN 'main') =====",
-            "Cloning 'REPOS/main'.",
+            "Cloning 'file://REPOS/main'.",
             "Workspace initialized at 'main'. Please continue with:",
             "",
             "    git ws update",
@@ -276,14 +276,14 @@ group_filters = ["+test"]
             "Merging branch 'main'.",
             "===== dep1 ('dep1') =====",
             "WARNING: Clone dep1 has no revision!",
-            "Cloning 'REPOS/dep1'.",
+            "Cloning 'file://REPOS/dep1'.",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "Cloning 'REPOS/dep2'.",
+            "Cloning 'file://REPOS/dep2'.",
             "===== dep3 ('dep3', groups='test') =====",
             "WARNING: Clone dep3 (groups='test') has no revision!",
-            "Cloning 'REPOS/dep3'.",
+            "Cloning 'file://REPOS/dep3'.",
             "===== dep4 ('dep4', revision='main') =====",
-            "Cloning 'REPOS/dep4'.",
+            "Cloning 'file://REPOS/dep4'.",
             "",
         ]
 

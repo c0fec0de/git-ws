@@ -24,6 +24,7 @@ from gitws._util import run
 from gitws.git import Git
 
 from .fixtures import git_repo
+from .util import path2url
 
 
 def is_sha(sha):
@@ -173,7 +174,7 @@ def test_git_has_changes(tmp_path, repos):
     """Git Has Changes."""
     main = tmp_path / "main"
     git = Git(main)
-    git.clone(str(repos / "main"))
+    git.clone(path2url(repos / "main"))
     git.set_config("user.email", "you@example.com")
     git.set_config("user.name", "you")
 
@@ -303,7 +304,7 @@ def test_cache_nomain(tmp_path):
 
     # First Clone
     git = Git(tmp_path / "main1", clone_cache=cache_path)
-    git.clone(str(repos_path / "main"))
+    git.clone(path2url(repos_path / "main"))
     assert (git.path / "data.txt").read_text() == "main"
 
     cache_entry_path = next(cache_path.glob("*"))
@@ -313,7 +314,7 @@ def test_cache_nomain(tmp_path):
 
     # Second Clone
     git = Git(tmp_path / "main2", clone_cache=cache_path)
-    git.clone(str(repos_path / "main"))
+    git.clone(path2url(repos_path / "main"))
     assert (git.path / "data.txt").read_text() == "main"
 
     assert marker_filepath.exists()

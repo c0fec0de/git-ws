@@ -19,7 +19,7 @@
 from gitws import GitWS
 
 from .fixtures import create_repos
-from .util import chdir, cli
+from .util import chdir, cli, path2url
 
 
 def test_checkout(tmp_path):
@@ -28,7 +28,7 @@ def test_checkout(tmp_path):
     create_repos(repos_path)
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_path / "main"))
+        gws = GitWS.clone(path2url(repos_path / "main"))
         gws.update(skip_main=True)
 
     with chdir(gws.path):

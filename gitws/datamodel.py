@@ -483,7 +483,7 @@ class Project(BaseModel):
             if project_remote:
                 for remote in remotes:
                     if remote.name == project_remote:
-                        url = f"{remote.url_base}/{project_sub_url}"
+                        url = urljoin(remote.url_base, project_sub_url)
                         break
                 else:
                     raise ValueError(f"Unknown remote {spec.remote} for project {spec.name}")

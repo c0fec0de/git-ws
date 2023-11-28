@@ -24,7 +24,7 @@ from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
 from .common import TESTDATA_PATH
 from .fixtures import git_repo
-from .util import assert_gen, chdir, check, cli
+from .util import assert_gen, chdir, check, cli, path2url
 
 
 @fixture(scope="session")
@@ -74,7 +74,7 @@ def repos_submodules():
 def gws(tmp_path, repos_submodules):
     """Initialize :any:`GitWS` on ``repos_submodules``."""
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos_submodules / "main"))
+        gws = GitWS.clone(path2url(repos_submodules / "main"))
         gws.update(skip_main=True)
 
     with chdir(gws.main_path):

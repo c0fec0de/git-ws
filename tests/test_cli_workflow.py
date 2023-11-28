@@ -19,7 +19,7 @@ from pytest import fixture
 
 from gitws import Git, GitWS
 
-from .util import assert_any, chdir, cli
+from .util import assert_any, chdir, cli, path2url
 
 
 @fixture
@@ -28,7 +28,7 @@ def gws(tmp_path, repos):
     workspace = tmp_path / "main"
 
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos / "main"))
+        gws = GitWS.clone(path2url(repos / "main"))
         gws.update(skip_main=True)
 
     with chdir(workspace):

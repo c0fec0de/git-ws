@@ -21,7 +21,7 @@ from gitws import GitWS, InitializedError, ManifestExistError
 from gitws.const import CONFIG_PATH, INFO_PATH
 
 from .common import MANIFEST_DEFAULT
-from .util import chdir, run
+from .util import chdir, path2url, run
 
 
 def test_git(tmp_path):
@@ -68,7 +68,7 @@ def test_git(tmp_path):
 def test_from_path(tmp_path, repos):
     """From Path."""
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos / "main"))
+        gws = GitWS.clone(path2url(repos / "main"))
         gws.update()
 
     workspace = tmp_path / "main"
@@ -96,7 +96,7 @@ def test_from_path(tmp_path, repos):
 def test_reinit(tmp_path, repos):
     """Initialize."""
     with chdir(tmp_path):
-        gws = GitWS.clone(str(repos / "main"))
+        gws = GitWS.clone(path2url(repos / "main"))
         gws.update()
 
     workspace = tmp_path / "main"
