@@ -31,7 +31,7 @@ import shutil
 import subprocess
 from enum import Enum
 from pathlib import Path
-from typing import Generator, List, Optional, Tuple, Union
+from typing import Iterator, List, Optional, Tuple, Union
 
 from ._basemodel import BaseModel
 from ._pathlock import atomic_update_or_create_path
@@ -540,7 +540,7 @@ class Git:
             cmd.append(pattern)
         return tuple(self._run2lines(cmd, skip_empty=True))
 
-    def status(self, paths: Optional[Paths] = None, branch: bool = False) -> Generator[Status, None, None]:
+    def status(self, paths: Optional[Paths] = None, branch: bool = False) -> Iterator[Status]:
         """
         Git Status.
 
@@ -576,7 +576,7 @@ class Git:
         else:
             self._run(("diff",))
 
-    def diffstat(self, paths: Optional[Paths] = None) -> Generator[DiffStat, None, None]:
+    def diffstat(self, paths: Optional[Paths] = None) -> Iterator[DiffStat]:
         """
         Git Diff Statistics.
 

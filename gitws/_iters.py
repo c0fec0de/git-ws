@@ -23,7 +23,7 @@ The creation/cloning of missing project dependencies during the iteration is sup
 import logging
 from fnmatch import fnmatchcase
 from pathlib import Path
-from typing import Callable, Generator, List, Optional, Tuple
+from typing import Callable, Iterator, List, Optional, Tuple
 
 from ._manifestformatmanager import ManifestFormatManager
 from ._util import resolve_relative
@@ -81,7 +81,7 @@ class ManifestIter:
         self.group_filters: GroupFilters = group_filters
         self.__done: List[str] = []
 
-    def __iter__(self) -> Generator[Manifest, None, None]:
+    def __iter__(self) -> Iterator[Manifest]:
         self.__done.clear()
         try:
             manifest_spec = self.manifest_format_manager.load(self.manifest_path)
@@ -93,9 +93,7 @@ class ManifestIter:
             filter_ = create_filter(group_selects, default=True)
             yield from self.__iter(self.manifest_path, manifest_spec, filter_)
 
-    def __iter(
-        self, manifest_path: Path, manifest_spec: ManifestSpec, filter_: FilterFunc
-    ) -> Generator[Manifest, None, None]:
+    def __iter(self, manifest_path: Path, manifest_spec: ManifestSpec, filter_: FilterFunc) -> Iterator[Manifest]:
         deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
         done: List[str] = self.__done
 
@@ -179,7 +177,7 @@ class ProjectIter:
         self.resolve_url: bool = resolve_url
         self.__done: List[str] = []
 
-    def __iter__(self) -> Generator[Project, None, None]:
+    def __iter__(self) -> Iterator[Project]:
         workspace = self.workspace
         info = workspace.info
         main_path_rel = str(info.main_path or "")
@@ -207,7 +205,7 @@ class ProjectIter:
 
     def __iter(
         self, level: int, project_path: Optional[Path], manifest_spec: ManifestSpec, filter_: FilterFunc
-    ) -> Generator[Project, None, None]:
+    ) -> Iterator[Project]:
         deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
         refurl: Optional[str] = None
         done: List[str] = self.__done
