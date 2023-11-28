@@ -24,7 +24,7 @@ import logging
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Iterator, Optional
 
 import tomlkit
 from pydantic import Field
@@ -316,7 +316,7 @@ class Workspace:
         return group_filters
 
     @contextmanager
-    def edit_info(self) -> Generator[Info, None, None]:
+    def edit_info(self) -> Iterator[Info]:
         """Yield Contextmanager to edit :any:`Info` and write back changes."""
         try:
             yield self.info

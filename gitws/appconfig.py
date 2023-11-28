@@ -28,7 +28,7 @@ from contextlib import contextmanager
 from enum import Enum
 from os import environ
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Iterator, Optional
 
 import tomlkit
 import tomlkit.exceptions
@@ -302,7 +302,7 @@ class AppConfig:
         self._merged_config = None
 
     @contextmanager
-    def edit(self, location: AppConfigLocation) -> Generator[AppConfigData, None, None]:
+    def edit(self, location: AppConfigLocation) -> Iterator[AppConfigData]:
         """
         Edit a configuration file.
 
