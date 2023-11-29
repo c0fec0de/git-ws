@@ -17,6 +17,9 @@ source = gitws
 	pdm install --group :all
 	@touch .make.lock
 
+.PHONY: lock  ## Setup PDM
+lock: .make.lock
+
 .PHONY: setup  ## Prepare environment for local development
 setup: .make.pdm .make.pre-commit .git/hooks/pre-commit .make.lock
 
@@ -46,6 +49,10 @@ all: checks test mypy doc
 .PHONY: clean  ## Clear all files list by .gitignore
 clean:
 	@git clean -Xdf
+
+.PHONY: publish  # Hidden Publish Target for CI
+publish: .make.lock
+	pdm publish
 
 .PHONY: help  ## Display this message
 help:
