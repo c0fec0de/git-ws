@@ -119,13 +119,13 @@ select = [
 ignore = [
     # too-many-arguments
     'PLR0913',
-    # Ambigious
+    # Ambiguous
     'ISC001',
     # support type: ignore
     'PGH003',
     # poetry deviates
     'RUF200',
-    # Ambigious doc
+    # Ambiguous doc
     'D203', 'D212', 'D402', 'D406',
     # Multiline doc is ok.
     'D200',

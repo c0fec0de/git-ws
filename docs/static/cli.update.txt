@@ -17,5 +17,5 @@ Options:
   -S, --skip-main            Skip Main Repository
   --rebase                   Run 'git rebase' instead of 'git pull'
   --prune                    Remove obsolete git clones
-  -f, --force                Enfore operation.
+  -f, --force                Enforce operation.
   -h, --help                 Show this message and exit.

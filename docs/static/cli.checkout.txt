@@ -6,7 +6,7 @@ Usage: git-ws checkout [OPTIONS] [PATHS]...
   Checkout all clones to their manifest revision, if no paths are given.
 
 Options:
-  -f, --force                Enfore operation.
+  -f, --force                Enforce operation.
   -b TEXT                    create and checkout a new branch
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by
                              default.

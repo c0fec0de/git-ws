@@ -1,4 +1,4 @@
-"""Pytest Conifguration and Fixtures."""
+"""Pytest Configuration and Fixtures."""
 import tempfile
 from pathlib import Path
 
@@ -28,7 +28,7 @@ def _docdir(request):
 
 @pytest.fixture(scope="session")
 def repos():
-    """Fixture with main and four depedency repos."""
+    """Fixture with main and four dependency repos."""
     with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
         repos_path = Path(tmpdir)
 
@@ -39,7 +39,7 @@ def repos():
 
 @pytest.fixture(scope="session")
 def repos_dotgit():
-    """Fixture with main and four depedency repos."""
+    """Fixture with main and four dependency repos."""
     with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
         repos_path = Path(tmpdir)
 

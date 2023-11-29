@@ -3,7 +3,7 @@ Usage: git-ws rm [OPTIONS] [PATHS]...
   Run 'git rm' on PATHS and choose the right git clone automatically.
 
 Options:
-  -f, --force                Enfore operation.
+  -f, --force                Enforce operation.
   --cached                   only remove from index
   -r                         allow recursive removal
   -M, --manifest FILE        Manifest file. Initial/Configuration settings by

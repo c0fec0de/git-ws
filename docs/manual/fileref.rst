@@ -23,7 +23,7 @@ To aid this, ``git-ws`` provides two mechanisms: File linking and file copying.
 
     Both mechanisms described here apply only to the main repo within a
     workspace and all its direct dependencies.
-    Copy and link files in the manifest files of the refered dependencies are ignored.
+    Copy and link files in the manifest files of the referred dependencies are ignored.
 
 
 File Linking
@@ -95,7 +95,7 @@ file unchanged.
     Any modification of a copied file is noticed.
 
     ``git ws update`` updates copied files.
-    But it denies overwritting a copied file, which has changed at the destination since last update.
+    But it denies overwriting a copied file, which has changed at the destination since last update.
 
 
 Group Filtering

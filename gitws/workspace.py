@@ -44,7 +44,7 @@ class Info(BaseModel):
     """
     Workspace Information Container.
 
-    The workspace information container assembles all information which has to be kept persistant between tool
+    The workspace information container assembles all information which has to be kept persistent between tool
     invocations.
 
     Keyword Args:
@@ -290,7 +290,7 @@ class Workspace:
         Keyword Args:
             manifest_path: Absolute Or Relative (To ``self.base_path``) Manifest Path.
 
-        The manifest path is choosen according to the following list, the first matching wins:
+        The manifest path is chosen according to the following list, the first matching wins:
 
         * Explicit manifest path specified by ``manifest_path``.
         * Path from configuration (set during ``init``, ``clone`` or later on).
@@ -305,7 +305,7 @@ class Workspace:
         Keyword Args:
             group_filters: Group Filters.
 
-        The group filter is choosen according to the following list, the first matching wins:
+        The group filter is chosen according to the following list, the first matching wins:
 
         * Explicit group filter specified by ``group_filters``.
         * Path from configuration (set during ``init``, ``clone`` or later on).

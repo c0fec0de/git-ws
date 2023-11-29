@@ -241,7 +241,7 @@ class Defaults(BaseModel):
         remote: Remote Name.
         revision: Revision. Tag or Branch. SHA does not make sense here.
         groups: Dependency Groups.
-        with_groups: Group Selection for refered projects.
+        with_groups: Group Selection for referred projects.
     """
 
     model_config = ConfigDict(frozen=True, populate_by_name=True, arbitrary_types_allowed=True)
@@ -355,7 +355,7 @@ class Project(BaseModel):
         revision: Revision to be checked out. Tag, branch or SHA.
         manifest_path: Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default.
         groups: Dependency Groups.
-        with_groups: Group Selection for refered project.
+        with_groups: Group Selection for referred project.
         submodules: initialize and update `git submodules`
         linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
@@ -530,7 +530,7 @@ class ProjectSpec(BaseModel):
         path: Project Filesystem Path. Relative to Workspace Root Directory.
         manifest_path: Path to the manifest file. Relative to ``path`` of project. ``git-ws.toml`` by default.
         groups: Dependency Groups.
-        with_groups: Group Selection for refered project.
+        with_groups: Group Selection for referred project.
         submodules: initialize and update `git submodules`
         linkfiles: symbolic links to be created in the workspace
         copyfiles: files to be created in the workspace
@@ -574,7 +574,7 @@ class ProjectSpec(BaseModel):
     """Dependency Groups."""
 
     with_groups: Groups = Field((), alias="with-groups")
-    """Group Selection for refered project."""
+    """Group Selection for referred project."""
 
     submodules: Optional[bool] = None
     """Initialize and Update `git submodules`."""

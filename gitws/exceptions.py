@@ -125,7 +125,7 @@ class InvalidConfigurationValueError(RuntimeError):
 
 
 class InvalidConfigurationOptionError(RuntimeError):
-    """An Invalid Configuration Option Has Been Passed To The Applicaiton."""
+    """An Invalid Configuration Option Has Been Passed To The Application."""
 
     def __init__(self, key):
         super().__init__(f"Unknown configuration option {key}")
