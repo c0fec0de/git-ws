@@ -24,7 +24,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     # Allows use of emojis - see https://sphinxemojicodes.readthedocs.io/en/stable/ for a list of available icons
-    "sphinxemoji.sphinxemoji",
+    # "sphinxemoji.sphinxemoji",
 ]
 
 templates_path = ["_templates"]
