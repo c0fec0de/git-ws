@@ -11,7 +11,7 @@ source = gitws
 	pre-commit install --install-hooks
 	@touch .git/hooks/pre-commit
 
-.make.lock: pyproject.toml
+.make.lock: .make.pdm pyproject.toml
 	pdm info
 	pdm lock
 	pdm install --group :all
@@ -24,7 +24,7 @@ lock: .make.lock
 setup: .make.pdm .make.pre-commit .git/hooks/pre-commit .make.lock
 
 .PHONY: checks  ## Run formatter, linter and all other checks (aka pre-commit)
-checks: .make.pre-commit
+checks: .make.pre-commit .git/hooks/pre-commit
 	pre-commit run --all-files
 
 .PHONY: test  ## Run tests
