@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Test
-        run: make all
+        run: make all checkmod
       - name: Upload coverage data to coveralls.io
         run: pdm run coveralls --service=github
         env:

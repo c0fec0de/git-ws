@@ -65,6 +65,11 @@ all: checks test mypy doc
 clean:
 	@git clean -Xdf
 
+.PHONY: checkmod  # Hidden Modification Check for CI
+checkmod:
+	@git status --short
+	@git status --short | wc -l | xargs test 0 -eq
+
 .PHONY: publish  # Hidden Publish Target for CI
 publish: .make.lock
 	pdm publish
