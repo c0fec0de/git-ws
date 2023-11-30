@@ -15,7 +15,7 @@ dependencies = [
     "pydantic<3.0.0,>=2.2.0",
     "pydantic-settings<3.0.0,>=2.0.3",
     "tomlkit<1.0.0,>=0.11.5",
-]
+    ]
 requires-python = ">=3.9.2,<4.0"
 readme = "README.md"
 license = {text = "LGPL-3.0-or-later"}
@@ -53,9 +53,6 @@ test = [
     "pytest-cov<5.0.0,>=4.1.0",
     "pytest-xdist<4.0.0,>=3.5.0",
     "pytest<8.0,>=7.0",
-    "sphinx-rtd-theme<2.0.0,>=1.0.0",
-    "sphinx<6.0.0,>=5.1.1",
-    "sphinxemoji>=0.2.0",
     "types-appdirs<2.0.0,>=1.4.3",
 ]
 

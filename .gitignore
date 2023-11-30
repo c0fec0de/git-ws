@@ -4,7 +4,7 @@
 .make.*
 .mypy_cache
 .pdm*
-.venv
+.venv*
 /.vscode
 /docs/api
 __pycache__
