@@ -19,9 +19,7 @@ jobs:
       - name: Test
         run: make test
       - name: Upload coverage data to coveralls.io
-        run: |
-          make lock
-          pdm run coveralls --service=github
+        run: pdm run coveralls --service=github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.test-name }}
