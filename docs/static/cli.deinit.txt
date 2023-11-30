@@ -4,5 +4,5 @@ Usage: git-ws deinit [OPTIONS]
 
 Options:
   --prune      Remove obsolete git clones
-  -f, --force  Enfore operation.
+  -f, --force  Enforce operation.
   -h, --help   Show this message and exit.

@@ -29,7 +29,7 @@ from .util import assert_gen, chdir, check, cli, path2url
 
 @fixture(scope="session")
 def repos_submodules():
-    """Fixture with main and four depedency repos."""
+    """Fixture with main and four dependency repos."""
     with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
         repos_path = Path(tmpdir)
 

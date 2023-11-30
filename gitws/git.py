@@ -282,7 +282,7 @@ class Git:
         return cloned
 
     def check(self):
-        """Check Clone for Existance."""
+        """Check Clone for Existence."""
         if not self.is_cloned():
             raise GitCloneMissingError(self.path)
 

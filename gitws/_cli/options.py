@@ -60,7 +60,7 @@ def update_option():
 
 def force_option():
     """Force Option."""
-    return click.option("--force", "-f", is_flag=True, help="Enfore operation.")
+    return click.option("--force", "-f", is_flag=True, help="Enforce operation.")
 
 
 def group_filters_option(initial=False):

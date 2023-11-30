@@ -29,7 +29,7 @@ from .util import chdir, cli, path2url, run
 
 @fixture()
 def repos():
-    """Fixture with main and four depedency repos."""
+    """Fixture with main and four dependency repos."""
     with tempfile.TemporaryDirectory(prefix="git-ws-test-repos") as tmpdir:
         repos_path = Path(tmpdir)
 

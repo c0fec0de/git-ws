@@ -12,7 +12,6 @@ build:
 
   commands:
     - pip install --upgrade --no-cache-dir pip
-    - pip install --no-cache-dir "poetry>=1.4"
-    - poetry install --with=doc --without=test
-    - poetry run make html -C docs
+    - pip install --no-cache-dir pdm
+    - make doc
     - cp -r docs/build _readthedocs

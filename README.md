@@ -373,7 +373,7 @@ Please see the next section for an overview of all commands.
 | `git ws info project-paths`  | Print Paths to all git clones. |
 | `git ws info workspace-path` | Print Path to Workspace. |
 | `git ws info dep-tree` | Print Dependency Tree. |
-| `git ws info dep-tree --dot \| dot -Tpng > dep-tree.png` | Draw Dependency Diagramm (needs [graphviz](https://graphviz.org)) |
+| `git ws info dep-tree --dot \| dot -Tpng > dep-tree.png` | Draw Dependency Diagram (needs [graphviz](https://graphviz.org)) |
 
 
 See the [command-line interface documentation](https://git-ws.readthedocs.io/en/stable/manual/command-line-interface/index.html) for any further details.

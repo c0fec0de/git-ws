@@ -60,7 +60,7 @@ class GitWS:
     Keyword Args:
         secho: :any:`click.secho` like print method for verbose output.
 
-    There are static methods to create a :any:`GitWS` instances in the different szenarios:
+    There are static methods to create a :any:`GitWS` instances in the different scenarios:
 
     * :any:`GitWS.from_path()`: Create :any:`GitWS` for EXISTING workspace at ``path``.
     * :any:`GitWS.create()`: Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.

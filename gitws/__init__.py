@@ -29,7 +29,7 @@ See :any:`GitWS` for all details.
 Getting Started
 ---------------
 
-There are 4 ways to create a :any:`GitWS` instances in the different szenarios:
+There are 4 ways to create a :any:`GitWS` instances in the different scenarios:
 
 * :any:`GitWS.from_path()`: Create :any:`GitWS` for EXISTING workspace at ``path``.
 * :any:`GitWS.create()`: Create NEW workspace at ``path`` and return corresponding :any:`GitWS`.
