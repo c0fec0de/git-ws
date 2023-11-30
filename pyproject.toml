@@ -1,6 +1,6 @@
 [project]
 name = "git-ws"
-version = "2.0.1"
+version = "2.0.2"
 description = "Git Workspace - Multi Repository Management Tool"
 authors = [
     {name = "c0fec0de", email = "c0fec0de@gmail.com"},
