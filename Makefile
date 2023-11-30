@@ -5,17 +5,21 @@ DOC_REQUIREMENTS += "sphinx-rtd-theme<2.0.0,>=1.0.0"
 DOC_REQUIREMENTS += "sphinx<6.0.0,>=5.1.1"
 DOC_REQUIREMENTS += "sphinxemoji>=0.2.0"
 
-.make.pdm:
+# install pdm - helper target, might require 'make clean' in case of broken setup
+.make.pdm: $(MAKEFILE_LIST)
 	@pdm -V 2> /dev/null || \
 	(pipx install pdm && pdm self add pdm-version) || \
 	echo 'Please install PDM: https://pdm.fming.dev/latest/#installation'
+	@touch .make.pdm
 
-.make.pre-commit:
+# install pre-commit - helper target, might require 'make clean' in case of broken setup
+.make.pre-commit: $(MAKEFILE_LIST)
 	@pre-commit -V 2> /dev/null || \
 	pipx install pre-commit || \
 	echo 'Please install pre-commit: https://pre-commit.com/'
+	@touch .make.pre-commit
 
-.git/hooks/pre-commit:
+.git/hooks/pre-commit: .make.pre-commit
 	pre-commit install --install-hooks
 	@touch .git/hooks/pre-commit
 
@@ -25,15 +29,15 @@ DOC_REQUIREMENTS += "sphinxemoji>=0.2.0"
 	pdm install --group :all
 	@touch .make.lock
 
-.PHONY: lock  ## Setup PDM
+.PHONY: lock  ## Create pdm.lock file
 lock: .make.lock
 
 .PHONY: setup  ## Prepare environment for local development
 setup: .make.pdm .make.pre-commit .git/hooks/pre-commit .make.lock
 
 .PHONY: checks  ## Run formatter, linter and all other checks (aka pre-commit)
-checks: .make.pre-commit .git/hooks/pre-commit
-	pre-commit run --all-files
+checks: .git/hooks/pre-commit
+	pre-commit run --all-files || pre-commit run --all-files
 
 .PHONY: test  ## Run tests
 test: .make.lock
