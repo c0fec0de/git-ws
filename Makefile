@@ -37,11 +37,15 @@ setup: .make.pdm .make.pre-commit .git/hooks/pre-commit .make.lock
 
 .PHONY: checks  ## Run formatter, linter and all other checks (aka pre-commit)
 checks: .git/hooks/pre-commit
-	pre-commit run --all-files || pre-commit run --all-files
+	@pre-commit run --all-files || (echo "Trying again :-)" && pre-commit run --all-files)
 
 .PHONY: test  ## Run tests
 test: .make.lock
 	LANGUAGE=en_US && pdm run pytest -vv -n auto
+
+.PHONY: test-quick  ## Run tests, fail fast
+test-quick: .make.lock
+	LANGUAGE=en_US && pdm run pytest -vv --ff -x
 
 .PHONY: mypy  ## Run mypy
 mypy: .make.lock
@@ -57,15 +61,21 @@ mypy: .make.lock
 .PHONY: doc  ## Build Documentation
 doc: .make.venv-doc
 	. .venv-doc/bin/activate && make html -C docs
+	@echo ""
+	@echo "    file://${PWD}/docs/build/html/index.html"
+	@echo ""
 
-.PHONY: doc-quick  ## Build Documentation - without updating help pages
+.PHONY: doc-quick  ## Build Documentation - without code generation
 doc-quick: .make.venv-doc
 	. .venv-doc/bin/activate && make quick-html -C docs
 
 .PHONY: all  ## Run all steps
 all: checks test mypy doc
 
-.PHONY: clean  ## Clear all files list by .gitignore
+.PHONY: all-quick  ## Run all steps fast, but maybe inaccurate
+all-quick: checks test-quick mypy doc-quick
+
+.PHONY: clean  ## Remove all files listed by .gitignore
 clean:
 	@git clean -Xdf
 
@@ -83,4 +93,4 @@ help:
 	@grep -E \
 		'^.PHONY: .*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
-		awk 'BEGIN {FS = ".PHONY: |## "}; {printf "\033[36m%-11s\033[0m %s\n", $$2, $$3}'
+		awk 'BEGIN {FS = ".PHONY: |## "}; {printf "\033[36m%-13s\033[0m %s\n", $$2, $$3}'
