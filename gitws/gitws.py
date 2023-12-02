@@ -758,14 +758,15 @@ class GitWS:
         workspace = self.workspace
         manifest_path = self.manifest_path
         group_filters = self.group_filters
-        yield from ProjectIter(
+        for project_specs in ProjectIter(
             workspace,
             self.manifest_format_manager,
             manifest_path,
             group_filters,
             skip_main=skip_main,
             resolve_url=resolve_url,
-        )
+        ):
+            yield from project_specs
 
     def manifests(
         self,

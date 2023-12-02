@@ -157,7 +157,7 @@ class ProjectIter:
         resolve_url: Resolve relative URLs to absolute ones.
 
     Yields:
-        :py:class:`gitws.Project`
+        :py:class:`Tuple[gitws.Project, ...]`
     """
 
     def __init__(
@@ -177,7 +177,7 @@ class ProjectIter:
         self.resolve_url: bool = resolve_url
         self.__done: List[str] = []
 
-    def __iter__(self) -> Iterator[Project]:
+    def __iter__(self) -> Iterator[Tuple[Project, ...]]:
         workspace = self.workspace
         info = workspace.info
         main_path_rel = str(info.main_path or "")
@@ -186,12 +186,14 @@ class ProjectIter:
         if main_path and not self.skip_main:
             main_git = Git(resolve_relative(main_path))
             revision = main_git.get_revision()
-            yield Project(
-                name=main_path.name,
-                path=main_path_rel,
-                level=0,
-                revision=revision,
-                is_main=True,
+            yield (
+                Project(
+                    name=main_path.name,
+                    path=main_path_rel,
+                    level=0,
+                    revision=revision,
+                    is_main=True,
+                ),
             )
         try:
             manifest_spec = self.manifest_format_manager.load(self.manifest_path)
@@ -205,10 +207,8 @@ class ProjectIter:
 
     def __iter(
         self, level: int, project_path: Optional[Path], manifest_spec: ManifestSpec, filter_: FilterFunc
-    ) -> Iterator[Project]:
-        deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
+    ) -> Iterator[Tuple[Project, ...]]:
         refurl: Optional[str] = None
-        done: List[str] = self.__done
         if project_path and manifest_spec.dependencies:
             project_path_rel = resolve_relative(project_path)
             git = Git(project_path_rel)
@@ -218,6 +218,11 @@ class ProjectIter:
 
         _LOGGER.debug("%r", manifest_spec)
 
+        #
+        # Current manifest_spec
+        #
+        dep_projects: List[Project] = []
+        done: List[str] = self.__done
         for spec in manifest_spec.dependencies:
             dep_project = Project.from_spec(manifest_spec, spec, level, refurl=refurl, resolve_url=self.resolve_url)
 
@@ -232,27 +237,30 @@ class ProjectIter:
                 continue
 
             _LOGGER.debug("%r", dep_project)
-            yield dep_project
+            dep_projects.append(dep_project)
 
+        yield tuple(dep_projects)
+
+        #
+        # Dependencies
+        #
+        sublevel = level + 1
+        for dep_project in dep_projects:
+            # Recursive?
             if not dep_project.recursive:
                 continue
 
-            # Recursive
+            # Manifest?
             dep_project_path = self.workspace.get_project_path(dep_project)
             dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
             try:
-                dep_manifest = self.manifest_format_manager.load(dep_manifest_path)
+                dep_manifest_spec = self.manifest_format_manager.load(dep_manifest_path)
             except ManifestNotFoundError:
-                pass
-            else:
-                group_selects = group_selects_from_groups(dep_project.with_groups)
-                deps.append((dep_project_path, dep_manifest, group_selects))
+                continue
 
-        # We resolve all dependencies in a second iteration to prioritize the manifest
-        sublevel = level + 1
-        for dep_project_path, dep_manifest, dep_group_selects in deps:
+            dep_group_selects = group_selects_from_groups(dep_project.with_groups)
             dep_filter = create_filter(dep_group_selects)
-            yield from self.__iter(sublevel, dep_project_path, dep_manifest, dep_filter)
+            yield from self.__iter(sublevel, dep_project_path, dep_manifest_spec, dep_filter)
 
 
 def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterFunc:

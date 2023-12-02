@@ -19,7 +19,8 @@ from pathlib import Path
 
 from pytest import fixture
 
-from gitws import GroupFilters, ManifestIter, ProjectIter, Workspace
+from gitws import GroupFilters, Workspace
+from gitws._iters import ManifestIter, ProjectIter
 from gitws._manifestformatmanager import ManifestFormatManager
 from gitws.gitwsmanifestformat import GitWSManifestFormat
 
