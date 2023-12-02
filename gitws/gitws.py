@@ -21,7 +21,7 @@ The :any:`GitWS` class provides a simple facade to all Git Workspace functionali
 """
 import urllib
 from pathlib import Path
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from ._deptree import DepNode, get_deptree
 from ._iters import ManifestIter, ProjectIter, create_filter
@@ -464,7 +464,7 @@ class GitWS:
         paths: Optional[Tuple[Path, ...]] = None,
         banner: bool = False,
         branch: bool = False,
-    ) -> Generator[Status, None, None]:
+    ) -> Iterator[Status]:
         """
         Enriched Git Status - aka ``git status``.
 
@@ -498,7 +498,7 @@ class GitWS:
             clone.check()
             clone.git.diff(paths=cpaths, prefix=Path(clone.project.path))
 
-    def diffstat(self, paths: Optional[Tuple[Path, ...]] = None) -> Generator[DiffStat, None, None]:
+    def diffstat(self, paths: Optional[Tuple[Path, ...]] = None) -> Iterator[DiffStat]:
         """
         Enriched Git Diff Status - aka ``git diff --stat``.
 
@@ -688,7 +688,7 @@ class GitWS:
         project_paths: Optional[ProjectPaths] = None,
         reverse: bool = False,
         filter_=None,
-    ) -> Generator[Clone, None, None]:
+    ) -> Iterator[Clone]:
         """
         User Level Clone Iteration.
 
@@ -713,7 +713,7 @@ class GitWS:
         resolve_url: bool = False,
         reverse: bool = False,
         filter_=None,
-    ) -> Generator[Clone, None, None]:
+    ) -> Iterator[Clone]:
         project_paths_filter = self._create_project_paths_filter(project_paths)
         clones = self.clones(skip_main=skip_main, resolve_url=resolve_url, reverse=reverse)
         for clone in clones:
@@ -724,9 +724,7 @@ class GitWS:
             else:
                 self.secho(f"===== SKIPPING {clone.info} =====", fg=COLOR_SKIP)
 
-    def clones(
-        self, skip_main: bool = False, resolve_url: bool = True, reverse: bool = False
-    ) -> Generator[Clone, None, None]:
+    def clones(self, skip_main: bool = False, resolve_url: bool = True, reverse: bool = False) -> Iterator[Clone]:
         """
         Iterate over Clones.
 
@@ -746,7 +744,7 @@ class GitWS:
             clone = Clone.from_project(workspace, project, secho=self.secho)
             yield clone
 
-    def projects(self, skip_main: bool = False, resolve_url: bool = False) -> Generator[Project, None, None]:
+    def projects(self, skip_main: bool = False, resolve_url: bool = False) -> Iterator[Project]:
         """
         Iterate Over Projects In Current Workspace.
 
@@ -771,7 +769,7 @@ class GitWS:
 
     def manifests(
         self,
-    ) -> Generator[Manifest, None, None]:
+    ) -> Iterator[Manifest]:
         """
         Iterate Over Manifests In Current Workspace.
         """

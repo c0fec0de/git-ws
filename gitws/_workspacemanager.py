@@ -23,7 +23,7 @@ import shutil
 from os import readlink
 from pathlib import Path
 from shutil import copy2
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 from ._util import exception2logging, no_echo, relative
 from .const import COLOR_ACTION, COLOR_BANNER, GIT_WS_PATH
@@ -238,7 +238,7 @@ class WorkspaceManager:
             if is_file is False and path.is_file():
                 raise RuntimeError(f"{what} file {str(relative(path))!r} is a file!")  # pragma: no cover
 
-    def _iter_obsoletes(self) -> Generator[Path, None, None]:
+    def _iter_obsoletes(self) -> Iterator[Path]:
         """Yield paths except *used* ones."""
         usemap: Dict[str, Any] = {GIT_WS_PATH.name: {}}
         for path in self._knownpaths:

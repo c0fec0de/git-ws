@@ -23,7 +23,7 @@ A :any:`Clone` is just the assembly of a :any:`Project` and its corresponding gi
 import logging
 from contextlib import suppress
 from pathlib import Path
-from typing import Callable, Generator, List, Optional, Tuple
+from typing import Callable, Iterator, List, Optional, Tuple
 
 from ._util import get_repr
 from .appconfig import AppConfig
@@ -152,7 +152,7 @@ class Clone:
 ClonePaths = Tuple[Clone, Tuple[Path, ...]]
 
 
-def map_paths(clones: Tuple[Clone, ...], paths: Optional[Tuple[Path, ...]]) -> Generator[ClonePaths, None, None]:
+def map_paths(clones: Tuple[Clone, ...], paths: Optional[Tuple[Path, ...]]) -> Iterator[ClonePaths]:
     """
     Map ``paths`` to ``clones``.
 
