@@ -193,15 +193,15 @@ class ProjectIter:
         if main_path and not self.skip_main:
             main_git = Git(resolve_relative(main_path))
             revision = main_git.get_revision()
-            yield (
-                Project(
-                    name=main_path.name,
-                    path=main_path_rel,
-                    level=0,
-                    revision=revision,
-                    is_main=True,
-                ),
+            project = Project(
+                name=main_path.name,
+                path=main_path_rel,
+                level=0,
+                revision=revision,
+                is_main=True,
             )
+            if project_filter(project):
+                yield (project,)
         try:
             manifest_spec = self.manifest_format_manager.load(self.manifest_path)
         except ManifestNotFoundError:

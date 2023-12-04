@@ -16,7 +16,6 @@
 
 """Test Utilities."""
 import contextlib
-import logging
 import os
 import re
 import shutil
@@ -30,7 +29,8 @@ from gitws._cli import main
 
 _RE_EMPTY_LINE = re.compile(r"[ \t]*\r")
 
-LEARN = False
+REFDATA_PATH = Path(__file__).parent / "refdata"
+REFUPDATE = Path(".make.test2ref").exists()
 
 
 @contextlib.contextmanager
@@ -123,8 +123,9 @@ def check(workspace, name, path=None, content=None, exists=True, depth=None, bra
         assert branches == len(lines), f"{branches} == len({lines})"
 
 
-def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_path=None, replacements=None):
+def assert_refdata(func, genpath, capsys=None, caplog=None, tmp_path=None, repos_path=None, replacements=None):
     """Compare Generated Files Versus Reference."""
+    refpath = REFDATA_PATH / func.__module__ / func.__name__
     genpath.mkdir(parents=True, exist_ok=True)
     refpath.mkdir(parents=True, exist_ok=True)
     if capsys:
@@ -143,8 +144,7 @@ def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_
         with open(genpath / "logging.txt", "w", encoding="utf-8") as file:
             for item in format_logs(caplog, tmp_path=tmp_path, repos_path=repos_path, replacements=replacements):
                 file.write(f"{item}\n")
-    if LEARN:  # pragma: no cover
-        logging.getLogger(__name__).warning("LEARNING %s", refpath)
+    if REFUPDATE:  # pragma: no cover
         shutil.rmtree(refpath, ignore_errors=True)
         shutil.copytree(genpath, refpath)
     cmd = ["diff", "-r", "--exclude", "__pycache__", str(refpath), str(genpath)]

@@ -22,9 +22,8 @@ from pytest import fixture
 
 from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
-from .common import TESTDATA_PATH
 from .fixtures import git_repo
-from .util import assert_gen, chdir, check, path2url
+from .util import assert_refdata, chdir, check, path2url
 
 
 @fixture
@@ -114,9 +113,9 @@ def test_deptop(tmp_path, repos_deptop, caplog, capsys):
         check(workspace, "dep4", path="sub/dep4")
         check(workspace, "dep5", path="sub/dep5", exists=False)
 
-    assert_gen(
+    assert_refdata(
+        test_deptop,
         tmp_path / "gen",
-        TESTDATA_PATH / "cli_cornercases" / "deptop",
         caplog=caplog,
         capsys=capsys,
         tmp_path=tmp_path,

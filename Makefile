@@ -41,9 +41,21 @@ checks: .git/hooks/pre-commit
 
 .PHONY: test  ## Run tests
 test: .make.lock
+	rm -f .make.test2ref  # remove update reference marker
 	LANGUAGE=en_US && pdm run pytest -vv -n auto
+	@echo ""
+	@echo "    file://${PWD}/htmlcov/index.html"
+	@echo ""
 
-.PHONY: test-quick  ## Run tests, fail fast
+.PHONY: test2ref  ## Run tests, update reference data
+test2ref: .make.lock
+	touch .make.test2ref  # create update reference marker
+	LANGUAGE=en_US && pdm run pytest -vv -n auto
+	@echo ""
+	@echo "    file://${PWD}/htmlcov/index.html"
+	@echo ""
+
+.PHONY: test-quick  ## Run tests, start with failing, fail fast
 test-quick: .make.lock
 	LANGUAGE=en_US && pdm run pytest -vv --ff -x
 

@@ -23,9 +23,8 @@ from pytest import fixture
 
 from gitws import Git, GitWS
 
-from .common import TESTDATA_PATH
 from .fixtures import create_repos
-from .util import assert_gen, chdir, cli, path2url
+from .util import assert_refdata, chdir, cli, path2url
 
 
 @fixture()
@@ -189,9 +188,9 @@ def test_foreach(tmp_path, gws, repos):
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
-    assert_gen(
+    assert_refdata(
+        test_foreach,
         tmp_path / "gen",
-        TESTDATA_PATH / "cli_basic" / "foreach",
         tmp_path=tmp_path,
         repos_path=repos,
         replacements={
@@ -286,9 +285,9 @@ def test_git_no_color(tmp_path, gws, repos):
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
-    assert_gen(
+    assert_refdata(
+        test_git_no_color,
         tmp_path / "gen",
-        TESTDATA_PATH / "cli_basic" / "git_no_color",
         tmp_path=tmp_path,
         repos_path=repos,
         replacements={

@@ -22,9 +22,8 @@ from pytest import fixture
 
 from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
-from .common import TESTDATA_PATH
 from .fixtures import git_repo
-from .util import assert_gen, chdir, check, cli, path2url
+from .util import assert_refdata, chdir, check, cli, path2url
 
 
 @fixture(scope="session")
@@ -89,8 +88,7 @@ def test_update(tmp_path, repos_submodules, gws):
     out = cli(["-vv", "submodule", "update"], tmp_path=tmp_path, repos_path=repos_submodules)
     (genpath / "out.txt").write_text("\n".join(out))
 
-    refpath = TESTDATA_PATH / "cli_submodule" / "test_update"
-    assert_gen(genpath, refpath, tmp_path=tmp_path, repos_path=repos_submodules)
+    assert_refdata(test_update, genpath, tmp_path=tmp_path, repos_path=repos_submodules)
 
     workspace = gws.path
     check(workspace, "dep1")

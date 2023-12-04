@@ -50,12 +50,9 @@ def test_update(tmp_path):
 
         # Update project
         assert cli(["update", "-P", "dep2"]) == [
-            "===== SKIPPING main (MAIN 'main', revision='main') =====",
-            "===== SKIPPING dep1 ('dep1') =====",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Fetching.",
             "Merging branch '1-feature'.",
-            "===== SKIPPING dep4 ('dep4', revision='main') =====",
             "",
         ]
 
