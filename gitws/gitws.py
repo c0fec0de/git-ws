@@ -390,9 +390,21 @@ class GitWS:
         depth = workspace.app_config.options.depth
 
         # Update Clones
-        for clone in self._foreach(project_paths=project_paths, skip_main=skip_main, resolve_url=True):
-            clone.check(diff=False, exists=False)
-            self._update(clone, rebase, depth)
+
+        project_paths_filter = self._create_project_paths_filter(project_paths)
+
+        for projects in ProjectIter(
+            workspace,
+            self.manifest_format_manager,
+            self.manifest_path,
+            self.group_filters,
+            skip_main=skip_main,
+            filter_=project_paths_filter,
+            resolve_url=True,
+        ):
+            for project in projects:
+                clone = Clone.from_project(workspace, project, secho=self.secho)
+                self._update(clone, rebase, depth)
 
         # Update Workspace
         mngr = WorkspaceManager(workspace, secho=self.secho)
@@ -416,6 +428,9 @@ class GitWS:
             mngr.update(force=force)
 
     def _update(self, clone: Clone, rebase: bool, depth: Optional[int]):
+        self.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
+        clone.check(diff=False, exists=False)
+
         # Clone
         project = clone.project
         git = clone.git

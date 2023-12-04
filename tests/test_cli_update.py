@@ -277,11 +277,8 @@ def test_update_missing_origin(tmp_path):
             "WARNING: Clone dep1 has no revision!",
             "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
             "Already on '1-feature'",
-            "WARNING: Clone dep2 (revision='1-feature', submodules=False) has no "
-            "remote origin but intends to be: 'file://TMP/repos/dep2'",
-            "===== dep4 ('dep4', revision='main') =====",
-            "Already on 'main'",
-            "WARNING: Clone dep4 (revision='main') has no remote origin but intends to be: 'file://TMP/repos/dep4'",
+            "WARNING: Clone dep2 (revision='1-feature', submodules=False) has no remote "
+            "origin but intends to be: 'file://TMP/repos/dep2'",
             "Error: Git Clone 'dep2' has not remote 'origin'. Try:",
             "",
             "    git remote add origin <URL>",

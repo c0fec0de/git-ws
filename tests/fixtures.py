@@ -30,7 +30,7 @@ def set_meta(path=None):
 
 
 @contextmanager
-def git_repo(path, commit=None, branch="main"):
+def git_repo(path, commit=None, branch="main", origin=None):
     """Initialize Repo."""
     path.mkdir(parents=True, exist_ok=True)
     with chdir(path):
@@ -40,6 +40,8 @@ def git_repo(path, commit=None, branch="main"):
         yield path
         run(("git", "add", "-A"), check=True)
         run(("git", "commit", "-m", commit), check=True)
+        if origin:
+            run(("git", "remote", "add", "origin", origin))
 
 
 def create_repos(repos_path, add_dep5=False, add_dep6=False):  # noqa: PLR0915

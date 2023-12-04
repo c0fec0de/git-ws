@@ -43,7 +43,8 @@ from .manifestfinder import find_manifest
 from .workspace import Workspace
 
 _LOGGER = logging.getLogger("git-ws")
-FilterFunc = Callable[[str, Groups], bool]
+GroupFilterFunc = Callable[[str, Groups], bool]
+ProjectFilterFunc = Callable[[Project], bool]
 
 
 class ManifestIter:
@@ -93,7 +94,7 @@ class ManifestIter:
             filter_ = create_filter(group_selects, default=True)
             yield from self.__iter(self.manifest_path, manifest_spec, filter_)
 
-    def __iter(self, manifest_path: Path, manifest_spec: ManifestSpec, filter_: FilterFunc) -> Iterator[Manifest]:
+    def __iter(self, manifest_path: Path, manifest_spec: ManifestSpec, filter_: GroupFilterFunc) -> Iterator[Manifest]:
         deps: List[Tuple[Path, ManifestSpec, GroupSelects]] = []
         done: List[str] = self.__done
 
@@ -166,6 +167,7 @@ class ProjectIter:
         manifest_format_manager: ManifestFormatManager,
         manifest_path: Path,
         group_filters: GroupFilters,
+        filter_: Optional[ProjectFilterFunc] = None,
         skip_main: bool = False,
         resolve_url: bool = False,
     ):
@@ -173,16 +175,21 @@ class ProjectIter:
         self.manifest_format_manager: ManifestFormatManager = manifest_format_manager
         self.manifest_path: Path = manifest_path
         self.group_filters: GroupFilters = group_filters
+        self.filter_: Optional[ProjectFilterFunc] = filter_
         self.skip_main: bool = skip_main
         self.resolve_url: bool = resolve_url
-        self.__done: List[str] = []
 
-    def __iter__(self) -> Iterator[Tuple[Project, ...]]:
+    def __iter__(self) -> Iterator[Tuple[Project, ...]]:  # noqa: C901, PLR0915, PLR0912
+        # NOTE: This is a quite long and complex method - on purpose - optimized for speed
+
         workspace = self.workspace
         info = workspace.info
         main_path_rel = str(info.main_path or "")
-        self.__done = [main_path_rel]
+        done = [main_path_rel]
         main_path = workspace.main_path
+        project_filter = self.filter_ or (lambda _: True)
+
+        # level=0
         if main_path and not self.skip_main:
             main_git = Git(resolve_relative(main_path))
             revision = main_git.get_revision()
@@ -199,71 +206,78 @@ class ProjectIter:
             manifest_spec = self.manifest_format_manager.load(self.manifest_path)
         except ManifestNotFoundError:
             manifest_spec = ManifestSpec()
-        if manifest_spec.dependencies:
-            group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters
-            group_selects = group_selects_from_filters(group_filters)
-            filter_ = create_filter(group_selects, default=True)
-            yield from self.__iter(1, main_path, manifest_spec, filter_)
+        if not manifest_spec.dependencies:
+            return
 
-    def __iter(
-        self, level: int, project_path: Optional[Path], manifest_spec: ManifestSpec, filter_: FilterFunc
-    ) -> Iterator[Tuple[Project, ...]]:
-        refurl: Optional[str] = None
-        if project_path and manifest_spec.dependencies:
-            project_path_rel = resolve_relative(project_path)
-            git = Git(project_path_rel)
-            refurl = git.get_url()
-            if not refurl:
-                raise GitCloneMissingOriginError(project_path_rel)
+        # Start Iteration
+        group_filters: GroupFilters = manifest_spec.group_filters + self.group_filters
+        group_selects = group_selects_from_filters(group_filters)
+        group_filter = create_filter(group_selects, default=True)
+        manifests = [(main_path, manifest_spec, group_filter)]
+        projects: List[Project] = []
+        level = 1
 
-        _LOGGER.debug("%r", manifest_spec)
+        while manifests:
+            for project_path, manifest_spec, group_filter in manifests:
+                refurl: Optional[str] = None
+                if project_path and manifest_spec.dependencies:
+                    project_path_rel = resolve_relative(project_path)
+                    git = Git(project_path_rel)
+                    refurl = git.get_url()
+                    if not refurl:
+                        raise GitCloneMissingOriginError(project_path_rel)
 
-        #
-        # Current manifest_spec
-        #
-        dep_projects: List[Project] = []
-        done: List[str] = self.__done
-        for spec in manifest_spec.dependencies:
-            dep_project = Project.from_spec(manifest_spec, spec, level, refurl=refurl, resolve_url=self.resolve_url)
+                _LOGGER.debug("%r", manifest_spec)
 
-            # Update every path just once
-            if dep_project.path in done:
-                _LOGGER.debug("DUPLICATE %r", dep_project)
-                continue
-            done.append(dep_project.path)
+                for spec in manifest_spec.dependencies:
+                    dep_project = Project.from_spec(
+                        manifest_spec, spec, level, refurl=refurl, resolve_url=self.resolve_url
+                    )
 
-            if not filter_(dep_project.path, dep_project.groups):
-                _LOGGER.debug("FILTERED OUT %r", dep_project)
-                continue
+                    # Update every path just once
+                    if dep_project.path in done:
+                        _LOGGER.debug("DUPLICATE %r", dep_project)
+                        continue
+                    done.append(dep_project.path)
 
-            _LOGGER.debug("%r", dep_project)
-            dep_projects.append(dep_project)
+                    if not group_filter(dep_project.path, dep_project.groups) or not project_filter(dep_project):
+                        _LOGGER.debug("FILTERED OUT %r", dep_project)
+                        continue
 
-        yield tuple(dep_projects)
+                    _LOGGER.debug("%r", dep_project)
+                    projects.append(dep_project)
 
-        #
-        # Dependencies
-        #
-        sublevel = level + 1
-        for dep_project in dep_projects:
-            # Recursive?
-            if not dep_project.recursive:
-                continue
+            if projects:
+                yield tuple(projects)
 
-            # Manifest?
-            dep_project_path = self.workspace.get_project_path(dep_project)
-            dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
-            try:
-                dep_manifest_spec = self.manifest_format_manager.load(dep_manifest_path)
-            except ManifestNotFoundError:
-                continue
+            # See projects for manifests
+            manifests.clear()
+            level += 1
+            for dep_project in projects:
+                # Recursive?
+                if not dep_project.recursive:
+                    continue
 
-            dep_group_selects = group_selects_from_groups(dep_project.with_groups)
-            dep_filter = create_filter(dep_group_selects)
-            yield from self.__iter(sublevel, dep_project_path, dep_manifest_spec, dep_filter)
+                # Manifest?
+                dep_project_path = self.workspace.get_project_path(dep_project)
+                dep_manifest_path = dep_project_path / (find_manifest(dep_project_path) or dep_project.manifest_path)
+                try:
+                    dep_manifest_spec = self.manifest_format_manager.load(dep_manifest_path)
+                except ManifestNotFoundError:
+                    continue
+
+                # Empty?
+                if not dep_manifest_spec.dependencies:
+                    continue
+
+                dep_group_selects = group_selects_from_groups(dep_project.with_groups)
+                dep_filter = create_filter(dep_group_selects)
+                manifests.append((dep_project_path, dep_manifest_spec, dep_filter))
+
+            projects.clear()
 
 
-def create_filter(group_selects: GroupSelects, default: bool = False) -> FilterFunc:
+def create_filter(group_selects: GroupSelects, default: bool = False) -> GroupFilterFunc:
     """
     Create Group Filter Function.
 
