@@ -16,12 +16,16 @@
 
 """Command Line Interface."""
 
+from concurrent.futures import Future, ThreadPoolExecutor
+from typing import List, Optional, Tuple
+
 import click
 
-from gitws import AppConfig, AppConfigLocation, Defaults, GitWS, filter_clone_on_branch
+from gitws import AppConfig, AppConfigLocation, Clone, Defaults, GitWS, filter_clone_on_branch, map_paths
 from gitws._manifestformatmanager import get_manifest_format_manager
-from gitws._util import resolve_relative
-from gitws.git import FileStatus, State
+from gitws._util import LOGGER, resolve_relative
+from gitws.const import COLOR_BANNER
+from gitws.git import FileStatus, Paths, State, Status
 
 from .common import COLOR_INFO, Context, Error, exceptionhandling, pass_context
 from .config import config
@@ -331,19 +335,42 @@ def status(context, manifest_path=None, group_filters=None, paths=None, branch: 
     Run 'git status' on PATHS or all files (displayed paths include the current clone path).
     """
     with exceptionhandling(context):
+        paths = process_paths(paths)
         gws = GitWS.from_path(manifest_path=manifest_path, group_filters=group_filters, secho=context.secho)
-        for status in gws.status(paths=process_paths(paths), branch=branch, banner=banner):
-            text = str(status)
-            if isinstance(status, FileStatus):
-                fgidx = "red" if status.work in (State.IGNORED, State.UNTRACKED) else "green"
-                parts = (
-                    context.style(text[0], fg=fgidx),
-                    context.style(text[1], fg="red"),
-                    text[2:],
-                )
-                click.echo("".join(parts))
-            else:
-                click.echo(text)
+
+        def clone_status(
+            clone: Clone, cpaths: Optional[Paths] = None, branch: bool = False
+        ) -> Tuple[Tuple[str, ...], Tuple[Status, ...]]:
+            warnings = []
+            clone.check(warn=lambda msg: warnings.append(msg))
+            return tuple(warnings), tuple(clone.git.status(paths=cpaths, branch=branch))
+
+        jobs = gws.workspace.config.jobs
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = [
+                (clone, pool.submit(clone_status, clone=clone, cpaths=cpaths, branch=branch))
+                for clone, cpaths in map_paths(tuple(gws.clones()), paths)
+            ]
+            for clone, future in futures:
+                if banner:
+                    context.secho(f"===== {clone.info} =====", fg=COLOR_BANNER)
+                path = clone.git.path
+                warnings, statuses = future.result()
+                for warning in warnings:
+                    LOGGER.warning(warning)
+                for status in statuses:
+                    pathstatus = status.with_path(path)
+                    text = str(pathstatus)
+                    if isinstance(pathstatus, FileStatus):
+                        fgidx = "red" if pathstatus.work in (State.IGNORED, State.UNTRACKED) else "green"
+                        parts = (
+                            context.style(text[0], fg=fgidx),
+                            context.style(text[1], fg="red"),
+                            text[2:],
+                        )
+                        click.echo("".join(parts))
+                    else:
+                        click.echo(text)
 
 
 @main.command()

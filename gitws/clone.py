@@ -55,7 +55,7 @@ class Clone:
         git = Git(project_path, clone_cache=clone_cache, secho=secho)
         return Clone(project, git)
 
-    def check(self, exists=True, diff=True):
+    def check(self, exists=True, diff=True, warn: Optional[Callable[[str], None]] = None):
         """
         Check Clone And Emit Warnings On Logger.
 
@@ -68,7 +68,10 @@ class Clone:
         Keyword Args:
             exists: Check if cloned.
             diff: Check if revisions differ
+            warn: Print-like function to handle warnings
         """
+        if warn is None:
+            warn = _LOGGER.warning
         git = self.git
         # exists
         if exists:
@@ -78,9 +81,12 @@ class Clone:
         # revision
         if project.revision:
             if diff:
-                self._check_revision()
+                revs = self._get_revs(git)
+                if revs and project.revision not in revs:
+                    akas = " aka ".join(repr(rev) for rev in revs)
+                    warn(f"Clone {info} is on different revision: {akas}")
         elif not project.is_main:
-            _LOGGER.warning("Clone %s has no revision!", info)
+            warn(f"Clone {info} has no revision!")
         # URL
         if diff and project.url:
             cloneurl = None
@@ -88,31 +94,27 @@ class Clone:
                 cloneurl = git.get_url()
             if project.url != cloneurl:
                 if cloneurl:
-                    _LOGGER.warning("Clone %s remote origin is %r but intends to be: %r", info, cloneurl, project.url)
+                    warn(f"Clone {info} remote origin is {cloneurl!r} but intends to be: {project.url!r}")
                 else:
-                    _LOGGER.warning("Clone %s has no remote origin but intends to be: %r", info, project.url)
+                    warn(f"Clone {info} has no remote origin but intends to be: {project.url!r}")
 
-    def _check_revision(self) -> None:
-        git = self.git
-        project = self.project
-        revs: Tuple[str, ...] = ()
+    @staticmethod
+    def _get_revs(git) -> Tuple[str, ...]:
         with suppress(FileNotFoundError):
             # We cannot determine if we checked out a tag or SHA, so we need to be careful here
             branch = git.get_branch()
             if branch:
-                revs = (branch,)
+                return (branch,)
             else:
                 tag = git.get_tag()
                 sha = git.get_sha()
                 if tag and sha:
-                    revs = (tag, sha)
-                elif tag:
-                    revs = (tag,)
-                elif sha:
-                    revs = (sha,)
-        if revs and project.revision not in revs:
-            akas = " aka ".join(repr(rev) for rev in revs)
-            _LOGGER.warning("Clone %s is on different revision: %s", project.info, akas)
+                    return (tag, sha)
+                if tag:
+                    return (tag,)
+                if sha:
+                    return (sha,)
+        return ()
 
     def __eq__(self, other):
         if isinstance(other, Clone):

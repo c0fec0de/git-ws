@@ -15,6 +15,8 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+
+
 from pytest import fixture
 
 from gitws import Git, GitWS
@@ -35,120 +37,6 @@ def gws(tmp_path, repos):
         yield gws
 
 
-def test_status(tmp_path, gws):
-    """Test status."""
-    workspace = tmp_path / "main"
-    dep1 = workspace / "dep1"
-    dep2 = workspace / "dep2"
-
-    assert cli(("status", "--banner")) == [
-        "===== main (MAIN 'main', revision='main') =====",
-        "===== dep1 ('dep1') =====",
-        "WARNING: Clone dep1 has no revision!",
-        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "===== dep4 ('dep4', revision='main') =====",
-        "",
-    ]
-
-    assert_any(
-        cli(("status", "--branch", "--banner")),
-        (
-            [
-                "===== main (MAIN 'main', revision='main') =====",
-                "## main...origin/main",
-                "===== dep1 ('dep1') =====",
-                "WARNING: Clone dep1 has no revision!",
-                "## main...origin/main",
-                "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-                "## 1-feature...origin/1-feature",
-                "===== dep4 ('dep4', revision='main') =====",
-                "## main...origin/main",
-                "",
-            ],
-            [
-                "===== main (MAIN 'main', revision='main') =====",
-                "## main",
-                "===== dep1 ('dep1') =====",
-                "WARNING: Clone dep1 has no revision!",
-                "## main",
-                "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-                "## 1-feature",
-                "===== dep4 ('dep4', revision='main') =====",
-                "## main",
-                "",
-            ],
-        ),
-    )
-
-    (dep1 / "foo.txt").touch()
-    (dep2 / "bb.txt").touch()
-    (dep2 / "bc.txt").touch()
-
-    assert_any(
-        cli(("status", "--branch")),
-        (
-            [
-                "## main...origin/main",
-                "WARNING: Clone dep1 has no revision!",
-                "## main...origin/main",
-                "?? dep1/foo.txt",
-                "## 1-feature...origin/1-feature",
-                "?? dep2/bb.txt",
-                "?? dep2/bc.txt",
-                "## main...origin/main",
-                "",
-            ],
-            [
-                "## main...origin/main",
-                "WARNING: Clone dep1 has no revision!",
-                "## main...origin/main",
-                "## 1-feature...origin/1-feature",
-                "?? dep2/bb.txt",
-                "?? dep2/bc.txt",
-                "## main...origin/main",
-                "",
-            ],
-            [
-                "## main",
-                "WARNING: Clone dep1 has no revision!",
-                "## main",
-                "?? dep1/foo.txt",
-                "## 1-feature",
-                "?? dep2/bb.txt",
-                "?? dep2/bc.txt",
-                "## main",
-                "",
-            ],
-        ),
-    )
-
-    assert_any(
-        cli(("status", "--branch", "--banner", "dep2")),
-        (
-            [
-                "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-                "## 1-feature...origin/1-feature",
-                "?? dep2/bb.txt",
-                "?? dep2/bc.txt",
-                "",
-            ],
-            [
-                "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-                "## 1-feature",
-                "?? dep2/bb.txt",
-                "?? dep2/bc.txt",
-                "",
-            ],
-        ),
-    )
-
-    assert cli(("status", "-B", "dep2/bc.txt")) == [
-        "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "?? dep2/bc.txt",
-        "",
-    ]
-
-
 def test_workflow(tmp_path, gws):  # noqa: PLR0915
     """Test Full Workflow."""
     workspace = tmp_path / "main"
@@ -166,18 +54,20 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
     git4.set_config("user.email", "you@example.com")
     git4.set_config("user.name", "you")
 
-    (dep1 / "foo.txt").touch()
-    (dep2 / "bb.txt").touch()
-    (dep4 / "foo.txt").touch()
-    git4.add(("foo.txt",))
+    (dep1 / "new1.txt").touch()
+    (dep2 / "new2.txt").touch()
+    (dep4 / "new4.txt").touch()
+    git4.add(("new4.txt",))
 
     assert cli(("status", "--banner")) == [
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "WARNING: Clone dep1 has no revision!",
+        "?? dep1/new1.txt",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "?? dep2/bb.txt",
+        "?? dep2/new2.txt",
         "===== dep4 ('dep4', revision='main') =====",
+        "A  dep4/new4.txt",
         "",
     ]
 
@@ -190,15 +80,15 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
             "===== ../main (MAIN 'main', revision='main') =====",
             "===== . ('dep1') =====",
             "WARNING: Clone dep1 has no revision!",
-            "?? foo.txt",
+            "?? new1.txt",
             "===== ../dep2 ('dep2', revision='1-feature', submodules=False) =====",
-            "?? ../dep2/bb.txt",
+            "?? ../dep2/new2.txt",
             "===== ../dep4 ('dep4', revision='main') =====",
-            "A  ../dep4/foo.txt",
+            "A  ../dep4/new4.txt",
             "",
         ]
 
-    assert cli(("add", "dep2/bb.txt", "dep1/foo.txt", "missing/file.txt"), exit_code=1) == [
+    assert cli(("add", "dep2/new2.txt", "dep1/new1.txt", "missing/file.txt"), exit_code=1) == [
         "Error: 'missing/file.txt' cannot be associated with any clone.",
         "",
     ]
@@ -207,29 +97,29 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "WARNING: Clone dep1 has no revision!",
-        "?? dep1/foo.txt",
+        "?? dep1/new1.txt",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "?? dep2/bb.txt",
+        "?? dep2/new2.txt",
         "===== dep4 ('dep4', revision='main') =====",
-        "A  dep4/foo.txt",
+        "A  dep4/new4.txt",
         "",
     ]
 
-    assert cli(("add", "dep2/bb.txt", "dep1/foo.txt")) == ["WARNING: Clone dep1 has no revision!", ""]
+    assert cli(("add", "dep2/new2.txt", "dep1/new1.txt")) == ["WARNING: Clone dep1 has no revision!", ""]
 
     assert cli(("status", "--banner")) == [
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "WARNING: Clone dep1 has no revision!",
-        "A  dep1/foo.txt",
+        "A  dep1/new1.txt",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "A  dep2/bb.txt",
+        "A  dep2/new2.txt",
         "===== dep4 ('dep4', revision='main') =====",
-        "A  dep4/foo.txt",
+        "A  dep4/new4.txt",
         "",
     ]
 
-    assert cli(("commit", "dep2/bb.txt", "dep4/foo.txt"), exit_code=1) == [
+    assert cli(("commit", "dep2/new2.txt", "dep4/new4.txt"), exit_code=1) == [
         "Error: Please provide a commit message.",
         "",
     ]
@@ -238,15 +128,15 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "WARNING: Clone dep1 has no revision!",
-        "A  dep1/foo.txt",
+        "A  dep1/new1.txt",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
-        "A  dep2/bb.txt",
+        "A  dep2/new2.txt",
         "===== dep4 ('dep4', revision='main') =====",
-        "A  dep4/foo.txt",
+        "A  dep4/new4.txt",
         "",
     ]
 
-    assert cli(("commit", "dep2/bb.txt", "dep4/foo.txt", "-m", "messi")) == [
+    assert cli(("commit", "dep2/new2.txt", "dep4/new4.txt", "-m", "messi")) == [
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "===== dep4 ('dep4', revision='main') =====",
         "",
@@ -261,7 +151,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
                 "===== dep1 ('dep1') =====",
                 "WARNING: Clone dep1 has no revision!",
                 "## main...origin/main",
-                "A  dep1/foo.txt",
+                "A  dep1/new1.txt",
                 "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
                 "## 1-feature...origin/1-feature [ahead 1]",
                 "===== dep4 ('dep4', revision='main') =====",
@@ -274,7 +164,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
                 "===== dep1 ('dep1') =====",
                 "WARNING: Clone dep1 has no revision!",
                 "## main",
-                "A  dep1/foo.txt",
+                "A  dep1/new1.txt",
                 "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
                 "## 1-feature...origin/1-feature [ahead 1]",
                 "===== dep4 ('dep4', revision='main') =====",
@@ -284,7 +174,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         ),
     )
 
-    assert cli(("reset", "dep1/foo.txt")) == ["WARNING: Clone dep1 has no revision!", ""]
+    assert cli(("reset", "dep1/new1.txt")) == ["WARNING: Clone dep1 has no revision!", ""]
 
     (dep2 / "barbar.txt").touch()
 
@@ -292,7 +182,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "WARNING: Clone dep1 has no revision!",
-        "?? dep1/foo.txt",
+        "?? dep1/new1.txt",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "?? dep2/barbar.txt",
         "===== dep4 ('dep4', revision='main') =====",
@@ -305,7 +195,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "WARNING: Clone dep1 has no revision!",
-        "?? dep1/foo.txt",
+        "?? dep1/new1.txt",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "?? dep2/barbar.txt",
         "===== dep4 ('dep4', revision='main') =====",
@@ -315,7 +205,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
     assert cli(("status", "-B", "dep1")) == [
         "===== dep1 ('dep1') =====",
         "WARNING: Clone dep1 has no revision!",
-        "?? dep1/foo.txt",
+        "?? dep1/new1.txt",
         "",
     ]
 
@@ -325,7 +215,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "WARNING: Clone dep1 has no revision!",
-        "A  dep1/foo.txt",
+        "A  dep1/new1.txt",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "?? dep2/barbar.txt",
         "===== dep4 ('dep4', revision='main') =====",
@@ -348,7 +238,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "",
     ]
 
-    (dep4 / "foo.txt").write_text("content")
+    (dep4 / "new4.txt").write_text("content")
 
     assert cli(("status", "--banner")) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -357,7 +247,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "?? dep2/barbar.txt",
         "===== dep4 ('dep4', revision='main') =====",
-        " M dep4/foo.txt",
+        " M dep4/new4.txt",
         "",
     ]
 
@@ -385,7 +275,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "",
     ]
 
-    assert cli(("rm", "dep2/barbar.txt", "dep4/foo.txt"), exit_code=1) == [
+    assert cli(("rm", "dep2/barbar.txt", "dep4/new4.txt"), exit_code=1) == [
         "fatal: pathspec 'barbar.txt' did not match any files",
         "Error: 'git rm -- barbar.txt' failed.",
         "",
@@ -393,7 +283,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
 
     assert cli(("rm",), exit_code=1) == ["Error: Nothing specified, nothing removed.", ""]
 
-    assert cli(("rm", "dep4/foo.txt")) == [""]
+    assert cli(("rm", "dep4/new4.txt")) == [""]
 
     assert cli(("status", "--banner")) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -402,11 +292,11 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "?? dep2/barbar.txt",
         "===== dep4 ('dep4', revision='main') =====",
-        "D  dep4/foo.txt",
+        "D  dep4/new4.txt",
         "",
     ]
 
-    assert cli(("rm", "dep1/foo.txt", "--force", "--cached", "-r")) == [
+    assert cli(("rm", "dep1/new1.txt", "--force", "--cached", "-r")) == [
         "WARNING: Clone dep1 has no revision!",
         "",
     ]

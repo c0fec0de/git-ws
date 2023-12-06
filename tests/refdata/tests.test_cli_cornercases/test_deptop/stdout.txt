@@ -2,7 +2,7 @@ INFO:    Git('top/top').clone('file://REPOS/top', revision=None, depth=None)
 DEBUG:   run(('git', 'clone', '--', 'file://REPOS/top', 'top/top'), cwd=None) OK stdout=None stderr=None
 DEBUG:   GitWS.create('TMP/top', main_path='TMP/top/top', manifest_path=None, group-filters=None)
 INFO:    Workspace path=TMP/top main=top
-INFO:    AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None, clone_cache=None, depth=None)
+INFO:    AppConfigData(manifest_path='git-ws.toml', color_ui=True, group_filters=None, clone_cache=None, depth=None, jobs=None)
 DEBUG:   run(['git', 'branch'], cwd='top/top') OK stdout=b'* main\n' stderr=b''
 INFO:    Git('TMP/top/top').get_branch() = 'main'
 DEBUG:   run(['git', 'remote', '-v'], cwd='top/top') OK stdout=b'origin\tfile://REPOS/top (fetch)\norigin\tfile://REPOS/top (push)\n' stderr=b''

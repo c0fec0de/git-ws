@@ -828,6 +828,13 @@ class AppConfigData(BaseSettings):
     0 deactivates shallow cloning.
     """
 
+    jobs: Optional[int] = Field(default=None, description="Maximum number of parallel jobs")
+    """
+    Maximum Number of Jobs.
+
+    Compute and IO-Sensitive operations are spread to this number of processes.
+    """
+
     @staticmethod
     def defaults() -> Dict[str, Any]:
         """
