@@ -134,7 +134,7 @@ class ManifestIter:
             yield from self.__iter(dep_manifest_path, dep_manifest_spec, dep_filter)
 
 
-class ProjectIter:
+class ProjectLevelIter:
     """
     Iterate over all :py:class:`gitws.Project` s.
 
@@ -275,6 +275,64 @@ class ProjectIter:
                 manifests.append((dep_project_path, dep_manifest_spec, dep_filter))
 
             projects.clear()
+
+
+class ProjectIter:
+    """
+    Iterate over all :py:class:`gitws.Project` s.
+
+    The iterator takes a :py:class:`gitws.Workspace` and the path to a manifest file (`manifest_path`)
+    of the main project.
+    The manifest is read (:py:class:`gitws.ManifestSpec`) and all dependencies are translated to
+    :py:class:`gitws.Project` s, which are yielded.
+    The manifest files of the dependencies are also read, translated to a :py:class:`gitws.Project` s
+    and yielded likewise, until all manifest files and their dependencies are read.
+    Dependencies which have been already yielded are not evaluated again.
+    Means the first dependency (i.e. from the MAIN project) wins. Including the specified
+    attributes (i.e. revision).
+
+    Args:
+        workspace: The current workspace
+        manifest_path: Path to the manifest file **in the main project**.
+        group_filters: Group Filters.
+
+    Keyword Args:
+        skip_main: Do not yield main project.
+        resolve_url: Resolve relative URLs to absolute ones.
+
+    Yields:
+        :py:class:`gitws.Project`
+    """
+
+    def __init__(
+        self,
+        workspace: Workspace,
+        manifest_format_manager: ManifestFormatManager,
+        manifest_path: Path,
+        group_filters: GroupFilters,
+        filter_: Optional[ProjectFilterFunc] = None,
+        skip_main: bool = False,
+        resolve_url: bool = False,
+    ):
+        self.workspace: Workspace = workspace
+        self.manifest_format_manager: ManifestFormatManager = manifest_format_manager
+        self.manifest_path: Path = manifest_path
+        self.group_filters: GroupFilters = group_filters
+        self.filter_: Optional[ProjectFilterFunc] = filter_
+        self.skip_main: bool = skip_main
+        self.resolve_url: bool = resolve_url
+
+    def __iter__(self) -> Iterator[Project]:
+        for projects in ProjectLevelIter(
+            workspace=self.workspace,
+            manifest_format_manager=self.manifest_format_manager,
+            manifest_path=self.manifest_path,
+            group_filters=self.group_filters,
+            filter_=self.filter_,
+            skip_main=self.skip_main,
+            resolve_url=self.resolve_url,
+        ):
+            yield from projects
 
 
 def create_filter(group_selects: GroupSelects, default: bool = False) -> GroupFilterFunc:

@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from ._deptree import DepNode, get_deptree
-from ._iters import ManifestIter, ProjectIter, create_filter
+from ._iters import ManifestIter, ProjectLevelIter, create_filter
 from ._manifestformatmanager import ManifestFormatManager, get_manifest_format_manager
 from ._url import urlrel, urlsub
 from ._util import LOGGER, get_repr, no_echo, removesuffix, resolve_relative, run
@@ -393,7 +393,7 @@ class GitWS:
 
         project_paths_filter = self._create_project_paths_filter(project_paths)
 
-        for projects in ProjectIter(
+        for projects in ProjectLevelIter(
             workspace,
             self.manifest_format_manager,
             self.manifest_path,
@@ -773,7 +773,7 @@ class GitWS:
         workspace = self.workspace
         manifest_path = self.manifest_path
         group_filters = self.group_filters
-        for project_specs in ProjectIter(
+        for project_specs in ProjectLevelIter(
             workspace,
             self.manifest_format_manager,
             manifest_path,

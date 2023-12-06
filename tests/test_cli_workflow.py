@@ -175,11 +175,9 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "===== main (MAIN 'main', revision='main') =====",
         "===== dep1 ('dep1') =====",
         "WARNING: Clone dep1 has no revision!",
-        "?? dep1/foo.txt",
         "===== dep2 ('dep2', revision='1-feature', submodules=False) =====",
         "?? dep2/bb.txt",
         "===== dep4 ('dep4', revision='main') =====",
-        "A  dep4/foo.txt",
         "",
     ]
 

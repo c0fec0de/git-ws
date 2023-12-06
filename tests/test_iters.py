@@ -21,7 +21,7 @@ from typing import List
 from pytest import fixture
 
 from gitws import GroupFilters, ManifestSpec, Project, ProjectSpec, Workspace, const, save
-from gitws._iters import ManifestIter, ProjectIter
+from gitws._iters import ManifestIter, ProjectIter, ProjectLevelIter
 from gitws._manifestformatmanager import ManifestFormatManager
 from gitws.gitwsmanifestformat import GitWSManifestFormat
 
@@ -42,8 +42,15 @@ def test_empty_project_iter(tmp_path, mngr):
     workspace = Workspace.init(tmp_path)
     manifest_path = Path("none.toml")
     group_filters: GroupFilters = []
-    project_iter = ProjectIter(workspace, mngr, manifest_path, group_filters)
-    assert tuple(project_iter) == ()
+    assert tuple(ProjectIter(workspace, mngr, manifest_path, group_filters)) == ()
+
+
+def test_empty_project_level_iter(tmp_path, mngr):
+    """Empty Project Level Iterator."""
+    workspace = Workspace.init(tmp_path)
+    manifest_path = Path("none.toml")
+    group_filters: GroupFilters = []
+    assert tuple(ProjectLevelIter(workspace, mngr, manifest_path, group_filters)) == ()
 
 
 def test_empty_manifest_iter(tmp_path, mngr):
@@ -51,8 +58,7 @@ def test_empty_manifest_iter(tmp_path, mngr):
     workspace = Workspace.init(tmp_path)
     manifest_path = Path("none.toml")
     group_filters: GroupFilters = []
-    manifest_iter = ManifestIter(workspace, mngr, manifest_path, group_filters)
-    assert tuple(manifest_iter) == ()
+    assert tuple(ManifestIter(workspace, mngr, manifest_path, group_filters)) == ()
 
 
 def _create_hier(tmp_path, name, levels) -> List[ProjectSpec]:
@@ -78,14 +84,57 @@ def create_hier(tmp_path, name, levels):
         save(spec, const.MANIFEST_PATH_DEFAULT)
 
 
-def test_hier(tmp_path, mngr):
-    """Test On Project Hierarchy."""
+def test_project_iter(tmp_path, mngr):
+    """Test On Project Iterator."""
     workspace = Workspace.init(tmp_path)
     create_hier(tmp_path, "main", [2, 4, 3])
     group_filters: GroupFilters = ()
     manifest_path = tmp_path / "main" / const.MANIFEST_PATH_DEFAULT
-    project_iter = ProjectIter(workspace, mngr, manifest_path, group_filters)
-    assert tuple(project_iter) == (
+    assert tuple(ProjectIter(workspace, mngr, manifest_path, group_filters)) == (
+        Project(name="main-0", path="main-0", level=1, url="../main-0"),
+        Project(name="main-1", path="main-1", level=1, url="../main-1"),
+        Project(name="main-0-0", path="main-0-0", level=2, url="../main-0-0"),
+        Project(name="main-0-1", path="main-0-1", level=2, url="../main-0-1"),
+        Project(name="main-0-2", path="main-0-2", level=2, url="../main-0-2"),
+        Project(name="main-0-3", path="main-0-3", level=2, url="../main-0-3"),
+        Project(name="main-1-0", path="main-1-0", level=2, url="../main-1-0"),
+        Project(name="main-1-1", path="main-1-1", level=2, url="../main-1-1"),
+        Project(name="main-1-2", path="main-1-2", level=2, url="../main-1-2"),
+        Project(name="main-1-3", path="main-1-3", level=2, url="../main-1-3"),
+        Project(name="main-0-0-0", path="main-0-0-0", level=3, url="../main-0-0-0"),
+        Project(name="main-0-0-1", path="main-0-0-1", level=3, url="../main-0-0-1"),
+        Project(name="main-0-0-2", path="main-0-0-2", level=3, url="../main-0-0-2"),
+        Project(name="main-0-1-0", path="main-0-1-0", level=3, url="../main-0-1-0"),
+        Project(name="main-0-1-1", path="main-0-1-1", level=3, url="../main-0-1-1"),
+        Project(name="main-0-1-2", path="main-0-1-2", level=3, url="../main-0-1-2"),
+        Project(name="main-0-2-0", path="main-0-2-0", level=3, url="../main-0-2-0"),
+        Project(name="main-0-2-1", path="main-0-2-1", level=3, url="../main-0-2-1"),
+        Project(name="main-0-2-2", path="main-0-2-2", level=3, url="../main-0-2-2"),
+        Project(name="main-0-3-0", path="main-0-3-0", level=3, url="../main-0-3-0"),
+        Project(name="main-0-3-1", path="main-0-3-1", level=3, url="../main-0-3-1"),
+        Project(name="main-0-3-2", path="main-0-3-2", level=3, url="../main-0-3-2"),
+        Project(name="main-1-0-0", path="main-1-0-0", level=3, url="../main-1-0-0"),
+        Project(name="main-1-0-1", path="main-1-0-1", level=3, url="../main-1-0-1"),
+        Project(name="main-1-0-2", path="main-1-0-2", level=3, url="../main-1-0-2"),
+        Project(name="main-1-1-0", path="main-1-1-0", level=3, url="../main-1-1-0"),
+        Project(name="main-1-1-1", path="main-1-1-1", level=3, url="../main-1-1-1"),
+        Project(name="main-1-1-2", path="main-1-1-2", level=3, url="../main-1-1-2"),
+        Project(name="main-1-2-0", path="main-1-2-0", level=3, url="../main-1-2-0"),
+        Project(name="main-1-2-1", path="main-1-2-1", level=3, url="../main-1-2-1"),
+        Project(name="main-1-2-2", path="main-1-2-2", level=3, url="../main-1-2-2"),
+        Project(name="main-1-3-0", path="main-1-3-0", level=3, url="../main-1-3-0"),
+        Project(name="main-1-3-1", path="main-1-3-1", level=3, url="../main-1-3-1"),
+        Project(name="main-1-3-2", path="main-1-3-2", level=3, url="../main-1-3-2"),
+    )
+
+
+def test_project_level_iter(tmp_path, mngr):
+    """Test On Project Level Iterator."""
+    workspace = Workspace.init(tmp_path)
+    create_hier(tmp_path, "main", [2, 4, 3])
+    group_filters: GroupFilters = ()
+    manifest_path = tmp_path / "main" / const.MANIFEST_PATH_DEFAULT
+    assert tuple(ProjectLevelIter(workspace, mngr, manifest_path, group_filters)) == (
         (
             Project(name="main-0", path="main-0", level=1, url="../main-0"),
             Project(name="main-1", path="main-1", level=1, url="../main-1"),
