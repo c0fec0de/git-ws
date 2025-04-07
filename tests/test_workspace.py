@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,8 +15,10 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Workspace Testing."""
+
 from pathlib import Path
 
+from contextlib_chdir import chdir
 from pytest import raises
 
 from gitws import InitializedError, OutsideWorkspaceError, UninitializedError
@@ -25,7 +27,6 @@ from gitws.datamodel import WorkspaceFileRef
 from gitws.workspace import Info, Workspace
 
 from .common import TESTDATA_PATH
-from .util import chdir
 
 
 def test_load():

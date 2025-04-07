@@ -1,4 +1,4 @@
-# Copyright 2023 c0fec0de
+# Copyright 2023-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #

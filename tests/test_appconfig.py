@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -39,7 +39,7 @@ def _app_config_from(scenario: str, include_workspace=True, **kwargs):
         args["workspace_config_dir"] = str(TEST_DATA_ROOT / scenario / "workspace")
     args.update(kwargs)
 
-    return AppConfig(**args)
+    return AppConfig(**args)  # type: ignore[arg-type]
 
 
 def test_default_construction():

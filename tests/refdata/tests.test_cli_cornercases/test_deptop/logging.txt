@@ -1,0 +1,4 @@
+WARNING  git-ws  Clone dep1 has no revision!
+WARNING  git-ws  Clone dep2 has no revision!
+WARNING  git-ws  Clone sub/dep4 has no revision!
+WARNING  git-ws  Clone dep5 has no revision!

@@ -1,3 +1,19 @@
+# Copyright 2022-2025 c0fec0de
+#
+# This file is part of Git Workspace.
+#
+# Git Workspace is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# Git Workspace is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
+
 """
 Configuration file for the Sphinx documentation builder.
 
@@ -9,7 +25,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html#project-informatio
 """
 
 project = "git-ws"
-copyright = "2022-2023, c0fec0de"
+copyright = "2022-2025, c0fec0de"
 author = "c0fec0de"
 
 # -- General configuration ---------------------------------------------------

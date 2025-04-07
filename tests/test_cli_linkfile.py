@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,12 +15,15 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface - Update Variants."""
+
 from pathlib import Path
+
+from contextlib_chdir import chdir
 
 from gitws import FileRef, Git, GitWS, MainFileRef, ManifestSpec, ProjectSpec, save
 
 from .fixtures import git_repo
-from .util import chdir, cli, path2url
+from .util import cli, path2url
 
 
 def create_repos(repos_path) -> str:
@@ -55,7 +58,7 @@ def create_repos(repos_path) -> str:
         (path / "data2.txt").write_text("dep1-2")
         save(ManifestSpec(), path / "git-ws.toml")
 
-    return Git(repos_path / "main").get_sha()[:7]
+    return Git(repos_path / "main").get_sha()[:7]  # type: ignore[index]
 
 
 def modify_repos(repos_path) -> str:
@@ -78,9 +81,9 @@ def modify_repos(repos_path) -> str:
             ],
         )
         save(manifest_spec, Path("git-ws.toml"))
-        git = Git(Path("."))
+        git = Git(Path())
         git.commit("update", all_=True)
-        return git.get_sha()[:7]
+        return git.get_sha()[:7]  # type: ignore[index]
 
 
 def test_update(tmp_path):

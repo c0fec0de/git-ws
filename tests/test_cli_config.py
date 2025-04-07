@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,11 +15,12 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Tests of the config command line interface."""
+
 import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional
+from typing import Optional
 from unittest import mock
 
 from appdirs import site_config_dir, user_config_dir
@@ -59,7 +60,7 @@ _USER_CONFIG_DIR = user_config_dir(APP_NAME, appauthor=APP_AUTHOR)
         ([USER_CONFIG_PATH_ENV_NAME, WORKSPACE_CONFIG_PATH_ENV_NAME], [], str(MANIFEST_PATH_DEFAULT)),
     ],
 )
-def test_config_cli(env_patches: List[str], cli_args: List[str], initial_manifest_path: Optional[str]):  # noqa: PLR0915
+def test_config_cli(env_patches: list[str], cli_args: list[str], initial_manifest_path: Optional[str]):  # noqa: PLR0915
     """Check that we can edit the system config file with the CLI."""
     with TemporaryDirectory() as tmpdir:
         patch = {

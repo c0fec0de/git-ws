@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,16 +15,18 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface - Update Variants."""
+
 import tempfile
 from pathlib import Path
 
+from contextlib_chdir import chdir
 from pytest import fixture
+from test2ref import assert_refdata
 
 from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
-from .common import TESTDATA_PATH
 from .fixtures import git_repo
-from .util import assert_gen, chdir, check, cli, path2url
+from .util import check, cli, path2url
 
 
 @fixture(scope="session")
@@ -83,14 +85,14 @@ def gws(tmp_path, repos_submodules):
 
 def test_update(tmp_path, repos_submodules, gws):
     """Test update."""
-    genpath = tmp_path / "gen"
-    genpath.mkdir()
+    gen_path = tmp_path / "gen"
+    gen_path.mkdir()
 
     out = cli(["-vv", "submodule", "update"], tmp_path=tmp_path, repos_path=repos_submodules)
-    (genpath / "out.txt").write_text("\n".join(out))
+    (gen_path / "out.txt").write_text("\n".join(out))
 
-    refpath = TESTDATA_PATH / "cli_submodule" / "test_update"
-    assert_gen(genpath, refpath, tmp_path=tmp_path, repos_path=repos_submodules)
+    replacements = ((repos_submodules, "REPOS_PATH"),)
+    assert_refdata(test_update, gen_path, replacements=replacements)
 
     workspace = gws.path
     check(workspace, "dep1")

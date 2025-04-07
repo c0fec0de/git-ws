@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,12 +15,9 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Test Utilities."""
-import contextlib
-import logging
+
 import os
 import re
-import shutil
-import subprocess
 from pathlib import Path, PosixPath
 from subprocess import run
 
@@ -30,24 +27,11 @@ from gitws._cli import main
 
 _RE_EMPTY_LINE = re.compile(r"[ \t]*\r")
 
-LEARN = False
-
-
-@contextlib.contextmanager
-def chdir(path):
-    """Change Working Directory to ``path``."""
-    curdir = os.getcwd()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(curdir)
-
 
 def get_sha(path):
     """Get SHA for ``path``."""
     assert (path / ".git").exists()
-    result = run(("git", "rev-parse", "HEAD"), capture_output=True, check=True, cwd=path)
+    result = run(("git", "rev-parse", "HEAD"), capture_output=True, check=True, cwd=path)  # noqa: S603
     return result.stdout.decode("utf-8").strip()
 
 
@@ -112,46 +96,15 @@ def check(workspace, name, path=None, content=None, exists=True, depth=None, bra
     else:
         assert not file_path.exists()
     if depth is not None:
-        result = run(("git", "log", "--pretty=%H"), cwd=(workspace / path), capture_output=True, check=True)
+        result = run(("git", "log", "--pretty=%H"), cwd=(workspace / path), capture_output=True, check=True)  # noqa: S603
         lines = result.stdout.decode("utf-8").rstrip().split("\n")
         lines = [hash_ for hash_ in lines if hash_]
         assert depth == len(lines), f"{depth} == len({lines})"
     if branches is not None:
-        result = run(("git", "branch", "--all"), cwd=(workspace / path), capture_output=True, check=True)
+        result = run(("git", "branch", "--all"), cwd=(workspace / path), capture_output=True, check=True)  # noqa: S603
         lines = result.stdout.decode("utf-8").rstrip().split("\n")
         lines = [hash_ for hash_ in lines if hash_]
         assert branches == len(lines), f"{branches} == len({lines})"
-
-
-def assert_gen(genpath, refpath, capsys=None, caplog=None, tmp_path=None, repos_path=None, replacements=None):
-    """Compare Generated Files Versus Reference."""
-    genpath.mkdir(parents=True, exist_ok=True)
-    refpath.mkdir(parents=True, exist_ok=True)
-    if capsys:
-        assert tmp_path
-        assert repos_path
-        captured = capsys.readouterr()
-        out = captured.out
-        err = captured.err
-        out = replace_path(out, repos_path, "REPOS")
-        err = replace_path(err, repos_path, "REPOS")
-        out = replace_path(out, tmp_path, "TMP")
-        err = replace_path(err, tmp_path, "TMP")
-        (genpath / "stdout.txt").write_text(out)
-        (genpath / "stderr.txt").write_text(err)
-    if caplog:
-        with open(genpath / "logging.txt", "w", encoding="utf-8") as file:
-            for item in format_logs(caplog, tmp_path=tmp_path, repos_path=repos_path, replacements=replacements):
-                file.write(f"{item}\n")
-    if LEARN:  # pragma: no cover
-        logging.getLogger(__name__).warning("LEARNING %s", refpath)
-        shutil.rmtree(refpath, ignore_errors=True)
-        shutil.copytree(genpath, refpath)
-    cmd = ["diff", "-r", "--exclude", "__pycache__", str(refpath), str(genpath)]
-    try:
-        subprocess.run(cmd, check=True, capture_output=True)
-    except subprocess.CalledProcessError as error:  # pragma: no cover
-        raise AssertionError(error.stdout.decode("utf-8")) from None
 
 
 def assert_any(gen, refs):  # pragma: no cover

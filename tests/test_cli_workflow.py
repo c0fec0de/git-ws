@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,11 +15,13 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+
+from contextlib_chdir import chdir
 from pytest import fixture
 
 from gitws import Git, GitWS
 
-from .util import assert_any, chdir, cli, path2url
+from .util import assert_any, cli, path2url
 
 
 @fixture
@@ -166,9 +168,9 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
     git4.set_config("user.email", "you@example.com")
     git4.set_config("user.name", "you")
 
-    (dep1 / "foo.txt").touch()
-    (dep2 / "bb.txt").touch()
-    (dep4 / "foo.txt").touch()
+    (dep1 / "foo.txt").write_text("content")
+    (dep2 / "bb.txt").write_text("content")
+    (dep4 / "foo.txt").write_text("content")
     git4.add(("foo.txt",))
 
     assert cli(("status", "--banner")) == [
@@ -350,7 +352,7 @@ def test_workflow(tmp_path, gws):  # noqa: PLR0915
         "",
     ]
 
-    (dep4 / "foo.txt").write_text("content")
+    (dep4 / "foo.txt").write_text("content2")
 
     assert cli(("status", "--banner")) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -575,7 +577,7 @@ def test_add(tmp_path, gws):
 
 
 def test_diff(tmp_path, gws):
-    """diff."""
+    """Diff."""
     workspace = tmp_path / "main"
     dep2 = workspace / "dep2"
     dep4 = workspace / "dep4"

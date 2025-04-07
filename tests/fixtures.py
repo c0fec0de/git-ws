@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,12 +15,15 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Fixtures."""
+
 from contextlib import contextmanager
 from pathlib import Path
 
+from contextlib_chdir import chdir
+
 from gitws import Defaults, Git, ManifestSpec, ProjectSpec, save
 
-from .util import chdir, run
+from .util import run
 
 
 def set_meta(path=None):

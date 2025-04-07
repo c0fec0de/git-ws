@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,16 +15,18 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+
 import tempfile
 from pathlib import Path
 
+from contextlib_chdir import chdir
 from pytest import fixture
 
 from gitws import Git, load, save
 from gitws.const import CONFIG_PATH, INFO_PATH, MANIFESTS_PATH
 
 from .fixtures import create_repos, set_meta
-from .util import chdir, cli, path2url, run
+from .util import cli, path2url, run
 
 
 @fixture()
@@ -122,15 +124,15 @@ def test_tag(tmp_path, repos):
         ]
         assert cli(("checkout",)) == [
             "===== main (MAIN 'main', revision='MYTAG') =====",
-            f"===== dep1 ('dep1', revision='{dep1_sha}') " "=====",
+            f"===== dep1 ('dep1', revision='{dep1_sha}') =====",
             f"HEAD is now at {dep1_shas} other",
-            f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
+            f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) =====",
             f"HEAD is now at {dep2_shas} feature",
-            f"===== dep5 ('dep5', revision='{dep5_sha}') " "=====",
+            f"===== dep5 ('dep5', revision='{dep5_sha}') =====",
             f"HEAD is now at {dep5_shas} initial",
-            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
             f"HEAD is now at {dep6_shas} initial",
-            f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
+            f"===== dep4 ('dep4', revision='{dep4_sha}') =====",
             f"HEAD is now at {dep4_shas} initial",
             "",
         ]
@@ -145,7 +147,7 @@ def test_tag(tmp_path, repos):
             "Switched to branch '1-feature'",
             "===== dep5 ('dep5', revision='final2') =====",
             f"HEAD is now at {dep5_shas} initial",
-            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
             f"HEAD is now at {dep6_shas} initial",
             "===== dep4 ('dep4', revision='main') =====",
             "Switched to branch 'main'",
@@ -162,7 +164,7 @@ def test_tag(tmp_path, repos):
             "Already on '1-feature'",
             "===== dep5 ('dep5', revision='final2') =====",
             f"HEAD is now at {dep5_shas} initial",
-            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
             f"HEAD is now at {dep6_shas} initial",
             "===== dep4 ('dep4', revision='main') =====",
             "Already on 'main'",
@@ -204,15 +206,15 @@ def test_tag(tmp_path, repos):
 
         assert cli(("checkout",)) == [
             "===== main (MAIN 'main', revision='MYTAG') =====",
-            f"===== dep1 ('dep1', revision='{dep1_sha}') " "=====",
+            f"===== dep1 ('dep1', revision='{dep1_sha}') =====",
             f"HEAD is now at {dep1_shas} other",
-            f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
+            f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) =====",
             f"HEAD is now at {dep2_shas} feature",
             f"===== dep5 ('dep5', revision='{dep5_sha}') =====",
             f"HEAD is now at {dep5_shas} initial",
             f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
             f"HEAD is now at {dep6_shas} initial",
-            f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
+            f"===== dep4 ('dep4', revision='{dep4_sha}') =====",
             f"HEAD is now at {dep4_shas} initial",
             "",
         ]
@@ -225,7 +227,7 @@ def test_tag(tmp_path, repos):
             "Switched to branch '1-feature'",
             "===== dep5 ('dep5', revision='final2') =====",
             f"HEAD is now at {dep5_shas} initial",
-            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
             f"HEAD is now at {dep6_shas} initial",
             "===== dep4 ('dep4', revision='main') =====",
             "Switched to branch 'main'",
@@ -382,15 +384,15 @@ def test_tag_overwrite(tmp_path, repos):
         main_git.checkout(revision="MYTAG")
         assert cli(("checkout",)) == [
             "===== main (MAIN 'main', revision='MYTAG') =====",
-            f"===== dep1 ('dep1', revision='{dep1_sha}') " "=====",
+            f"===== dep1 ('dep1', revision='{dep1_sha}') =====",
             f"HEAD is now at {dep1_shas} change",
-            f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) " "=====",
+            f"===== dep2 ('dep2', revision='{dep2_sha}', submodules=False) =====",
             f"HEAD is now at {dep2_shas} feature",
-            f"===== dep5 ('dep5', revision='{dep5_sha}') " "=====",
+            f"===== dep5 ('dep5', revision='{dep5_sha}') =====",
             f"HEAD is now at {dep5_shas} initial",
-            f"===== dep6 ('dep6', revision='{dep6_sha}') " "=====",
+            f"===== dep6 ('dep6', revision='{dep6_sha}') =====",
             f"HEAD is now at {dep6_shas} initial",
-            f"===== dep4 ('dep4', revision='{dep4_sha}') " "=====",
+            f"===== dep4 ('dep4', revision='{dep4_sha}') =====",
             f"HEAD is now at {dep4_shas} initial",
             "",
         ]

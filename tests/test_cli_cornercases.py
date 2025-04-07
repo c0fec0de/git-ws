@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,16 +15,18 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+
 import tempfile
 from pathlib import Path
 
+from contextlib_chdir import chdir
 from pytest import fixture
+from test2ref import assert_refdata
 
 from gitws import GitWS, ManifestSpec, ProjectSpec, save
 
-from .common import TESTDATA_PATH
 from .fixtures import git_repo
-from .util import assert_gen, chdir, check, path2url
+from .util import check, path2url
 
 
 @fixture
@@ -90,6 +92,8 @@ def repos_deptop():
 def test_deptop(tmp_path, repos_deptop, caplog, capsys):
     """Initialized :any:`GitWS` on ``repos_deptop``."""
     workspace = tmp_path / "top"
+    gen_path = tmp_path / "gen"
+    gen_path.mkdir()
 
     with chdir(tmp_path):
         gws = GitWS.clone(path2url(repos_deptop / "top"))
@@ -114,11 +118,5 @@ def test_deptop(tmp_path, repos_deptop, caplog, capsys):
         check(workspace, "dep4", path="sub/dep4")
         check(workspace, "dep5", path="sub/dep5", exists=False)
 
-    assert_gen(
-        tmp_path / "gen",
-        TESTDATA_PATH / "cli_cornercases" / "deptop",
-        caplog=caplog,
-        capsys=capsys,
-        tmp_path=tmp_path,
-        repos_path=repos_deptop,
-    )
+    replacements = ((repos_deptop, "REPOS_PATH"),)
+    assert_refdata(test_deptop, gen_path, caplog=caplog, capsys=capsys, replacements=replacements)

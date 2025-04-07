@@ -1,41 +1,49 @@
-# Copyright cocotb contributors
-# Licensed under the Revised BSD License, see LICENSE for details.
-# SPDX-License-Identifier: BSD-3-Clause
-
-exclude: "tests/testdata/appconfig/invalid_config/user/config.toml"
+exclude: ^tests/refdata/.*$
 repos:
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  # Ruff version.
-  rev: v0.1.6
-  hooks:
-    # Run the formatter.
-    - id: ruff-format
-    # Run the linter.
-    - id: ruff
-      args: [ --fix ]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.11.2
+    hooks:
+      # Run the linter.
+      - id: ruff
+        args: [--fix]
+      # Run the formatter.
+      - id: ruff-format
 
-- repo: "https://github.com/pre-commit/pre-commit-hooks"
-  rev: "v4.5.0"
-  hooks:
-  - id: "check-added-large-files"
-  - id: "check-merge-conflict"
-  - id: "check-shebang-scripts-are-executable"
-  - id: "check-toml"
-  - id: "check-yaml"
-  - id: "debug-statements"
-  - id: "end-of-file-fixer"
-    exclude: "docs/images/.*"
-  - id: "trailing-whitespace"
-  - id: "mixed-line-ending"
-    args:
-    - "--fix=lf"
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+        exclude: ^tests/testdata/appconfig/invalid_config/.*$
+      - id: check-json
+      - id: check-xml
+      - id: debug-statements
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: mixed-line-ending
 
-- repo: https://github.com/codespell-project/codespell
-  rev: v2.2.4
-  hooks:
-  - id: codespell
-    args:
-    - "--write-changes"
-    additional_dependencies:
-      - tomli
-    exclude: '^pdm\.lock$'
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.5
+    hooks:
+      - id: remove-tabs
+        args: [--whitespaces-count, "2"] # defaults to: 4
+      - id: insert-license
+        files: \.py$
+        args:
+          - --license-filepath
+          - LICENSE
+          - --use-current-year
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args:
+          - "--write-changes"
+          - "--ignore-words=.codespellignore"
+        additional_dependencies:
+          - tomli
+        exclude: '^uv\.lock$'

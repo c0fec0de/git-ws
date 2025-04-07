@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -16,10 +16,11 @@
 
 """Clone Testing."""
 
+from contextlib_chdir import chdir
 
 from gitws.const import INFO_PATH
 
-from .util import chdir, check, cli, path2url
+from .util import check, cli, path2url
 
 
 def test_cli_clone(tmp_path, repos):

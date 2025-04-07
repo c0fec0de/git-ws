@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,10 +15,13 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Initialization Tests."""
+
 from pathlib import Path
 
+from contextlib_chdir import chdir
+
 from .common import MANIFEST_DEFAULT
-from .util import chdir, cli, run
+from .util import cli, run
 
 
 def test_cli_nogit(tmp_path):

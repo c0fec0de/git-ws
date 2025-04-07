@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,12 +15,14 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+
+from contextlib_chdir import chdir
 from pytest import fixture
 
 from gitws import GitWS
 
 from .common import MANIFEST_DEFAULT
-from .util import chdir, cli, get_sha, path2url
+from .util import cli, get_sha, path2url
 
 
 @fixture
@@ -805,16 +807,16 @@ def test_freeze_dotgit(tmp_path, gws_dotgit):
         "===== main (MAIN 'main', revision='main') =====",
         "Fetching.",
         "Merging branch 'main'.",
-        f"===== dep1 ('dep1', revision='{sha1}') " "=====",
+        f"===== dep1 ('dep1', revision='{sha1}') =====",
         "Fetching.",
         f"HEAD is now at {sha1s} initial",
-        f"===== dep3 ('dep3', revision='{sha3}') " "=====",
+        f"===== dep3 ('dep3', revision='{sha3}') =====",
         "Fetching.",
         f"HEAD is now at {sha3s} initial",
-        f"===== dep2 ('dep2', revision='{sha2}') " "=====",
+        f"===== dep2 ('dep2', revision='{sha2}') =====",
         "Fetching.",
         f"HEAD is now at {sha2s} initial",
-        f"===== dep4 ('dep4', revision='{sha4}') " "=====",
+        f"===== dep4 ('dep4', revision='{sha4}') =====",
         "Fetching.",
         f"HEAD is now at {sha4s} initial",
         "",

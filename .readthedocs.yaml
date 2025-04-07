@@ -8,10 +8,10 @@ version: 2
 build:
   os: ubuntu-22.04
   tools:
-    python: "3.9"
+    python: "3.11"
 
   commands:
     - pip install --upgrade --no-cache-dir pip
-    - pip install --no-cache-dir pdm
+    - pip install --no-cache-dir uv
     - make doc
     - cp -r docs/build _readthedocs
