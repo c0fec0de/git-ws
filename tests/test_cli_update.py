@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,13 +15,16 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface - Update Variants."""
+
 from pathlib import Path
+
+from contextlib_chdir import chdir
 
 from gitws import Git, GitWS, save
 from gitws.datamodel import ManifestSpec, ProjectSpec
 
 from .fixtures import create_repos
-from .util import chdir, check, cli, path2url, run
+from .util import check, cli, path2url, run
 
 
 def test_update(tmp_path):

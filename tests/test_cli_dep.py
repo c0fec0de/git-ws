@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,15 +15,17 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+
 from pathlib import Path
 
+from contextlib_chdir import chdir
 from pytest import fixture
 
 from gitws import Git, ManifestSpec, ProjectSpec, load, save
 from gitws._util import run
 
 from .fixtures import create_repos, git_repo
-from .util import chdir, cli, path2url
+from .util import cli, path2url
 
 
 def test_cli_dep(tmp_path):

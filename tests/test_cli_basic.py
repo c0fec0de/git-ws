@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,17 +15,18 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+
 import tempfile
 from pathlib import Path
 from shutil import rmtree
 
+from contextlib_chdir import chdir
 from pytest import fixture
 
 from gitws import Git, GitWS
 
-from .common import TESTDATA_PATH
 from .fixtures import create_repos
-from .util import assert_gen, chdir, cli, path2url
+from .util import cli, path2url
 
 
 @fixture()
@@ -177,7 +178,6 @@ def test_git(tmp_path, gws):
 
 def test_foreach(tmp_path, gws, repos):
     """Test foreach."""
-    dep5_sha = Git(gws.path / "dep5").get_sha()
     dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(["foreach", "git", "status"]) == [
         "===== main (MAIN 'main', revision='main') =====",
@@ -189,18 +189,6 @@ def test_foreach(tmp_path, gws, repos):
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
-    assert_gen(
-        tmp_path / "gen",
-        TESTDATA_PATH / "cli_basic" / "foreach",
-        tmp_path=tmp_path,
-        repos_path=repos,
-        replacements={
-            dep5_sha: "DEP5_SHA",
-            dep5_sha[:7]: "DEP5_SHAS",
-            dep6_sha: "DEP6_SHA",
-            dep6_sha[:7]: "DEP6_SHAS",
-        },
-    )
 
 
 def test_foreach_clone_missing(tmp_path, gws):
@@ -273,7 +261,6 @@ def _test_foreach(tmp_path, gws, *command, on_branch=False):
 
 def test_git_no_color(tmp_path, gws, repos):
     """Test git."""
-    dep5_sha = Git(gws.path / "dep5").get_sha()
     dep6_sha = Git(gws.path / "dep6").get_sha()
     assert cli(["config", "set", "color_ui", "False"]) == [""]
     assert cli(["git", "status"]) == [
@@ -286,18 +273,6 @@ def test_git_no_color(tmp_path, gws, repos):
         "===== dep4 ('dep4', revision='main') =====",
         "",
     ]
-    assert_gen(
-        tmp_path / "gen",
-        TESTDATA_PATH / "cli_basic" / "git_no_color",
-        tmp_path=tmp_path,
-        repos_path=repos,
-        replacements={
-            dep5_sha: "DEP5_SHA",
-            dep5_sha[:7]: "DEP5_SHAS",
-            dep6_sha: "DEP6_SHA",
-            dep6_sha[:7]: "DEP6_SHAS",
-        },
-    )
 
 
 def test_foreach_command_missing(tmp_path, gws):

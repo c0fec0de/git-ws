@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,8 +15,6 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Workspace Manager Testing."""
-from os import readlink
-from pathlib import Path
 
 from pytest import fixture
 
@@ -160,8 +158,7 @@ def test_modified(caplog, mgr, tmp_path):
     mgr.update()
 
     assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == [
-        "ERROR   git-ws Cannot update: File 'WSREL/main-copy.txt' got "
-        "manipulated. (Originally 'WSREL/main/copy.txt')",
+        "ERROR   git-ws Cannot update: File 'WSREL/main-copy.txt' got manipulated. (Originally 'WSREL/main/copy.txt')",
     ]
 
     assert (main_path / "link.txt").read_text() == "link-another-update"
@@ -283,6 +280,7 @@ def test_modified_symlink(caplog, mgr, tmp_path):
     (main_path / "link.txt").write_text("link")
     (main_path / "link2.txt").write_text("link2")
     (main_path / "copy.txt").write_text("copy")
+    mainlink = workspace_path / "main-link.txt"
     mgr.add(
         "main",
         linkfiles=[
@@ -297,7 +295,7 @@ def test_modified_symlink(caplog, mgr, tmp_path):
 
     assert (workspace_path / "main-link.txt").is_symlink()
     assert not (workspace_path / "main-copy.txt").is_symlink()
-    assert Path(readlink(workspace_path / "main-link.txt")) == (main_path / "link.txt")
+    assert mainlink.readlink() == (main_path / "link.txt")
     assert format_logs(caplog, tmp_path=tmp_path, replacements={relative(tmp_path / "workspace"): "WSREL"}) == []
 
     (workspace_path / "main-link.txt").unlink()
@@ -323,8 +321,8 @@ def test_modified_symlink(caplog, mgr, tmp_path):
         "manipulated. (Originally 'WSREL/main/link.txt')"
     ]
 
-    assert Path(readlink(workspace_path / "main-link.txt")) == (main_path / "copy.txt")
+    assert mainlink.readlink() == (main_path / "copy.txt")
 
     mgr.update(force=True)
 
-    assert Path(readlink(workspace_path / "main-link.txt")) == (main_path / "link2.txt")
+    assert mainlink.readlink() == (main_path / "link2.txt")

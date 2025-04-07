@@ -1,96 +1,79 @@
-.DEFAULT_GOAL := help
-SOURCE = gitws
-DOC_REQUIREMENTS =
-DOC_REQUIREMENTS += "sphinx-rtd-theme<2.0.0,>=1.0.0"
-DOC_REQUIREMENTS += "sphinx<6.0.0,>=5.1.1"
-DOC_REQUIREMENTS += "sphinxemoji>=0.2.0"
+_GREEN:=\033[0;32m
+_BLUE:=\033[0;34m
+_BOLD:=\033[1m
+_NORM:=\033[0m
+ENV:=uv run --frozen --
+PYTEST_OPTIONS=-n auto
 
-# install pdm - helper target, might require 'make clean' in case of broken setup
-.make.pdm: $(MAKEFILE_LIST)
-	@pdm -V 2> /dev/null || \
-	(pipx install pdm && pdm self add pdm-version) || \
-	echo 'Please install PDM: https://pdm.fming.dev/latest/#installation'
-	@touch .make.pdm
 
-# install pre-commit - helper target, might require 'make clean' in case of broken setup
-.make.pre-commit: $(MAKEFILE_LIST)
-	@pre-commit -V 2> /dev/null || \
-	pipx install pre-commit || \
-	echo 'Please install pre-commit: https://pre-commit.com/'
-	@touch .make.pre-commit
+.PHONY: help
+help:  ## [DEFAULT] Show this help
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "${_BLUE}${_BOLD}%-10s${_NORM} %s\n", $$1, $$2}'
 
-.git/hooks/pre-commit: .make.pre-commit
-	pre-commit install --install-hooks
-	@touch .git/hooks/pre-commit
 
-.make.lock: .make.pdm pyproject.toml
-	pdm info
-	pdm lock
-	pdm install --group :all
-	@touch .make.lock
+.PHONY: all
+all:  ## Do everything taggged with [ALL] below
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep "\[ALL\]" | grep -v "^all" | awk 'BEGIN {FS = ":.*?##"}; {printf "%s ", $$1}' | xargs make
+	@echo "\n    ${_GREEN}${_BOLD}PASS${_NORM}\n"
 
-.PHONY: lock  ## Create pdm.lock file
-lock: .make.lock
 
-.PHONY: setup  ## Prepare environment for local development
-setup: .make.pdm .make.pre-commit .git/hooks/pre-commit .make.lock
+.PHONY: pre-commit
+pre-commit: .venv/.valid .git/hooks/pre-commit ## [ALL] Run 'pre-commit' on all files
+	${ENV} pre-commit run --all-files
 
-.PHONY: checks  ## Run formatter, linter and all other checks (aka pre-commit)
-checks: .git/hooks/pre-commit
-	@pre-commit run --all-files || (echo "Trying again :-)" && pre-commit run --all-files)
+.git/hooks/pre-commit: .venv/.valid
+	${ENV} pre-commit install --install-hooks
 
-.PHONY: test  ## Run tests
-test: .make.lock
-	LANGUAGE=en_US && pdm run pytest -vv -n auto
 
-.PHONY: test-quick  ## Run tests, fail fast
-test-quick: .make.lock
-	LANGUAGE=en_US && pdm run pytest -vv --ff -x
+.PHONY: test
+test: .venv/.valid ## [ALL] Run Unittests via 'pytest' with {PYTEST_OPTIONS}
+	${ENV} pytest -vv ${PYTEST_OPTIONS}
+	@echo  "See coverage report:\n\n    file://${PWD}/htmlcov/index.html\n"
 
-.PHONY: mypy  ## Run mypy
-mypy: .make.lock
-	pdm run mypy $(SOURCE)
 
-.make.venv-doc:
-	python3 -m venv .venv-doc
-	. .venv-doc/bin/activate && \
-	pip install $(DOC_REQUIREMENTS) && \
-	pip install -e .
-	@touch .make.venv-doc
+.PHONY: checktypes
+checktypes: .venv/.valid ## [ALL] Run Type-Checking via 'mypy'
+	${ENV} mypy .
 
-.PHONY: doc  ## Build Documentation
-doc: .make.venv-doc
-	. .venv-doc/bin/activate && make html -C docs
-	@echo ""
-	@echo "    file://${PWD}/docs/build/html/index.html"
-	@echo ""
 
-.PHONY: doc-quick  ## Build Documentation - without code generation
-doc-quick: .make.venv-doc
-	. .venv-doc/bin/activate && make quick-html -C docs
+.PHONY: doc
+doc: .venv/.valid ## [ALL] Build Documentation via 'mkdocs'
+	${ENV} make quick-html -C docs
 
-.PHONY: all  ## Run all steps
-all: checks test mypy doc
+.PHONY: doc-serve
+doc-serve: .venv/.valid ## Start Local Documentation Server via 'mkdocs'
+	${ENV} mkdocs serve --no-strict
 
-.PHONY: all-quick  ## Run all steps fast, but maybe inaccurate
-all-quick: checks test-quick mypy doc-quick
 
-.PHONY: clean  ## Remove all files listed by .gitignore
-clean:
-	@git clean -Xdf
+.PHONY: code
+code:  ## Start Visual Studio Code
+	code git-ws.code-workspace &
 
-.PHONY: checkmod  # Hidden Modification Check for CI
-checkmod:
-	@git status --short
-	@git status --short | wc -l | xargs test 0 -eq
 
-.PHONY: publish  # Hidden Publish Target for CI
-publish: .make.lock
-	pdm publish
+.PHONY: clean
+clean:  ## Remove everything mentioned by '.gitignore' file
+	git clean -xdf
 
-.PHONY: help  ## Display this message
-help:
-	@grep -E \
-		'^.PHONY: .*?## .*$$' $(MAKEFILE_LIST) | \
-		sort | \
-		awk 'BEGIN {FS = ".PHONY: |## "}; {printf "\033[36m%-13s\033[0m %s\n", $$2, $$3}'
+
+.PHONY: distclean
+distclean:  ## Remove everything mentioned by '.gitignore' file and UNTRACKED files
+	git clean -xdf
+
+
+.PHONY: shell
+shell:  ## Open a project specific SHELL. For leaving use 'exit'.
+	${ENV} ${SHELL}
+
+
+	.PHONY: test-quick
+test-quick: .venv/.valid ## Run tests, fail fast
+	${ENV} pytest -vv --ff -x ${PYTEST_OPTIONS}
+
+
+# Helper
+.venv/.valid: pyproject.toml uv.lock
+	uv sync --frozen
+	@touch $@
+
+uv.lock:
+	uv lock

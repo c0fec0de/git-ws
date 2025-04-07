@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,16 +15,18 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Clone Testing."""
+
 import os
 from pathlib import Path
 from shutil import rmtree
 from unittest import mock
 
+from contextlib_chdir import chdir
 from pytest import raises
 
 from gitws import Clone, Git, GitCloneNotCleanError, GitWS, Manifest, NotEmptyError, Project, WorkspaceNotEmptyError
 
-from .util import chdir, check, path2url
+from .util import check, path2url
 
 
 def test_clone_basic():

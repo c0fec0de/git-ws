@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,6 +15,8 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Initialization Tests without Main Repo."""
+
+from contextlib_chdir import chdir
 from pytest import raises
 
 from gitws import Defaults, GitWS, InitializedError, ManifestSpec, NoAbsUrlError, NoMainError, ProjectSpec, Remote, save
@@ -22,7 +24,7 @@ from gitws.const import CONFIG_PATH, INFO_PATH, MANIFEST_PATH_DEFAULT
 
 from .common import MANIFEST_DEFAULT
 from .fixtures import create_repos
-from .util import chdir, cli
+from .util import cli
 
 
 def test_nomain(tmp_path):

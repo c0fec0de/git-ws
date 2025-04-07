@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -16,10 +16,12 @@
 
 """Command Line Interface - Update Variants."""
 
+from contextlib_chdir import chdir
+
 from gitws import GitWS
 
 from .fixtures import create_repos
-from .util import chdir, cli, path2url
+from .util import cli, path2url
 
 
 def test_checkout(tmp_path):

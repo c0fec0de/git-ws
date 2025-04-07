@@ -1,4 +1,4 @@
-# Copyright 2022-2023 c0fec0de
+# Copyright 2022-2025 c0fec0de
 #
 # This file is part of Git Workspace.
 #
@@ -15,11 +15,13 @@
 # with Git Workspace. If not, see <https://www.gnu.org/licenses/>.
 
 """Command Line Interface."""
+
+from contextlib_chdir import chdir
 from pytest import fixture
 
 from gitws import GitWS
 
-from .util import chdir, cli, path2url
+from .util import cli, path2url
 
 
 @fixture
