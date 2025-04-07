@@ -196,6 +196,7 @@ def clone(
 @click.option("--skip-main", "-S", is_flag=True, default=False, help="Skip Main Repository")
 @click.option("--rebase", is_flag=True, default=False, help="Run 'git rebase' instead of 'git pull'")
 @click.option("--prune", is_flag=True, default=False, help="Remove obsolete git clones")
+@click.option("--missing-only", is_flag=True, default=False, help="Just ensure that all clones are available")
 @force_option()
 @pass_context
 def update(
@@ -207,6 +208,7 @@ def update(
     rebase: bool = False,
     prune: bool = False,
     force: bool = False,
+    missing_only: bool = False,
 ):
     """Create/update all dependent git clones."""
     with exceptionhandling(context):
@@ -217,6 +219,7 @@ def update(
             rebase=rebase,
             prune=prune,
             force=force,
+            missing_only=missing_only,
         )
 
 
