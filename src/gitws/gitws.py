@@ -372,6 +372,7 @@ class GitWS:
         prune: bool = False,
         rebase: bool = False,
         force: bool = False,
+        missing_only: bool = False,
     ):
         """
         Create/Update all dependent projects.
@@ -387,6 +388,7 @@ class GitWS:
             prune: Remove obsolete files from workspace, including non-project data!
             rebase: Rebase instead of merge.
             force: Enforce to prune repositories with changes.
+            missing_only: just ensure that all clones are available
         """
         workspace = self.workspace
         depth = workspace.app_config.options.depth
@@ -394,6 +396,8 @@ class GitWS:
         # Update Clones
         for clone in self._foreach(project_paths=project_paths, skip_main=skip_main, resolve_url=True):
             clone.check(diff=False, exists=False)
+            if missing_only and clone.git.is_cloned():
+                continue
             self._update(clone, rebase, depth)
 
         # Update Workspace
