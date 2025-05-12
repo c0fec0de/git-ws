@@ -40,6 +40,7 @@ checktypes: .venv/.valid ## [ALL] Run Type-Checking via 'mypy'
 doc: .venv/.valid ## [ALL] Build Documentation via 'mkdocs'
 	${ENV} make quick-html -C docs
 
+
 .PHONY: doc-serve
 doc-serve: .venv/.valid ## Start Local Documentation Server via 'mkdocs'
 	${ENV} mkdocs serve --no-strict
@@ -52,7 +53,7 @@ code:  ## Start Visual Studio Code
 
 .PHONY: clean
 clean:  ## Remove everything mentioned by '.gitignore' file
-	git clean -xdf
+	git clean -Xdf
 
 
 .PHONY: distclean
